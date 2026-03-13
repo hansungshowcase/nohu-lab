@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
-    const { nickname, phone } = await request.json()
+    const { nickname, phone, adminLogin } = await request.json()
 
     if (!nickname || !phone) {
       return NextResponse.json(
@@ -21,43 +21,86 @@ export async function POST(request: NextRequest) {
       .eq('nickname', nickname.trim())
       .single()
 
-    if (error || !member) {
-      return NextResponse.json(
-        { error: '등록되지 않은 회원입니다. 관리자에게 문의하세요.' },
-        { status: 401 }
-      )
-    }
-
-    // 연락처 비교 (해시된 경우와 평문 모두 지원)
     const phoneClean = phone.replace(/-/g, '')
-    const phoneMatch =
-      member.phone === phoneClean ||
-      (await bcrypt.compare(phoneClean, member.phone))
+    let currentMember = member
 
-    if (!phoneMatch) {
-      return NextResponse.json(
-        { error: '연락처가 일치하지 않습니다.' },
-        { status: 401 }
-      )
+    if (error || !member) {
+      // 관리자 로그인은 자동 가입 불가
+      if (adminLogin) {
+        return NextResponse.json(
+          { error: '등록되지 않은 관리자입니다.' },
+          { status: 401 }
+        )
+      }
+
+      // 신규 회원 자동 등록 (Tier 1)
+      const { data: newMember, error: insertError } = await supabase
+        .from('members')
+        .insert({
+          nickname: nickname.trim(),
+          phone: phoneClean,
+          tier: 1,
+          last_login: new Date().toISOString(),
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        return NextResponse.json(
+          { error: '회원 등록에 실패했습니다. 다시 시도해주세요.' },
+          { status: 500 }
+        )
+      }
+
+      currentMember = newMember
+    } else {
+      // 기존 회원: 연락처 비교
+      const phoneMatch =
+        member.phone === phoneClean ||
+        member.phone === '' ||
+        (await bcrypt.compare(phoneClean, member.phone))
+
+      if (!phoneMatch) {
+        return NextResponse.json(
+          { error: '연락처가 일치하지 않습니다.' },
+          { status: 401 }
+        )
+      }
+
+      // 일반 로그인에서 관리자 계정 차단
+      if (!adminLogin && member.tier === 4) {
+        return NextResponse.json(
+          { error: '관리자는 관리자 로그인을 이용해주세요.' },
+          { status: 403 }
+        )
+      }
+
+      // 관리자 로그인에서 일반 회원 차단
+      if (adminLogin && member.tier !== 4) {
+        return NextResponse.json(
+          { error: '관리자 권한이 없습니다.' },
+          { status: 403 }
+        )
+      }
+
+      // last_login 업데이트
+      await supabase
+        .from('members')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', member.id)
     }
-
-    // last_login 업데이트
-    await supabase
-      .from('members')
-      .update({ last_login: new Date().toISOString() })
-      .eq('id', member.id)
 
     const token = await createToken({
-      memberId: member.id,
-      nickname: member.nickname,
-      tier: member.tier,
+      memberId: currentMember.id,
+      nickname: currentMember.nickname,
+      tier: currentMember.tier,
     })
 
     const response = NextResponse.json({
       success: true,
       member: {
-        nickname: member.nickname,
-        tier: member.tier,
+        nickname: currentMember.nickname,
+        tier: currentMember.tier,
       },
     })
 

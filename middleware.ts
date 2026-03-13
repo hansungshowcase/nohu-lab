@@ -8,6 +8,9 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const token = request.cookies.get(COOKIE_NAME)?.value
 
+  // 관리자 로그인 페이지는 보호하지 않음
+  if (pathname === '/admin/login') return NextResponse.next()
+
   // 보호된 경로 체크
   const isProtected =
     pathname.startsWith('/dashboard') ||
@@ -17,6 +20,10 @@ export async function middleware(request: NextRequest) {
   if (!isProtected) return NextResponse.next()
 
   if (!token) {
+    // /admin 경로는 관리자 로그인으로 리다이렉트
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
     return NextResponse.redirect(new URL('/', request.url))
   }
 

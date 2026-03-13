@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import TierBadge from '@/components/TierBadge'
 import { TIER_MAP } from '@/lib/types'
 import { programRegistry } from '@/app/programs/registry'
@@ -18,8 +19,9 @@ interface MemberRow {
 
 type Tab = 'members' | 'programs' | 'dashboard'
 
-export default function AdminPage() {
+function AdminContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [tab, setTab] = useState<Tab>('members')
   const [members, setMembers] = useState<MemberRow[]>([])
   const [search, setSearch] = useState('')
@@ -32,7 +34,17 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchMembers()
-  }, [])
+    // 동기화 결과 메시지
+    const sync = searchParams.get('sync')
+    const count = searchParams.get('count')
+    if (sync === 'success') {
+      setMessage(`카페 회원 ${count}명 동기화 완료!`)
+      setTimeout(() => setMessage(''), 5000)
+    } else if (sync === 'failed' || sync === 'error' || sync === 'token_failed') {
+      setMessage('카페 회원 동기화에 실패했습니다.')
+      setTimeout(() => setMessage(''), 5000)
+    }
+  }, [searchParams])
 
   async function fetchMembers() {
     setLoading(true)
@@ -178,6 +190,12 @@ export default function AdminPage() {
             >
               CSV 일괄 등록
             </button>
+            <a
+              href="/api/auth/naver?mode=admin"
+              className="px-4 py-2 bg-[#03C75A] hover:bg-[#02b351] text-white rounded-lg text-sm inline-flex items-center gap-1"
+            >
+              🔄 카페 회원 동기화
+            </a>
           </div>
 
           {/* 회원 추가 폼 */}
@@ -390,5 +408,17 @@ export default function AdminPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full" />
+      </div>
+    }>
+      <AdminContent />
+    </Suspense>
   )
 }
