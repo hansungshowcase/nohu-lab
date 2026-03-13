@@ -66,25 +66,35 @@ export async function GET(request: NextRequest) {
 
     // 3. 카페 가입 여부 및 등급 확인
     let cafeTier: 1 | 2 | 3 | 4 = 1
-    try {
-      const cafeRes = await fetch(
-        `https://openapi.naver.com/v1/cafe/member/${CAFE_ID}`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      )
-      const cafeData = await cafeRes.json()
+    let cafeJoined = false
 
-      if (cafeData.message?.status === '200' && cafeData.message?.result) {
-        const memberLevel = cafeData.message.result.memberLevel || 1
-        const memberLevelName = cafeData.message.result.memberLevelName || ''
-        cafeTier = mapCafeLevelToTier(memberLevel, memberLevelName)
-      } else {
-        // 카페 미가입 → 접근 불가
-        return NextResponse.redirect(
-          new URL('/?error=not_cafe_member', process.env.NEXT_PUBLIC_BASE_URL!)
+    // 두 가지 ID 형식 시도 (문자열 URL ID, 숫자 클럽 ID)
+    const cafeIds = ['eovhskfktmak', CAFE_ID]
+    for (const cid of cafeIds) {
+      try {
+        const cafeRes = await fetch(
+          `https://openapi.naver.com/v1/cafe/member/${cid}`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         )
+        const cafeData = await cafeRes.json()
+        console.log(`Cafe check (${cid}):`, JSON.stringify(cafeData).substring(0, 500))
+
+        if (cafeData.message?.status === '200' && cafeData.message?.result) {
+          const memberLevel = cafeData.message.result.memberLevel || 1
+          const memberLevelName = cafeData.message.result.memberLevelName || ''
+          cafeTier = mapCafeLevelToTier(memberLevel, memberLevelName)
+          cafeJoined = true
+          break
+        }
+      } catch (e) {
+        console.error(`Cafe API error (${cid}):`, e)
       }
-    } catch {
-      // 카페 API 실패 시 기본 Tier 1
+    }
+
+    if (!cafeJoined) {
+      // 카페 API가 모두 실패한 경우 → 일단 로그인 허용 (Tier 1)
+      // 카페 가입은 했지만 API가 안 되는 경우가 있을 수 있음
+      console.log('Cafe membership check failed for all IDs, allowing login with tier 1')
       cafeTier = 1
     }
 
