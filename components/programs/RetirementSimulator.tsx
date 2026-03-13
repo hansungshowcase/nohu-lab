@@ -2,816 +2,819 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 
-// ─── 타입 ───
+interface Input { age: number; monthlyNet: number; monthlySave: number; currentAssets: number; retireAge: number }
 
-interface Input {
-  age: number
-  monthlyNet: number
-  monthlySave: number
-  currentAssets: number
-  retireAge: number
+// 2026년 3월 실시간 물가 (API에서 가져오되 기본값 내장)
+interface MarketPrices {
+  chicken: number; gukbap: number; cvs: number; americano: number; soju: number
+  bus: number; ramen: number; samgak: number; market: number; lunchAvg: number
+  minWage: number; egg30: number; rice10kg: number
+  updated: string
+}
+const DEFAULT_PRICES: MarketPrices = {
+  chicken: 23000, gukbap: 10000, cvs: 5500, americano: 5500, soju: 5500,
+  bus: 1500, ramen: 1200, samgak: 1500, market: 50000, lunchAvg: 8500,
+  minWage: 10320, egg30: 8500, rice10kg: 35000,
+  updated: '2026-03-13',
 }
 
-interface Grade {
-  letter: string; name: string; color: string; bg: string; border: string
-  emoji: string; summary: string; shock: string; detail: string[]
+const S = {
+  need: 3_500_000, min: 2_400_000, avg: 2_200_000, pen: 670_000,
+  asset: { 20: 12e6, 30: 359_580_000, 40: 627_140_000, 50: 662_050_000, 60: 5e8 } as Record<number, number>,
+  med: { 50: 280, 55: 340, 60: 410, 65: 515, 70: 620, 75: 750, 80: 890 } as Record<number, number>,
 }
+const RET = 0.05, INF = 0.03, LE = 85
 
-interface LifeItem { icon: string; label: string; desc: string; amount: number }
-
-interface Comparison { add: number; monthly: number; grade: Grade }
-
-interface Result {
-  monthly: number; total: number; pension: number; grade: Grade
-  life: LifeItem[]; comparisons: Comparison[]; percentile: number
-  budgetBreakdown: { label: string; amount: number; icon: string }[]
-  realityChecks: string[]
-  ageGroup: number
+function estGross(n: number) { let g = n; for (let i = 0; i < 10; i++) g = n + dd(g).t; return Math.round(g) }
+function dd(g: number) {
+  const np = Math.round(Math.min(g, 59e5) * .045), hi = Math.round(g * .03545), ltc = Math.round(hi * .1281), ei = Math.round(g * .009)
+  const tb = Math.max(g - np - hi - ltc - ei - 15e5, 0), it = Math.round(itx(tb * 12) / 12), lt = Math.round(it * .1)
+  return { np, hi, ltc, ei, it, lt, t: np + hi + ltc + ei + it + lt }
 }
-
-// ─── 계산 ───
-
-const RETURN = 0.05
-const LIFE_EXP = 85
-
-// 2025 실제 통계 데이터 (통계청, KB금융, 국민연금공단)
-const STATS = {
-  avgNeeded: 3_500_000,        // 노후 적정 생활비 월 350만원
-  minNeeded: 2_480_000,        // 노후 최소 생활비 월 248만원
-  avgActual: 2_300_000,        // 실제 조달 가능 월 230만원
-  avgPension: 670_000,         // 국민연금 평균 수령 월 67만원
-  avgPension20y: 1_080_000,    // 20년+ 가입 월 108만원
-  preparedPct: 19.1,           // 노후 준비 잘 됐다 응답 비율
-  hopeRetireAge: 65,           // 희망 은퇴 나이
-  realRetireAge: 56,           // 실제 은퇴 나이
-  elderMedical: 515,           // 65세+ 연간 의료비 만원
-  assetByAge: { 20: 1_200, 30: 35_958, 40: 62_714, 50: 66_205, 60: 50_000 } as Record<number, number>, // 만원
-  savingByAge: { 20: 2_000, 30: 6_989, 40: 12_000, 50: 15_000, 60: 10_000 } as Record<number, number>, // 만원
-}
-
-function estimatePension(net: number, years: number): number {
-  const gross = net * 1.25
-  const A = 2_800_000, B = Math.min(gross, 5_900_000)
-  const y = Math.min(Math.max(years, 10), 40)
-  return Math.round(Math.max((A + B) * y * 0.008, 300_000))
-}
-
-function calc(input: Input, extra = 0) {
-  const yrs = input.retireAge - input.age
-  const mr = RETURN / 12, months = yrs * 12
-  const save = input.monthlySave + extra
-  const assetG = input.currentAssets * Math.pow(1 + RETURN, yrs)
-  const saveG = save > 0 ? save * ((Math.pow(1 + mr, months) - 1) / mr) : 0
-  const sev = input.monthlyNet * 1.1 * yrs
-  const total = Math.round(assetG + saveG + sev)
-  const retYrs = LIFE_EXP - input.retireAge
-  const fromAssets = Math.round(total / (retYrs * 12))
-  const pension = estimatePension(input.monthlyNet, yrs)
-  return { monthly: fromAssets + pension, total, pension }
-}
-
-function getGrade(m: number): Grade {
-  if (m >= 4_000_000) return {
-    letter: 'S', name: '자유로운 은퇴자', color: 'text-amber-600', bg: 'from-amber-400 to-yellow-500',
-    border: 'border-amber-400', emoji: '👑', summary: '하고 싶은 거 다 하며 삽니다',
-    shock: '축하합니다! 당신은 경제적 자유를 달성한 소수입니다.',
-    detail: ['해외여행 연 2회 이상', '취미·문화생활 자유', '의료비 걱정 없음', '자녀·손주에게 여유 있는 지원']
-  }
-  if (m >= 3_000_000) return {
-    letter: 'A', name: '안정적 은퇴자', color: 'text-green-600', bg: 'from-green-400 to-emerald-500',
-    border: 'border-green-400', emoji: '😊', summary: '큰 걱정 없이 살 수 있어요',
-    shock: '괜찮은 수준이지만, 물가 상승을 고려하면 방심은 금물입니다.',
-    detail: ['외식 주 1~2회', '국내여행 분기 1회', '의료비 감당 가능', '경조사 부담 적음']
-  }
-  if (m >= 2_000_000) return {
-    letter: 'B', name: '알뜰 은퇴자', color: 'text-blue-600', bg: 'from-blue-400 to-cyan-500',
-    border: 'border-blue-400', emoji: '🙂', summary: '아끼면서 살면 괜찮아요',
-    shock: '생존은 가능하지만, "즐기는 노후"와는 거리가 있습니다. 지금이 마지막 골든타임일 수 있어요.',
-    detail: ['외식은 특별한 날만', '여행은 1년에 1~2번', '큰 병원비는 저축 소진', '생활비 계산이 일상']
-  }
-  if (m >= 1_500_000) return {
-    letter: 'C', name: '빠듯한 은퇴자', color: 'text-orange-600', bg: 'from-orange-400 to-amber-500',
-    border: 'border-orange-400', emoji: '😰', summary: '지출을 꽤 조절해야 해요',
-    shock: '솔직히 말씀드리면, 이대로면 노후가 상당히 팍팍합니다. 외식은 사치가 되고, 아프면 병원비가 두려워집니다.',
-    detail: ['외식 거의 불가', '여행은 꿈도 못 꿈', '병원비가 공포', '경조사비 = 생활비 위기']
-  }
-  return {
-    letter: 'D', name: '위기의 은퇴자', color: 'text-red-600', bg: 'from-red-500 to-rose-600',
-    border: 'border-red-500', emoji: '🚨', summary: '지금 당장 전략이 필요해요',
-    shock: '경고합니다. 현재 페이스대로면 기초생활 유지도 힘든 수준입니다. 라면으로 끼니를 때우고, 아파도 병원을 참아야 하는 현실이 올 수 있습니다. 하지만 지금 시작하면 아직 늦지 않았습니다.',
-    detail: ['식비조차 빠듯', '의료비 감당 불가', '자녀에게 손 벌려야 함', '사회적 고립 위험']
-  }
-}
-
-function getLife(m: number): LifeItem[] {
-  if (m >= 4_000_000) return [
-    { icon: '☕', label: '아침', desc: '동네 카페에서 모닝커피와 브런치', amount: 400_000 },
-    { icon: '🍽️', label: '점심', desc: '친구들과 맛집 탐방, 주 3회 외식', amount: 600_000 },
-    { icon: '🎨', label: '오후', desc: '골프, 요가, 그림 클래스 수강', amount: 500_000 },
-    { icon: '🥩', label: '저녁', desc: '가족과 외식, 좋은 식재료로 요리', amount: 500_000 },
-    { icon: '🏥', label: '건강', desc: '종합검진 + 치과 + 한의원 자유롭게', amount: 300_000 },
-    { icon: '✈️', label: '여행', desc: '연 2회 해외, 국내여행은 수시로', amount: 800_000 },
-    { icon: '🎁', label: '여유', desc: '손주 용돈, 기부, 자기계발도 OK', amount: 400_000 },
-  ]
-  if (m >= 3_000_000) return [
-    { icon: '☕', label: '아침', desc: '집에서 내린 커피, 가끔 카페도', amount: 100_000 },
-    { icon: '🍽️', label: '점심', desc: '주 1~2회 외식 가능', amount: 400_000 },
-    { icon: '🚶', label: '오후', desc: '산책 + 월 1~2회 문화생활', amount: 200_000 },
-    { icon: '🍳', label: '저녁', desc: '직접 요리, 가끔 배달도 OK', amount: 400_000 },
-    { icon: '🏥', label: '건강', desc: '병원 걱정 없음, 정기검진 가능', amount: 250_000 },
-    { icon: '🚌', label: '여행', desc: '연 1회 해외, 국내 분기 1회', amount: 500_000 },
-    { icon: '🎁', label: '여유', desc: '경조사비 부담 없는 수준', amount: 150_000 },
-  ]
-  if (m >= 2_000_000) return [
-    { icon: '🏠', label: '아침', desc: '집에서 간단한 아침 (카페는 특별한 날만)', amount: 50_000 },
-    { icon: '🍱', label: '점심', desc: '도시락·집밥 위주, 외식은 월 3~4회', amount: 350_000 },
-    { icon: '🚶', label: '오후', desc: '동네 산책, 무료 문화행사 위주', amount: 80_000 },
-    { icon: '🛒', label: '저녁', desc: '마트 할인시간에 장보기', amount: 350_000 },
-    { icon: '🏥', label: '건강', desc: '감기는 OK, 큰 수술은 저축 필요', amount: 150_000 },
-    { icon: '🚌', label: '여행', desc: '국내여행 연 1~2회, 해외는 3년에 1회', amount: 200_000 },
-    { icon: '😅', label: '현실', desc: '경조사비가 부담스러운 달이 있음', amount: 100_000 },
-  ]
-  if (m >= 1_500_000) return [
-    { icon: '🍚', label: '아침', desc: '밥에 반찬 하나, 외식은 생각도 못 함', amount: 30_000 },
-    { icon: '🍚', label: '점심', desc: '경로식당 또는 집에서 간단히', amount: 250_000 },
-    { icon: '🏠', label: '오후', desc: 'TV 시청이 유일한 여가', amount: 30_000 },
-    { icon: '🛒', label: '저녁', desc: '전단지 최저가만 골라서 장보기', amount: 250_000 },
-    { icon: '😰', label: '건강', desc: '아파도 참다가 가는 편, 큰 병은 공포', amount: 100_000 },
-    { icon: '❌', label: '여행', desc: '여행은 사실상 불가능', amount: 0 },
-    { icon: '😓', label: '현실', desc: '경조사 가면 한 달 생활이 흔들림', amount: 80_000 },
-  ]
-  return [
-    { icon: '😢', label: '아침', desc: '라면이나 죽으로 끼니 해결', amount: 20_000 },
-    { icon: '🍚', label: '점심', desc: '무료급식소 또는 경로식당에 의존', amount: 150_000 },
-    { icon: '🏠', label: '오후', desc: '외출 자제, 집에서 TV만', amount: 0 },
-    { icon: '🛒', label: '저녁', desc: '마감 할인 도시락으로 연명', amount: 100_000 },
-    { icon: '🚨', label: '건강', desc: '병원비가 무서워서 아파도 참는 생활', amount: 50_000 },
-    { icon: '❌', label: '여행', desc: '교통비조차 아낌, 외출 최소화', amount: 0 },
-    { icon: '😭', label: '현실', desc: '자녀에게 손 벌리거나 기초생활수급 신청', amount: 0 },
-  ]
-}
-
-function getPercentile(age: number, monthly: number): number {
-  // 연령대별 평균 은퇴 후 월 추정 (자산 기반 역산)
-  const avg: Record<number, number> = { 20: 1_600_000, 30: 2_200_000, 40: 2_800_000, 50: 2_600_000, 60: 2_000_000 }
-  const a = avg[Math.floor(age / 10) * 10] || 2_200_000
-  const z = (monthly - a) / (a * 0.4)
-  const t = 1 / (1 + 0.2316419 * Math.abs(z))
-  const d = 0.3989422802 * Math.exp(-z * z / 2)
-  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))))
+function itx(a: number) { if (a <= 14e6) return a * .06; if (a <= 5e7) return 84e4 + (a - 14e6) * .15; if (a <= 88e6) return 624e4 + (a - 5e7) * .24; if (a <= 15e7) return 1536e4 + (a - 88e6) * .35; return 3706e4 + (a - 15e7) * .38 }
+function pen(g: number, y: number) { return Math.round(Math.max((2_861_091 + Math.min(g, 59e5)) * Math.min(Math.max(y, 10), 40) * .008, 33e4)) }
+function pctl(age: number, m: number) {
+  const a = ({ 20: 16e5, 30: 22e5, 40: 28e5, 50: 26e5, 60: 2e6 } as Record<number, number>)[Math.floor(age / 10) * 10] || 22e5
+  const z = (m - a) / (a * .4), t = 1 / (1 + .2316419 * Math.abs(z)), d = .3989422802 * Math.exp(-z * z / 2)
+  const p = d * t * (.3193815 + t * (-.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))))
   return Math.round(Math.min(Math.max((z > 0 ? 1 - p : p) * 100, 1), 99))
 }
 
-function won(n: number): string {
-  if (n >= 100_000_000) return (n / 100_000_000).toFixed(1) + '억'
-  if (n >= 10_000) return Math.round(n / 10_000).toLocaleString() + '만'
-  return n.toLocaleString()
+interface R {
+  gross: number; dedT: number; dedD: ReturnType<typeof dd>; yrs: number; retYrs: number
+  retAll: number; assetG: number; saveG: number; total: number; penM: number; fromAsset: number; monthly: number
+  daily: number; perMeal: number
+  inflAdj: number; real10: number; real20: number; pct: number; ag: number; fi: number; sr: number
+  gr: string; grN: string; grC: string; nickname: string
+  budget: { c: string; a: number; p: number }[]
+  proj: { y: number; age: number; v: number }[]
+  sc: { add: number; m: number; gr: string; diff: number }[]
+  med: { age: string; ann: number; pct: number }[]; medT: number
 }
-function wonW(n: number) { return won(n) + '원' }
 
-// ─── 분석 단계 ───
+function calc(inp: Input): R {
+  const net = inp.monthlyNet * 1e4, sav = inp.monthlySave * 1e4, ast = inp.currentAssets * 1e4
+  const gross = estGross(net), d = dd(gross), yrs = inp.retireAge - inp.age, retYrs = LE - inp.retireAge
+  const retAll = gross * yrs, mr = RET / 12, mo = yrs * 12
+  const assetG = Math.round(ast * Math.pow(1 + RET, yrs))
+  const saveG = sav > 0 ? Math.round(sav * ((Math.pow(1 + mr, mo) - 1) / mr)) : 0
+  const total = assetG + saveG + retAll, penM = pen(gross, yrs)
+  const fromAsset = Math.round(total / (retYrs * 12)), monthly = fromAsset + penM
+  const daily = Math.round(monthly / 30), perMeal = Math.round(daily / 3)
+  const inflAdj = Math.round(monthly / Math.pow(1 + INF, yrs))
+  const p = pctl(inp.age, monthly), ag = Math.floor(inp.age / 10) * 10
+  const fi = Math.round(monthly / S.need * 100), sr = net > 0 ? Math.round(sav / net * 100) : 0
+  const { l: gr, n: grN, c: grC } = grI(monthly)
+  const nickname = getNick(monthly, gr)
+  const budget = getBud(monthly, gr)
+  const now = new Date().getFullYear()
+  const proj: R['proj'] = [{ y: now, age: inp.age, v: ast }]
+  for (let y = 5; y <= yrs; y += 5) proj.push({ y: now + y, age: inp.age + y, v: Math.round(ast * Math.pow(1 + RET, y) + sav * ((Math.pow(1 + mr, y * 12) - 1) / mr)) })
+  if (yrs % 5 !== 0) proj.push({ y: now + yrs, age: inp.retireAge, v: total })
+  const sc = [10, 30, 50, 100].map(add => { const es = sav + add * 1e4, sg = es > 0 ? Math.round(es * ((Math.pow(1 + mr, mo) - 1) / mr)) : 0, m = Math.round((assetG + sg + retAll) / (retYrs * 12)) + penM; return { add, m, gr: grI(m).l, diff: m - monthly } })
+  const med: R['med'] = []; let medT = 0
+  for (const [a, c] of Object.entries(S.med)) { if (Number(a) >= inp.retireAge - 5) { const ann = c * 1e4; med.push({ age: a + '세', ann, pct: Math.round(ann / 12 / monthly * 100) }); medT += ann * 5 } }
+  return { gross, dedT: d.t, dedD: d, yrs, retYrs, retAll, assetG, saveG, total, penM, fromAsset, monthly, daily, perMeal, inflAdj, real10: Math.round(monthly * Math.pow(1 - INF, 10)), real20: Math.round(monthly * Math.pow(1 - INF, 20)), pct: p, ag, fi, sr, gr, grN, grC, nickname, budget, proj, sc, med, medT }
+}
+function grI(m: number) {
+  if (m >= 4e6) return { l: 'S', n: '치킨도 시켜먹는 노후', c: '#f59e0b' }
+  if (m >= 3e6) return { l: 'A', n: '국밥은 사 먹는 노후', c: '#22c55e' }
+  if (m >= 2e6) return { l: 'B', n: '집에서 해 먹는 노후', c: '#3b82f6' }
+  if (m >= 15e5) return { l: 'C', n: '라면으로 버티는 노후', c: '#f97316' }
+  return { l: 'D', n: '끼니 걱정 노후', c: '#ef4444' }
+}
+function getNick(m: number, gr: string): string {
+  if (gr === 'S') {
+    if (m >= 5e6) return '은퇴계의 금수저'
+    return '치킨은 배달시키는 사람'
+  }
+  if (gr === 'A') return '국밥집 단골 어르신'
+  if (gr === 'B') return '마트 마감할인 헌터'
+  if (gr === 'C') return '라면 물 조절의 달인'
+  return '삼각김밥도 고민하는 사람'
+}
+function getBud(m: number, g: string): R['budget'] {
+  const r: Record<string, [string, number][]> = {
+    S:[['식비',.22],['주거',.08],['교통/통신',.07],['의료',.08],['여가/여행',.20],['경조사',.08],['공과금',.07],['예비비',.15],['기타',.05]],
+    A:[['식비',.25],['주거',.10],['교통/통신',.08],['의료',.12],['여가',.12],['경조사',.08],['공과금',.10],['예비비',.10],['기타',.05]],
+    B:[['식비',.30],['주거',.12],['교통/통신',.10],['의료',.13],['여가',.05],['경조사',.07],['공과금',.13],['예비비',.05],['기타',.05]],
+    C:[['식비',.35],['주거',.15],['교통/통신',.10],['의료',.12],['공과금',.15],['경조사',.05],['예비비',.03],['기타',.05]],
+    D:[['식비',.40],['주거',.18],['교통/통신',.10],['의료',.10],['공과금',.17],['기타',.05]],
+  }
+  return (r[g] || r.D).map(([c, v]) => ({ c, a: Math.round(m * v), p: Math.round(v * 100) }))
+}
+function w(n: number) { if (Math.abs(n) >= 1e8) return (n / 1e8).toFixed(1) + '억'; if (Math.abs(n) >= 1e4) return Math.round(n / 1e4).toLocaleString() + '만'; return n.toLocaleString() }
+function ww(n: number) { return w(n) + '원' }
 
-const ANALYSIS_STEPS = [
-  { text: '기본 정보 분석 중', icon: '📋' },
-  { text: '국민연금 수령액 계산 중', icon: '🏛️' },
-  { text: '투자 수익률 시뮬레이션 중', icon: '📈' },
-  { text: '은퇴 후 생활비 산출 중', icon: '🧮' },
-  { text: '또래 데이터와 비교 분석 중', icon: '👥' },
-  { text: '최종 결과 생성 중', icon: '✨' },
-]
+const STEPS = ['실시간 물가 데이터 수집','세전 급여 역산','4대보험 산출','소득세 계산','국민연금 추정','퇴직금 산출','복리 시뮬레이션','물가 반영','의료비 추계','동년배 비교','현금흐름 구성','리포트 생성']
 
-// ─── 메인 ───
+function useCU(t: number, d = 1500, on = false) {
+  const [v, s] = useState(0)
+  useEffect(() => { if (!on) return; let f: number, t0: number; const tick = (ts: number) => { if (!t0) t0 = ts; const p = Math.min((ts - t0) / d, 1); s(Math.round(t * (1 - Math.pow(1 - p, 3)))); if (p < 1) f = requestAnimationFrame(tick) }; f = requestAnimationFrame(tick); return () => cancelAnimationFrame(f) }, [t, d, on]); return v
+}
+function useVis(ref: React.RefObject<HTMLElement | null>) {
+  const [v, s] = useState(false)
+  useEffect(() => { if (!ref.current) return; const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) { s(true); o.disconnect() } }, { threshold: .12 }); o.observe(ref.current); return () => o.disconnect() }, [ref]); return v
+}
+
+const CSS = `
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes ring{from{stroke-dashoffset:283}to{stroke-dashoffset:var(--dash)}}
+@keyframes grow{from{width:0}}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes pop{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.au{animation:up .6s cubic-bezier(.22,1,.36,1) forwards}
+.sh{background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);background-size:200% 100%;animation:shimmer 2s infinite}
+.ring-anim{animation:ring 1.5s cubic-bezier(.22,1,.36,1) forwards}
+.bar-anim{animation:grow .8s cubic-bezier(.22,1,.36,1) forwards}
+.pop-in{animation:pop .5s cubic-bezier(.22,1,.36,1) forwards}
+.shake{animation:shake .4s ease-in-out}
+.pulse-warn{animation:pulse-red 1.5s infinite}
+`
 
 export default function RetirementSimulator() {
-  const [step, setStep] = useState<'input' | 'analyzing' | 'result'>('input')
-  const [screen, setScreen] = useState(0)
-  const [input, setInput] = useState<Input>({ age: 35, monthlyNet: 300, monthlySave: 50, currentAssets: 3000, retireAge: 65 })
-  const [result, setResult] = useState<Result | null>(null)
-  const [analysisStep, setAnalysisStep] = useState(0)
-  const [analysisProgress, setAnalysisProgress] = useState(0)
-  const [isMember, setIsMember] = useState(false)
-  const [showGate, setShowGate] = useState(false)
-  const [isShared, setIsShared] = useState(false)
-  const [revealShock, setRevealShock] = useState(false)
-  const cardRef = useRef<HTMLDivElement>(null)
+  const [phase, setPhase] = useState<'input'|'load'|'result'>('input')
+  const [inp, setInp] = useState<Input>({ age: 35, monthlyNet: 300, monthlySave: 50, currentAssets: 3000, retireAge: 65 })
+  const [result, setResult] = useState<R | null>(null)
+  const [ls, setLs] = useState(0)
+  const [lp, setLp] = useState(0)
+  const [member, setMember] = useState(false)
+  const [gate, setGate] = useState(false)
+  const [shared, setShared] = useState(false)
+  const [prices, setPrices] = useState<MarketPrices>(DEFAULT_PRICES)
+  const [showShareMenu, setShowShareMenu] = useState(false)
 
   useEffect(() => {
-    if (typeof window !== 'undefined') setIsShared(new URLSearchParams(window.location.search).has('shared'))
-    fetch('/api/auth/me').then(r => { if (r.ok) setIsMember(true) }).catch(() => {})
+    if (typeof window !== 'undefined') setShared(new URLSearchParams(window.location.search).has('shared'))
+    fetch('/api/auth/me').then(r => { if (r.ok) setMember(true) }).catch(() => {})
+    // 실시간 물가 데이터 로드
+    fetch('/api/programs/market-data').then(r => r.json()).then(data => {
+      if (data?.prices) {
+        setPrices({
+          chicken: data.prices.chicken?.price ?? DEFAULT_PRICES.chicken,
+          gukbap: data.prices.gukbap?.price ?? DEFAULT_PRICES.gukbap,
+          cvs: data.prices.cvs_dosirak?.price ?? DEFAULT_PRICES.cvs,
+          americano: data.prices.americano?.price ?? DEFAULT_PRICES.americano,
+          soju: data.prices.soju?.price ?? DEFAULT_PRICES.soju,
+          bus: data.prices.bus?.price ?? DEFAULT_PRICES.bus,
+          ramen: data.prices.ramen?.price ?? DEFAULT_PRICES.ramen,
+          samgak: data.prices.samgak?.price ?? DEFAULT_PRICES.samgak,
+          market: data.prices.market_weekly?.price ?? DEFAULT_PRICES.market,
+          lunchAvg: data.prices.lunch_avg?.price ?? DEFAULT_PRICES.lunchAvg,
+          minWage: data.wages?.min_hourly_2026 ?? DEFAULT_PRICES.minWage,
+          egg30: data.prices.egg_30?.price ?? DEFAULT_PRICES.egg30,
+          rice10kg: data.prices.rice_10kg?.price ?? DEFAULT_PRICES.rice10kg,
+          updated: data.updated ?? DEFAULT_PRICES.updated,
+        })
+      }
+    }).catch(() => {})
+    // 카카오 SDK 로드 (앱키가 있을 때만)
+    const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY
+    if (kakaoKey && typeof window !== 'undefined' && !document.getElementById('kakao-sdk')) {
+      const s = document.createElement('script')
+      s.id = 'kakao-sdk'
+      s.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js'
+      s.crossOrigin = 'anonymous'
+      s.onload = () => {
+        const K = (window as any).Kakao
+        if (K && !K.isInitialized()) K.init(kakaoKey)
+      }
+      document.head.appendChild(s)
+    }
   }, [])
 
-  function gate(fn: () => void) {
-    if (isMember) fn(); else setShowGate(true)
+  function go(e: React.FormEvent) {
+    e.preventDefault(); setPhase('load'); setLs(0); setLp(0)
+    const dur = 5000, sd = dur / STEPS.length; let s = 0
+    const pi = setInterval(() => setLp(p => Math.min(p + .85, 100)), dur / 115)
+    const si = setInterval(() => { s++; if (s < STEPS.length) setLs(s); else { clearInterval(si); clearInterval(pi); setLp(100); setResult(calc(inp)); setTimeout(() => setPhase('result'), 400) } }, sd)
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setStep('analyzing')
-    setAnalysisStep(0)
-    setAnalysisProgress(0)
-    setRevealShock(false)
+  const makeCard = useCallback((): HTMLCanvasElement | null => {
+    if (!result) return null
+    const P = prices, r = result
+    const W = 700, H = 1240, sc = 2 // A4 비율에 가까운 크기
+    const c = document.createElement('canvas'); c.width = W * sc; c.height = H * sc
+    const x = c.getContext('2d')!; x.scale(sc, sc)
+    const L = 44, R2 = W - 44
+    const gc: Record<string, string> = { S: '#f59e0b', A: '#22c55e', B: '#3b82f6', C: '#f97316', D: '#ef4444' }
+    const col = gc[r.gr] || '#888'
 
-    // 분석 애니메이션
-    let s = 0
-    const totalDuration = 4000
-    const stepDuration = totalDuration / ANALYSIS_STEPS.length
-    const progressInterval = setInterval(() => {
-      setAnalysisProgress(prev => Math.min(prev + 1.5, 100))
-    }, totalDuration / 70)
-
-    const stepInterval = setInterval(() => {
-      s++
-      if (s < ANALYSIS_STEPS.length) {
-        setAnalysisStep(s)
-      } else {
-        clearInterval(stepInterval)
-        clearInterval(progressInterval)
-        setAnalysisProgress(100)
-        // 계산 실행
-        const realInput: Input = {
-          ...input,
-          monthlyNet: input.monthlyNet * 10000,
-          monthlySave: input.monthlySave * 10000,
-          currentAssets: input.currentAssets * 10000,
-        }
-        const base = calc(realInput)
-        const grade = getGrade(base.monthly)
-        const ageGroup = Math.floor(input.age / 10) * 10
-
-        const r: Result = {
-          monthly: base.monthly,
-          total: base.total,
-          pension: base.pension,
-          grade,
-          life: getLife(base.monthly),
-          comparisons: [30, 50, 100].map(add => {
-            const c = calc(realInput, add * 10000)
-            return { add, monthly: c.monthly, grade: getGrade(c.monthly) }
-          }),
-          percentile: getPercentile(input.age, base.monthly),
-          budgetBreakdown: getLife(base.monthly),
-          realityChecks: getRealityChecks(base.monthly, input.age, input.retireAge),
-          ageGroup,
-        }
-        setResult(r)
-        setTimeout(() => setStep('result'), 500)
-      }
-    }, stepDuration)
-  }
-
-  function getRealityChecks(monthly: number, age: number, retireAge: number): string[] {
-    const checks: string[] = []
-    const gap = STATS.avgNeeded - monthly
-    if (gap > 0) checks.push(`한국인이 생각하는 노후 적정 생활비는 월 350만원입니다. 당신은 월 ${won(gap)}원이 부족합니다. (KB금융 2025)`)
-    if (monthly < STATS.minNeeded) checks.push(`노후 '최소' 생활비 월 248만원에도 미달합니다. 기본적인 생활 유지가 어려울 수 있습니다.`)
-    if (monthly < STATS.avgActual) checks.push(`한국인의 실제 노후 조달 가능 금액 평균 월 230만원보다도 적습니다.`)
-    checks.push(`국민연금 평균 수령액은 월 67만원에 불과합니다. 국민연금만으로는 절대 부족합니다. (국민연금공단 2025)`)
-    if (retireAge > STATS.realRetireAge) checks.push(`희망 은퇴 나이 ${retireAge}세지만, 한국인 실제 은퇴 나이는 평균 56세입니다. 예상보다 빨리 은퇴할 수 있습니다.`)
-    if (retireAge - age < 15) checks.push(`은퇴까지 ${retireAge - age}년밖에 남지 않았습니다. 1년이 지날수록 만회가 어려워집니다.`)
-    checks.push(`65세 이상 연간 의료비 평균 515만원. 나이 들수록 의료비가 급증합니다.`)
-    checks.push(`노후 준비가 잘 되어 있다고 답한 한국인은 19.1%뿐입니다. 10명 중 8명은 불안한 노후를 맞이합니다.`)
-    if (monthly >= 3_000_000) checks.push(`상위권이지만 연 3% 물가상승률 감안 시 20년 후 실질 가치는 절반 수준입니다.`)
-    return checks
-  }
-
-  // 카드 이미지 다운로드
-  const downloadCard = useCallback(() => {
-    if (!result) return
-    const canvas = document.createElement('canvas')
-    const s = 2
-    canvas.width = 640 * s; canvas.height = 440 * s
-    const ctx = canvas.getContext('2d')!
-    ctx.scale(s, s)
-
-    // 배경
-    const colors: Record<string, [string, string]> = {
-      S: ['#f59e0b', '#d97706'], A: ['#22c55e', '#16a34a'], B: ['#3b82f6', '#2563eb'],
-      C: ['#f97316', '#ea580c'], D: ['#ef4444', '#dc2626'],
+    const drawLine = (yy: number) => { x.strokeStyle = '#e5e5e5'; x.lineWidth = 1; x.beginPath(); x.moveTo(L, yy); x.lineTo(R2, yy); x.stroke() }
+    const drawRow = (label: string, val: string, yy: number, highlight?: boolean) => {
+      x.fillStyle = '#888'; x.font = '400 13px system-ui'; x.textAlign = 'left'; x.fillText(label, L, yy)
+      x.fillStyle = highlight ? col : '#222'; x.font = `${highlight ? '800' : '600'} 14px system-ui`
+      x.textAlign = 'right'; x.fillText(val, R2, yy); x.textAlign = 'left'
     }
-    const grad = ctx.createLinearGradient(0, 0, 640, 440)
-    const [c1, c2] = colors[result.grade.letter] || ['#22c55e', '#16a34a']
-    grad.addColorStop(0, c1); grad.addColorStop(1, c2)
-    ctx.fillStyle = grad
-    ctx.beginPath(); ctx.roundRect(0, 0, 640, 440, 28); ctx.fill()
-
-    // 배경 대문자
-    ctx.fillStyle = 'rgba(255,255,255,0.12)'
-    ctx.font = 'bold 240px sans-serif'
-    ctx.fillText(result.grade.letter, 390, 280)
-
-    ctx.fillStyle = '#fff'
-    ctx.font = 'bold 16px sans-serif'
-    ctx.fillText('노후연구소 은퇴 시뮬레이터', 36, 44)
-
-    ctx.font = 'bold 80px sans-serif'
-    ctx.fillText(`${result.grade.letter}등급`, 36, 155)
-
-    ctx.font = 'bold 30px sans-serif'
-    ctx.fillText(result.grade.name, 36, 200)
-
-    ctx.font = '20px sans-serif'
-    ctx.fillStyle = 'rgba(255,255,255,0.85)'
-    ctx.fillText('은퇴 후 월 사용 가능 금액', 36, 260)
-
-    ctx.font = 'bold 48px sans-serif'
-    ctx.fillStyle = '#fff'
-    ctx.fillText(wonW(result.monthly), 36, 315)
-
-    ctx.font = '18px sans-serif'
-    ctx.fillStyle = 'rgba(255,255,255,0.8)'
-    const lines = wrapText(ctx, `"${result.grade.summary}"`, 560)
-    lines.forEach((line, i) => ctx.fillText(line, 36, 360 + i * 24))
-
-    ctx.font = '13px sans-serif'
-    ctx.fillStyle = 'rgba(255,255,255,0.5)'
-    ctx.fillText('nohu-lab.vercel.app  |  너도 테스트해봐!', 36, 420)
-
-    const link = document.createElement('a')
-    link.download = `은퇴등급_${result.grade.letter}.png`
-    link.href = canvas.toDataURL('image/png')
-    link.click()
-  }, [result])
-
-  function handleShare() {
-    if (!result) return
-    const url = window.location.origin + '/programs/retirement-simulator?shared=true'
-    const text = `🏖️ 나의 은퇴 등급: ${result.grade.letter}등급 "${result.grade.name}"\n은퇴 후 월 ${wonW(result.monthly)}으로 생활하게 됩니다.\n\n너도 테스트해봐 👉 ${url}`
-    if (navigator.share) {
-      navigator.share({ title: `은퇴 등급 ${result.grade.letter}등급`, text, url }).catch(() => {})
-    } else {
-      navigator.clipboard.writeText(text)
-      alert('공유 링크가 복사되었습니다!')
+    const drawWrap = (text: string, yy: number, maxW: number, fontSize = 13) => {
+      x.font = `400 ${fontSize}px system-ui`
+      let line = '', ly = yy
+      for (const ch of text) { const t = line + ch; if (x.measureText(t).width > maxW) { x.fillText(line, L, ly); ly += fontSize + 6; line = ch } else line = t }
+      if (line) x.fillText(line, L, ly)
+      return ly
     }
+
+    // 배경 (밝은 톤)
+    x.fillStyle = '#fafafa'; x.fillRect(0, 0, W, H)
+    x.fillStyle = 'rgba(0,0,0,.015)'; x.font = '900 500px system-ui'; x.fillText(r.gr, 280, 580)
+
+    // ─── 헤더 ───
+    x.fillStyle = '#999'; x.font = '300 11px system-ui'; x.fillText('노후연구소', L, 36)
+    x.fillStyle = '#aaa'; x.font = '300 11px system-ui'; x.fillText(P.updated + ' 물가 기준', L, 54)
+    x.fillStyle = '#111'; x.font = '900 28px system-ui'; x.fillText('은퇴 종합 진단서', L, 90)
+
+    // 등급 뱃지
+    x.fillStyle = col
+    x.beginPath(); x.roundRect(R2 - 64, 28, 64, 64, 14); x.fill()
+    x.fillStyle = '#fff'; x.font = '900 36px system-ui'; x.textAlign = 'center'
+    x.fillText(r.gr, R2 - 32, 66); x.font = '500 10px system-ui'; x.fillText('등급', R2 - 32, 82)
+    x.textAlign = 'left'
+
+    // 별명 + 등급명
+    x.fillStyle = col; x.font = '700 16px system-ui'; x.fillText(`"${r.nickname}"`, L, 120)
+    x.fillStyle = '#888'; x.font = '400 13px system-ui'; x.fillText(r.grN, L, 140)
+
+    let y = 160; drawLine(y); y += 30
+
+    // ─── 핵심 수치 ───
+    x.fillStyle = '#888'; x.font = '500 12px system-ui'; x.fillText('은퇴 후 월 가용액', L, y)
+    y += 8
+    x.fillStyle = '#111'; x.font = '900 48px system-ui'; x.fillText(ww(r.monthly), L, y + 44)
+    y += 60
+
+    // 한 끼 + 하루
+    x.fillStyle = '#666'; x.font = '400 12px system-ui'; x.fillText('한 끼', L, y)
+    x.fillStyle = col; x.font = '800 24px system-ui'; x.fillText(ww(r.perMeal), L + 50, y)
+    x.fillStyle = '#666'; x.font = '400 12px system-ui'; x.fillText('하루', L + 250, y)
+    x.fillStyle = '#333'; x.font = '700 18px system-ui'; x.fillText(ww(r.daily), L + 290, y)
+    y += 20
+
+    if (r.perMeal < P.lunchAvg) {
+      x.fillStyle = '#ef4444'; x.font = '600 12px system-ui'
+      x.fillText(`직장인 점심 ${ww(P.lunchAvg)}의 ${Math.round(r.perMeal / P.lunchAvg * 100)}%`, L, y)
+      y += 16
+    }
+    y += 10; drawLine(y); y += 24
+
+    // ─── 이 돈으로 한 달에 ───
+    x.fillStyle = '#555'; x.font = '700 13px system-ui'; x.fillText('이 돈으로 한 달에', L, y); y += 22
+    const ck = Math.floor(r.monthly / P.chicken), gb = Math.floor(r.monthly / P.gukbap), cv = Math.floor(r.monthly / P.cvs)
+    const funItems = [
+      [`치킨 (${ww(P.chicken)})`, `${ck}마리`, ck >= 15],
+      [`국밥 (${ww(P.gukbap)})`, `${gb}그릇`, gb >= 25],
+      [`편의점 도시락 (${ww(P.cvs)})`, `${cv}개`, cv >= 50],
+      [`시장 장보기 (${ww(P.market)})`, `${Math.floor(r.monthly / P.market)}번`, r.monthly / P.market >= 5],
+      [`소주 (${ww(P.soju)})`, `${Math.floor(r.monthly / P.soju)}병`, true],
+    ]
+    funItems.forEach(([label, val, ok]) => {
+      drawRow(label as string, val as string, y, ok as boolean); y += 24
+    })
+    y += 6; drawLine(y); y += 24
+
+    // ─── 동년배 비교 ───
+    x.fillStyle = '#555'; x.font = '700 13px system-ui'; x.fillText('나의 위치', L, y); y += 22
+    drawRow(`${r.ag}대 동년배 순위`, `상위 ${r.pct}%`, y, r.pct <= 30); y += 24
+    drawRow('노후 준비도', `${r.fi}%`, y, r.fi >= 70); y += 24
+    drawRow('은퇴 시 총자산', ww(r.total), y); y += 24
+    drawRow('국민연금 월 수령', ww(r.penM), y); y += 24
+    drawRow('저축률', `${r.sr}%`, y, r.sr >= 20); y += 10
+    drawLine(y); y += 24
+
+    // ─── 할 수 있는 것 / 없는 것 ───
+    x.fillStyle = '#555'; x.font = '700 13px system-ui'; x.fillText('할 수 있는 것', L, y)
+    x.fillText('할 수 없는 것', L + 310, y); y += 20
+    const m = r.monthly
+    const canL: string[] = [], cantL: string[] = []
+    if (m >= 300000) canL.push('사 먹기'); else cantL.push('외식')
+    if (m >= P.chicken * 2) canL.push('치킨 배달'); else cantL.push('치킨')
+    if (m >= 200000) canL.push('손주 용돈'); else cantL.push('손주 용돈')
+    if (m >= 100000) canL.push('경조사'); else cantL.push('경조사')
+    if (m >= 300000) canL.push('병원'); else cantL.push('병원')
+    if (m >= 500000) canL.push('국내 여행'); else cantL.push('여행')
+    if (m < 3000000) cantL.push('해외여행'); else canL.push('해외여행')
+    if (m < 4000000) cantL.push('골프/고급취미'); else canL.push('취미')
+    for (let i = 0; i < Math.max(canL.length, cantL.length); i++) {
+      if (canL[i]) { x.fillStyle = '#22c55e'; x.font = '700 12px system-ui'; x.fillText('V', L, y); x.fillStyle = '#555'; x.font = '400 12px system-ui'; x.fillText(canL[i], L + 18, y) }
+      if (cantL[i]) { x.fillStyle = '#ef4444'; x.font = '700 12px system-ui'; x.fillText('X', L + 310, y); x.fillStyle = '#555'; x.font = '400 12px system-ui'; x.fillText(cantL[i], L + 328, y) }
+      y += 20
+    }
+    y += 6; drawLine(y); y += 24
+
+    // ─── 하루 스토리 (3줄만) ───
+    x.fillStyle = '#555'; x.font = '700 13px system-ui'; x.fillText('은퇴 후 어느 하루', L, y); y += 20
+    const stories: Record<string, string[]> = {
+      S: ['카페에서 아메리카노 한 잔', '시장 칼국수로 점심', '마트에서 삼겹살 사서 가족 저녁'],
+      A: ['커피믹스 한 잔으로 시작', '집에서 김치찌개', '이마트 할인 시간에 장보기'],
+      B: ['밥 지어 먹고 김치볶음', '남은 밥에 계란 후라이', '마감할인 반찬 고르기'],
+      C: ['계란 3개, 아껴 먹어야 한다', '경로식당 2,000원', '라면 한 봉지가 저녁'],
+      D: ['간장 비빔밥이 아침', '무료급식소에 줄 서기', '폐기 직전 도시락 2,000원'],
+    }
+    const dayLines = stories[r.gr] || stories.D
+    x.fillStyle = '#555'; x.font = '400 12px system-ui'
+    dayLines.forEach(l => { x.fillText(`- ${l}`, L + 8, y); y += 20 })
+    y += 6; drawLine(y); y += 24
+
+    // ─── 종합 진단 ───
+    x.fillStyle = col; x.font = '700 14px system-ui'; x.fillText('종합 진단', L, y); y += 22
+    const gap = S.need - r.monthly
+    let diag: string
+    if (r.gr === 'S') diag = '여유 있는 노후입니다. 물가 상승만 대비하면 안정적.'
+    else if (r.gr === 'A') diag = `괜찮지만 월 ${ww(gap > 0 ? gap : 0)} 더 모으면 걱정 없는 수준.`
+    else if (r.gr === 'B') diag = '밥은 먹을 수 있지만 병원비 한 번이면 그 달은 끝. 지금이 기회.'
+    else if (r.gr === 'C') diag = '끼니를 거르는 날이 생깁니다. 아파도 병원비가 무서워 참게 됩니다.'
+    else diag = '삼시세끼 해결이 안 됩니다. 무료급식소가 일상. 긴급 개편 필요.'
+    x.fillStyle = '#555'
+    y = drawWrap(diag, y, R2 - L, 13) + 20
+
+    // ─── 처방 ───
+    x.fillStyle = '#555'; x.font = '700 13px system-ui'; x.fillText('잘 살려면', L, y); y += 20
+    const rx: string[] = []
+    if (r.sr < 20) rx.push(`저축률 ${r.sr}% -> 20%로 올리기`)
+    if (gap > 0) rx.push(`월 ${ww(gap)} 추가 저축/투자`)
+    rx.push(`은퇴까지 ${r.yrs}년, 지금이 복리 효과 극대화 구간`)
+    x.fillStyle = '#666'; x.font = '400 12px system-ui'
+    rx.forEach((a, i) => { x.fillText(`${i + 1}. ${a}`, L + 8, y); y += 20 })
+
+    // ─── 하단 CTA ───
+    y = H - 80
+    x.fillStyle = '#03C75A'
+    x.beginPath(); x.roundRect(L, y, R2 - L, 44, 12); x.fill()
+    x.fillStyle = '#fff'; x.font = '700 14px system-ui'; x.textAlign = 'center'
+    x.fillText('나도 분석해보기   nohu-lab.vercel.app', W / 2, y + 28)
+    x.textAlign = 'left'
+
+    x.fillStyle = '#999'; x.font = '400 11px system-ui'; x.textAlign = 'center'
+    x.fillText('노후연구소 카페   cafe.naver.com/eovhskfktmak', W / 2, H - 20)
+    x.textAlign = 'left'
+
+    return c
+  }, [result, prices])
+
+  const dlCard = useCallback(() => {
+    const c = makeCard()
+    if (!c) return
+    const a = document.createElement('a'); a.download = `은퇴진단서_${result?.gr}.png`; a.href = c.toDataURL('image/png'); a.click()
+  }, [makeCard, result])
+
+  function shareKakao() {
+    if (!result) return
+    const url = 'https://nohu-lab.vercel.app/programs/retirement-simulator?shared=true'
+    const ck = Math.floor(result.monthly / prices.chicken)
+    const txt = `[은퇴 종합 진단서]\n\n${result.gr}등급 "${result.nickname}"\n은퇴 후 한 끼: ${ww(result.perMeal)}\n치킨 ${ck}마리 | ${result.ag}대 상위 ${result.pct}%\n\n나도 해보기: ${url}\n\n노후연구소 카페\ncafe.naver.com/eovhskfktmak`
+    // 진단서 이미지 생성 후 카카오톡으로 공유
+    const c = makeCard()
+    if (c) {
+      c.toBlob(async (blob) => {
+        if (!blob) { fallbackShare(txt); return }
+        const file = new File([blob], `은퇴진단서_${result.gr}.png`, { type: 'image/png' })
+        if (navigator.share && navigator.canShare?.({ files: [file] })) {
+          try {
+            await navigator.share({ title: `은퇴 진단 ${result.gr}등급`, text: txt, files: [file] })
+          } catch { fallbackShare(txt) }
+        } else {
+          fallbackShare(txt)
+        }
+      }, 'image/png')
+    } else { fallbackShare(txt) }
+    setShowShareMenu(false)
   }
 
-  // ─── 입력 화면 ───
-  if (step === 'input') return (
-    <div className="max-w-md mx-auto space-y-5">
-      {isShared && (
-        <div className="bg-green-100 border border-green-300 rounded-xl p-3 text-sm text-green-800 text-center">
-          친구가 공유한 은퇴 시뮬레이터입니다!<br />
-          <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="underline font-bold">노후연구소 카페 가입하고 더 많은 도구 이용하기</a>
-        </div>
-      )}
-      <div className="text-center space-y-1">
-        <div className="text-5xl">🔮</div>
-        <h2 className="text-xl font-bold text-gray-900">당신의 은퇴 후, 어떤 하루를 보내게 될까?</h2>
-        <p className="text-gray-500 text-sm">딱 5가지만 입력하면 30초 안에 알 수 있어요</p>
+  function fallbackShare(txt: string) {
+    navigator.clipboard.writeText(txt)
+    alert('텍스트가 복사되었습니다. 카카오톡에 붙여넣기 해주세요.')
+  }
+
+  function shareGeneral() {
+    if (!result) return
+    const url = 'https://nohu-lab.vercel.app/programs/retirement-simulator?shared=true'
+    const ck = Math.floor(result.monthly / prices.chicken), gb = Math.floor(result.monthly / prices.gukbap)
+    const txt = `[나의 은퇴 종합 진단서]\n\n${result.gr}등급 "${result.nickname}"\n\n은퇴 후 한 달: ${ww(result.monthly)}\n한 끼: ${ww(result.perMeal)}\n치킨 ${ck}마리 | 국밥 ${gb}그릇\n\n${result.ag}대 상위 ${result.pct}%\n\n나도 해보기: ${url}\n노후연구소 카페: cafe.naver.com/eovhskfktmak`
+    const c = makeCard()
+    if (c) {
+      c.toBlob(async (blob) => {
+        if (!blob) { textShare(txt, url); return }
+        const file = new File([blob], `은퇴진단서_${result.gr}.png`, { type: 'image/png' })
+        if (navigator.share && navigator.canShare?.({ files: [file] })) {
+          try { await navigator.share({ title: `은퇴 진단 ${result.gr}등급`, text: txt, files: [file] }) } catch { textShare(txt, url) }
+        } else { textShare(txt, url) }
+      }, 'image/png')
+    } else { textShare(txt, url) }
+    setShowShareMenu(false)
+  }
+
+  function textShare(txt: string, url: string) {
+    if (navigator.share) navigator.share({ title: '은퇴 진단서', text: txt, url }).catch(() => {})
+    else { navigator.clipboard.writeText(txt); alert('클립보드에 복사되었습니다') }
+  }
+
+  function copyLink() {
+    if (!result) return
+    const url = 'https://nohu-lab.vercel.app/programs/retirement-simulator?shared=true'
+    navigator.clipboard.writeText(url)
+    alert('링크가 복사되었습니다')
+    setShowShareMenu(false)
+  }
+
+  // ─── 입력 ───
+  if (phase === 'input') return (
+    <div className="max-w-[440px] mx-auto px-4">
+      <style>{CSS}</style>
+      {shared && <div className="text-center text-xs text-gray-500 mb-6 bg-gray-50 rounded-lg py-2">친구가 공유한 분석입니다 <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" className="underline text-green-600 font-bold">카페 가입</a></div>}
+      <div className="text-center pt-4 pb-8 space-y-3">
+        <div className="inline-block bg-gray-100 rounded-full px-3 py-1 text-[10px] text-gray-500">{prices.updated} 실시간 물가 반영</div>
+        <h2 className="text-[26px] font-[900] text-gray-900 leading-tight">은퇴 후,<br/>당신의 한 끼는<br/>얼마짜리인가요</h2>
+        <p className="text-[13px] text-gray-500">지금 직장인 점심 평균 <strong className="text-gray-900">{ww(prices.lunchAvg)}</strong></p>
+        <p className="text-[11px] text-gray-400">5개 입력 -- 12개 항목 정밀 분석</p>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={go} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="현재 나이" value={input.age} unit="세" onChange={v => setInput({...input, age: v})} min={20} max={70} />
-          <Field label="희망 은퇴 나이" value={input.retireAge} unit="세" onChange={v => setInput({...input, retireAge: v})} min={input.age+1} max={80} />
+          <FI l="현재 나이" v={inp.age} u="세" set={v => setInp({...inp, age: v})} min={20} max={70} />
+          <FI l="은퇴 나이" v={inp.retireAge} u="세" set={v => setInp({...inp, retireAge: v})} min={inp.age+1} max={80} />
         </div>
-        <Field label="월 실수령액 (세후)" value={input.monthlyNet} unit="만원" onChange={v => setInput({...input, monthlyNet: v})} step={10} min={100} />
-        <Field label="매월 저축·투자 금액" value={input.monthlySave} unit="만원" onChange={v => setInput({...input, monthlySave: v})} step={10} min={0} />
+        <FI l="월 실수령액" v={inp.monthlyNet} u="만원" set={v => setInp({...inp, monthlyNet: v})} step={10} min={100}
+          sub={`세전 약 ${w(estGross(inp.monthlyNet * 1e4) * 12)}원 | 2026 최저임금 ${ww(prices.minWage)}/시간`} />
+        <FI l="월 저축+투자" v={inp.monthlySave} u="만원" set={v => setInp({...inp, monthlySave: v})} step={10} min={0}
+          sub={`저축률 ${inp.monthlyNet > 0 ? Math.round(inp.monthlySave / inp.monthlyNet * 100) : 0}% | 권장 20% 이상`} />
         <div>
-          <Field label="현재 모아둔 총 자산" value={input.currentAssets} unit="만원" onChange={v => setInput({...input, currentAssets: v})} step={100} min={0} />
-          <div className="flex gap-2 mt-2">
-            {[1000, 3000, 5000, 10000, 30000].map(v => (
-              <button key={v} type="button" onClick={() => setInput({...input, currentAssets: v})}
-                className={`px-2 py-1 rounded text-xs ${input.currentAssets === v ? 'bg-green-600 text-white' : 'bg-green-50 text-gray-600'}`}>
-                {won(v * 10000)}
-              </button>
+          <FI l="총 자산 (부동산 제외)" v={inp.currentAssets} u="만원" set={v => setInp({...inp, currentAssets: v})} step={500} min={0} />
+          <div className="flex gap-1.5 mt-2 flex-wrap">
+            {[1000,3000,5000,10000,30000,50000].map(v => (
+              <button key={v} type="button" onClick={() => setInp({...inp, currentAssets: v})}
+                className={`px-2.5 py-1.5 rounded-lg text-[11px] transition font-medium ${inp.currentAssets === v ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-500 active:bg-gray-200'}`}>{w(v * 1e4)}</button>
             ))}
           </div>
         </div>
-        <button type="submit" className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition text-lg">
-          내 은퇴 후 생활 분석하기 →
-        </button>
+        <button type="submit" className="w-full py-4 bg-gray-900 text-white font-[800] rounded-xl text-[15px] hover:bg-black transition mt-3 active:scale-[0.98]">내 노후 분석하기</button>
+        <p className="text-[10px] text-center text-gray-400">개인정보 수집 없음 | 출처: 통계청, KB금융, 국민연금공단</p>
       </form>
     </div>
   )
 
-  // ─── 분석 중 화면 ───
-  if (step === 'analyzing') return (
-    <div className="max-w-md mx-auto py-12 space-y-8">
-      <div className="text-center space-y-2">
-        <div className="text-5xl animate-pulse">{ANALYSIS_STEPS[analysisStep]?.icon}</div>
-        <h2 className="text-xl font-bold text-gray-900">분석하고 있습니다</h2>
-        <p className="text-sm text-gray-500">잠시만 기다려주세요...</p>
+  // ─── 로딩 ───
+  if (phase === 'load') return (
+    <div className="max-w-[440px] mx-auto py-10 px-4">
+      <style>{CSS}</style>
+      <div className="text-center mb-8">
+        <p className="text-[17px] font-[800] text-gray-900 mt-1">분석 중입니다</p>
+        <p className="text-[11px] text-gray-400 mt-1">{prices.updated} 실시간 물가 기준</p>
       </div>
-      <div className="space-y-3">
-        <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-300"
-            style={{ width: `${analysisProgress}%` }} />
+      <div className="mb-6">
+        <div className="flex justify-between text-[11px] mb-1.5">
+          <span className="text-gray-500">{STEPS[ls]}</span>
+          <span className="text-gray-900 font-bold tabular-nums">{Math.round(lp)}%</span>
         </div>
-        <div className="space-y-2">
-          {ANALYSIS_STEPS.map((s, i) => (
-            <div key={i} className={`flex items-center gap-3 text-sm transition-all duration-300 ${
-              i < analysisStep ? 'text-green-600' : i === analysisStep ? 'text-gray-900 font-medium' : 'text-gray-300'}`}>
-              <span className="w-5 text-center">
-                {i < analysisStep ? '✓' : i === analysisStep ? <span className="inline-block animate-spin">⏳</span> : '○'}
-              </span>
-              <span>{s.text}</span>
+        <div className="h-[4px] bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-gray-900 rounded-full transition-all duration-300 relative" style={{width:`${lp}%`}}><div className="absolute inset-0 sh rounded-full"/></div>
+        </div>
+      </div>
+      <div className="space-y-0">
+        {STEPS.map((s, i) => (
+          <div key={i} className={`py-2 text-[11px] transition-all ${i < ls ? 'text-gray-400' : i === ls ? 'text-gray-900 font-medium' : 'text-gray-200'}`}>
+            <span className="inline-block w-5 text-right mr-2 font-mono text-[10px]">{i < ls ? 'v' : i === ls ? '>' : ''}</span>{s}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  if (!result) return null
+  const r = result
+  const P = prices
+  const chicken = Math.floor(r.monthly / P.chicken)
+  const gukbap = Math.floor(r.monthly / P.gukbap)
+  const cvs = Math.floor(r.monthly / P.cvs)
+  const soju = Math.floor(r.monthly / P.soju)
+  const bus = Math.floor(r.monthly / P.bus)
+  const market = Math.floor(r.monthly / P.market)
+
+  return (
+    <div className="max-w-[440px] mx-auto px-4">
+      <style>{CSS}</style>
+
+      {/* 1. 히어로 + 별명 + 핵심 수치 통합 */}
+      <Sec>
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 relative overflow-hidden">
+          <div className="absolute -right-6 -top-6 text-[160px] font-[900] leading-none select-none" style={{ color: r.grC, opacity: 0.06 }}>{r.gr}</div>
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="text-[9px] text-gray-400">노후연구소 분석</p>
+                <p className="text-[15px] font-[800] mt-1" style={{ color: r.grC }}>"{r.nickname}"</p>
+                <p className="text-[11px] text-gray-500">{r.grN}</p>
+              </div>
+              <div className="w-14 h-14 rounded-xl flex flex-col items-center justify-center pop-in" style={{ backgroundColor: r.grC }}>
+                <span className="text-[24px] font-[900] leading-none text-white">{r.gr}</span>
+                <span className="text-[8px] text-white/70">등급</span>
+              </div>
+            </div>
+            <div className="border-t border-gray-100 pt-3 mt-1">
+              <p className="text-[10px] text-gray-400">은퇴 후 매달 쓸 수 있는 돈</p>
+              <p className="text-[40px] font-[900] tracking-tight leading-none text-gray-900 mt-1">{ww(r.monthly)}</p>
+              <div className="flex gap-4 mt-2">
+                <span className="text-[12px] text-gray-500">한 끼 <strong className="text-[16px] font-[800]" style={{ color: r.grC }}>{ww(r.perMeal)}</strong></span>
+                <span className="text-[12px] text-gray-500">하루 <strong className="text-[16px] font-[800] text-gray-800">{ww(r.daily)}</strong></span>
+              </div>
+              {r.perMeal < P.lunchAvg && (
+                <p className="text-[11px] text-red-500 mt-1">직장인 점심 {ww(P.lunchAvg)}의 {Math.round(r.perMeal / P.lunchAvg * 100)}%</p>
+              )}
+            </div>
+            <div className="flex gap-2 mt-3 text-center">
+              <div className="flex-1 bg-gray-50 rounded-lg py-2">
+                <p className="text-[9px] text-gray-400">동년배</p>
+                <p className="text-[13px] font-[800] text-gray-900">상위 {r.pct}%</p>
+              </div>
+              <div className="flex-1 bg-gray-50 rounded-lg py-2">
+                <p className="text-[9px] text-gray-400">준비도</p>
+                <p className="text-[13px] font-[800]" style={{ color: r.fi >= 70 ? '#22c55e' : '#ef4444' }}>{r.fi}%</p>
+              </div>
+              <div className="flex-1 bg-gray-50 rounded-lg py-2">
+                <p className="text-[9px] text-gray-400">은퇴 시 자산</p>
+                <p className="text-[13px] font-[800] text-gray-900">{w(r.total)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Sec>
+
+      {/* 2. 이 돈으로 한 달에 (치킨/국밥 카드) */}
+      <Sec>
+        <div className="bg-white border border-gray-100 rounded-2xl p-4">
+          <p className="text-[12px] font-[700] text-gray-900 mb-3">이 돈으로 한 달에 <span className="text-[9px] text-gray-400 font-normal ml-1">{P.updated} 물가</span></p>
+          <div className="grid grid-cols-3 gap-2">
+            <FunCard top={`${chicken}`} unit="마리" label="치킨" sub={ww(P.chicken)} color={chicken >= 30 ? 'green' : chicken >= 15 ? 'yellow' : 'red'} />
+            <FunCard top={`${gukbap}`} unit="그릇" label="국밥" sub={ww(P.gukbap)} color={gukbap >= 50 ? 'green' : gukbap >= 25 ? 'yellow' : 'red'} />
+            <FunCard top={`${cvs}`} unit="개" label="편의점도시락" sub={ww(P.cvs)} color={cvs >= 100 ? 'green' : cvs >= 50 ? 'yellow' : 'red'} />
+          </div>
+          <p className="text-[11px] text-gray-500 text-center mt-3">
+            {chicken < 5 ? `한 달에 치킨 ${chicken}마리... 가족 4명이면 1인당 ${(chicken / 4).toFixed(1)}마리` :
+             chicken < 15 ? '2주에 치킨 한 마리 시킬 수 있는 수준' :
+             chicken < 30 ? '일주일에 한 번은 치킨 시켜먹을 수 있습니다' :
+             '매일 치킨 먹어도 되는 수준 (안 추천)'}
+          </p>
+        </div>
+      </Sec>
+
+      {/* 3. 할 수 있는 것 / 없는 것 + 진단 통합 */}
+      <Sec>
+        <div className={`bg-white border rounded-2xl p-4 ${r.fi < 70 ? 'border-red-200' : 'border-gray-100'}`}>
+          <CanCantInline r={r} prices={P} />
+          <div className="border-t border-gray-100 mt-3 pt-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1 h-6 rounded-full" style={{ backgroundColor: r.grC }} />
+              <p className="text-[13px] font-[700] text-gray-900">종합 진단</p>
+            </div>
+            <p className="text-[12px] text-gray-700 leading-[1.8]">
+              {r.gr === 'S' && `여유 있는 노후. 물가 상승만 대비하면 안정적.`}
+              {r.gr === 'A' && `먹고 사는 건 되지만, 월 ${ww(S.need - r.monthly > 0 ? S.need - r.monthly : 0)} 더 모으면 마음이 편해집니다.`}
+              {r.gr === 'B' && `밥은 먹을 수 있지만 병원비 한 번이면 그 달은 끝. 치킨 ${chicken}마리가 한 달 전부.`}
+              {r.gr === 'C' && '끼니를 거르는 날이 생깁니다. 아파도 병원비가 무서워 참게 됩니다.'}
+              {r.gr === 'D' && '삼시세끼 해결이 안 됩니다. 무료급식소가 일상이 됩니다.'}
+            </p>
+            {r.gr !== 'S' && (
+              <div className="mt-2 bg-gray-50 rounded-lg p-2.5">
+                <p className="text-[11px] text-gray-600 font-medium">
+                  {r.sr < 20 ? `저축률 ${r.sr}% → 20%로 올리기. ` : ''}
+                  은퇴까지 {r.yrs}년, 지금이 복리 효과 극대화 구간
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </Sec>
+
+      {/* ═══ GATED ═══ */}
+      {member ? (
+        <>
+          <Sec><BenchBars r={r} /></Sec>
+          <Sec><IncomeBlock r={r} /></Sec>
+          <Sec><AssetBlock r={r} /></Sec>
+          <Sec><PensionBlock r={r} /></Sec>
+          <Sec><BudgetBlock r={r} /></Sec>
+          <Sec><RiskBlock r={r} /></Sec>
+          <Sec><ScenarioBlock r={r} /></Sec>
+          <Sec><PeerBlock r={r} inp={inp} /></Sec>
+        </>
+      ) : (
+        <Sec><LockedZone onJoin={() => setGate(true)} /></Sec>
+      )}
+
+      {/* 하단 공유 버튼 */}
+      <div className="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-gray-100 -mx-4 px-4 py-3 flex gap-2 z-40">
+        <button onClick={() => { setPhase('input'); setResult(null) }} className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-[13px] font-bold active:bg-gray-50">다시 분석</button>
+        <button onClick={() => setShowShareMenu(true)} className="flex-[2] py-3 bg-[#FEE500] text-[#3C1E1E] rounded-xl text-[13px] font-[800] active:bg-[#F5DC00] flex items-center justify-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.48 3 2 6.58 2 10.94c0 2.8 1.86 5.27 4.68 6.67-.15.56-.96 3.6-.99 3.82 0 0-.02.16.08.22s.22.02.22.02c.29-.04 3.37-2.2 3.9-2.57.67.1 1.37.15 2.11.15 5.52 0 10-3.58 10-7.94S17.52 3 12 3"/></svg>
+          진단서 공유하기
+        </button>
+      </div>
+      <div className="h-16" /> {/* sticky 버튼 여유 */}
+
+      {/* 공유 메뉴 */}
+      {showShareMenu && (
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50" onClick={() => setShowShareMenu(false)}>
+          <div className="bg-white rounded-t-2xl w-full max-w-[440px] p-5 pb-8 au" onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
+            <p className="text-[16px] font-[800] text-gray-900 mb-4 text-center">분석 결과 공유하기</p>
+            <div className="space-y-2">
+              <button onClick={shareKakao} className="w-full py-3.5 bg-[#FEE500] text-[#3C1E1E] rounded-xl text-[14px] font-[700] flex items-center justify-center gap-2 active:bg-[#F5DC00]">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.48 3 2 6.58 2 10.94c0 2.8 1.86 5.27 4.68 6.67-.15.56-.96 3.6-.99 3.82 0 0-.02.16.08.22s.22.02.22.02c.29-.04 3.37-2.2 3.9-2.57.67.1 1.37.15 2.11.15 5.52 0 10-3.58 10-7.94S17.52 3 12 3"/></svg>
+                카카오톡으로 보내기
+              </button>
+              <button onClick={shareGeneral} className="w-full py-3.5 bg-gray-900 text-white rounded-xl text-[14px] font-[700] active:bg-gray-800">다른 앱으로 공유</button>
+              <button onClick={() => { member ? dlCard() : setGate(true); setShowShareMenu(false) }} className="w-full py-3.5 bg-gray-100 text-gray-700 rounded-xl text-[14px] font-[700] active:bg-gray-200">리포트 이미지 저장</button>
+              <button onClick={copyLink} className="w-full py-3.5 bg-gray-50 text-gray-500 rounded-xl text-[13px] font-[600] active:bg-gray-100">링크 복사</button>
+            </div>
+            <button onClick={() => setShowShareMenu(false)} className="w-full mt-3 text-[13px] text-gray-400 py-2">닫기</button>
+          </div>
+        </div>
+      )}
+
+      {gate && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={() => setGate(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-[340px] w-full space-y-4 text-center au" onClick={e => e.stopPropagation()}>
+            <p className="text-[18px] font-[900] text-gray-900">전체 분석 리포트는<br/>카페 회원 전용입니다</p>
+            <div className="text-left bg-gray-50 rounded-lg p-3 space-y-1 text-[12px] text-gray-600">
+              <p>- 4대보험/세금 상세 내역</p>
+              <p>- 5년 단위 자산 성장 추계표</p>
+              <p>- 국민연금 상세 분석</p>
+              <p>- 월간 지출 배분표</p>
+              <p>- 물가/의료비 리스크</p>
+              <p>- 추가 저축 시나리오 비교</p>
+              <p>- 동년배 비교 분석</p>
+              <p>- 리포트 이미지 저장/공유</p>
+            </div>
+            <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer"
+              className="block w-full py-3.5 bg-[#03C75A] text-white font-[800] rounded-xl text-[15px] active:bg-[#02b050]">무료 가입하고 전체 리포트 보기</a>
+            <p className="text-[11px] text-gray-400">가입 후 닉네임으로 로그인</p>
+            <button onClick={() => setGate(false)} className="text-[12px] text-gray-400">닫기</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── 스크롤 등장 ───
+function Sec({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null); const v = useVis(ref)
+  return <div ref={ref} className={`transition-all duration-700 ease-out ${v ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'} mb-4`}>{children}</div>
+}
+
+// ═══ FREE 섹션들 ═══
+
+function FunCard({ top, unit, label, sub, color }: { top: string; unit: string; label: string; sub: string; color: 'green' | 'yellow' | 'red' }) {
+  const bg = color === 'green' ? 'bg-green-50 border-green-100' : color === 'yellow' ? 'bg-yellow-50 border-yellow-100' : 'bg-red-50 border-red-100'
+  const tc = color === 'green' ? 'text-green-700' : color === 'yellow' ? 'text-yellow-700' : 'text-red-700'
+  return (
+    <div className={`${bg} border rounded-xl p-3 text-center`}>
+      <p className={`text-[24px] font-[900] leading-none ${tc}`}>{top}<span className="text-[11px] font-[600]">{unit}</span></p>
+      <p className="text-[11px] font-[600] text-gray-800 mt-1">{label}</p>
+      <p className="text-[9px] text-gray-400">{sub}</p>
+    </div>
+  )
+}
+
+function CanCantInline({ r, prices }: { r: R; prices: MarketPrices }) {
+  const m = r.monthly
+  const can: string[] = [], cant: string[] = []
+  if (m >= 300000) can.push('사 먹기'); else cant.push('외식')
+  if (m >= prices.chicken * 2) can.push('치킨 배달'); else cant.push('치킨')
+  if (m >= 200000) can.push('손주 용돈'); else cant.push('손주 용돈')
+  if (m >= 300000) can.push('병원'); else cant.push('병원')
+  if (m >= 500000) can.push('국내 여행'); else cant.push('여행')
+  if (m < 3000000) cant.push('해외여행'); else can.push('해외여행')
+  if (m < 4000000) cant.push('골프'); else can.push('취미')
+  return (
+    <>
+      <p className="text-[12px] font-[700] text-gray-900 mb-2">할 수 있는 것 / 없는 것</p>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+        <div className="space-y-1">
+          {can.slice(0, 5).map((c, i) => (
+            <div key={i} className="flex items-center gap-1 text-[11px] text-gray-700">
+              <span className="text-green-500 font-bold text-[10px]">V</span>{c}
+            </div>
+          ))}
+        </div>
+        <div className="space-y-1">
+          {cant.slice(0, 5).map((c, i) => (
+            <div key={i} className="flex items-center gap-1 text-[11px] text-gray-700">
+              <span className="text-red-400 font-bold text-[10px]">X</span>{c}
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </>
   )
+}
 
-  // ─── 결과 화면 ───
-  if (!result) return null
-
-  const screens = [
-    { label: '은퇴 후 하루', icon: '🌅' },
-    { label: '등급 카드', icon: '🏆' },
-    { label: '추가 저축', icon: '💰' },
-    { label: '또래 비교', icon: '👥' },
+function BenchBars({ r }: { r: R }) {
+  const items = [
+    { label: '부부 적정 생활비', amount: S.need },
+    { label: '부부 최소 생활비', amount: S.min },
+    { label: '실제 조달 평균', amount: S.avg },
+    { label: '국민연금 평균', amount: S.pen },
   ]
-
+  const mx = Math.max(...items.map(i => i.amount), r.monthly) * 1.1
   return (
-    <div className="max-w-md mx-auto space-y-4">
-      {/* 탭 */}
-      <div className="flex gap-1 bg-green-50 rounded-xl p-1 sticky top-0 z-10">
-        {screens.map((s, i) => (
-          <button key={i} onClick={() => setScreen(i)}
-            className={`flex-1 py-2 rounded-lg text-xs font-medium transition ${
-              screen === i ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500'}`}>
-            <span className="block text-sm">{s.icon}</span>{s.label}
-          </button>
-        ))}
+    <div className="bg-white border border-gray-100 rounded-2xl p-5">
+      <p className="text-[13px] font-[700] text-gray-900 mb-4">기준치 대비</p>
+      <div className="space-y-3">
+        {items.map((item, i) => {
+          const mine = r.monthly / mx * 100, theirs = item.amount / mx * 100, ok = r.monthly >= item.amount
+          return (
+            <div key={i}>
+              <div className="flex justify-between text-[11px] mb-1">
+                <span className="text-gray-500">{item.label}</span>
+                <span className="text-gray-800 tabular-nums font-medium">{ww(item.amount)}</span>
+              </div>
+              <div className="relative h-5 bg-gray-50 rounded overflow-hidden">
+                <div className="absolute h-full bg-gray-200 rounded bar-anim" style={{ width: `${theirs}%`, animationDelay: `${i * 150}ms` }} />
+                <div className={`absolute h-full rounded bar-anim ${ok ? 'bg-green-500' : 'bg-red-400'}`} style={{ width: `${mine}%`, animationDelay: `${i * 150 + 100}ms` }} />
+                <span className="absolute left-2 top-0.5 text-[10px] text-white font-bold drop-shadow">{ww(r.monthly)}</span>
+              </div>
+            </div>
+          )
+        })}
       </div>
-
-      {/* ─── 1. 은퇴 후 하루 ─── */}
-      {screen === 0 && (
-        <div className="space-y-4">
-          <div className="text-center py-3">
-            <p className="text-sm text-gray-500">은퇴 후 월 사용 가능 금액</p>
-            <p className="text-4xl font-black text-gray-900">{wonW(result.monthly)}</p>
-            <div className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-bold ${result.grade.color} bg-opacity-10`}
-              style={{ backgroundColor: `currentColor`, color: 'white' }}>
-              <span className={`${result.grade.color}`} style={{ color: 'inherit' }}>{result.grade.emoji} {result.grade.letter}등급 · {result.grade.name}</span>
-            </div>
-          </div>
-
-          {/* 충격 메시지 */}
-          <div className={`rounded-xl p-4 border-2 ${result.grade.border} bg-white`}>
-            {!revealShock ? (
-              <button onClick={() => setRevealShock(true)}
-                className="w-full text-center py-2 text-gray-700 font-medium animate-pulse">
-                🔍 당신의 은퇴 현실을 직시하세요 (터치)
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <p className={`font-bold text-base ${result.grade.color}`}>{result.grade.emoji} 솔직한 진단</p>
-                <p className="text-gray-800 text-sm leading-relaxed">{result.grade.shock}</p>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {result.grade.detail.map((d, i) => (
-                    <span key={i} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{d}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 하루 일과 */}
-          <div className="bg-white rounded-xl border border-green-200 overflow-hidden">
-            <div className="bg-green-50 px-4 py-3">
-              <h3 className="font-bold text-gray-900">🌅 당신의 은퇴 후 하루</h3>
-            </div>
-            {result.life.map((item, i) => (
-              <div key={i} className="px-4 py-3 border-t border-green-50 flex items-start gap-3">
-                <span className="text-xl shrink-0">{item.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-sm font-medium text-gray-900">{item.label}</span>
-                    {item.amount > 0 && <span className="text-xs text-gray-400 shrink-0">월 {won(item.amount)}원</span>}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-0.5">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* 현실 체크 */}
-          <div className="bg-red-50 rounded-xl p-4 space-y-2">
-            <h3 className="font-bold text-red-800 text-sm">⚠️ 현실 체크</h3>
-            {result.realityChecks.map((c, i) => (
-              <p key={i} className="text-xs text-red-700 flex gap-2">
-                <span className="shrink-0">•</span><span>{c}</span>
-              </p>
-            ))}
-          </div>
-
-          {/* 자산 요약 */}
-          <div className="grid grid-cols-3 gap-2">
-            <MiniCard label="은퇴 시 총 자산" value={wonW(result.total)} />
-            <MiniCard label="국민연금" value={`${wonW(result.pension)}/월`} />
-            <MiniCard label="자산 인출" value={`${wonW(result.monthly - result.pension)}/월`} />
-          </div>
-
-          {/* 실제 통계 비교 */}
-          <div className="bg-white rounded-xl border border-green-200 overflow-hidden">
-            <div className="bg-gray-900 px-4 py-3">
-              <h3 className="font-bold text-white text-sm">📊 2025 실제 통계로 보는 당신의 위치</h3>
-            </div>
-            <div className="p-4 space-y-3">
-              <StatBar label="노후 적정 생활비" amount={STATS.avgNeeded} mine={result.monthly} color="bg-green-400" />
-              <StatBar label="노후 최소 생활비" amount={STATS.minNeeded} mine={result.monthly} color="bg-yellow-400" />
-              <StatBar label="실제 조달 가능 평균" amount={STATS.avgActual} mine={result.monthly} color="bg-blue-400" />
-              <StatBar label="국민연금 평균 수령" amount={STATS.avgPension} mine={result.monthly} color="bg-gray-400" />
-              <p className="text-xs text-gray-400 pt-1">출처: KB금융 2025 골든라이프보고서, 통계청 가계금융복지조사, 국민연금공단</p>
-            </div>
-          </div>
-
-          {/* 충격 팩트 */}
-          <div className="bg-gray-900 rounded-xl p-4 space-y-3">
-            <h3 className="font-bold text-white text-sm">💀 알아야 할 불편한 진실</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <FactCard emoji="👴" number="56세" desc="한국인 실제 은퇴 나이 (희망 65세)" />
-              <FactCard emoji="💊" number="515만원" desc="65세+ 연간 의료비 평균" />
-              <FactCard emoji="😰" number="80.9%" desc="노후 준비 안 된 한국인" />
-              <FactCard emoji="💰" number="67만원" desc="국민연금 평균 수령액/월" />
-            </div>
-            {result.monthly < STATS.avgNeeded && (
-              <div className="bg-red-900/30 rounded-lg p-3 text-center">
-                <p className="text-red-300 text-sm font-bold">
-                  당신은 적정 생활비 대비 월 {wonW(STATS.avgNeeded - result.monthly)} 부족합니다
-                </p>
-                <p className="text-red-400/80 text-xs mt-1">
-                  은퇴 후 {LIFE_EXP - input.retireAge}년간 총 {wonW((STATS.avgNeeded - result.monthly) * (LIFE_EXP - input.retireAge) * 12)} 부족
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ─── 2. 등급 카드 ─── */}
-      {screen === 1 && (
-        <div className="space-y-4">
-          <div ref={cardRef}
-            className={`bg-gradient-to-br ${result.grade.bg} rounded-2xl p-6 text-white relative overflow-hidden`}
-            style={{ aspectRatio: '640/440' }}>
-            <div className="absolute right-[-30px] top-[-20px] text-[200px] font-black opacity-10 leading-none select-none">{result.grade.letter}</div>
-            <div className="relative z-10 h-full flex flex-col justify-between">
-              <p className="text-sm opacity-80 font-medium">노후연구소 은퇴 시뮬레이터</p>
-              <div>
-                <p className="text-6xl font-black leading-none">{result.grade.letter}등급</p>
-                <p className="text-2xl font-bold mt-2">{result.grade.name}</p>
-              </div>
-              <div>
-                <p className="text-sm opacity-80">은퇴 후 월 사용 가능 금액</p>
-                <p className="text-3xl font-bold mt-0.5">{wonW(result.monthly)}</p>
-                <p className="text-sm opacity-70 mt-2">&ldquo;{result.grade.summary}&rdquo;</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border border-green-200 p-4 space-y-3">
-            <h3 className="font-bold text-gray-900">📊 등급 기준</h3>
-            {[
-              { l: 'S', n: '자유로운 은퇴자', r: '400만원 이상', c: 'bg-amber-400' },
-              { l: 'A', n: '안정적 은퇴자', r: '300~400만원', c: 'bg-green-400' },
-              { l: 'B', n: '알뜰 은퇴자', r: '200~300만원', c: 'bg-blue-400' },
-              { l: 'C', n: '빠듯한 은퇴자', r: '150~200만원', c: 'bg-orange-400' },
-              { l: 'D', n: '위기의 은퇴자', r: '150만원 미만', c: 'bg-red-400' },
-            ].map(g => (
-              <div key={g.l} className={`flex items-center gap-3 text-sm ${result.grade.letter === g.l ? 'font-bold' : 'text-gray-500'}`}>
-                <span className={`w-8 h-8 ${g.c} text-white rounded-lg flex items-center justify-center font-black text-sm ${result.grade.letter === g.l ? 'ring-2 ring-offset-1 ring-gray-900' : ''}`}>{g.l}</span>
-                <span className="flex-1">{g.n}</span>
-                <span className="text-xs">{g.r}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            <button onClick={() => gate(downloadCard)} className="flex-1 py-3 bg-gray-900 text-white rounded-xl font-medium text-sm">
-              📥 카드 이미지 저장
-            </button>
-            <button onClick={() => gate(handleShare)} className="flex-1 py-3 bg-green-600 text-white rounded-xl font-medium text-sm">
-              🔗 친구에게 공유
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ─── 3. 추가 저축 비교 ─── */}
-      {screen === 2 && (
-        <div className="space-y-3">
-          <div className="text-center py-2">
-            <h2 className="text-lg font-bold text-gray-900">만약 매달 조금 더 모으면?</h2>
-            <p className="text-sm text-gray-500">작은 차이가 노후를 바꿉니다</p>
-          </div>
-
-          <div className={`rounded-xl border-2 ${result.grade.border} bg-white p-4`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-400">현재 페이스</p>
-                <p className="text-base font-bold text-gray-900">{result.grade.emoji} {result.grade.letter}등급 · {result.grade.name}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-bold text-gray-900">{wonW(result.monthly)}</p>
-                <p className="text-xs text-gray-400">/월</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center text-gray-300 text-lg">▼</div>
-
-          {result.comparisons.map((c) => {
-            const diff = c.monthly - result.monthly
-            const up = c.grade.letter !== result.grade.letter
-            return (
-              <div key={c.add} className={`rounded-xl border bg-white p-4 ${up ? `${c.grade.border} ring-1 ring-green-100` : 'border-gray-200'}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-green-600 font-bold">💰 월 {c.add}만원 추가 시</p>
-                    <p className="text-base font-bold text-gray-900">
-                      {c.grade.emoji} {c.grade.letter}등급 · {c.grade.name}
-                      {up && <span className="ml-1 text-green-600 text-xs bg-green-50 px-1.5 py-0.5 rounded-full">등급 UP!</span>}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-gray-900">{wonW(c.monthly)}</p>
-                    <p className="text-xs text-green-600 font-medium">+{wonW(diff)}/월</p>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-
-          <div className="bg-green-50 rounded-xl p-4 space-y-2 text-sm text-gray-700">
-            <p className="font-bold text-gray-900">💡 이 금액, 어디서 만들까?</p>
-            <ul className="space-y-1 text-xs">
-              <li>☕ 커피 하루 1잔 줄이기 → <b>월 10~15만원</b></li>
-              <li>📱 통신비 알뜰 요금제 변경 → <b>월 3~5만원</b></li>
-              <li>🚗 자차 대신 대중교통 주 2회 → <b>월 10~20만원</b></li>
-              <li>🍽️ 외식 주 1회 줄이기 → <b>월 8~15만원</b></li>
-              <li>📺 안 보는 구독 서비스 정리 → <b>월 3~5만원</b></li>
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {/* ─── 4. 또래 비교 ─── */}
-      {screen === 3 && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-green-200 p-6 text-center space-y-2">
-            <p className="text-sm text-gray-500">{result.ageGroup}대 이용자 중</p>
-            <p className="text-7xl font-black text-gray-900 leading-none py-2">
-              상위 <span className={result.percentile <= 30 ? 'text-green-600' : result.percentile <= 60 ? 'text-yellow-600' : 'text-red-600'}>{result.percentile}%</span>
-            </p>
-            <p className="text-base text-gray-700 font-medium">
-              {result.percentile <= 10 ? '🎉 상위 10%! 노후 준비의 모범 사례입니다' :
-               result.percentile <= 25 ? '👏 훌륭합니다! 또래보다 확실히 앞서 있어요' :
-               result.percentile <= 40 ? '😊 평균 이상! 꾸준히 하면 안정적인 노후' :
-               result.percentile <= 60 ? '🙂 평균 수준이에요. 조금만 더 노력하면...' :
-               result.percentile <= 80 ? '😐 또래보다 준비가 부족합니다. 지금이 기회!' :
-               '😰 솔직히, 또래 대비 많이 뒤처져 있습니다. 오늘부터 시작하세요'}
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl border border-green-200 p-4 space-y-3">
-            <p className="text-sm font-bold text-gray-900">{result.ageGroup}대 은퇴 준비 분포</p>
-            <div className="h-10 bg-gradient-to-r from-red-400 via-yellow-400 to-green-400 rounded-full relative overflow-visible">
-              <div className="absolute top-0 h-full flex flex-col items-center" style={{ left: `${100 - result.percentile}%`, transform: 'translateX(-50%)' }}>
-                <div className="w-1 h-full bg-gray-900 rounded-full" />
-                <span className="mt-1 text-xs font-bold bg-gray-900 text-white px-2 py-0.5 rounded-full whitespace-nowrap">← 나</span>
-              </div>
-            </div>
-            <div className="flex justify-between text-xs text-gray-400">
-              <span>상위 (잘 준비됨)</span><span>하위 (준비 부족)</span>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border border-green-200 p-4 space-y-3">
-            <p className="text-sm font-bold text-gray-900">📊 {result.ageGroup}대 실제 통계 비교 (2025)</p>
-            <div className="grid grid-cols-2 gap-2 text-center">
-              <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">평균 총 자산</p>
-                <p className="text-base font-bold text-gray-900">{won((STATS.assetByAge[result.ageGroup] || 50000) * 10000)}원</p>
-              </div>
-              <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">나의 총 자산</p>
-                <p className={`text-base font-bold ${input.currentAssets * 10000 >= (STATS.assetByAge[result.ageGroup] || 50000) * 10000 ? 'text-green-600' : 'text-red-600'}`}>
-                  {won(input.currentAssets * 10000)}원
-                </p>
-              </div>
-              <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">평균 저축액</p>
-                <p className="text-base font-bold text-gray-900">{won((STATS.savingByAge[result.ageGroup] || 10000) * 10000)}원</p>
-              </div>
-              <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">나의 은퇴 후 월수입</p>
-                <p className={`text-base font-bold ${result.grade.color}`}>{won(result.monthly)}원</p>
-              </div>
-            </div>
-            <p className="text-xs text-gray-400">출처: 2025 가계금융복지조사 (통계청)</p>
-          </div>
-
-          {result.percentile > 50 && (
-            <div className="bg-red-50 rounded-xl p-4 text-center text-sm">
-              <p className="font-bold text-red-800">🚨 또래의 절반 이상보다 뒤처져 있습니다</p>
-              <p className="text-red-700 text-xs mt-1">매월 저축을 {result.comparisons[0].add}만원만 늘려도 순위가 크게 올라갑니다</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 하단 버튼 */}
-      <div className="flex gap-2 pt-2 pb-4">
-        <button onClick={() => { setStep('input'); setResult(null) }}
-          className="flex-1 py-3 bg-white border border-green-200 text-gray-700 rounded-xl font-medium text-sm">
-          ↩ 다시 해보기
-        </button>
-        <button onClick={() => gate(handleShare)}
-          className="flex-1 py-3 bg-green-600 text-white rounded-xl font-medium text-sm">
-          🔗 친구도 테스트해보게 하기
-        </button>
-      </div>
-
-      {/* 카페 가입 유도 모달 */}
-      {showGate && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={() => setShowGate(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 text-center shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="text-5xl">🔒</div>
-            <h3 className="text-xl font-bold text-gray-900">결과 저장·공유는<br />카페 회원만 가능해요!</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              노후연구소 카페에 <b>무료 가입</b>하시면<br />
-              등급 카드 저장, 결과 공유, 더 많은<br />재무 분석 도구를 이용할 수 있습니다.
-            </p>
-            <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer"
-              className="block w-full py-3.5 bg-[#03C75A] text-white font-bold rounded-xl text-base hover:bg-[#02b351] transition">
-              네이버 카페 무료 가입하기
-            </a>
-            <p className="text-xs text-gray-400">가입 후 닉네임으로 로그인하면 잠금이 해제됩니다</p>
-            <button onClick={() => setShowGate(false)} className="text-sm text-gray-400 hover:text-gray-600">
-              나중에 할게요
-            </button>
-          </div>
-        </div>
-      )}
+      <p className="text-[9px] text-gray-400 mt-3">출처: KB금융 2025, 통계청, 국민연금공단, 가계금융복지조사 2024</p>
     </div>
   )
 }
 
-// ─── 서브 컴포넌트 ───
-
-function Field({ label, value, unit, onChange, step = 1, min = 0, max }: {
-  label: string; value: number; unit: string; onChange: (v: number) => void; step?: number; min?: number; max?: number
-}) {
+// ═══ LOCKED ═══
+function LockedZone({ onJoin }: { onJoin: () => void }) {
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <div className="relative">
-        <input type="number" value={value} onChange={e => onChange(+e.target.value)}
-          step={step} min={min} max={max}
-          className="w-full px-4 py-3 rounded-lg border border-green-200 bg-white text-gray-900 text-lg font-medium focus:ring-2 focus:ring-green-500 outline-none pr-14" />
-        <span className="absolute right-3 top-3.5 text-sm text-gray-400">{unit}</span>
+    <div className="relative">
+      <div className="space-y-3 filter blur-[6px] pointer-events-none select-none" aria-hidden="true">
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 h-32" />
+        <div className="bg-[#0a0a0a] rounded-2xl p-5 h-40" />
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 h-36" />
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 h-28" />
       </div>
-    </div>
-  )
-}
-
-function MiniCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-white rounded-lg border border-green-100 p-3 text-center">
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="text-sm font-bold text-gray-900 mt-0.5">{value}</p>
-    </div>
-  )
-}
-
-function StatBar({ label, amount, mine, color }: { label: string; amount: number; mine: number; color: string }) {
-  const max = Math.max(amount, mine) * 1.1
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs">
-        <span className="text-gray-600">{label}</span>
-        <span className="text-gray-900 font-medium">{wonW(amount)}</span>
-      </div>
-      <div className="relative h-5 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`absolute h-full rounded-full ${color} opacity-40`} style={{ width: `${(amount / max) * 100}%` }} />
-        <div className="absolute h-full bg-green-600 rounded-full" style={{ width: `${(mine / max) * 100}%` }} />
-        <div className="absolute inset-0 flex items-center px-2">
-          <span className="text-[10px] text-white font-bold drop-shadow">나: {wonW(mine)}</span>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 max-w-[320px] w-full text-center shadow-xl border border-gray-100">
+          <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <svg width="20" height="20" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <p className="text-[16px] font-[900] text-gray-900">7개 상세 분석이<br/>잠겨 있습니다</p>
+          <p className="text-[12px] text-gray-500 mt-2 leading-relaxed">세금 내역, 자산 추계표, 연금,<br/>의료비, 저축 시나리오 등</p>
+          <button onClick={onJoin} className="w-full py-3.5 bg-[#03C75A] text-white font-[700] rounded-xl text-[14px] mt-4 active:bg-[#02b050]">무료 가입하고 전체 보기</button>
+          <p className="text-[10px] text-gray-400 mt-2">노후연구소 카페 가입 후 로그인</p>
         </div>
       </div>
     </div>
   )
 }
 
-function FactCard({ emoji, number, desc }: { emoji: string; number: string; desc: string }) {
-  return (
-    <div className="bg-white/10 rounded-lg p-3 text-center">
-      <span className="text-lg">{emoji}</span>
-      <p className="text-white font-black text-lg leading-tight mt-1">{number}</p>
-      <p className="text-gray-400 text-[10px] mt-0.5 leading-tight">{desc}</p>
+// ═══ GATED 섹션들 ═══
+function IncomeBlock({ r }: { r: R }) {
+  return <Card title="소득 구조"><D l="추정 세전 월급" v={ww(r.gross)} /><D l="추정 연봉" v={ww(r.gross * 12)} /><Sep /><D l="국민연금 4.5%" v={ww(r.dedD.np)} sm /><D l="건강보험 3.545%" v={ww(r.dedD.hi)} sm /><D l="장기요양 12.81%" v={ww(r.dedD.ltc)} sm /><D l="고용보험 0.9%" v={ww(r.dedD.ei)} sm /><D l="소득세" v={ww(r.dedD.it)} sm /><D l="지방소득세" v={ww(r.dedD.lt)} sm /><Sep /><D l="공제 합계" v={ww(r.dedT)} b /><D l="저축률" v={r.sr + '%'} sub={r.sr < 20 ? '권장 20% 미만' : ''} /></Card>
+}
+function AssetBlock({ r }: { r: R }) {
+  return <Card title="자산 성장 추계"><D l={`자산 복리 (연 5%, ${r.yrs}년)`} v={ww(r.assetG)} /><D l="적립 + 복리 수익" v={ww(r.saveG)} /><D l={`퇴직금 (${r.yrs}년)`} v={ww(r.retAll)} /><Sep /><D l="은퇴 시 총자산" v={ww(r.total)} b />
+    {r.proj.length > 2 && <table className="w-full text-[11px] mt-3"><thead><tr className="text-gray-400 border-b border-gray-50"><th className="text-left py-1 font-normal">연도</th><th className="text-left py-1 font-normal">나이</th><th className="text-right py-1 font-normal">자산</th></tr></thead><tbody>{r.proj.map((p, i) => <tr key={i} className={`border-t border-gray-50 ${i === r.proj.length-1 ? 'font-bold' : ''}`}><td className="py-1.5 text-gray-500 tabular-nums">{p.y}</td><td className="py-1.5 text-gray-500 tabular-nums">{p.age}세</td><td className="py-1.5 text-gray-900 text-right tabular-nums">{ww(p.v)}</td></tr>)}</tbody></table>}
+  </Card>
+}
+function PensionBlock({ r }: { r: R }) {
+  return <Card title="연금 + 은퇴 후 수입"><D l="국민연금 월 수령" v={ww(r.penM)} b /><D l="수령 시작" v="65세" sm /><D l="총 수령 (85세)" v={ww(r.penM * (LE - 65) * 12)} sm /><D l="전체 평균" v="월 67만원" sub="국민연금공단 2025" sm /><Sep /><D l="자산 인출/월" v={ww(r.fromAsset)} /><D l="국민연금/월" v={ww(r.penM)} /><Sep /><D l="월 가용 합계" v={ww(r.monthly)} b /></Card>
+}
+function BudgetBlock({ r }: { r: R }) {
+  return <Card title="월간 지출 배분">{r.budget.map((b, i) => <div key={i} className="mb-2 last:mb-0"><div className="flex justify-between text-[11px] mb-0.5"><span className="text-gray-500">{b.c}</span><span className="text-gray-800 tabular-nums">{ww(b.a)} ({b.p}%)</span></div><div className="h-[4px] bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-gray-800 rounded-full bar-anim" style={{width:`${b.p}%`,animationDelay:`${i*80}ms`}} /></div></div>)}</Card>
+}
+function RiskBlock({ r }: { r: R }) {
+  return <div className="bg-[#0a0a0a] rounded-2xl p-5 text-white space-y-3"><p className="text-[14px] font-[700]">물가 / 의료비 리스크</p>
+    <DR l="현재 가치" v={ww(r.monthly)} /><DR l={`물가 반영 (${r.yrs}년 후)`} v={ww(r.inflAdj)} s={`구매력 ${Math.round(r.inflAdj / r.monthly * 100)}%`} /><DR l="은퇴 10년 후" v={ww(r.real10)} /><DR l="은퇴 20년 후" v={ww(r.real20)} />
+    {r.med.length > 0 && <><div className="border-t border-white/[0.06] pt-2" /><p className="text-[10px] text-gray-600">연령대별 의료비</p>{r.med.map((m, i) => <div key={i} className="flex justify-between text-[11px]"><span className="text-gray-500">{m.age}</span><span className="text-gray-400 tabular-nums">연 {ww(m.ann)}</span><span className={`tabular-nums ${m.pct > 15 ? 'text-red-400' : 'text-gray-500'}`}>가용의 {m.pct}%</span></div>)}<DR l="의료비 총 추정" v={ww(r.medT)} /></>}
+  </div>
+}
+function ScenarioBlock({ r }: { r: R }) {
+  return <Card title="추가 저축 시나리오"><table className="w-full text-[11px]"><thead><tr className="text-gray-400 border-b border-gray-100"><th className="text-left py-1.5 font-normal">추가/월</th><th className="text-right py-1.5 font-normal">월 가용</th><th className="text-right py-1.5 font-normal">증가</th><th className="text-center py-1.5 font-normal">등급</th></tr></thead><tbody>
+    <tr className="border-b border-gray-50 font-medium"><td className="py-1.5 text-gray-400">현재</td><td className="py-1.5 text-right tabular-nums">{ww(r.monthly)}</td><td className="py-1.5 text-right text-gray-300">-</td><td className="py-1.5 text-center"><Bdg l={r.gr} /></td></tr>
+    {r.sc.map((s, i) => <tr key={i} className={`border-b border-gray-50 ${s.gr !== r.gr ? 'bg-green-50/40' : ''}`}><td className="py-1.5 text-gray-500">+{s.add}만</td><td className="py-1.5 text-right tabular-nums font-medium">{ww(s.m)}</td><td className="py-1.5 text-right tabular-nums text-green-600">+{ww(s.diff)}</td><td className="py-1.5 text-center"><Bdg l={s.gr} glow={s.gr !== r.gr} /></td></tr>)}
+  </tbody></table></Card>
+}
+function PeerBlock({ r, inp }: { r: R; inp: Input }) {
+  const myA = inp.currentAssets * 1e4, avgA = S.asset[r.ag] || 5e8
+  return <Card title={`${r.ag}대 동년배 비교`}>
+    <div className="h-6 bg-gradient-to-r from-red-200 via-yellow-100 to-green-200 rounded-lg relative overflow-visible my-3">
+      <div className="absolute top-0 h-full flex flex-col items-center" style={{ left: `${100 - r.pct}%`, transform: 'translateX(-50%)' }}><div className="w-px h-full bg-gray-900" /><span className="mt-1 text-[9px] font-bold bg-gray-900 text-white px-2 py-0.5 rounded whitespace-nowrap">상위 {r.pct}%</span></div>
     </div>
-  )
+    <div className="flex justify-between text-[9px] text-gray-400 mb-3"><span>상위</span><span>하위</span></div>
+    <div className="grid grid-cols-2 gap-2">
+      <MC l={`${r.ag}대 평균 자산`} v={ww(avgA)} /><MC l="나의 자산" v={ww(myA)} c={myA >= avgA ? 'g' : 'r'} />
+      <MC l="적정 생활비" v={ww(S.need)} s="KB금융 2025" /><MC l="나의 월 가용" v={ww(r.monthly)} c={r.monthly >= S.need ? 'g' : 'r'} />
+    </div>
+  </Card>
 }
 
-function wrapText(ctx: CanvasRenderingContext2D, text: string, maxW: number): string[] {
-  const words = text.split('')
-  const lines: string[] = []
-  let line = ''
-  for (const ch of words) {
-    if (ctx.measureText(line + ch).width > maxW) { lines.push(line); line = ch }
-    else line += ch
-  }
-  if (line) lines.push(line)
-  return lines
+// ─── 공통 ───
+function FI({ l, v, u, set, step = 1, min = 0, max, sub }: { l: string; v: number; u: string; set: (v: number) => void; step?: number; min?: number; max?: number; sub?: string }) {
+  return <div><label className="block text-[11px] font-[600] text-gray-500 mb-1">{l}</label><div className="relative"><input type="number" value={v} onChange={e => set(+e.target.value)} step={step} min={min} max={max} className="w-full px-3 py-3.5 rounded-xl border border-gray-200 text-gray-900 text-[18px] font-[700] focus:ring-2 focus:ring-gray-900 outline-none pr-12 bg-white" /><span className="absolute right-3 top-4 text-[11px] text-gray-400">{u}</span></div>{sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}</div>
 }
+function Card({ title, children }: { title: string; children: React.ReactNode }) { return <div className="bg-white border border-gray-100 rounded-2xl p-5"><p className="text-[14px] font-[700] text-gray-900 mb-3">{title}</p><div className="space-y-1.5">{children}</div></div> }
+function D({ l, v, b, sm, sub }: { l: string; v: string; b?: boolean; sm?: boolean; sub?: string }) { return <div className="flex justify-between gap-3"><div className="min-w-0"><p className={`${sm ? 'text-[11px] text-gray-400' : b ? 'text-[12px] font-[700] text-gray-900' : 'text-[11px] text-gray-600'}`}>{l}</p>{sub && <p className="text-[9px] text-gray-400">{sub}</p>}</div><p className={`shrink-0 tabular-nums ${b ? 'text-[13px] font-[800] text-gray-900' : sm ? 'text-[11px] text-gray-500' : 'text-[11px] text-gray-800 font-[500]'}`}>{v}</p></div> }
+function DR({ l, v, s }: { l: string; v: string; s?: string }) { return <div className="flex justify-between gap-3"><div><p className="text-[11px] text-gray-500">{l}</p>{s && <p className="text-[9px] text-gray-600">{s}</p>}</div><p className="text-[11px] text-white font-[500] shrink-0 tabular-nums">{v}</p></div> }
+function Sep() { return <div className="border-t border-gray-100 my-1" /> }
+function Bdg({ l, glow }: { l: string; glow?: boolean }) { const c: Record<string, string> = { S: 'bg-amber-500', A: 'bg-green-500', B: 'bg-blue-500', C: 'bg-orange-500', D: 'bg-red-500' }; return <span className={`inline-block w-5 h-5 ${c[l]} text-white rounded text-[9px] font-[800] leading-5 text-center ${glow ? 'ring-1 ring-green-300' : ''}`}>{l}</span> }
+function MC({ l, v, s, c }: { l: string; v: string; s?: string; c?: 'g' | 'r' }) { return <div className={`rounded-xl p-3 ${c === 'g' ? 'bg-green-50 border border-green-100' : c === 'r' ? 'bg-red-50 border border-red-100' : 'bg-gray-50 border border-gray-100'}`}><p className="text-[9px] text-gray-500">{l}</p><p className={`text-[13px] font-[800] mt-0.5 ${c === 'g' ? 'text-green-700' : c === 'r' ? 'text-red-700' : 'text-gray-900'}`}>{v}</p>{s && <p className="text-[8px] text-gray-400">{s}</p>}</div> }
