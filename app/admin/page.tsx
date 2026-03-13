@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { useRouter } from 'next/navigation'
 import TierBadge from '@/components/TierBadge'
 import { TIER_MAP } from '@/lib/types'
 import { programRegistry } from '@/app/programs/registry'
@@ -17,32 +16,28 @@ interface MemberRow {
   last_login: string | null
 }
 
+interface NewMember {
+  nickname: string
+  tier: number
+}
+
 type Tab = 'members' | 'programs' | 'dashboard'
 
 function AdminContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [tab, setTab] = useState<Tab>('members')
   const [members, setMembers] = useState<MemberRow[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newMember, setNewMember] = useState<NewMember>({ nickname: '', tier: 1 })
+  const [bulkInput, setBulkInput] = useState('')
+  const [addMode, setAddMode] = useState<'single' | 'bulk'>('single')
 
   useEffect(() => {
     fetchMembers()
-    const sync = searchParams.get('sync')
-    const count = searchParams.get('count')
-    const newCount = searchParams.get('new')
-    const updated = searchParams.get('updated')
-    const reason = searchParams.get('reason')
-    if (sync === 'success') {
-      setMessage(`카페 회원 ${count}명 동기화 완료! (신규: ${newCount || 0}명, 업데이트: ${updated || 0}명)`)
-      setTimeout(() => setMessage(''), 8000)
-    } else if (sync === 'failed' || sync === 'error') {
-      setMessage(`카페 회원 동기화 실패${reason ? ': ' + reason : ''}`)
-      setTimeout(() => setMessage(''), 8000)
-    }
-  }, [searchParams])
+  }, [])
 
   async function fetchMembers() {
     setLoading(true)
@@ -78,6 +73,49 @@ function AdminContent() {
     if (res.ok) {
       setMembers((prev) => prev.filter((m) => m.id !== id))
       setMessage('삭제되었습니다.')
+      setTimeout(() => setMessage(''), 3000)
+    }
+  }
+
+  async function handleAddMember() {
+    if (!newMember.nickname.trim()) return
+    const res = await fetch('/api/members', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname: newMember.nickname.trim(), tier: newMember.tier }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setMembers((prev) => [data, ...prev])
+      setNewMember({ nickname: '', tier: 1 })
+      setMessage(`${newMember.nickname.trim()} 회원이 등록되었습니다.`)
+      setTimeout(() => setMessage(''), 3000)
+    } else {
+      setMessage(data.error || '등록에 실패했습니다.')
+      setTimeout(() => setMessage(''), 3000)
+    }
+  }
+
+  async function handleBulkAdd() {
+    const nicknames = bulkInput
+      .split('\n')
+      .map((n) => n.trim())
+      .filter(Boolean)
+    if (nicknames.length === 0) return
+
+    const res = await fetch('/api/members/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nicknames, tier: newMember.tier }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setMessage(`${data.added}명 등록 완료${data.skipped > 0 ? ` (중복 ${data.skipped}명 건너뜀)` : ''}`)
+      setBulkInput('')
+      fetchMembers()
+      setTimeout(() => setMessage(''), 5000)
+    } else {
+      setMessage(data.error || '등록에 실패했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
   }
@@ -136,13 +174,111 @@ function AdminContent() {
               placeholder="닉네임 검색..."
               className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
             />
-            <a
-              href="/api/auth/naver?mode=admin"
-              className="px-4 py-2 bg-[#03C75A] hover:bg-[#02b351] text-white rounded-lg text-sm inline-flex items-center gap-2 font-medium"
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
             >
-              카페 회원 동기화
+              {showAddForm ? '닫기' : '+ 회원 등록'}
+            </button>
+            <a
+              href="https://cafe.naver.com/ManageWholeMember.nhn?clubid=20898041"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-white border border-green-300 text-green-700 rounded-lg text-sm font-medium hover:bg-green-50"
+            >
+              카페 회원 목록 보기
             </a>
           </div>
+
+          {/* 회원 등록 폼 */}
+          {showAddForm && (
+            <div className="bg-white rounded-lg border border-green-200 p-4 space-y-4">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setAddMode('single')}
+                  className={`px-3 py-1.5 rounded-lg text-sm ${addMode === 'single' ? 'bg-green-600 text-white' : 'bg-green-50 text-gray-700'}`}
+                >
+                  개별 등록
+                </button>
+                <button
+                  onClick={() => setAddMode('bulk')}
+                  className={`px-3 py-1.5 rounded-lg text-sm ${addMode === 'bulk' ? 'bg-green-600 text-white' : 'bg-green-50 text-gray-700'}`}
+                >
+                  일괄 등록
+                </button>
+              </div>
+
+              {addMode === 'single' ? (
+                <div className="flex flex-wrap gap-3 items-end">
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="block text-sm text-gray-700 mb-1">카페 닉네임</label>
+                    <input
+                      type="text"
+                      value={newMember.nickname}
+                      onChange={(e) => setNewMember({ ...newMember, nickname: e.target.value })}
+                      placeholder="카페에서 확인한 닉네임"
+                      className="w-full px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">등급</label>
+                    <select
+                      value={newMember.tier}
+                      onChange={(e) => setNewMember({ ...newMember, tier: parseInt(e.target.value) })}
+                      className="px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
+                    >
+                      {[1, 2, 3, 4].map((t) => (
+                        <option key={t} value={t}>{TIER_MAP[t].name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={handleAddMember}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
+                  >
+                    등록
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">
+                      닉네임 목록 (한 줄에 하나씩)
+                    </label>
+                    <textarea
+                      value={bulkInput}
+                      onChange={(e) => setBulkInput(e.target.value)}
+                      placeholder={"닉네임1\n닉네임2\n닉네임3"}
+                      className="w-full h-32 px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900 resize-y"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">등급</label>
+                      <select
+                        value={newMember.tier}
+                        onChange={(e) => setNewMember({ ...newMember, tier: parseInt(e.target.value) })}
+                        className="px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
+                      >
+                        {[1, 2, 3, 4].map((t) => (
+                          <option key={t} value={t}>{TIER_MAP[t].name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      onClick={handleBulkAdd}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium mt-auto"
+                    >
+                      일괄 등록 ({bulkInput.split('\n').filter((n) => n.trim()).length}명)
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    카페 회원 관리 페이지에서 닉네임을 복사해서 붙여넣으세요.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 회원 목록 테이블 */}
           {loading ? (
@@ -300,13 +436,5 @@ function AdminContent() {
 }
 
 export default function AdminPage() {
-  return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full" />
-      </div>
-    }>
-      <AdminContent />
-    </Suspense>
-  )
+  return <AdminContent />
 }

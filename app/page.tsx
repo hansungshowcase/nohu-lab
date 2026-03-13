@@ -1,20 +1,39 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-const ERROR_MESSAGES: Record<string, string> = {
-  naver_denied: '네이버 로그인이 취소되었습니다.',
-  token_failed: '인증에 실패했습니다. 다시 시도해주세요.',
-  profile_failed: '프로필 정보를 가져올 수 없습니다.',
-  not_cafe_member: '노후연구소 카페에 가입되지 않은 회원입니다.\n카페 가입 후 다시 시도해주세요.',
-  server_error: '서버 오류가 발생했습니다. 다시 시도해주세요.',
-}
+export default function LoginPage() {
+  const router = useRouter()
+  const [nickname, setNickname] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-function LoginContent() {
-  const searchParams = useSearchParams()
-  const errorCode = searchParams.get('error')
-  const errorMessage = errorCode ? ERROR_MESSAGES[errorCode] || '로그인에 실패했습니다.' : null
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: nickname.trim() }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || '로그인에 실패했습니다.')
+        return
+      }
+
+      router.push('/dashboard')
+    } catch {
+      setError('서버에 연결할 수 없습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-50 px-4">
@@ -28,25 +47,49 @@ function LoginContent() {
               노후연구소
             </h1>
             <p className="text-gray-500 mt-1">
-              카페 회원 인증 후 다양한 도구를 이용하세요
+              카페 닉네임으로 로그인하세요
             </p>
           </div>
 
-          {errorMessage && (
-            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-5 whitespace-pre-line">
-              {errorMessage}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                카페 닉네임
+              </label>
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="노후연구소 카페에서 사용하는 닉네임"
+                className="w-full px-4 py-3 rounded-lg border border-green-200 bg-white text-gray-900 focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none transition"
+                required
+              />
             </div>
-          )}
 
-          <a
-            href="/api/auth/naver"
-            className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition flex items-center justify-center gap-2 text-lg"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M13.5 10.56L6.26 0H0V20H6.5V9.44L13.74 20H20V0H13.5V10.56Z" fill="white"/>
-            </svg>
-            네이버로 로그인
-          </a>
+            {error && (
+              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  확인 중...
+                </>
+              ) : (
+                '로그인'
+              )}
+            </button>
+          </form>
 
           <p className="text-center text-sm text-gray-600 mt-5 leading-relaxed">
             노후연구소 카페 회원만 이용 가능합니다.
@@ -73,17 +116,5 @@ function LoginContent() {
         </div>
       </div>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-green-50">
-        <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full" />
-      </div>
-    }>
-      <LoginContent />
-    </Suspense>
   )
 }

@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    // 2. DB에 없으면 → 카페 회원이 아닌 것으로 안내
+    // 2. DB에 없으면 → 등록되지 않은 회원
     return NextResponse.json(
-      { error: '노후연구소 카페 회원이 아니거나, 아직 동기화되지 않았습니다.\n관리자에게 문의하세요.' },
+      { error: '등록되지 않은 닉네임입니다.\n관리자에게 등록을 요청해주세요.' },
       { status: 401 }
     )
   } catch {

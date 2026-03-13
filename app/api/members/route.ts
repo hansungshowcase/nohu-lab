@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
 import { getCurrentUser } from '@/lib/auth'
-import bcrypt from 'bcryptjs'
 
 // GET: 회원 목록 (관리자 전용)
 export async function GET() {
@@ -40,18 +39,17 @@ export async function POST(request: NextRequest) {
 
   const { nickname, phone, tier } = await request.json()
 
-  if (!nickname || !phone) {
-    return NextResponse.json({ error: '닉네임과 연락처는 필수입니다.' }, { status: 400 })
+  if (!nickname) {
+    return NextResponse.json({ error: '닉네임은 필수입니다.' }, { status: 400 })
   }
 
-  const phoneClean = phone.replace(/-/g, '')
   const supabase = getServiceSupabase()
 
   const { data, error } = await supabase
     .from('members')
     .insert({
       nickname: nickname.trim(),
-      phone: phoneClean,
+      phone: phone?.replace(/-/g, '') || '',
       tier: tier || 1,
     })
     .select()

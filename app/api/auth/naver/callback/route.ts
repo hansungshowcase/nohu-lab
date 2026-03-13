@@ -64,11 +64,11 @@ export async function GET(request: NextRequest) {
     const naverProfile = profileData.response
     const naverNickname = naverProfile.nickname || naverProfile.name || '회원'
 
-    // 3. 카페 가입 여부 및 등급 확인
+    // 3. 카페 가입 여부 및 등급 확인 (디버그 모드)
     let cafeTier: 1 | 2 | 3 | 4 = 1
     let cafeJoined = false
+    const debugResults: Record<string, unknown> = {}
 
-    // 두 가지 ID 형식 시도 (문자열 URL ID, 숫자 클럽 ID)
     const cafeIds = ['eovhskfktmak', CAFE_ID]
     for (const cid of cafeIds) {
       try {
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
           { headers: { Authorization: `Bearer ${accessToken}` } }
         )
         const cafeData = await cafeRes.json()
-        console.log(`Cafe check (${cid}):`, JSON.stringify(cafeData).substring(0, 500))
+        debugResults[cid] = { status: cafeRes.status, data: cafeData }
 
         if (cafeData.message?.status === '200' && cafeData.message?.result) {
           const memberLevel = cafeData.message.result.memberLevel || 1
@@ -87,15 +87,16 @@ export async function GET(request: NextRequest) {
           break
         }
       } catch (e) {
-        console.error(`Cafe API error (${cid}):`, e)
+        debugResults[cid] = { error: String(e) }
       }
     }
 
+    // 디버그: 카페 API 응답을 URL에 포함 (임시)
     if (!cafeJoined) {
-      // 카페 API가 모두 실패한 경우 → 일단 로그인 허용 (Tier 1)
-      // 카페 가입은 했지만 API가 안 되는 경우가 있을 수 있음
-      console.log('Cafe membership check failed for all IDs, allowing login with tier 1')
-      cafeTier = 1
+      const debugStr = encodeURIComponent(JSON.stringify(debugResults).substring(0, 300))
+      return NextResponse.redirect(
+        new URL(`/?error=not_cafe_member&debug=${debugStr}`, process.env.NEXT_PUBLIC_BASE_URL!)
+      )
     }
 
     // 4. DB에 회원 등록/업데이트
