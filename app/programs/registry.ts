@@ -48,8 +48,8 @@ export const programRegistry: Program[] = [
   },
   {
     id: 'retirement-simulator',
-    name: '노후 자금 계산기',
-    description: '은퇴까지 얼마를 모아야 하는지 한눈에 계산',
+    name: '노후 등급 테스트',
+    description: '7개 질문으로 알아보는 나의 은퇴 후 등급',
     minTier: 1,
     icon: '🏖️',
     category: '재무',
