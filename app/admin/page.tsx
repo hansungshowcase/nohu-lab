@@ -98,18 +98,18 @@ function AdminContent() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">
         관리자 패널
       </h1>
 
       {message && (
-        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-sm whitespace-pre-line">
+        <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm whitespace-pre-line">
           {message}
         </div>
       )}
 
       {/* 탭 */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-2 mb-6 border-b border-green-100">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -134,7 +134,7 @@ function AdminContent() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="닉네임 검색..."
-              className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
             />
             <a
               href="/api/auth/naver?mode=admin"
@@ -153,31 +153,31 @@ function AdminContent() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-100 dark:bg-gray-800">
-                    <th className="text-left px-4 py-3 font-medium text-gray-700 dark:text-gray-300">닉네임</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-700 dark:text-gray-300">등급</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-700 dark:text-gray-300">마지막 로그인</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-700 dark:text-gray-300">관리</th>
+                  <tr className="bg-green-50">
+                    <th className="text-left px-4 py-3 font-medium text-gray-700">닉네임</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-700">등급</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-700">마지막 로그인</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-700">관리</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-gray-200">
                   {filtered.map((member) => (
-                    <tr key={member.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">
+                    <tr key={member.id} className="hover:bg-green-50">
+                      <td className="px-4 py-3 text-gray-900 font-medium">
                         {member.nickname}
                       </td>
                       <td className="px-4 py-3">
                         <select
                           value={member.tier}
                           onChange={(e) => handleTierChange(member.id, parseInt(e.target.value))}
-                          className="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                          className="px-2 py-1 rounded border border-green-200 bg-white text-gray-900 text-sm"
                         >
                           {[1, 2, 3, 4].map((t) => (
                             <option key={t} value={t}>{TIER_MAP[t].name}</option>
                           ))}
                         </select>
                       </td>
-                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
+                      <td className="px-4 py-3 text-gray-500 text-xs">
                         {member.last_login
                           ? new Date(member.last_login).toLocaleString('ko-KR')
                           : '-'}
@@ -210,26 +210,26 @@ function AdminContent() {
       {/* 프로그램 관리 탭 */}
       {tab === 'programs' && (
         <div className="space-y-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500">
             프로그램은 코드에서 직접 추가/수정합니다.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-100 dark:bg-gray-800">
-                  <th className="text-left px-4 py-3 font-medium text-gray-700 dark:text-gray-300">프로그램</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700 dark:text-gray-300">카테고리</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700 dark:text-gray-300">최소 등급</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700 dark:text-gray-300">상태</th>
+                <tr className="bg-green-50">
+                  <th className="text-left px-4 py-3 font-medium text-gray-700">프로그램</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-700">카테고리</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-700">최소 등급</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-700">상태</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-200">
                 {programRegistry.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="px-4 py-3 text-gray-900 dark:text-white">
+                  <tr key={p.id} className="hover:bg-green-50">
+                    <td className="px-4 py-3 text-gray-900">
                       {p.icon} {p.name}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{p.category}</td>
+                    <td className="px-4 py-3 text-gray-500">{p.category}</td>
                     <td className="px-4 py-3">
                       <TierBadge tier={p.minTier} />
                     </td>
@@ -250,18 +250,18 @@ function AdminContent() {
       {tab === 'dashboard' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="bg-white rounded-lg p-4 border border-green-100">
+              <div className="text-2xl font-bold text-gray-900">
                 {members.length}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">전체 회원</div>
+              <div className="text-sm text-gray-500">전체 회원</div>
             </div>
             {[1, 2, 3, 4].map((t) => (
-              <div key={t} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              <div key={t} className="bg-white rounded-lg p-4 border border-green-100">
+                <div className="text-2xl font-bold text-gray-900">
                   {tierCounts[t - 1]}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-gray-500">
                   {TIER_MAP[t].name}
                 </div>
               </div>
@@ -269,7 +269,7 @@ function AdminContent() {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">
               최근 로그인
             </h3>
             <div className="space-y-2">
@@ -280,13 +280,13 @@ function AdminContent() {
                 .map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700"
+                    className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-green-100"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900 dark:text-white">{m.nickname}</span>
+                      <span className="font-medium text-gray-900">{m.nickname}</span>
                       <TierBadge tier={m.tier} />
                     </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-gray-500">
                       {new Date(m.last_login!).toLocaleString('ko-KR')}
                     </span>
                   </div>

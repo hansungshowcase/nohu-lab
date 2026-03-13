@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-green-50`}
       >
         <AppShell>{children}</AppShell>
       </body>

@@ -36,24 +36,24 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-green-50 px-4">
       <div className="w-full max-w-md">
-        <div className="bg-gray-800 rounded-2xl shadow-xl p-8">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-100">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gray-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">⚙️</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-2xl font-bold text-gray-900">
               관리자 로그인
             </h1>
-            <p className="text-gray-400 mt-1">
+            <p className="text-gray-500 mt-1">
               노후연구소 관리자 전용
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 비밀번호
               </label>
               <input
@@ -61,13 +61,13 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="관리자 비밀번호"
-                className="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-700 text-white focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 rounded-lg border border-green-200 bg-white text-gray-900 focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none transition"
                 required
               />
             </div>
 
             {error && (
-              <div className="bg-red-900/30 text-red-400 text-sm p-3 rounded-lg">
+              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
                 {error}
               </div>
             )}
@@ -75,7 +75,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+              className="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

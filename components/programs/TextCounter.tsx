@@ -17,7 +17,7 @@ export default function TextCounter() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="여기에 텍스트를 입력하세요..."
-        className="w-full h-48 p-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y focus:ring-2 focus:ring-green-500 outline-none"
+        className="w-full h-48 p-4 rounded-lg border border-green-200 bg-white text-gray-900 resize-y focus:ring-2 focus:ring-green-500 outline-none"
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
@@ -30,12 +30,12 @@ export default function TextCounter() {
         ].map((item) => (
           <div
             key={item.label}
-            className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center"
+            className="bg-green-50 rounded-lg p-4 text-center"
           >
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="text-2xl font-bold text-gray-900">
               {item.value.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <div className="text-sm text-gray-500 mt-1">
               {item.label}
             </div>
           </div>
@@ -45,7 +45,7 @@ export default function TextCounter() {
       {text && (
         <button
           onClick={() => setText('')}
-          className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition"
+          className="px-4 py-2 text-sm bg-green-100 text-gray-700 rounded-lg hover:bg-green-200 transition"
         >
           초기화
         </button>

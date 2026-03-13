@@ -41,13 +41,13 @@ export default function NicknameGenerator() {
     <div className="max-w-lg mx-auto space-y-6">
       <div className="flex gap-4 items-end">
         <div className="flex-1">
-          <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm text-gray-700 mb-1">
             생성 개수
           </label>
           <select
             value={count}
             onChange={(e) => setCount(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
           >
             {[3, 5, 10, 20].map((n) => (
               <option key={n} value={n}>{n}개</option>
@@ -67,14 +67,14 @@ export default function NicknameGenerator() {
           {nicknames.map((nick, i) => (
             <div
               key={i}
-              className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg px-4 py-3"
+              className="flex items-center justify-between bg-green-50 rounded-lg px-4 py-3"
             >
-              <span className="text-gray-900 dark:text-white font-medium">
+              <span className="text-gray-900 font-medium">
                 {nick}
               </span>
               <button
                 onClick={() => copyToClipboard(nick)}
-                className="text-sm text-green-600 hover:text-green-700 dark:text-green-400"
+                className="text-sm text-green-600 hover:text-green-700"
               >
                 복사
               </button>

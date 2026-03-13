@@ -52,26 +52,26 @@ export default function HashtagRecommender() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm text-gray-700 mb-1">
           게시글 내용을 입력하세요
         </label>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="예: 오늘 여행에서 맛있는 음식을 먹었다"
-          className="w-full h-32 p-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y focus:ring-2 focus:ring-green-500 outline-none"
+          className="w-full h-32 p-4 rounded-lg border border-green-200 bg-white text-gray-900 resize-y focus:ring-2 focus:ring-green-500 outline-none"
         />
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-gray-500">
           카테고리 힌트:
         </span>
         {KEYWORDS.map((k) => (
           <span
             key={k}
             onClick={() => setText((prev) => prev + ' ' + k)}
-            className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded cursor-pointer hover:bg-green-100 dark:hover:bg-green-900 transition"
+            className="text-xs bg-green-50 text-gray-600 px-2 py-1 rounded cursor-pointer hover:bg-green-100 transition"
           >
             {k}
           </span>
@@ -92,7 +92,7 @@ export default function HashtagRecommender() {
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm font-medium"
+                className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full text-sm font-medium"
               >
                 {tag}
               </span>
@@ -100,7 +100,7 @@ export default function HashtagRecommender() {
           </div>
           <button
             onClick={copyAll}
-            className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition"
+            className="px-4 py-2 text-sm bg-green-100 text-gray-700 rounded-lg hover:bg-green-200 transition"
           >
             {copied ? '✅ 복사됨!' : '전체 복사'}
           </button>

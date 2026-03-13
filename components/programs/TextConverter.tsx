@@ -62,14 +62,14 @@ export default function TextConverter() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm text-gray-700 mb-1">
           원본 텍스트
         </label>
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="변환할 텍스트를 입력하세요"
-          className="w-full h-32 p-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y focus:ring-2 focus:ring-green-500 outline-none"
+          className="w-full h-32 p-4 rounded-lg border border-green-200 bg-white text-gray-900 resize-y focus:ring-2 focus:ring-green-500 outline-none"
         />
       </div>
 
@@ -81,7 +81,7 @@ export default function TextConverter() {
             className={`px-3 py-1.5 rounded-lg text-sm transition ${
               mode === m.id
                 ? 'bg-green-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'bg-green-50 text-gray-700 hover:bg-green-100'
             }`}
           >
             {m.label}
@@ -91,15 +91,15 @@ export default function TextConverter() {
 
       {input && (
         <div>
-          <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm text-gray-700 mb-1">
             변환 결과
           </label>
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-gray-900 dark:text-white whitespace-pre-wrap min-h-[80px]">
+          <div className="bg-green-50 rounded-lg p-4 text-gray-900 whitespace-pre-wrap min-h-[80px]">
             {result}
           </div>
           <button
             onClick={handleCopy}
-            className="mt-2 px-4 py-2 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition"
+            className="mt-2 px-4 py-2 text-sm bg-green-100 text-gray-700 rounded-lg hover:bg-green-200 transition"
           >
             {copied ? '✅ 복사됨!' : '결과 복사'}
           </button>

@@ -68,10 +68,10 @@ export default function ImageResizer() {
       {!image ? (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-12 text-center cursor-pointer hover:border-green-500 transition"
+          className="border-2 border-dashed border-green-200 rounded-lg p-12 text-center cursor-pointer hover:border-green-500 transition"
         >
           <div className="text-4xl mb-3">🖼️</div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600">
             클릭하여 이미지를 선택하세요
           </p>
           <input
@@ -84,43 +84,43 @@ export default function ImageResizer() {
         </div>
       ) : (
         <>
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+          <div className="bg-green-50 rounded-lg p-4">
             <img
               src={image}
               alt="Preview"
               className="max-h-64 mx-auto rounded"
             />
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-center text-sm text-gray-500 mt-2">
               원본: {originalSize.width} × {originalSize.height}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 items-center">
             <div className="flex-1">
-              <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm text-gray-700 mb-1">
                 너비 (px)
               </label>
               <input
                 type="number"
                 value={width}
                 onChange={(e) => handleWidthChange(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm text-gray-700 mb-1">
                 높이 (px)
               </label>
               <input
                 type="number"
                 value={height}
                 onChange={(e) => handleHeightChange(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
               />
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
               type="checkbox"
               checked={keepRatio}
@@ -143,7 +143,7 @@ export default function ImageResizer() {
                 setWidth(0)
                 setHeight(0)
               }}
-              className="px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition"
+              className="px-6 py-2 bg-green-100 text-gray-700 rounded-lg hover:bg-green-200 transition"
             >
               다른 이미지
             </button>
