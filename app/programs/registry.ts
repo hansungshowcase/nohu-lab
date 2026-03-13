@@ -46,6 +46,15 @@ export const programRegistry: Program[] = [
     category: '유틸리티',
     isActive: true,
   },
+  {
+    id: 'retirement-simulator',
+    name: '노후 시뮬레이터',
+    description: '세전 급여로 은퇴 후 생활을 시뮬레이션합니다',
+    minTier: 1,
+    icon: '🏖️',
+    category: '재무',
+    isActive: true,
+  },
 ]
 
 export function getProgramsByTier(tier: number): Program[] {

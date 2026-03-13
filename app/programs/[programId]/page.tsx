@@ -12,6 +12,7 @@ const programComponents: Record<string, React.LazyExoticComponent<React.Componen
   'nickname-generator': lazy(() => import('@/components/programs/NicknameGenerator')),
   'hashtag-recommender': lazy(() => import('@/components/programs/HashtagRecommender')),
   'text-converter': lazy(() => import('@/components/programs/TextConverter')),
+  'retirement-simulator': lazy(() => import('@/components/programs/RetirementSimulator')),
 }
 
 interface User {
