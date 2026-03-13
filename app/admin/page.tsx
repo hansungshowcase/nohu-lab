@@ -440,13 +440,26 @@ function AdminContent() {
               </ol>
             </div>
 
-            <div className="bg-green-50 rounded-lg p-5 space-y-3">
-              <h3 className="font-bold text-gray-900 text-base">3단계: 네이버 로그인 확인</h3>
+            <div className="bg-amber-50 rounded-lg p-5 space-y-3 border border-amber-200">
+              <h3 className="font-bold text-gray-900 text-base">3단계: 네이버 관리자 계정 로그인 (중요!)</h3>
+              <div className="bg-white rounded-lg p-4 border border-amber-300">
+                <p className="text-sm text-gray-800 mb-3">
+                  확장프로그램이 설치된 <b>같은 Chrome 브라우저</b>에서 아래 계정으로 네이버에 로그인해야 합니다.
+                </p>
+                <div className="flex items-center gap-3 bg-amber-50 rounded-lg px-4 py-3">
+                  <span className="text-lg">👤</span>
+                  <div>
+                    <p className="text-base font-bold text-gray-900">네이버 계정: <code className="bg-white px-2 py-0.5 rounded border text-green-700">qhdl20</code></p>
+                    <p className="text-xs text-gray-500 mt-0.5">노후연구소 카페 관리자 계정</p>
+                  </div>
+                </div>
+              </div>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
-                <li>같은 Chrome에서 <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="text-green-700 underline font-bold">노후연구소 카페</a>에 접속</li>
-                <li><b>카페 관리자(운영진) 계정</b>으로 로그인되어 있는지 확인</li>
-                <li>카페 &gt; 관리 &gt; 회원 관리 페이지에 접근 가능해야 합니다</li>
+                <li><a href="https://nid.naver.com/nidlogin.login" target="_blank" rel="noopener noreferrer" className="text-green-700 underline font-bold">네이버 로그인 페이지</a>에서 <code className="bg-white px-1.5 py-0.5 rounded text-xs border font-bold">qhdl20</code> 계정으로 로그인</li>
+                <li><a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="text-green-700 underline font-bold">노후연구소 카페</a>에 접속해서 관리 메뉴가 보이는지 확인</li>
+                <li>카페 &gt; <b>관리</b> &gt; <b>회원 관리</b> 페이지에 접근 가능하면 OK</li>
               </ol>
+              <p className="text-xs text-red-600 font-bold">* 다른 네이버 계정으로 로그인하면 회원 확인이 안 됩니다!</p>
             </div>
 
             <div className="bg-green-50 rounded-lg p-5 space-y-3">
