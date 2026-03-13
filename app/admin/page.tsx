@@ -364,80 +364,101 @@ function AdminContent() {
       {/* 카페 동기화 탭 */}
       {tab === 'sync' && (
         <div className="space-y-6">
+          {/* 동기화 상태 경고 */}
+          {members.length <= 1 && (
+            <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">&#9888;&#65039;</span>
+                <h3 className="text-lg font-bold text-red-800">회원 동기화가 필요합니다!</h3>
+              </div>
+              <p className="text-sm text-red-700">
+                현재 DB에 등록된 회원이 {members.length}명뿐입니다.
+                Chrome 확장프로그램이 설치되어 있지 않거나, 실행 중이 아닐 수 있습니다.
+              </p>
+              <p className="text-sm text-red-700 font-bold">
+                확장프로그램이 실행되지 않으면 새로운 회원이 로그인할 수 없습니다.
+              </p>
+            </div>
+          )}
+
           <div className="bg-white rounded-lg border border-green-200 p-6 space-y-4">
-            <h2 className="text-lg font-bold text-gray-900">카페 회원 자동 동기화 (Chrome 확장프로그램)</h2>
-            <p className="text-sm text-gray-700">
-              Chrome 확장프로그램이 10분마다 자동으로 네이버 카페 회원 목록을 DB에 동기화합니다.<br />
-              네이버에 로그인된 Chrome 브라우저에 설치하면 됩니다.
+            <h2 className="text-lg font-bold text-gray-900">실시간 회원 확인 (Chrome 확장프로그램)</h2>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              사용자가 닉네임으로 로그인하면, Chrome 확장프로그램이 <b>실시간으로</b> 네이버 카페 회원 여부를 확인합니다.<br />
+              확인된 회원은 자동으로 DB에 등록되므로, 별도의 수동 등록이 필요 없습니다.
             </p>
 
-            {syncStatus && (
-              <div className={`rounded-lg p-4 ${syncStatus.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                <div className={`font-bold text-base ${syncStatus.success ? 'text-green-800' : 'text-red-800'}`}>
-                  {syncStatus.success ? '동기화 정상 작동 중' : '마지막 동기화 실패'}
-                </div>
-                {syncStatus.totalMembers && (
-                  <div className="text-sm text-gray-700 mt-1">
-                    총 회원: {syncStatus.totalMembers}명 | 신규: {syncStatus.inserted}명 | 등급변경: {syncStatus.updated}명
-                  </div>
-                )}
-                {syncStatus.lastSync && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    마지막 동기화: {new Date(syncStatus.lastSync).toLocaleString('ko-KR')}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="bg-green-50 rounded-lg p-4 space-y-3">
-              <h3 className="font-semibold text-gray-900">설치 방법 (최초 1회)</h3>
-              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
-                <li>Chrome에서 <code className="bg-white px-1.5 py-0.5 rounded text-xs border">chrome://extensions</code> 열기</li>
-                <li>우측 상단 <b>&quot;개발자 모드&quot;</b> 켜기</li>
-                <li><b>&quot;압축해제된 확장 프로그램을 로드합니다&quot;</b> 클릭</li>
-                <li>바탕화면의 <code className="bg-white px-1.5 py-0.5 rounded text-xs border">cafe-sync-extension</code> 폴더 선택</li>
-                <li>설치 완료! 10분마다 자동으로 회원 동기화</li>
+            <div className="bg-blue-50 rounded-lg p-4 space-y-2 border border-blue-200">
+              <h3 className="font-bold text-blue-800 text-base">작동 방식</h3>
+              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-900">
+                <li>사용자가 닉네임 입력 후 로그인 클릭</li>
+                <li>DB에 있으면 즉시 로그인 (기존 회원)</li>
+                <li>DB에 없으면 확장프로그램이 카페에서 실시간 검색</li>
+                <li>카페 회원이면 자동 등록 + 로그인 완료</li>
+                <li>카페 회원이 아니면 로그인 거부</li>
               </ol>
             </div>
 
-            <div className="bg-yellow-50 rounded-lg p-4 space-y-2">
-              <h3 className="font-semibold text-gray-900 text-sm">주의사항</h3>
-              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                <li>네이버 카페 관리자 계정으로 Chrome에 로그인 되어 있어야 합니다</li>
-                <li>컴퓨터가 켜져 있고 Chrome이 실행 중이어야 동기화됩니다</li>
-                <li>확장프로그램 팝업에서 수동 동기화도 가능합니다</li>
-              </ul>
-            </div>
+            {syncStatus && (
+              <div className={`rounded-lg p-4 ${syncStatus.totalMembers && syncStatus.totalMembers > 1 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                <div className={`font-bold text-base ${syncStatus.totalMembers && syncStatus.totalMembers > 1 ? 'text-green-800' : 'text-yellow-800'}`}>
+                  DB 등록 회원: {syncStatus.totalMembers || 0}명
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-lg border border-green-200 p-6 space-y-4">
-            <h2 className="text-lg font-bold text-gray-900">수동 등록</h2>
-            <p className="text-sm text-gray-700">
-              확장프로그램 외에 수동으로 회원을 등록할 수도 있습니다.
-            </p>
-            <textarea
-              value={bulkInput}
-              onChange={(e) => setBulkInput(e.target.value)}
-              placeholder={"닉네임1\n닉네임2\n닉네임3\n\n카페 회원 관리 페이지에서 닉네임을 복사해서 붙여넣으세요"}
-              className="w-full h-40 px-4 py-3 rounded-lg border border-green-200 bg-white text-gray-900 resize-y"
-            />
-            <div className="flex items-center gap-3">
-              <select
-                value={newMember.tier}
-                onChange={(e) => setNewMember({ ...newMember, tier: parseInt(e.target.value) })}
-                className="px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
-              >
-                {[1, 2, 3, 4].map((t) => (
-                  <option key={t} value={t}>{TIER_MAP[t].name}</option>
-                ))}
-              </select>
-              <button
-                onClick={handleBulkAdd}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
-              >
-                등록 ({bulkInput.split('\n').filter((n) => n.trim()).length}명)
-              </button>
+            <h2 className="text-lg font-bold text-gray-900">확장프로그램 설치 방법</h2>
+
+            <div className="bg-green-50 rounded-lg p-5 space-y-3">
+              <h3 className="font-bold text-gray-900 text-base">1단계: Chrome에 설치</h3>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
+                <li>Chrome 주소창에 <code className="bg-white px-1.5 py-0.5 rounded text-xs border font-bold">chrome://extensions</code> 입력</li>
+                <li>우측 상단 <b>&quot;개발자 모드&quot;</b> 스위치 켜기</li>
+                <li>좌측 상단 <b>&quot;압축해제된 확장 프로그램을 로드합니다&quot;</b> 클릭</li>
+                <li>바탕화면의 <code className="bg-white px-1.5 py-0.5 rounded text-xs border font-bold">cafe-sync-extension</code> 폴더 선택</li>
+              </ol>
             </div>
+
+            <div className="bg-green-50 rounded-lg p-5 space-y-3">
+              <h3 className="font-bold text-gray-900 text-base">2단계: 네이버 로그인 확인</h3>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
+                <li>같은 Chrome에서 <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="text-green-700 underline font-bold">노후연구소 카페</a>에 접속</li>
+                <li><b>카페 관리자(운영진) 계정</b>으로 로그인되어 있는지 확인</li>
+                <li>카페 &gt; 관리 &gt; 회원 관리 페이지에 접근 가능해야 합니다</li>
+              </ol>
+            </div>
+
+            <div className="bg-green-50 rounded-lg p-5 space-y-3">
+              <h3 className="font-bold text-gray-900 text-base">3단계: 정상 작동 확인</h3>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
+                <li>확장프로그램 아이콘 클릭 &gt; <b>&quot;실행 중&quot;</b> 확인</li>
+                <li>노후연구소 웹사이트에서 카페 회원 닉네임으로 로그인 테스트</li>
+                <li>&quot;회원 확인 중...&quot; 메시지 후 로그인 성공하면 정상!</li>
+              </ol>
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-5 space-y-2">
+            <h3 className="font-bold text-yellow-800">주의사항</h3>
+            <ul className="list-disc list-inside text-sm text-yellow-900 space-y-1.5">
+              <li><b>Chrome이 켜져 있어야</b> 새로운 회원 로그인이 가능합니다</li>
+              <li><b>네이버 카페 관리자 계정</b>으로 로그인 되어 있어야 합니다</li>
+              <li>이미 DB에 등록된 회원은 확장프로그램 없이도 로그인됩니다</li>
+              <li>확장프로그램이 꺼져 있으면, 신규 회원만 로그인 불가합니다</li>
+            </ul>
+          </div>
+
+          <div className="bg-red-50 rounded-lg border border-red-200 p-5 space-y-2">
+            <h3 className="font-bold text-red-800">로그인이 안 될 때 체크리스트</h3>
+            <ul className="list-disc list-inside text-sm text-red-900 space-y-1.5">
+              <li>Chrome이 실행 중인가? (백그라운드 실행 포함)</li>
+              <li>확장프로그램이 활성화되어 있는가? (chrome://extensions 확인)</li>
+              <li>네이버에 관리자 계정으로 로그인되어 있는가?</li>
+              <li>카페 회원 관리 페이지가 열려 있는가? (자동으로 열림)</li>
+              <li>위 항목 모두 확인 후에도 안 되면 확장프로그램을 새로고침 해보세요</li>
+            </ul>
           </div>
         </div>
       )}
