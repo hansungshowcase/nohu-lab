@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getResultByCode } from '@/components/programs/retirement-test/results'
 import { CategoryScore } from '@/components/programs/retirement-test/questions'
@@ -13,6 +13,20 @@ export default function RetirementTestResultClient({
 }: {
   resultCode: string
 }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full" />
+        </div>
+      }
+    >
+      <ResultContent resultCode={resultCode} />
+    </Suspense>
+  )
+}
+
+function ResultContent({ resultCode }: { resultCode: string }) {
   const searchParams = useSearchParams()
   const cardRef = useRef<HTMLDivElement>(null)
 
