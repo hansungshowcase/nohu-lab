@@ -17,7 +17,7 @@ interface MemberRow {
   last_login: string | null
 }
 
-type Tab = 'members' | 'programs' | 'dashboard'
+type Tab = 'members' | 'programs' | 'dashboard' | 'sync'
 
 function AdminContent() {
   const router = useRouter()
@@ -31,17 +31,14 @@ function AdminContent() {
   const [newMember, setNewMember] = useState({ nickname: '', phone: '', tier: '1' })
   const [csvText, setCsvText] = useState('')
   const [message, setMessage] = useState('')
+  const [syncLoading, setSyncLoading] = useState(false)
 
   useEffect(() => {
     fetchMembers()
-    // 동기화 결과 메시지
     const sync = searchParams.get('sync')
     const count = searchParams.get('count')
     if (sync === 'success') {
       setMessage(`카페 회원 ${count}명 동기화 완료!`)
-      setTimeout(() => setMessage(''), 5000)
-    } else if (sync === 'failed' || sync === 'error' || sync === 'token_failed') {
-      setMessage('카페 회원 동기화에 실패했습니다.')
       setTimeout(() => setMessage(''), 5000)
     }
   }, [searchParams])
@@ -132,8 +129,49 @@ function AdminContent() {
     (t) => members.filter((m) => m.tier === t).length
   )
 
+  const BOOKMARKLET_CODE = `javascript:void(function(){var d=document,rows=d.querySelectorAll('table.tbl_type02 tbody tr, table.type_style1 tbody tr, #memberListBody tr, .article-board tbody tr');if(!rows.length){rows=d.querySelectorAll('tr[data-memberid], tr.MClickTrackingBy498979');}if(!rows.length){alert('회원 목록을 찾을 수 없습니다. 카페 회원관리 페이지에서 실행해주세요.');return;}var members=[];rows.forEach(function(r){var cells=r.querySelectorAll('td');if(cells.length>=2){var nick=cells[1]?cells[1].textContent.trim():'';var level=cells[2]?cells[2].textContent.trim():'일반회원';if(nick)members.push({nickname:nick,levelName:level});}});if(!members.length){alert('회원 데이터를 파싱할 수 없습니다.');return;}fetch('${typeof window !== 'undefined' ? window.location.origin : 'https://nohu-lab.vercel.app'}/api/members/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({members:members,syncKey:'nohu-lab-sync-2026'})}).then(function(r){return r.json()}).then(function(d){if(d.success)alert('동기화 완료! 총 '+d.total+'명 (신규: '+d.new+', 업데이트: '+d.updated+')');else alert('실패: '+d.error);}).catch(function(e){alert('오류: '+e.message);});})()`
+
+  async function handleManualSync() {
+    setSyncLoading(true)
+    setMessage('')
+    try {
+      const textarea = document.getElementById('syncData') as HTMLTextAreaElement
+      if (!textarea || !textarea.value.trim()) {
+        setMessage('회원 데이터를 입력해주세요.')
+        setSyncLoading(false)
+        return
+      }
+
+      // 형식: 닉네임,등급명 (한 줄에 하나)
+      const lines = textarea.value.trim().split('\n').filter(l => l.trim())
+      const memberList = lines.map(line => {
+        const parts = line.split(',').map(p => p.trim())
+        return { nickname: parts[0], levelName: parts[1] || '일반회원' }
+      }).filter(m => m.nickname)
+
+      const res = await fetch('/api/members/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ members: memberList, syncKey: 'nohu-lab-sync-2026' }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setMessage(`동기화 완료! 총 ${data.total}명 (신규: ${data.new}명, 업데이트: ${data.updated}명)`)
+        fetchMembers()
+      } else {
+        setMessage(data.error || '동기화 실패')
+      }
+    } catch {
+      setMessage('동기화 중 오류가 발생했습니다.')
+    } finally {
+      setSyncLoading(false)
+      setTimeout(() => setMessage(''), 5000)
+    }
+  }
+
   const tabs: { id: Tab; label: string }[] = [
     { id: 'members', label: '회원 관리' },
+    { id: 'sync', label: '카페 동기화' },
     { id: 'programs', label: '프로그램 관리' },
     { id: 'dashboard', label: '대시보드' },
   ]
@@ -190,12 +228,12 @@ function AdminContent() {
             >
               CSV 일괄 등록
             </button>
-            <a
-              href="/api/auth/naver?mode=admin"
+            <button
+              onClick={() => setTab('sync')}
               className="px-4 py-2 bg-[#03C75A] hover:bg-[#02b351] text-white rounded-lg text-sm inline-flex items-center gap-1"
             >
-              🔄 카페 회원 동기화
-            </a>
+              카페 회원 동기화
+            </button>
           </div>
 
           {/* 회원 추가 폼 */}
@@ -315,6 +353,78 @@ function AdminContent() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* 카페 동기화 탭 */}
+      {tab === 'sync' && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              카페 회원 동기화
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              네이버 카페 회원 목록을 가져와서 DB에 등록합니다.
+            </p>
+
+            {/* 방법 1: 직접 입력 */}
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-6">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                방법 1: 직접 입력
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                카페 회원관리에서 회원 목록을 복사해서 붙여넣기하세요.<br />
+                형식: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">닉네임,등급명</code> (한 줄에 하나)
+              </p>
+              <textarea
+                id="syncData"
+                placeholder={"홍길동,코어회원\n김철수,우수회원\n이영희,프리미엄회원\n박지민,헤리티지회원"}
+                className="w-full h-40 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm mb-3"
+              />
+              <button
+                onClick={handleManualSync}
+                disabled={syncLoading}
+                className="px-4 py-2 bg-[#03C75A] hover:bg-[#02b351] disabled:bg-gray-400 text-white rounded-lg text-sm"
+              >
+                {syncLoading ? '동기화 중...' : '동기화 실행'}
+              </button>
+            </div>
+
+            {/* 방법 2: 북마클릿 */}
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                방법 2: 북마클릿 (자동)
+              </h4>
+              <div className="text-xs text-gray-500 dark:text-gray-400 space-y-2 mb-3">
+                <p>1. 아래 버튼을 <strong>북마크바에 드래그</strong>하세요.</p>
+                <p>2. 네이버 카페 회원관리 페이지에 접속하세요.</p>
+                <p>3. 북마크바에서 해당 북마클릿을 클릭하면 자동 동기화됩니다.</p>
+              </div>
+              <a
+                href={BOOKMARKLET_CODE}
+                onClick={(e) => e.preventDefault()}
+                className="inline-block px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium cursor-grab"
+                title="이 버튼을 북마크바에 드래그하세요"
+              >
+                노후연구소 동기화
+              </a>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                * 이 버튼을 클릭하지 말고 북마크바로 드래그하세요
+              </p>
+            </div>
+          </div>
+
+          {/* 카페 회원관리 바로가기 */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <a
+              href="https://cafe.naver.com/ManageJoinList.nhn?clubid=eovhskfktmak"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-[#03C75A] hover:underline font-medium"
+            >
+              네이버 카페 회원관리 페이지 열기 →
+            </a>
+          </div>
         </div>
       )}
 
