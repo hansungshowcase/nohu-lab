@@ -34,6 +34,21 @@ interface Result {
 const RETURN = 0.05
 const LIFE_EXP = 85
 
+// 2025 실제 통계 데이터 (통계청, KB금융, 국민연금공단)
+const STATS = {
+  avgNeeded: 3_500_000,        // 노후 적정 생활비 월 350만원
+  minNeeded: 2_480_000,        // 노후 최소 생활비 월 248만원
+  avgActual: 2_300_000,        // 실제 조달 가능 월 230만원
+  avgPension: 670_000,         // 국민연금 평균 수령 월 67만원
+  avgPension20y: 1_080_000,    // 20년+ 가입 월 108만원
+  preparedPct: 19.1,           // 노후 준비 잘 됐다 응답 비율
+  hopeRetireAge: 65,           // 희망 은퇴 나이
+  realRetireAge: 56,           // 실제 은퇴 나이
+  elderMedical: 515,           // 65세+ 연간 의료비 만원
+  assetByAge: { 20: 1_200, 30: 35_958, 40: 62_714, 50: 66_205, 60: 50_000 } as Record<number, number>, // 만원
+  savingByAge: { 20: 2_000, 30: 6_989, 40: 12_000, 50: 15_000, 60: 10_000 } as Record<number, number>, // 만원
+}
+
 function estimatePension(net: number, years: number): number {
   const gross = net * 1.25
   const A = 2_800_000, B = Math.min(gross, 5_900_000)
@@ -137,7 +152,8 @@ function getLife(m: number): LifeItem[] {
 }
 
 function getPercentile(age: number, monthly: number): number {
-  const avg: Record<number, number> = { 20: 2_800_000, 30: 2_400_000, 40: 2_200_000, 50: 2_000_000, 60: 1_800_000 }
+  // 연령대별 평균 은퇴 후 월 추정 (자산 기반 역산)
+  const avg: Record<number, number> = { 20: 1_600_000, 30: 2_200_000, 40: 2_800_000, 50: 2_600_000, 60: 2_000_000 }
   const a = avg[Math.floor(age / 10) * 10] || 2_200_000
   const z = (monthly - a) / (a * 0.4)
   const t = 1 / (1 + 0.2316419 * Math.abs(z))
@@ -245,11 +261,16 @@ export default function RetirementSimulator() {
 
   function getRealityChecks(monthly: number, age: number, retireAge: number): string[] {
     const checks: string[] = []
-    if (monthly < 2_000_000) checks.push('현재 한국 1인 가구 평균 생활비는 약 180만원입니다. 기본 생활도 빠듯할 수 있습니다.')
-    if (monthly < 1_500_000) checks.push('2024년 기준 최저생계비는 1인 가구 약 113만원입니다. 여기에 가깝습니다.')
-    if (retireAge - age < 15) checks.push(`은퇴까지 ${retireAge - age}년밖에 남지 않았습니다. 매달 저축을 늘리는 것이 급선무입니다.`)
-    if (monthly >= 3_000_000) checks.push('상위권이지만, 연 3%의 물가상승률을 감안하면 20년 후 실질 가치는 절반 수준입니다.')
-    checks.push(`평균 수명 ${LIFE_EXP}세 기준이며, 더 오래 사실 경우 자금이 더 빨리 소진됩니다.`)
+    const gap = STATS.avgNeeded - monthly
+    if (gap > 0) checks.push(`한국인이 생각하는 노후 적정 생활비는 월 350만원입니다. 당신은 월 ${won(gap)}원이 부족합니다. (KB금융 2025)`)
+    if (monthly < STATS.minNeeded) checks.push(`노후 '최소' 생활비 월 248만원에도 미달합니다. 기본적인 생활 유지가 어려울 수 있습니다.`)
+    if (monthly < STATS.avgActual) checks.push(`한국인의 실제 노후 조달 가능 금액 평균 월 230만원보다도 적습니다.`)
+    checks.push(`국민연금 평균 수령액은 월 67만원에 불과합니다. 국민연금만으로는 절대 부족합니다. (국민연금공단 2025)`)
+    if (retireAge > STATS.realRetireAge) checks.push(`희망 은퇴 나이 ${retireAge}세지만, 한국인 실제 은퇴 나이는 평균 56세입니다. 예상보다 빨리 은퇴할 수 있습니다.`)
+    if (retireAge - age < 15) checks.push(`은퇴까지 ${retireAge - age}년밖에 남지 않았습니다. 1년이 지날수록 만회가 어려워집니다.`)
+    checks.push(`65세 이상 연간 의료비 평균 515만원. 나이 들수록 의료비가 급증합니다.`)
+    checks.push(`노후 준비가 잘 되어 있다고 답한 한국인은 19.1%뿐입니다. 10명 중 8명은 불안한 노후를 맞이합니다.`)
+    if (monthly >= 3_000_000) checks.push(`상위권이지만 연 3% 물가상승률 감안 시 20년 후 실질 가치는 절반 수준입니다.`)
     return checks
   }
 
@@ -480,6 +501,41 @@ export default function RetirementSimulator() {
             <MiniCard label="국민연금" value={`${wonW(result.pension)}/월`} />
             <MiniCard label="자산 인출" value={`${wonW(result.monthly - result.pension)}/월`} />
           </div>
+
+          {/* 실제 통계 비교 */}
+          <div className="bg-white rounded-xl border border-green-200 overflow-hidden">
+            <div className="bg-gray-900 px-4 py-3">
+              <h3 className="font-bold text-white text-sm">📊 2025 실제 통계로 보는 당신의 위치</h3>
+            </div>
+            <div className="p-4 space-y-3">
+              <StatBar label="노후 적정 생활비" amount={STATS.avgNeeded} mine={result.monthly} color="bg-green-400" />
+              <StatBar label="노후 최소 생활비" amount={STATS.minNeeded} mine={result.monthly} color="bg-yellow-400" />
+              <StatBar label="실제 조달 가능 평균" amount={STATS.avgActual} mine={result.monthly} color="bg-blue-400" />
+              <StatBar label="국민연금 평균 수령" amount={STATS.avgPension} mine={result.monthly} color="bg-gray-400" />
+              <p className="text-xs text-gray-400 pt-1">출처: KB금융 2025 골든라이프보고서, 통계청 가계금융복지조사, 국민연금공단</p>
+            </div>
+          </div>
+
+          {/* 충격 팩트 */}
+          <div className="bg-gray-900 rounded-xl p-4 space-y-3">
+            <h3 className="font-bold text-white text-sm">💀 알아야 할 불편한 진실</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <FactCard emoji="👴" number="56세" desc="한국인 실제 은퇴 나이 (희망 65세)" />
+              <FactCard emoji="💊" number="515만원" desc="65세+ 연간 의료비 평균" />
+              <FactCard emoji="😰" number="80.9%" desc="노후 준비 안 된 한국인" />
+              <FactCard emoji="💰" number="67만원" desc="국민연금 평균 수령액/월" />
+            </div>
+            {result.monthly < STATS.avgNeeded && (
+              <div className="bg-red-900/30 rounded-lg p-3 text-center">
+                <p className="text-red-300 text-sm font-bold">
+                  당신은 적정 생활비 대비 월 {wonW(STATS.avgNeeded - result.monthly)} 부족합니다
+                </p>
+                <p className="text-red-400/80 text-xs mt-1">
+                  은퇴 후 {LIFE_EXP - input.retireAge}년간 총 {wonW((STATS.avgNeeded - result.monthly) * (LIFE_EXP - input.retireAge) * 12)} 부족
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -621,20 +677,29 @@ export default function RetirementSimulator() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-green-200 p-4 space-y-2">
-            <p className="text-sm font-bold text-gray-900">{result.ageGroup}대 평균 데이터</p>
+          <div className="bg-white rounded-xl border border-green-200 p-4 space-y-3">
+            <p className="text-sm font-bold text-gray-900">📊 {result.ageGroup}대 실제 통계 비교 (2025)</p>
             <div className="grid grid-cols-2 gap-2 text-center">
               <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">평균 은퇴 후 월 수입</p>
-                <p className="text-base font-bold text-gray-900">
-                  {result.ageGroup === 20 ? '280' : result.ageGroup === 30 ? '240' : result.ageGroup === 40 ? '220' : result.ageGroup === 50 ? '200' : '180'}만원
+                <p className="text-xs text-gray-500">평균 총 자산</p>
+                <p className="text-base font-bold text-gray-900">{won((STATS.assetByAge[result.ageGroup] || 50000) * 10000)}원</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">나의 총 자산</p>
+                <p className={`text-base font-bold ${input.currentAssets * 10000 >= (STATS.assetByAge[result.ageGroup] || 50000) * 10000 ? 'text-green-600' : 'text-red-600'}`}>
+                  {won(input.currentAssets * 10000)}원
                 </p>
               </div>
               <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500">나의 은퇴 후 월 수입</p>
+                <p className="text-xs text-gray-500">평균 저축액</p>
+                <p className="text-base font-bold text-gray-900">{won((STATS.savingByAge[result.ageGroup] || 10000) * 10000)}원</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">나의 은퇴 후 월수입</p>
                 <p className={`text-base font-bold ${result.grade.color}`}>{won(result.monthly)}원</p>
               </div>
             </div>
+            <p className="text-xs text-gray-400">출처: 2025 가계금융복지조사 (통계청)</p>
           </div>
 
           {result.percentile > 50 && (
@@ -706,6 +771,35 @@ function MiniCard({ label, value }: { label: string; value: string }) {
     <div className="bg-white rounded-lg border border-green-100 p-3 text-center">
       <p className="text-xs text-gray-500">{label}</p>
       <p className="text-sm font-bold text-gray-900 mt-0.5">{value}</p>
+    </div>
+  )
+}
+
+function StatBar({ label, amount, mine, color }: { label: string; amount: number; mine: number; color: string }) {
+  const max = Math.max(amount, mine) * 1.1
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs">
+        <span className="text-gray-600">{label}</span>
+        <span className="text-gray-900 font-medium">{wonW(amount)}</span>
+      </div>
+      <div className="relative h-5 bg-gray-100 rounded-full overflow-hidden">
+        <div className={`absolute h-full rounded-full ${color} opacity-40`} style={{ width: `${(amount / max) * 100}%` }} />
+        <div className="absolute h-full bg-green-600 rounded-full" style={{ width: `${(mine / max) * 100}%` }} />
+        <div className="absolute inset-0 flex items-center px-2">
+          <span className="text-[10px] text-white font-bold drop-shadow">나: {wonW(mine)}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FactCard({ emoji, number, desc }: { emoji: string; number: string; desc: string }) {
+  return (
+    <div className="bg-white/10 rounded-lg p-3 text-center">
+      <span className="text-lg">{emoji}</span>
+      <p className="text-white font-black text-lg leading-tight mt-1">{number}</p>
+      <p className="text-gray-400 text-[10px] mt-0.5 leading-tight">{desc}</p>
     </div>
   )
 }
