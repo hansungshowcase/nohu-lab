@@ -1,6 +1,17 @@
 import { Program } from '@/lib/types'
 
 export const programRegistry: Program[] = [
+  // minTier 0 - 비회원
+  {
+    id: 'retirement-test',
+    name: '노후 준비 점수 테스트',
+    description: '12개 질문으로 알아보는 나의 노후 준비 상태',
+    minTier: 0,
+    icon: '🏦',
+    category: '테스트',
+    isActive: true,
+  },
+  // minTier 1 - 코어회원
   {
     id: 'text-counter',
     name: '글자수 카운터',
@@ -28,6 +39,7 @@ export const programRegistry: Program[] = [
     category: '유틸리티',
     isActive: true,
   },
+  // minTier 2 - 우수회원
   {
     id: 'hashtag-recommender',
     name: '해시태그 추천기',
@@ -44,15 +56,6 @@ export const programRegistry: Program[] = [
     minTier: 2,
     icon: '🔄',
     category: '유틸리티',
-    isActive: true,
-  },
-  {
-    id: 'retirement-test',
-    name: '노후 준비 점수 테스트',
-    description: '12개 질문으로 알아보는 나의 노후 준비 상태',
-    minTier: 0,
-    icon: '🏦',
-    category: '테스트',
     isActive: true,
   },
 ]

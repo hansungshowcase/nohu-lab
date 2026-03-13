@@ -1,20 +1,49 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { questions, calculateScores } from './retirement-test/questions'
 import { getResultByScore, ResultCode } from './retirement-test/results'
 import ResultCard from './retirement-test/ResultCard'
+import ResultCardA4 from './retirement-test/ResultCardA4'
 import ShareButtons from './retirement-test/ShareButtons'
+import AnalyzingScreen from './retirement-test/AnalyzingScreen'
 
-type Phase = 'intro' | 'quiz' | 'result'
+type Phase = 'intro' | 'quiz' | 'analyzing' | 'result'
+
+const FREE_LIMIT = 2
+const STORAGE_KEY = 'retirement-test-count'
+const CAFE_URL = 'https://cafe.naver.com/eovhskfktmak'
+
+function getTestCount(): number {
+  if (typeof window === 'undefined') return 0
+  return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10)
+}
+
+function incrementTestCount(): void {
+  if (typeof window === 'undefined') return
+  const current = getTestCount()
+  localStorage.setItem(STORAGE_KEY, String(current + 1))
+}
 
 export default function RetirementTest() {
   const [phase, setPhase] = useState<Phase>('intro')
   const [currentQ, setCurrentQ] = useState(0)
   const [answers, setAnswers] = useState<Record<number, number>>({})
+  const [showLimitModal, setShowLimitModal] = useState(false)
+  const [testCount, setTestCount] = useState(0)
   const cardRef = useRef<HTMLDivElement>(null)
+  const a4CardRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setTestCount(getTestCount())
+  }, [])
 
   const handleStart = useCallback(() => {
+    const count = getTestCount()
+    if (count >= FREE_LIMIT) {
+      setShowLimitModal(true)
+      return
+    }
     setPhase('quiz')
     setCurrentQ(0)
     setAnswers({})
@@ -28,9 +57,15 @@ export default function RetirementTest() {
     if (currentQ < questions.length - 1) {
       setCurrentQ((prev) => prev + 1)
     } else {
-      setPhase('result')
+      setPhase('analyzing')
     }
   }, [currentQ])
+
+  const handleAnalysisComplete = useCallback(() => {
+    incrementTestCount()
+    setTestCount(getTestCount())
+    setPhase('result')
+  }, [])
 
   const handlePrev = useCallback(() => {
     if (currentQ > 0) {
@@ -38,10 +73,52 @@ export default function RetirementTest() {
     }
   }, [currentQ])
 
+  // Limit modal
+  const limitModal = showLimitModal ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
+        <div className="bg-gradient-to-br from-green-500 to-green-700 text-white p-6 text-center">
+          <div className="text-4xl mb-3">🔒</div>
+          <h3 className="text-lg font-bold">무료 체험이 끝났어요!</h3>
+        </div>
+        <div className="p-6 space-y-4">
+          <p className="text-center text-gray-700 text-sm leading-relaxed">
+            무료 테스트 <strong>{FREE_LIMIT}회</strong>를 모두 사용하셨습니다.
+          </p>
+          <div className="bg-green-50 rounded-xl p-4 text-center">
+            <p className="text-green-800 font-bold text-base mb-1">
+              카페 회원가입하고 무제한으로 이용하세요!
+            </p>
+            <p className="text-green-600 text-xs">
+              가입 즉시 무제한 테스트 + 상세 리포트 다운로드
+            </p>
+          </div>
+          <a
+            href={CAFE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full py-3.5 bg-green-600 hover:bg-green-700 text-white text-center text-base font-bold rounded-xl transition"
+          >
+            카페 회원가입 하러가기
+          </a>
+          <button
+            onClick={() => setShowLimitModal(false)}
+            className="w-full py-2.5 text-sm text-gray-400 hover:text-gray-600 transition"
+          >
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null
+
   // Intro screen
   if (phase === 'intro') {
+    const remaining = Math.max(0, FREE_LIMIT - testCount)
+
     return (
       <div className="max-w-2xl mx-auto space-y-6">
+        {limitModal}
         <div className="bg-white rounded-2xl shadow-sm border border-green-100 overflow-hidden">
           <div className="bg-gradient-to-br from-green-500 to-green-700 text-white p-8 text-center">
             <div className="text-5xl mb-4">🏦</div>
@@ -71,8 +148,17 @@ export default function RetirementTest() {
             </div>
             <div className="text-center text-sm text-gray-500 space-y-1">
               <p>소요 시간: 약 2분</p>
-              <p>총 12문항 · 비회원도 가능</p>
+              <p>총 12문항 · 비회원 {FREE_LIMIT}회 무료</p>
             </div>
+            {remaining > 0 ? (
+              <div className="text-center text-xs text-green-600 font-medium">
+                무료 테스트 {remaining}회 남음
+              </div>
+            ) : (
+              <div className="text-center text-xs text-orange-500 font-medium">
+                무료 체험이 종료되었습니다
+              </div>
+            )}
             <button
               onClick={handleStart}
               className="w-full py-4 bg-green-600 hover:bg-green-700 text-white text-lg font-bold rounded-xl transition"
@@ -151,6 +237,11 @@ export default function RetirementTest() {
     )
   }
 
+  // Analyzing screen
+  if (phase === 'analyzing') {
+    return <AnalyzingScreen onComplete={handleAnalysisComplete} />
+  }
+
   // Result screen
   const { total, categories } = calculateScores(answers)
   const maxTotal = 48
@@ -175,12 +266,22 @@ export default function RetirementTest() {
         categories={categories}
       />
 
+      {/* A4 report card (hidden, for capture) */}
+      <ResultCardA4
+        ref={a4CardRef}
+        total={total}
+        maxTotal={maxTotal}
+        result={result}
+        categories={categories}
+      />
+
       {/* Share buttons */}
       <ShareButtons
         shareUrl={shareUrl}
         total={total}
         grade={result.grade}
         cardRef={cardRef}
+        a4CardRef={a4CardRef}
       />
 
       {/* Retry */}

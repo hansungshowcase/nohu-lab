@@ -7,6 +7,7 @@ interface ShareButtonsProps {
   total: number
   grade: string
   cardRef: RefObject<HTMLDivElement | null>
+  a4CardRef?: RefObject<HTMLDivElement | null>
 }
 
 export default function ShareButtons({
@@ -14,6 +15,7 @@ export default function ShareButtons({
   total,
   grade,
   cardRef,
+  a4CardRef,
 }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -37,17 +39,18 @@ export default function ShareButtons({
   }
 
   async function saveImage() {
-    if (!cardRef.current || saving) return
+    const target = a4CardRef?.current || cardRef.current
+    if (!target || saving) return
     setSaving(true)
     try {
       const html2canvas = (await import('html2canvas')).default
-      const canvas = await html2canvas(cardRef.current, {
+      const canvas = await html2canvas(target, {
         scale: 2,
         backgroundColor: '#ffffff',
         useCORS: true,
       })
       const link = document.createElement('a')
-      link.download = `노후준비점수_${total}점_${grade}.png`
+      link.download = `노후준비_리포트_${total}점_${grade}.png`
       link.href = canvas.toDataURL('image/png')
       link.click()
     } catch (err) {

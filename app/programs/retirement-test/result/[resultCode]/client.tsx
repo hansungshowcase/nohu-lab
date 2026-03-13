@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { getResultByCode } from '@/components/programs/retirement-test/results'
 import { CategoryScore } from '@/components/programs/retirement-test/questions'
 import ResultCard from '@/components/programs/retirement-test/ResultCard'
+import ResultCardA4 from '@/components/programs/retirement-test/ResultCardA4'
 import ShareButtons from '@/components/programs/retirement-test/ShareButtons'
 import Link from 'next/link'
 
@@ -29,6 +30,7 @@ export default function RetirementTestResultClient({
 function ResultContent({ resultCode }: { resultCode: string }) {
   const searchParams = useSearchParams()
   const cardRef = useRef<HTMLDivElement>(null)
+  const a4CardRef = useRef<HTMLDivElement>(null)
 
   const result = getResultByCode(resultCode)
 
@@ -90,11 +92,20 @@ function ResultContent({ resultCode }: { resultCode: string }) {
           categories={categories}
         />
 
+        <ResultCardA4
+          ref={a4CardRef}
+          total={total}
+          maxTotal={48}
+          result={result}
+          categories={categories}
+        />
+
         <ShareButtons
           shareUrl={shareUrl}
           total={total}
           grade={result.grade}
           cardRef={cardRef}
+          a4CardRef={a4CardRef}
         />
 
         {/* CTA */}
