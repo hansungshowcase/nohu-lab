@@ -48,9 +48,9 @@ export const TIER_MAP: Record<number, { name: string; color: string; description
 }
 
 export const TIER_COLORS: Record<number, string> = {
-  0: 'bg-gray-100 text-gray-600 border-gray-300',
-  1: 'bg-green-100 text-green-800 border-green-300',
-  2: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  3: 'bg-orange-100 text-orange-800 border-orange-300',
-  4: 'bg-purple-100 text-purple-800 border-purple-300',
+  0: 'bg-gray-50 text-gray-500 ring-1 ring-gray-200',
+  1: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+  2: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+  3: 'bg-orange-50 text-orange-700 ring-1 ring-orange-200',
+  4: 'bg-violet-50 text-violet-700 ring-1 ring-violet-200',
 }

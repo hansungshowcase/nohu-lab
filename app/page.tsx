@@ -21,7 +21,7 @@ export default function LoginPage() {
   async function pollVerifyStatus(verifyId: string) {
     setVerifying(true)
     let attempts = 0
-    const maxAttempts = 20 // 40 seconds max
+    const maxAttempts = 20
 
     return new Promise<void>((resolve) => {
       pollingRef.current = setInterval(async () => {
@@ -52,7 +52,6 @@ export default function LoginPage() {
           }
           resolve()
         } catch {
-          // Network error, keep polling
           if (attempts >= maxAttempts) {
             stopPolling()
             setVerifying(false)
@@ -85,7 +84,6 @@ export default function LoginPage() {
       }
 
       if (data.status === 'verifying' && data.verifyId) {
-        // Start polling for verification result
         await pollVerifyStatus(data.verifyId)
         return
       }
@@ -102,49 +100,52 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-100">
+    <div className="min-h-screen flex items-center justify-center bg-premium px-4 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-green-100/40 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-emerald-100/30 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+
+      <div className="w-full max-w-[420px] relative">
+        <div className="animate-fade-in bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-green-900/5 p-8 sm:p-10 border border-white/60">
+          {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">☕</span>
+            <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-green-500/20">
+              <span className="text-white font-bold text-xl">N</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">
               노후연구소
             </h1>
-            <p className="text-gray-500 mt-1">
+            <p className="text-[13px] text-gray-400 mt-1.5 font-medium">
               카페 닉네임으로 로그인하세요
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[12px] font-semibold text-gray-500 mb-2 uppercase tracking-wider">
                 카페 닉네임
               </label>
               <input
                 type="text"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                placeholder="노후연구소 카페에서 사용하는 닉네임"
-                className="w-full px-4 py-3 rounded-lg border border-green-200 bg-white text-gray-900 focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none transition"
+                placeholder="닉네임을 입력하세요"
+                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-[14px] placeholder:text-gray-300 focus:ring-2 focus:ring-green-500/20 focus:border-green-400 outline-none transition-all duration-200"
                 required
                 disabled={loading}
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg whitespace-pre-line">
+              <div className="bg-red-50 text-red-600 text-[13px] p-3.5 rounded-xl whitespace-pre-line border border-red-100">
                 {error}
               </div>
             )}
 
             {verifying && (
-              <div className="bg-amber-50 text-amber-700 text-sm p-3 rounded-lg flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4 shrink-0" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+              <div className="bg-amber-50 text-amber-700 text-[13px] p-3.5 rounded-xl flex items-center gap-2.5 border border-amber-100">
+                <div className="w-4 h-4 spinner shrink-0" style={{ borderTopColor: '#d97706' }} />
                 카페 회원 여부를 확인하고 있습니다...
               </div>
             )}
@@ -152,14 +153,11 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-green-300 disabled:to-emerald-300 text-white font-semibold text-[14px] rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-green-500/20 hover:shadow-lg hover:shadow-green-500/30"
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
+                  <div className="w-5 h-5 spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} />
                   {verifying ? '회원 확인 중...' : '확인 중...'}
                 </>
               ) : (
@@ -168,12 +166,14 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="relative flex items-center my-5">
-            <div className="flex-grow border-t border-gray-200" />
-            <span className="mx-3 text-xs text-gray-400">또는</span>
-            <div className="flex-grow border-t border-gray-200" />
+          {/* Divider */}
+          <div className="relative flex items-center my-6">
+            <div className="flex-grow border-t border-gray-100" />
+            <span className="mx-4 text-[11px] text-gray-300 font-medium uppercase tracking-wider">or</span>
+            <div className="flex-grow border-t border-gray-100" />
           </div>
 
+          {/* Guest login */}
           <button
             type="button"
             onClick={async () => {
@@ -194,27 +194,28 @@ export default function LoginPage() {
               }
             }}
             disabled={loading}
-            className="w-full py-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 font-medium rounded-lg transition"
+            className="w-full py-3.5 bg-white hover:bg-gray-50 disabled:bg-gray-50 text-gray-600 font-medium text-[14px] rounded-xl transition-all duration-200 border border-gray-200 hover:border-gray-300"
           >
             비회원으로 둘러보기
           </button>
 
-          <p className="text-center text-sm text-gray-600 mt-5 leading-relaxed">
-            카페 등급에 따라 사용 가능한 도구가 다릅니다.
+          {/* Footer */}
+          <p className="text-center text-[12px] text-gray-400 mt-6 leading-relaxed">
+            카페 등급에 따라 사용 가능한 도구가 다릅니다
           </p>
 
-          <div className="text-center mt-4 space-y-2">
+          <div className="text-center mt-4 space-y-3">
             <a
               href="https://cafe.naver.com/eovhskfktmak"
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full py-3 border border-green-200 text-green-700 font-medium rounded-lg hover:bg-green-50 transition text-center"
+              className="block w-full py-3 border border-gray-200 text-gray-600 font-medium text-[13px] rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-center"
             >
               카페 회원가입
             </a>
             <a
               href="/admin/login"
-              className="inline-block text-xs text-gray-400 hover:text-gray-600 transition mt-2"
+              className="inline-block text-[11px] text-gray-300 hover:text-gray-500 transition-colors mt-1"
             >
               관리자 로그인
             </a>
