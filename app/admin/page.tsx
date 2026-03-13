@@ -367,7 +367,24 @@ function AdminContent() {
               네이버 카페 회원 목록을 가져와서 DB에 등록합니다.
             </p>
 
-            {/* 방법 1: 직접 입력 */}
+            {/* 방법 1: 카페 API 자동 동기화 */}
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 mb-6 border border-green-200 dark:border-green-800">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                카페 API 자동 동기화 (권장)
+              </h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                네이버 로그인 후 카페 회원 전체 목록을 자동으로 가져옵니다.<br />
+                등급도 자동 매핑됩니다.
+              </p>
+              <a
+                href="/api/auth/naver?mode=admin"
+                className="inline-block px-6 py-3 bg-[#03C75A] hover:bg-[#02b351] text-white rounded-lg text-sm font-medium"
+              >
+                네이버 카페 API로 동기화
+              </a>
+            </div>
+
+            {/* 방법 2: 직접 입력 */}
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-6">
               <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
                 방법 1: 직접 입력
