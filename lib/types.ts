@@ -25,6 +25,7 @@ export interface TierInfo {
 }
 
 // DB tier 범위: 1~4 (DB CHECK 제약)
+// tier 0 = 비회원 (DB에 저장하지 않음, JWT만 발급)
 // 카페 등급 표시는 cafeTier 필드로 별도 관리
 // tier 1 = 일반/코어, tier 2 = 우수, tier 3 = 프리미엄/시그니처, tier 4 = 헤리티지/관리자
 //
@@ -39,6 +40,7 @@ export const CAFE_LEVELS = [
 ]
 
 export const TIER_MAP: Record<number, { name: string; color: string; description: string; cafeName: string }> = {
+  0: { name: '비회원', color: 'gray', description: '체험용 - 일부 프로그램만 이용 가능', cafeName: '비회원' },
   1: { name: '코어회원', color: 'green', description: '기본 프로그램 이용 가능', cafeName: '코어회원' },
   2: { name: '우수회원', color: 'yellow', description: '우수회원 이상 이용 가능', cafeName: '우수회원' },
   3: { name: '프리미엄회원', color: 'orange', description: '프리미엄회원 이상 이용 가능', cafeName: '프리미엄회원' },
@@ -46,6 +48,7 @@ export const TIER_MAP: Record<number, { name: string; color: string; description
 }
 
 export const TIER_COLORS: Record<number, string> = {
+  0: 'bg-gray-100 text-gray-600 border-gray-300',
   1: 'bg-green-100 text-green-800 border-green-300',
   2: 'bg-yellow-100 text-yellow-800 border-yellow-300',
   3: 'bg-orange-100 text-orange-800 border-orange-300',

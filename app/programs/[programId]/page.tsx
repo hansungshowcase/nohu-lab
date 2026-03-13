@@ -12,12 +12,13 @@ const programComponents: Record<string, React.LazyExoticComponent<React.Componen
   'nickname-generator': lazy(() => import('@/components/programs/NicknameGenerator')),
   'hashtag-recommender': lazy(() => import('@/components/programs/HashtagRecommender')),
   'text-converter': lazy(() => import('@/components/programs/TextConverter')),
+  'retirement-test': lazy(() => import('@/components/programs/RetirementTest')),
 }
 
 interface User {
   memberId: string
   nickname: string
-  tier: 1 | 2 | 3 | 4
+  tier: 0 | 1 | 2 | 3 | 4
 }
 
 export default function ProgramPage() {

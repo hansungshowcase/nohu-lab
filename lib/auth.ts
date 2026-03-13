@@ -7,7 +7,7 @@ const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'default-s
 export interface TokenPayload {
   memberId: string
   nickname: string
-  tier: 1 | 2 | 3 | 4
+  tier: 0 | 1 | 2 | 3 | 4
 }
 
 export async function createToken(payload: TokenPayload): Promise<string> {
@@ -24,7 +24,7 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
     return {
       memberId: payload.memberId as string,
       nickname: payload.nickname as string,
-      tier: payload.tier as 1 | 2 | 3 | 4,
+      tier: payload.tier as 0 | 1 | 2 | 3 | 4,
     }
   } catch {
     return null

@@ -7,7 +7,7 @@ import Sidebar from './Sidebar'
 interface User {
   memberId: string
   nickname: string
-  tier: 1 | 2 | 3 | 4
+  tier: 0 | 1 | 2 | 3 | 4
 }
 
 export default function AppShell({ children }: { children: React.ReactNode }) {

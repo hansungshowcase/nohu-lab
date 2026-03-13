@@ -168,9 +168,38 @@ export default function LoginPage() {
             </button>
           </form>
 
+          <div className="relative flex items-center my-5">
+            <div className="flex-grow border-t border-gray-200" />
+            <span className="mx-3 text-xs text-gray-400">또는</span>
+            <div className="flex-grow border-t border-gray-200" />
+          </div>
+
+          <button
+            type="button"
+            onClick={async () => {
+              setError('')
+              setLoading(true)
+              try {
+                const res = await fetch('/api/auth/guest-login', { method: 'POST' })
+                const data = await res.json()
+                if (data.success) {
+                  router.push('/dashboard')
+                } else {
+                  setError(data.error || '비회원 로그인에 실패했습니다.')
+                  setLoading(false)
+                }
+              } catch {
+                setError('서버에 연결할 수 없습니다.')
+                setLoading(false)
+              }
+            }}
+            disabled={loading}
+            className="w-full py-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 font-medium rounded-lg transition"
+          >
+            비회원으로 둘러보기
+          </button>
+
           <p className="text-center text-sm text-gray-600 mt-5 leading-relaxed">
-            노후연구소 카페 회원만 이용 가능합니다.
-            <br />
             카페 등급에 따라 사용 가능한 도구가 다릅니다.
           </p>
 

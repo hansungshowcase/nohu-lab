@@ -10,7 +10,7 @@ import { TIER_MAP } from '@/lib/types'
 interface User {
   memberId: string
   nickname: string
-  tier: 1 | 2 | 3 | 4
+  tier: 0 | 1 | 2 | 3 | 4
 }
 
 export default function DashboardPage() {

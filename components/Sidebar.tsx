@@ -9,7 +9,7 @@ import { getAllCategories } from '@/app/programs/registry'
 interface User {
   memberId: string
   nickname: string
-  tier: 1 | 2 | 3 | 4
+  tier: 0 | 1 | 2 | 3 | 4
 }
 
 export default function Sidebar({ user }: { user: User | null }) {
@@ -30,8 +30,9 @@ export default function Sidebar({ user }: { user: User | null }) {
     ...categories.map((cat) => ({
       href: `/dashboard?category=${encodeURIComponent(cat)}`,
       label: cat,
-      icon: cat === '유틸리티' ? '🔧' : cat === '콘텐츠' ? '📄' : cat === '분석' ? '📊' : '📁',
+      icon: cat === '유틸리티' ? '🔧' : cat === '콘텐츠' ? '📄' : cat === '분석' ? '📊' : cat === '테스트' ? '📋' : '📁',
     })),
+    { href: '/dashboard/tier-guide', label: '등급 안내', icon: '🏆' },
     ...(user.tier === 4
       ? [{ href: '/admin', label: '관리자 패널', icon: '⚙️' }]
       : []),
