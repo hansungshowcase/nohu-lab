@@ -152,7 +152,7 @@ export default function TierGuidePage() {
                 </div>
 
                 {t.conditions && (
-                  <div className="mt-4 grid grid-cols-4 gap-2">
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
                       { label: '게시글', value: t.conditions.posts },
                       { label: '댓글', value: t.conditions.comments },

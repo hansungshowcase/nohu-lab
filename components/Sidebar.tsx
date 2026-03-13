@@ -147,7 +147,7 @@ export default function Sidebar({ user }: { user: User | null }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-[260px] bg-white/95 backdrop-blur-md border-r border-gray-100 transform transition-transform duration-300 ease-out lg:translate-x-0 ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-[260px] max-w-[80vw] bg-white/95 backdrop-blur-md border-r border-gray-100 transform transition-transform duration-300 ease-out lg:translate-x-0 ${
           open ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
       >

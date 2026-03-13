@@ -102,8 +102,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-premium px-4 relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-green-100/40 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-emerald-100/30 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+      <div className="hidden sm:block absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-green-100/40 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+      <div className="hidden sm:block absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-emerald-100/30 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
 
       <div className="w-full max-w-[420px] relative">
         <div className="animate-fade-in bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-green-900/5 p-8 sm:p-10 border border-white/60">
