@@ -411,18 +411,37 @@ function AdminContent() {
           <div className="bg-white rounded-lg border border-green-200 p-6 space-y-4">
             <h2 className="text-lg font-bold text-gray-900">확장프로그램 설치 방법</h2>
 
+            <a
+              href="/cafe-sync-extension.zip"
+              download
+              className="flex items-center justify-center gap-3 w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-base transition"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              확장프로그램 다운로드 (cafe-sync-extension.zip)
+            </a>
+
             <div className="bg-green-50 rounded-lg p-5 space-y-3">
-              <h3 className="font-bold text-gray-900 text-base">1단계: Chrome에 설치</h3>
+              <h3 className="font-bold text-gray-900 text-base">1단계: 다운로드 &amp; 압축 해제</h3>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
-                <li>Chrome 주소창에 <code className="bg-white px-1.5 py-0.5 rounded text-xs border font-bold">chrome://extensions</code> 입력</li>
-                <li>우측 상단 <b>&quot;개발자 모드&quot;</b> 스위치 켜기</li>
-                <li>좌측 상단 <b>&quot;압축해제된 확장 프로그램을 로드합니다&quot;</b> 클릭</li>
-                <li>바탕화면의 <code className="bg-white px-1.5 py-0.5 rounded text-xs border font-bold">cafe-sync-extension</code> 폴더 선택</li>
+                <li>위 버튼을 클릭해서 zip 파일 다운로드</li>
+                <li>다운로드한 파일을 <b>바탕화면</b>에 압축 해제</li>
               </ol>
             </div>
 
             <div className="bg-green-50 rounded-lg p-5 space-y-3">
-              <h3 className="font-bold text-gray-900 text-base">2단계: 네이버 로그인 확인</h3>
+              <h3 className="font-bold text-gray-900 text-base">2단계: Chrome에 설치</h3>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
+                <li>Chrome 주소창에 <code className="bg-white px-1.5 py-0.5 rounded text-xs border font-bold">chrome://extensions</code> 입력 후 이동</li>
+                <li>우측 상단 <b>&quot;개발자 모드&quot;</b> 스위치 켜기</li>
+                <li>좌측 상단 <b>&quot;압축해제된 확장 프로그램을 로드합니다&quot;</b> 클릭</li>
+                <li>바탕화면에 압축 해제한 <code className="bg-white px-1.5 py-0.5 rounded text-xs border font-bold">cafe-sync-extension</code> 폴더 선택</li>
+              </ol>
+            </div>
+
+            <div className="bg-green-50 rounded-lg p-5 space-y-3">
+              <h3 className="font-bold text-gray-900 text-base">3단계: 네이버 로그인 확인</h3>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
                 <li>같은 Chrome에서 <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="text-green-700 underline font-bold">노후연구소 카페</a>에 접속</li>
                 <li><b>카페 관리자(운영진) 계정</b>으로 로그인되어 있는지 확인</li>
@@ -431,7 +450,7 @@ function AdminContent() {
             </div>
 
             <div className="bg-green-50 rounded-lg p-5 space-y-3">
-              <h3 className="font-bold text-gray-900 text-base">3단계: 정상 작동 확인</h3>
+              <h3 className="font-bold text-gray-900 text-base">4단계: 정상 작동 확인</h3>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
                 <li>확장프로그램 아이콘 클릭 &gt; <b>&quot;실행 중&quot;</b> 확인</li>
                 <li>노후연구소 웹사이트에서 카페 회원 닉네임으로 로그인 테스트</li>
