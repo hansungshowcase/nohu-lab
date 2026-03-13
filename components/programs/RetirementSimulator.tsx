@@ -195,18 +195,13 @@ export default function RetirementSimulator() {
   const makeCard = useCallback((): HTMLCanvasElement | null => {
     if (!result) return null
     const P = prices, r = result
-    const W = 700, H = 990, sc = 2
+    const W = 700, H = 920, sc = 2
     const c = document.createElement('canvas'); c.width = W * sc; c.height = H * sc
     const x = c.getContext('2d')!; x.scale(sc, sc)
     const L = 40, R2 = W - 40, CW = R2 - L
     const gc: Record<string, string> = { S: '#f59e0b', A: '#22c55e', B: '#3b82f6', C: '#f97316', D: '#ef4444' }
     const col = gc[r.gr] || '#888'
-
     const line = (yy: number) => { x.strokeStyle = '#e0e0e0'; x.lineWidth = 1; x.beginPath(); x.moveTo(L, yy); x.lineTo(R2, yy); x.stroke() }
-    const row = (label: string, val: string, yy: number, hl?: boolean) => {
-      x.fillStyle = '#777'; x.font = '400 13px system-ui'; x.textAlign = 'left'; x.fillText(label, L, yy)
-      x.fillStyle = hl ? col : '#222'; x.font = `${hl ? '700' : '500'} 14px system-ui`; x.textAlign = 'right'; x.fillText(val, R2, yy); x.textAlign = 'left'
-    }
     const wrap = (text: string, yy: number, mw: number, fs = 13) => {
       x.font = `400 ${fs}px system-ui`; let ln = '', ly = yy
       for (const ch of text) { const t = ln + ch; if (x.measureText(t).width > mw) { x.fillText(ln, L, ly); ly += fs + 5; ln = ch } else ln = t }
@@ -215,92 +210,99 @@ export default function RetirementSimulator() {
 
     // 배경
     x.fillStyle = '#fafafa'; x.fillRect(0, 0, W, H)
-    x.fillStyle = 'rgba(0,0,0,.012)'; x.font = '900 420px system-ui'; x.fillText(r.gr, 250, 500)
 
     // 헤더
-    x.fillStyle = '#999'; x.font = '300 11px system-ui'; x.fillText('노후연구소 | ' + P.updated + ' 물가 기준', L, 34)
-    x.fillStyle = '#111'; x.font = '900 26px system-ui'; x.fillText('은퇴 종합 진단서', L, 70)
+    x.fillStyle = '#999'; x.font = '300 11px system-ui'; x.fillText('노후연구소 | ' + P.updated + ' 실제 물가 기준', L, 30)
+    x.fillStyle = '#111'; x.font = '900 24px system-ui'; x.fillText('은퇴 후, 당신의 어느 하루', L, 62)
 
     // 등급 뱃지
-    x.fillStyle = col; x.beginPath(); x.roundRect(R2 - 56, 22, 56, 56, 12); x.fill()
-    x.fillStyle = '#fff'; x.font = '900 32px system-ui'; x.textAlign = 'center'; x.fillText(r.gr, R2 - 28, 56)
-    x.font = '500 9px system-ui'; x.fillText('등급', R2 - 28, 70); x.textAlign = 'left'
+    x.fillStyle = col; x.beginPath(); x.roundRect(R2 - 50, 18, 50, 50, 10); x.fill()
+    x.fillStyle = '#fff'; x.font = '900 28px system-ui'; x.textAlign = 'center'; x.fillText(r.gr, R2 - 25, 50); x.textAlign = 'left'
 
-    // 별명
-    x.fillStyle = col; x.font = '700 15px system-ui'; x.fillText(`"${r.nickname}"`, L, 100)
-    x.fillStyle = '#888'; x.font = '400 12px system-ui'; x.fillText(r.grN, L, 118)
+    // 별명 + 월 가용
+    x.fillStyle = col; x.font = '700 14px system-ui'; x.fillText(`"${r.nickname}"`, L, 88)
+    x.fillStyle = '#888'; x.font = '400 12px system-ui'; x.fillText(`${r.grN} | 월 ${ww(r.monthly)} | 한 끼 ${ww(r.perMeal)}`, L, 106)
 
-    let y = 134; line(y); y += 24
+    let y = 120; line(y); y += 20
 
-    // 핵심 수치 (월/한끼/하루 한 줄)
-    x.fillStyle = '#888'; x.font = '400 11px system-ui'; x.fillText('은퇴 후 월 가용액', L, y)
-    x.fillStyle = '#111'; x.font = '900 40px system-ui'; x.fillText(ww(r.monthly), L, y + 38); y += 50
-    x.fillStyle = '#666'; x.font = '400 11px system-ui'; x.fillText('한 끼', L, y)
-    x.fillStyle = col; x.font = '800 20px system-ui'; x.fillText(ww(r.perMeal), L + 42, y)
-    x.fillStyle = '#666'; x.font = '400 11px system-ui'; x.fillText('하루', L + 220, y)
-    x.fillStyle = '#333'; x.font = '700 16px system-ui'; x.fillText(ww(r.daily), L + 258, y)
-    if (r.perMeal < P.lunchAvg) { x.fillStyle = '#ef4444'; x.font = '500 11px system-ui'; x.fillText(`점심 ${ww(P.lunchAvg)}의 ${Math.round(r.perMeal / P.lunchAvg * 100)}%`, L + 420, y) }
-    y += 16; line(y); y += 20
+    // 하루 타임라인
+    type CS = { t: string; e: string; c: number; ok: boolean }
+    const slots: CS[] = (() => {
+      const mo = r.monthly
+      if (mo >= 4e6) return [
+        { t: '07:00', e: `카페 아메리카노 ${ww(P.americano)}`, c: P.americano, ok: true },
+        { t: '09:00', e: '문화센터 수영 80,000원/월', c: 80000, ok: true },
+        { t: '12:00', e: `시장 칼국수 ${ww(P.gukbap)}`, c: P.gukbap, ok: true },
+        { t: '15:00', e: '손주 간식 5,000원', c: 5000, ok: true },
+        { t: '18:00', e: '마트 삼겹살 20,000원', c: 20000, ok: true },
+      ]
+      if (mo >= 3e6) return [
+        { t: '07:00', e: '커피믹스 200원', c: 200, ok: true },
+        { t: '09:00', e: '뒷산 등산 (무료)', c: 0, ok: true },
+        { t: '12:00', e: '집에서 김치찌개 3,000원', c: 3000, ok: true },
+        { t: '15:00', e: '도서관 (에어컨 무료)', c: 0, ok: true },
+        { t: '18:00', e: '이마트 할인 장보기 15,000원', c: 15000, ok: true },
+      ]
+      if (mo >= 2e6) return [
+        { t: '07:00', e: '밥 + 김치 1,000원', c: 1000, ok: true },
+        { t: '12:00', e: '남은 밥에 계란 후라이 1,500원', c: 1500, ok: true },
+        { t: '15:00', e: '혈압약... 병원비 9,000원 무섭다', c: 9000, ok: false },
+        { t: '18:00', e: '마감할인 반찬 5,000원', c: 5000, ok: true },
+        { t: '21:00', e: '경조사 축의금 10만원... 이달 마이너스', c: 100000, ok: false },
+      ]
+      if (mo >= 15e5) return [
+        { t: '07:00', e: '계란 2개, 아껴야 한다 600원', c: 600, ok: true },
+        { t: '12:00', e: '경로식당 2,000원', c: 2000, ok: true },
+        { t: '15:00', e: '혈압약 떨어졌다. 참는다', c: 0, ok: false },
+        { t: '18:00', e: `라면 한 봉지 ${ww(P.ramen)}`, c: P.ramen, ok: true },
+        { t: '21:00', e: '난방 안 튼다. 이불 속으로', c: 0, ok: false },
+      ]
+      return [
+        { t: '07:00', e: '간장 비빔밥 (반찬 없다)', c: 500, ok: false },
+        { t: '12:00', e: '무료급식소 줄 서기', c: 0, ok: false },
+        { t: '15:00', e: '전기세 35,000원 고지서', c: 35000, ok: false },
+        { t: '18:00', e: '폐기 직전 도시락 2,000원', c: 2000, ok: false },
+        { t: '21:00', e: '아들한테 전화할까... 말까', c: 0, ok: false },
+      ]
+    })()
 
-    // 치킨/국밥/도시락 한 줄
-    const ck = Math.floor(r.monthly / P.chicken), gb = Math.floor(r.monthly / P.gukbap), cv = Math.floor(r.monthly / P.cvs)
-    x.fillStyle = '#555'; x.font = '600 12px system-ui'
-    x.fillText(`치킨 ${ck}마리`, L, y); x.fillText(`국밥 ${gb}그릇`, L + 140, y); x.fillText(`도시락 ${cv}개`, L + 290, y)
-    x.fillStyle = '#aaa'; x.font = '400 10px system-ui'
-    x.fillText(`(${ww(P.chicken)})`, L + 80, y); x.fillText(`(${ww(P.gukbap)})`, L + 220, y); x.fillText(`(${ww(P.cvs)})`, L + 368, y)
-    y += 16; line(y); y += 20
-
-    // 나의 위치 (3행)
-    x.fillStyle = '#555'; x.font = '600 12px system-ui'; x.fillText('나의 위치', L, y); y += 20
-    row(`${r.ag}대 동년배 순위`, `상위 ${r.pct}%`, y, r.pct <= 30); y += 22
-    row('노후 준비도', `${r.fi}%`, y, r.fi >= 70); y += 22
-    row('은퇴 시 총자산 / 국민연금', `${w(r.total)} / 월 ${ww(r.penM)}`, y); y += 8
-    line(y); y += 20
-
-    // 할 수 있는 것 / 없는 것 (각 4개)
-    const m = r.monthly, canL: string[] = [], cantL: string[] = []
-    if (m >= 300000) canL.push('사 먹기'); else cantL.push('외식')
-    if (m >= P.chicken * 2) canL.push('치킨 배달'); else cantL.push('치킨')
-    if (m >= 200000) canL.push('손주 용돈'); else cantL.push('손주 용돈')
-    if (m >= 300000) canL.push('병원'); else cantL.push('병원')
-    if (m >= 500000) canL.push('여행'); else cantL.push('여행')
-    if (m < 3000000) cantL.push('해외여행'); else canL.push('해외여행')
-    x.fillStyle = '#555'; x.font = '600 12px system-ui'; x.fillText('할 수 있는 것', L, y); x.fillText('할 수 없는 것', L + CW / 2, y); y += 18
-    for (let i = 0; i < Math.max(canL.length, cantL.length, 4); i++) {
-      if (canL[i]) { x.fillStyle = '#22c55e'; x.font = '700 11px system-ui'; x.fillText('V', L, y); x.fillStyle = '#555'; x.font = '400 11px system-ui'; x.fillText(canL[i], L + 16, y) }
-      if (cantL[i]) { x.fillStyle = '#ef4444'; x.font = '700 11px system-ui'; x.fillText('X', L + CW / 2, y); x.fillStyle = '#555'; x.font = '400 11px system-ui'; x.fillText(cantL[i], L + CW / 2 + 16, y) }
-      y += 18
-    }
+    slots.forEach(s => {
+      x.fillStyle = '#aaa'; x.font = '500 11px system-ui'; x.fillText(s.t, L, y)
+      x.fillStyle = s.ok ? '#333' : '#dc2626'; x.font = `${s.ok ? '400' : '600'} 13px system-ui`; x.fillText(s.e, L + 55, y)
+      if (!s.ok) { x.fillStyle = '#fecaca'; x.beginPath(); x.roundRect(L + 50, y - 12, CW - 50, 18, 4); x.fill(); x.fillStyle = '#dc2626'; x.font = '600 13px system-ui'; x.fillText(s.e, L + 55, y) }
+      y += 28
+    })
     y += 4; line(y); y += 20
 
-    // 종합 진단 (풍부하게)
-    x.fillStyle = col; x.font = '700 14px system-ui'; x.fillText('종합 진단', L, y); y += 20
-    const gap = S.need - r.monthly
-    let d1: string, d2: string
-    if (r.gr === 'S') { d1 = '여유 있는 노후입니다. 시장에서 제철 과일 사고, 가끔 외식도 됩니다.'; d2 = `다만 ${r.yrs}년 후 물가 반영 시 구매력 ${Math.round(r.inflAdj / r.monthly * 100)}%. 인플레이션 대비 필수.` }
-    else if (r.gr === 'A') { d1 = `먹고 사는 건 됩니다. 치킨은 시켜먹을 수 있지만, 경조사 겹치면 빠듯합니다.`; d2 = `월 ${ww(gap > 0 ? gap : 0)} 더 모으면 걱정 없는 수준. 저축률 ${r.sr}%${r.sr < 20 ? ' (권장 20%)' : ''}.` }
-    else if (r.gr === 'B') { d1 = `밥은 먹지만 병원비 한 번이면 그 달은 끝. 마감할인 반찬이 일상입니다.`; d2 = `적정 생활비 ${ww(S.need)} 대비 ${ww(gap)} 부족. 지금이 바꿀 수 있는 마지막 기회.` }
-    else if (r.gr === 'C') { d1 = '끼니를 거르는 날이 생깁니다. 아파도 병원비가 무서워 참게 됩니다.'; d2 = `난방비 아끼려고 이불 속에서 버티게 됩니다. 월 ${ww(gap)} 추가 저축이 시급합니다.` }
-    else { d1 = '삼시세끼 해결이 안 됩니다. 무료급식소, 폐기 직전 도시락이 일상.'; d2 = `국민연금 ${ww(r.penM)}으로는 공과금 내면 남는 게 없습니다. 긴급 개편 필요.` }
-    x.fillStyle = '#444'; y = wrap(d1, y, CW, 13) + 8
-    x.fillStyle = '#666'; y = wrap(d2, y, CW, 12) + 16
+    // 한 줄 핵심
+    const ck = Math.floor(r.monthly / P.chicken)
+    x.fillStyle = '#111'; x.font = '800 16px system-ui'; x.fillText(`한 끼 ${ww(r.perMeal)}`, L, y)
+    x.fillStyle = '#888'; x.font = '400 13px system-ui'; x.fillText(`치킨 ${ck}마리/월 | ${r.ag}대 상위 ${r.pct}%`, L + 160, y)
+    y += 12; line(y); y += 18
 
-    // 처방
-    x.fillStyle = col; x.font = '700 13px system-ui'; x.fillText('잘 살려면', L, y); y += 18
-    const rx: string[] = []
-    if (r.sr < 20) rx.push(`저축률 ${r.sr}% → 20%로 올리기`)
-    if (gap > 0) rx.push(`월 ${ww(gap)} 추가 저축/투자`)
-    rx.push(`은퇴까지 ${r.yrs}년, 복리 효과 극대화 구간`)
-    x.fillStyle = '#555'; x.font = '400 12px system-ui'
-    rx.forEach((a, i) => { x.fillText(`${i + 1}. ${a}`, L + 8, y); y += 18 })
+    // 종합 진단
+    x.fillStyle = col; x.font = '700 14px system-ui'; x.fillText('종합 진단', L, y); y += 18
+    const gap = S.need - r.monthly
+    let diag: string
+    if (r.gr === 'S') diag = `여유 있는 노후. 카페 커피도 마시고, 외식도 됩니다. 물가 상승(구매력 ${Math.round(r.inflAdj / r.monthly * 100)}%)만 대비하세요.`
+    else if (r.gr === 'A') diag = `먹고 사는 건 됩니다. 하지만 경조사 겹치면 빠듯. 월 ${ww(gap > 0 ? gap : 0)} 더 모으면 안심.`
+    else if (r.gr === 'B') diag = `밥은 먹지만 병원비 한 번이면 그 달은 끝. 적정 생활비 대비 ${ww(gap)} 부족.`
+    else if (r.gr === 'C') diag = `끼니를 거르는 날이 생깁니다. 난방비 아끼려고 이불 속에서 버팁니다. 월 ${ww(gap)} 추가 저축 시급.`
+    else diag = `삼시세끼 해결이 안 됩니다. 국민연금 ${ww(r.penM)}으로는 공과금 내면 끝.`
+    x.fillStyle = '#444'; y = wrap(diag, y, CW, 13) + 14
+
+    // 처방 한 줄
+    x.fillStyle = col; x.font = '600 12px system-ui'
+    if (r.gr !== 'S') x.fillText(`은퇴까지 ${r.yrs}년. ${r.sr < 20 ? `저축률 ${r.sr}%→20%.` : ''} 지금이 복리 극대화 구간.`, L, y)
+    else x.fillText(`은퇴까지 ${r.yrs}년. 인플레이션 대비 투자 유지하세요.`, L, y)
 
     // 하단 CTA
-    y = H - 70
-    x.fillStyle = '#03C75A'; x.beginPath(); x.roundRect(L, y, CW, 40, 10); x.fill()
-    x.fillStyle = '#fff'; x.font = '700 13px system-ui'; x.textAlign = 'center'
-    x.fillText('나도 분석해보기   nohu-lab.vercel.app', W / 2, y + 25); x.textAlign = 'left'
+    const by = H - 60
+    x.fillStyle = '#03C75A'; x.beginPath(); x.roundRect(L, by, CW, 36, 10); x.fill()
+    x.fillStyle = '#fff'; x.font = '700 12px system-ui'; x.textAlign = 'center'
+    x.fillText('나도 체험해보기  nohu-lab.vercel.app', W / 2, by + 22); x.textAlign = 'left'
     x.fillStyle = '#999'; x.font = '400 10px system-ui'; x.textAlign = 'center'
-    x.fillText('노후연구소 카페  cafe.naver.com/eovhskfktmak', W / 2, H - 16); x.textAlign = 'left'
+    x.fillText('노후연구소 카페  cafe.naver.com/eovhskfktmak', W / 2, H - 12); x.textAlign = 'left'
 
     return c
   }, [result, prices])
@@ -315,7 +317,7 @@ export default function RetirementSimulator() {
     if (!result) return
     const url = 'https://nohu-lab.vercel.app/programs/retirement-simulator?shared=true'
     const ck = Math.floor(result.monthly / prices.chicken)
-    const txt = `[은퇴 종합 진단서]\n\n${result.gr}등급 "${result.nickname}"\n은퇴 후 한 끼: ${ww(result.perMeal)}\n치킨 ${ck}마리 | ${result.ag}대 상위 ${result.pct}%\n\n나도 해보기: ${url}\n\n노후연구소 카페\ncafe.naver.com/eovhskfktmak`
+    const txt = `[은퇴 후 하루 체험]\n\n${result.gr}등급 "${result.nickname}"\n은퇴 후 한 끼: ${ww(result.perMeal)}\n치킨 ${ck}마리/월 | ${result.ag}대 상위 ${result.pct}%\n\n나도 체험해보기: ${url}\n\n노후연구소 카페\ncafe.naver.com/eovhskfktmak`
     // 진단서 이미지 생성 후 카카오톡으로 공유
     const c = makeCard()
     if (c) {
@@ -343,7 +345,7 @@ export default function RetirementSimulator() {
     if (!result) return
     const url = 'https://nohu-lab.vercel.app/programs/retirement-simulator?shared=true'
     const ck = Math.floor(result.monthly / prices.chicken), gb = Math.floor(result.monthly / prices.gukbap)
-    const txt = `[나의 은퇴 종합 진단서]\n\n${result.gr}등급 "${result.nickname}"\n\n은퇴 후 한 달: ${ww(result.monthly)}\n한 끼: ${ww(result.perMeal)}\n치킨 ${ck}마리 | 국밥 ${gb}그릇\n\n${result.ag}대 상위 ${result.pct}%\n\n나도 해보기: ${url}\n노후연구소 카페: cafe.naver.com/eovhskfktmak`
+    const txt = `[은퇴 후 하루 체험]\n\n${result.gr}등급 "${result.nickname}"\n은퇴 후 한 끼: ${ww(result.perMeal)}\n치킨 ${ck}마리 | 국밥 ${gb}그릇/월\n\n나도 체험: ${url}\n노후연구소 카페: cafe.naver.com/eovhskfktmak`
     const c = makeCard()
     if (c) {
       c.toBlob(async (blob) => {
@@ -377,7 +379,7 @@ export default function RetirementSimulator() {
       {shared && <div className="text-center text-xs text-gray-500 mb-6 bg-gray-50 rounded-lg py-2">친구가 공유한 분석입니다 <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" className="underline text-green-600 font-bold">카페 가입</a></div>}
       <div className="text-center pt-4 pb-8 space-y-3">
         <div className="inline-block bg-gray-100 rounded-full px-3 py-1 text-[10px] text-gray-500">{prices.updated} 실시간 물가 반영</div>
-        <h2 className="text-[26px] font-[900] text-gray-900 leading-tight">은퇴 후,<br/>당신의 한 끼는<br/>얼마짜리인가요</h2>
+        <h2 className="text-[26px] font-[900] text-gray-900 leading-tight">은퇴 후,<br/>당신의 하루를<br/>체험해 보세요</h2>
         <p className="text-[13px] text-gray-500">지금 직장인 점심 평균 <strong className="text-gray-900">{ww(prices.lunchAvg)}</strong></p>
         <p className="text-[11px] text-gray-400">5개 입력 -- 12개 항목 정밀 분석</p>
       </div>
@@ -435,80 +437,105 @@ export default function RetirementSimulator() {
   if (!result) return null
   const r = result
   const P = prices
-  const chicken = Math.floor(r.monthly / P.chicken)
-  const gukbap = Math.floor(r.monthly / P.gukbap)
-  const cvs = Math.floor(r.monthly / P.cvs)
-  const soju = Math.floor(r.monthly / P.soju)
-  const bus = Math.floor(r.monthly / P.bus)
-  const market = Math.floor(r.monthly / P.market)
+  const m = r.monthly
+  const chicken = Math.floor(m / P.chicken)
+
+  // 하루 타임라인 생성
+  type Slot = { time: string; icon: string; text: string; cost: number; ok: boolean }
+  const day: Slot[] = (() => {
+    if (m >= 4e6) return [
+      { time: '07:00', icon: '☕', text: `동네 카페 아메리카노`, cost: P.americano, ok: true },
+      { time: '09:00', icon: '🏊', text: '문화센터 수영', cost: 80000, ok: true },
+      { time: '12:00', icon: '🍲', text: `시장 칼국수`, cost: P.gukbap, ok: true },
+      { time: '15:00', icon: '👶', text: '손주 간식 사주기', cost: 5000, ok: true },
+      { time: '18:00', icon: '🥩', text: `마트에서 삼겹살`, cost: 20000, ok: true },
+      { time: '21:00', icon: '📺', text: 'TV + 맥주 한 캔', cost: 3000, ok: true },
+    ]
+    if (m >= 3e6) return [
+      { time: '07:00', icon: '☕', text: '커피믹스 한 잔', cost: 200, ok: true },
+      { time: '09:00', icon: '⛰️', text: '뒷산 등산 (무료)', cost: 0, ok: true },
+      { time: '12:00', icon: '🍚', text: '집에서 김치찌개', cost: 3000, ok: true },
+      { time: '15:00', icon: '📚', text: '도서관 (에어컨 무료)', cost: 0, ok: true },
+      { time: '18:00', icon: '🛒', text: `이마트 저녁할인 장보기`, cost: 15000, ok: true },
+      { time: '21:00', icon: '📺', text: '넷플릭스 (아들 계정)', cost: 0, ok: true },
+    ]
+    if (m >= 2e6) return [
+      { time: '07:00', icon: '🍚', text: '밥 + 어제 남은 김치', cost: 1000, ok: true },
+      { time: '09:00', icon: '🚶', text: '아파트 단지 산책', cost: 0, ok: true },
+      { time: '12:00', icon: '🍳', text: '남은 밥에 계란 후라이', cost: 1500, ok: true },
+      { time: '15:00', icon: '💊', text: `혈압약 (이번 달 병원비 무섭다)`, cost: 9000, ok: false },
+      { time: '18:00', icon: '🏷️', text: '마감할인 30% 반찬', cost: 5000, ok: true },
+      { time: '21:00', icon: '💸', text: `경조사 축의금 10만원... 이달 마이너스`, cost: 100000, ok: false },
+    ]
+    if (m >= 15e5) return [
+      { time: '07:00', icon: '🥚', text: '계란 2개 (아껴야 한다)', cost: 600, ok: true },
+      { time: '09:00', icon: '🏠', text: '나가면 돈 든다. 집에 있는다', cost: 0, ok: true },
+      { time: '12:00', icon: '🍜', text: `경로식당 2,000원`, cost: 2000, ok: true },
+      { time: '15:00', icon: '💊', text: '혈압약 떨어졌다. 참는다', cost: 0, ok: false },
+      { time: '18:00', icon: '🍜', text: `라면 한 봉지 ${ww(P.ramen)}`, cost: P.ramen, ok: true },
+      { time: '21:00', icon: '🥶', text: '난방 안 튼다. 이불 속으로', cost: 0, ok: false },
+    ]
+    return [
+      { time: '07:00', icon: '🍚', text: '간장 비빔밥 (반찬 없다)', cost: 500, ok: false },
+      { time: '09:00', icon: '🛏️', text: '보일러 못 켠다. 이불 속', cost: 0, ok: false },
+      { time: '12:00', icon: '🍱', text: '무료급식소 줄 서기', cost: 0, ok: false },
+      { time: '15:00', icon: '📄', text: '전기세 35,000원 고지서', cost: 35000, ok: false },
+      { time: '18:00', icon: '🍱', text: '폐기 직전 도시락 2,000원', cost: 2000, ok: false },
+      { time: '21:00', icon: '📱', text: '아들한테 전화할까... 말까', cost: 0, ok: false },
+    ]
+  })()
+  const dayTotal = day.reduce((s, d) => s + d.cost, 0)
 
   return (
     <div className="max-w-[440px] mx-auto px-4">
       <style>{CSS}</style>
 
-      {/* 전체 결과 1블록 */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-5 relative overflow-hidden">
-        <div className="absolute -right-6 -top-6 text-[140px] font-[900] leading-none select-none" style={{ color: r.grC, opacity: 0.05 }}>{r.gr}</div>
-        <div className="relative z-10">
-          {/* 등급 + 별명 */}
-          <div className="flex items-start justify-between mb-2">
-            <div>
-              <p className="text-[9px] text-gray-400">노후연구소 분석</p>
-              <p className="text-[15px] font-[800] mt-1" style={{ color: r.grC }}>"{r.nickname}"</p>
-              <p className="text-[11px] text-gray-500">{r.grN}</p>
-            </div>
-            <div className="w-12 h-12 rounded-xl flex flex-col items-center justify-center" style={{ backgroundColor: r.grC }}>
-              <span className="text-[22px] font-[900] leading-none text-white">{r.gr}</span>
-              <span className="text-[7px] text-white/70">등급</span>
-            </div>
-          </div>
-
-          {/* 핵심 수치 */}
-          <div className="border-t border-gray-100 pt-3 mt-1">
-            <p className="text-[10px] text-gray-400">은퇴 후 매달</p>
-            <p className="text-[36px] font-[900] tracking-tight leading-none text-gray-900">{ww(r.monthly)}</p>
-            <div className="flex gap-4 mt-1.5 items-baseline">
-              <span className="text-[11px] text-gray-500">한 끼 <strong className="text-[15px] font-[800]" style={{ color: r.grC }}>{ww(r.perMeal)}</strong></span>
-              <span className="text-[11px] text-gray-500">하루 <strong className="text-[14px] font-[700] text-gray-800">{ww(r.daily)}</strong></span>
-              {r.perMeal < P.lunchAvg && <span className="text-[10px] text-red-500">점심 {ww(P.lunchAvg)}의 {Math.round(r.perMeal / P.lunchAvg * 100)}%</span>}
-            </div>
-          </div>
-
-          {/* 치킨/국밥 — 한 줄 */}
-          <div className="flex gap-1.5 mt-3">
-            <FunCard top={`${chicken}`} unit="마리" label="치킨" sub={ww(P.chicken)} color={chicken >= 30 ? 'green' : chicken >= 15 ? 'yellow' : 'red'} />
-            <FunCard top={`${gukbap}`} unit="그릇" label="국밥" sub={ww(P.gukbap)} color={gukbap >= 50 ? 'green' : gukbap >= 25 ? 'yellow' : 'red'} />
-            <FunCard top={`${cvs}`} unit="개" label="도시락" sub={ww(P.cvs)} color={cvs >= 100 ? 'green' : cvs >= 50 ? 'yellow' : 'red'} />
-          </div>
-
-          {/* 진단 */}
-          <div className="border-t border-gray-100 mt-3 pt-3">
-            <p className="text-[12px] font-[700] text-gray-900 mb-1">종합 진단</p>
-            <p className="text-[12px] text-gray-700 leading-[1.7]">
-              {r.gr === 'S' && `여유 있는 노후. 물가 상승만 대비하면 안정적.`}
-              {r.gr === 'A' && `먹고 사는 건 되지만, 월 ${ww(S.need - r.monthly > 0 ? S.need - r.monthly : 0)} 더 모으면 마음 편해집니다.`}
-              {r.gr === 'B' && `밥은 먹지만 병원비 한 번이면 그 달 끝. 치킨 ${chicken}마리가 전부.`}
-              {r.gr === 'C' && '끼니를 거르는 날이 생깁니다. 아파도 참게 됩니다.'}
-              {r.gr === 'D' && '삼시세끼 해결이 안 됩니다. 무료급식소가 일상.'}
-            </p>
-          </div>
-
-          {/* 동년배 + 준비도 */}
-          <div className="flex gap-2 mt-3 text-center">
-            <div className="flex-1 bg-gray-50 rounded-lg py-1.5">
-              <p className="text-[9px] text-gray-400">동년배</p>
-              <p className="text-[12px] font-[800] text-gray-900">상위 {r.pct}%</p>
-            </div>
-            <div className="flex-1 bg-gray-50 rounded-lg py-1.5">
-              <p className="text-[9px] text-gray-400">준비도</p>
-              <p className="text-[12px] font-[800]" style={{ color: r.fi >= 70 ? '#22c55e' : '#ef4444' }}>{r.fi}%</p>
-            </div>
-            <div className="flex-1 bg-gray-50 rounded-lg py-1.5">
-              <p className="text-[9px] text-gray-400">은퇴 시 자산</p>
-              <p className="text-[12px] font-[800] text-gray-900">{w(r.total)}</p>
-            </div>
+      {/* 헤더: 등급 + 별명 + 한 줄 */}
+      <div className="text-center pt-2 pb-4">
+        <div className="inline-flex items-center gap-2 mb-2">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-[900] text-[18px]" style={{ backgroundColor: r.grC }}>{r.gr}</div>
+          <div className="text-left">
+            <p className="text-[14px] font-[800] text-gray-900">"{r.nickname}"</p>
+            <p className="text-[10px] text-gray-500">{r.grN} | 월 {ww(m)}</p>
           </div>
         </div>
+      </div>
+
+      {/* 하루 타임라인 */}
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100">
+          <p className="text-[14px] font-[800] text-gray-900">은퇴 후, 당신의 어느 하루</p>
+          <p className="text-[10px] text-gray-400">{P.updated} 실제 물가 기준 | 하루 예산 {ww(r.daily)}</p>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {day.map((s, i) => (
+            <div key={i} className={`flex items-center gap-3 px-4 py-3 ${!s.ok ? 'bg-red-50/50' : ''}`}>
+              <div className="text-[10px] text-gray-400 w-10 shrink-0 tabular-nums font-mono">{s.time}</div>
+              <div className="text-[20px] shrink-0">{s.icon}</div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] font-[600] ${s.ok ? 'text-gray-800' : 'text-red-700'}`}>{s.text}</p>
+              </div>
+              {s.cost > 0 && <p className={`text-[11px] shrink-0 tabular-nums font-[600] ${s.ok ? 'text-gray-500' : 'text-red-500'}`}>{s.cost >= 10000 ? ww(s.cost) : `${s.cost.toLocaleString()}원`}</p>}
+            </div>
+          ))}
+        </div>
+        <div className="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
+          <span className="text-[11px] text-gray-500">오늘 하루 지출</span>
+          <span className={`text-[14px] font-[800] ${dayTotal > r.daily ? 'text-red-600' : 'text-gray-900'}`}>{ww(dayTotal)} {dayTotal > r.daily ? '(예산 초과!)' : ''}</span>
+        </div>
+      </div>
+
+      {/* 한 줄 요약 */}
+      <div className="mt-3 bg-white border border-gray-200 rounded-2xl p-4">
+        <div className="flex items-baseline gap-2 justify-center">
+          <span className="text-[11px] text-gray-500">한 끼</span>
+          <span className="text-[24px] font-[900]" style={{ color: r.grC }}>{ww(r.perMeal)}</span>
+          <span className="text-[11px] text-gray-400">|</span>
+          <span className="text-[11px] text-gray-500">치킨</span>
+          <span className="text-[18px] font-[800] text-gray-900">{chicken}마리</span>
+          <span className="text-[11px] text-gray-400">/ 월</span>
+        </div>
+        <p className="text-[11px] text-gray-500 text-center mt-2">{r.ag}대 상위 {r.pct}% | 준비도 {r.fi}% | 은퇴 시 자산 {w(r.total)}</p>
       </div>
 
       {/* ═══ GATED ═══ */}
@@ -532,7 +559,7 @@ export default function RetirementSimulator() {
         <button onClick={() => { setPhase('input'); setResult(null) }} className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-[13px] font-bold active:bg-gray-50">다시 분석</button>
         <button onClick={() => setShowShareMenu(true)} className="flex-[2] py-3 bg-[#FEE500] text-[#3C1E1E] rounded-xl text-[13px] font-[800] active:bg-[#F5DC00] flex items-center justify-center gap-2">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.48 3 2 6.58 2 10.94c0 2.8 1.86 5.27 4.68 6.67-.15.56-.96 3.6-.99 3.82 0 0-.02.16.08.22s.22.02.22.02c.29-.04 3.37-2.2 3.9-2.57.67.1 1.37.15 2.11.15 5.52 0 10-3.58 10-7.94S17.52 3 12 3"/></svg>
-          진단서 공유하기
+          결과 공유하기
         </button>
       </div>
       <div className="h-16" /> {/* sticky 버튼 여유 */}
@@ -589,18 +616,6 @@ function Sec({ children }: { children: React.ReactNode }) {
 }
 
 // ═══ FREE 섹션들 ═══
-
-function FunCard({ top, unit, label, sub, color }: { top: string; unit: string; label: string; sub: string; color: 'green' | 'yellow' | 'red' }) {
-  const bg = color === 'green' ? 'bg-green-50 border-green-100' : color === 'yellow' ? 'bg-yellow-50 border-yellow-100' : 'bg-red-50 border-red-100'
-  const tc = color === 'green' ? 'text-green-700' : color === 'yellow' ? 'text-yellow-700' : 'text-red-700'
-  return (
-    <div className={`${bg} border rounded-xl p-3 text-center`}>
-      <p className={`text-[24px] font-[900] leading-none ${tc}`}>{top}<span className="text-[11px] font-[600]">{unit}</span></p>
-      <p className="text-[11px] font-[600] text-gray-800 mt-1">{label}</p>
-      <p className="text-[9px] text-gray-400">{sub}</p>
-    </div>
-  )
-}
 
 function BenchBars({ r }: { r: R }) {
   const items = [

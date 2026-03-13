@@ -15,8 +15,22 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "노후연구소",
-  description: "노후연구소 카페 회원 전용 프로그램 플랫폼",
+  description: "은퇴 후 당신의 하루를 체험해 보세요. 아침부터 밤까지, 실제 물가로 시뮬레이션.",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+  metadataBase: new URL('https://nohu-lab.vercel.app'),
+  openGraph: {
+    title: '노후연구소 | 은퇴 후 하루 체험',
+    description: '은퇴 후 당신의 하루를 체험해 보세요. 아침 커피부터 저녁 반찬까지, 실제 물가로 시뮬레이션.',
+    url: 'https://nohu-lab.vercel.app/programs/retirement-simulator',
+    siteName: '노후연구소',
+    locale: 'ko_KR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '노후연구소 | 은퇴 후 하루 체험',
+    description: '은퇴 후 당신의 하루를 체험해 보세요.',
+  },
 };
 
 export default function RootLayout({
