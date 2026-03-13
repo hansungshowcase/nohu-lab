@@ -44,7 +44,7 @@ export default function Sidebar({ user }: { user: User | null }) {
         <Link href="/dashboard" className="flex items-center gap-2">
           <span className="text-2xl">☕</span>
           <span className="font-bold text-lg text-gray-900 dark:text-white">
-            카페 웹앱
+            노후연구소
           </span>
         </Link>
       </div>

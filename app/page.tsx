@@ -1,20 +1,47 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-const ERROR_MESSAGES: Record<string, string> = {
-  naver_denied: '네이버 로그인이 취소되었습니다.',
-  token_failed: '인증에 실패했습니다. 다시 시도해주세요.',
-  profile_failed: '프로필 정보를 가져올 수 없습니다.',
-  not_cafe_member: '노후연구소 카페에 가입되지 않은 회원입니다.\n카페 가입 후 다시 시도해주세요.',
-  server_error: '서버 오류가 발생했습니다. 다시 시도해주세요.',
-}
+export default function LoginPage() {
+  const router = useRouter()
+  const [nickname, setNickname] = useState('')
+  const [phone, setPhone] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-function LoginContent() {
-  const searchParams = useSearchParams()
-  const errorCode = searchParams.get('error')
-  const errorMessage = errorCode ? ERROR_MESSAGES[errorCode] || '로그인에 실패했습니다.' : null
+  function formatPhone(value: string) {
+    const digits = value.replace(/\D/g, '').slice(0, 11)
+    if (digits.length <= 3) return digits
+    if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: nickname.trim(), phone }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || '로그인에 실패했습니다.')
+        return
+      }
+
+      router.push('/dashboard')
+    } catch {
+      setError('서버에 연결할 수 없습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
@@ -32,26 +59,61 @@ function LoginContent() {
             </p>
           </div>
 
-          {errorMessage && (
-            <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg mb-5 whitespace-pre-line">
-              {errorMessage}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                카페 닉네임
+              </label>
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="카페에서 사용하는 닉네임"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                required
+              />
             </div>
-          )}
 
-          {/* 네이버 로그인 버튼 */}
-          <a
-            href="/api/auth/naver"
-            className="w-full py-3 bg-[#03C75A] hover:bg-[#02b351] text-white font-medium rounded-lg transition flex items-center justify-center gap-2 text-lg"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M13.5 10.56L6.26 0H0V20H6.5V9.44L13.74 20H20V0H13.5V10.56Z" fill="white"/>
-            </svg>
-            네이버로 로그인
-          </a>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                연락처
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(formatPhone(e.target.value))}
+                placeholder="010-0000-0000"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  로그인 중...
+                </>
+              ) : (
+                '로그인'
+              )}
+            </button>
+          </form>
 
           <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-4">
-            네이버 카페 회원만 이용 가능합니다.
-            <br />
             카페 등급에 따라 사용 가능한 도구가 다릅니다.
           </p>
 
@@ -74,17 +136,5 @@ function LoginContent() {
         </div>
       </div>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full" />
-      </div>
-    }>
-      <LoginContent />
-    </Suspense>
   )
 }

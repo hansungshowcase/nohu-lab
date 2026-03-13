@@ -14,8 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "카페 회원 전용 웹앱",
-  description: "네이버 카페 회원 전용 프로그램 플랫폼",
+  title: "노후연구소",
+  description: "노후연구소 카페 회원 전용 프로그램 플랫폼",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 };
 
 export default function RootLayout({

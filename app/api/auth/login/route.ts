@@ -21,43 +21,19 @@ export async function POST(request: NextRequest) {
       .eq('nickname', nickname.trim())
       .single()
 
-    const phoneClean = phone.replace(/-/g, '')
-    let currentMember = member
-
     if (error || !member) {
-      // 관리자 로그인은 자동 가입 불가
-      if (adminLogin) {
-        return NextResponse.json(
-          { error: '등록되지 않은 관리자입니다.' },
-          { status: 401 }
-        )
-      }
+      return NextResponse.json(
+        { error: '등록되지 않은 회원입니다. 카페 가입 후 관리자에게 문의하세요.' },
+        { status: 401 }
+      )
+    }
 
-      // 신규 회원 자동 등록 (Tier 1)
-      const { data: newMember, error: insertError } = await supabase
-        .from('members')
-        .insert({
-          nickname: nickname.trim(),
-          phone: phoneClean,
-          tier: 1,
-          last_login: new Date().toISOString(),
-        })
-        .select()
-        .single()
+    // 연락처 비교 (첫 로그인 시 연락처 등록, 이후 비교)
+    const phoneClean = phone.replace(/-/g, '')
 
-      if (insertError) {
-        return NextResponse.json(
-          { error: '회원 등록에 실패했습니다. 다시 시도해주세요.' },
-          { status: 500 }
-        )
-      }
-
-      currentMember = newMember
-    } else {
-      // 기존 회원: 연락처 비교
+    if (member.phone && member.phone !== '') {
       const phoneMatch =
         member.phone === phoneClean ||
-        member.phone === '' ||
         (await bcrypt.compare(phoneClean, member.phone))
 
       if (!phoneMatch) {
@@ -66,41 +42,31 @@ export async function POST(request: NextRequest) {
           { status: 401 }
         )
       }
-
-      // 일반 로그인에서 관리자 계정 차단
-      if (!adminLogin && member.tier === 4) {
-        return NextResponse.json(
-          { error: '관리자는 관리자 로그인을 이용해주세요.' },
-          { status: 403 }
-        )
-      }
-
-      // 관리자 로그인에서 일반 회원 차단
-      if (adminLogin && member.tier !== 4) {
-        return NextResponse.json(
-          { error: '관리자 권한이 없습니다.' },
-          { status: 403 }
-        )
-      }
-
-      // last_login 업데이트
+    } else {
+      // 첫 로그인: 연락처 저장
       await supabase
         .from('members')
-        .update({ last_login: new Date().toISOString() })
+        .update({ phone: phoneClean })
         .eq('id', member.id)
     }
 
+    // last_login 업데이트
+    await supabase
+      .from('members')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', member.id)
+
     const token = await createToken({
-      memberId: currentMember.id,
-      nickname: currentMember.nickname,
-      tier: currentMember.tier,
+      memberId: member.id,
+      nickname: member.nickname,
+      tier: member.tier as 1 | 2 | 3 | 4,
     })
 
     const response = NextResponse.json({
       success: true,
       member: {
-        nickname: currentMember.nickname,
-        tier: currentMember.tier,
+        nickname: member.nickname,
+        tier: member.tier,
       },
     })
 

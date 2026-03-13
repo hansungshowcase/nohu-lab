@@ -42,9 +42,9 @@ export default function DashboardPage() {
       : programRegistry.filter((p) => p.isActive && p.category === category)
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
       {/* 환영 메시지 */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8 ml-12 lg:ml-0">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           {user.nickname}님 환영합니다 👋
         </h1>
@@ -74,7 +74,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 프로그램 그리드 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filtered.map((program) => (
           <ProgramCard
             key={program.id}
