@@ -46,6 +46,15 @@ export const programRegistry: Program[] = [
     category: '유틸리티',
     isActive: true,
   },
+  {
+    id: 'retirement-test',
+    name: '노후 준비 점수 테스트',
+    description: '12개 질문으로 알아보는 나의 노후 준비 상태',
+    minTier: 1,
+    icon: '🏦',
+    category: '테스트',
+    isActive: true,
+  },
 ]
 
 export function getProgramsByTier(tier: number): Program[] {
