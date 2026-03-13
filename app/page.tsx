@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
@@ -8,11 +8,68 @@ export default function LoginPage() {
   const [nickname, setNickname] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current)
+      pollingRef.current = null
+    }
+  }, [])
+
+  async function pollVerifyStatus(verifyId: string) {
+    setVerifying(true)
+    let attempts = 0
+    const maxAttempts = 20 // 40 seconds max
+
+    return new Promise<void>((resolve) => {
+      pollingRef.current = setInterval(async () => {
+        attempts++
+        try {
+          const res = await fetch(`/api/auth/verify-status?id=${verifyId}`)
+          const data = await res.json()
+
+          if (data.status === 'pending') {
+            if (attempts >= maxAttempts) {
+              stopPolling()
+              setVerifying(false)
+              setError('회원 확인 시간이 초과되었습니다.\n관리자의 확장프로그램이 실행 중인지 확인해주세요.')
+              setLoading(false)
+              resolve()
+            }
+            return
+          }
+
+          stopPolling()
+          setVerifying(false)
+
+          if (data.status === 'found') {
+            router.push('/dashboard')
+          } else {
+            setError('노후연구소 카페에 가입되지 않은 닉네임입니다.\n카페에 먼저 가입해주세요.')
+            setLoading(false)
+          }
+          resolve()
+        } catch {
+          // Network error, keep polling
+          if (attempts >= maxAttempts) {
+            stopPolling()
+            setVerifying(false)
+            setError('서버에 연결할 수 없습니다.')
+            setLoading(false)
+            resolve()
+          }
+        }
+      }, 2000)
+    })
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
+    stopPolling()
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -22,15 +79,24 @@ export default function LoginPage() {
       })
       const data = await res.json()
 
-      if (!res.ok) {
-        setError(data.error || '로그인에 실패했습니다.')
+      if (data.success) {
+        router.push('/dashboard')
         return
       }
 
-      router.push('/dashboard')
+      if (data.status === 'verifying' && data.verifyId) {
+        // Start polling for verification result
+        await pollVerifyStatus(data.verifyId)
+        return
+      }
+
+      if (!res.ok) {
+        setError(data.error || '로그인에 실패했습니다.')
+        setLoading(false)
+        return
+      }
     } catch {
       setError('서버에 연결할 수 없습니다.')
-    } finally {
       setLoading(false)
     }
   }
@@ -63,12 +129,23 @@ export default function LoginPage() {
                 placeholder="노후연구소 카페에서 사용하는 닉네임"
                 className="w-full px-4 py-3 rounded-lg border border-green-200 bg-white text-gray-900 focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none transition"
                 required
+                disabled={loading}
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
+              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg whitespace-pre-line">
                 {error}
+              </div>
+            )}
+
+            {verifying && (
+              <div className="bg-amber-50 text-amber-700 text-sm p-3 rounded-lg flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4 shrink-0" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                카페 회원 여부를 확인하고 있습니다...
               </div>
             )}
 
@@ -83,7 +160,7 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  확인 중...
+                  {verifying ? '회원 확인 중...' : '확인 중...'}
                 </>
               ) : (
                 '로그인'

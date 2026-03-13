@@ -14,12 +14,13 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getServiceSupabase()
+    const trimmed = nickname.trim()
 
-    // DB에서 닉네임 검색 (동기화 스크립트가 카페 회원을 DB에 자동 등록)
+    // DB에서 닉네임 검색
     const { data: member } = await supabase
       .from('members')
       .select('*')
-      .eq('nickname', nickname.trim())
+      .eq('nickname', trimmed)
       .single()
 
     if (member) {
@@ -50,10 +51,24 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    return NextResponse.json(
-      { error: '노후연구소 카페에 가입되지 않은 닉네임입니다.\n카페 가입 후 잠시 기다리면 자동으로 등록됩니다.' },
-      { status: 401 }
-    )
+    // DB에 없으면 → 실시간 확인 요청 생성
+    const { data: verifyReq } = await supabase
+      .from('verify_requests')
+      .insert({ nickname: trimmed, status: 'pending' })
+      .select()
+      .single()
+
+    if (!verifyReq) {
+      return NextResponse.json(
+        { error: '확인 요청 생성 실패' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      status: 'verifying',
+      verifyId: verifyReq.id,
+    })
   } catch {
     return NextResponse.json(
       { error: '서버 오류가 발생했습니다.' },

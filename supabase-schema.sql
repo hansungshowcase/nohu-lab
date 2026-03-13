@@ -55,6 +55,23 @@ CREATE POLICY "Service role full access on access_logs" ON access_logs
 CREATE POLICY "Authenticated read programs" ON programs
   FOR SELECT USING (auth.role() = 'authenticated');
 
+-- 4. verify_requests 테이블 (로그인 시 실시간 회원 확인)
+CREATE TABLE IF NOT EXISTS verify_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nickname TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'found', 'not_found', 'error')),
+  grade_name TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_verify_requests_status ON verify_requests(status);
+CREATE INDEX IF NOT EXISTS idx_verify_requests_created ON verify_requests(created_at);
+
+ALTER TABLE verify_requests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service role full access on verify_requests" ON verify_requests
+  FOR ALL USING (auth.role() = 'service_role');
+
 -- ==========================================
 -- 초기 데이터
 -- ==========================================
