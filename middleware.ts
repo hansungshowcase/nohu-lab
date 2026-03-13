@@ -12,9 +12,11 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/admin/login') return NextResponse.next()
 
   // 보호된 경로 체크
+  // 임시: 프로그램 페이지 비로그인 허용
+  if (pathname.startsWith('/programs')) return NextResponse.next()
+
   const isProtected =
     pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/programs') ||
     pathname.startsWith('/admin')
 
   if (!isProtected) return NextResponse.next()
