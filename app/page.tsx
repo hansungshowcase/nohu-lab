@@ -48,7 +48,7 @@ function LoginContent() {
             네이버로 로그인
           </a>
 
-          <p className="text-center text-xs text-gray-400 mt-4">
+          <p className="text-center text-sm text-gray-600 mt-5 leading-relaxed">
             노후연구소 카페 회원만 이용 가능합니다.
             <br />
             카페 등급에 따라 사용 가능한 도구가 다릅니다.
