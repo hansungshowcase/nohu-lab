@@ -748,7 +748,7 @@ function LockedZone({ onJoin }: { onJoin: () => void }) {
     <div className="relative">
       <div className="space-y-3 filter blur-[6px] pointer-events-none select-none" aria-hidden="true">
         <div className="bg-white border border-gray-100 rounded-2xl p-5 h-32" />
-        <div className="bg-[#0a0a0a] rounded-2xl p-5 h-40" />
+        <div className="bg-gray-100 rounded-2xl p-5 h-40" />
         <div className="bg-white border border-gray-100 rounded-2xl p-5 h-36" />
         <div className="bg-white border border-gray-100 rounded-2xl p-5 h-28" />
       </div>
@@ -783,10 +783,10 @@ function BudgetBlock({ r }: { r: R }) {
   return <Card title="월간 지출 배분">{r.budget.map((b, i) => <div key={i} className="mb-2 last:mb-0"><div className="flex justify-between text-[11px] mb-0.5"><span className="text-gray-500">{b.c}</span><span className="text-gray-800 tabular-nums">{ww(b.a)} ({b.p}%)</span></div><div className="h-[4px] bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-gray-800 rounded-full bar-anim" style={{width:`${b.p}%`,animationDelay:`${i*80}ms`}} /></div></div>)}</Card>
 }
 function RiskBlock({ r }: { r: R }) {
-  return <div className="bg-[#0a0a0a] rounded-2xl p-5 text-white space-y-3"><p className="text-[14px] font-[700]">물가 / 의료비 리스크</p>
-    <DR l="현재 가치" v={ww(r.monthly)} /><DR l={`물가 반영 (${r.yrs}년 후)`} v={ww(r.inflAdj)} s={`구매력 ${Math.round(r.inflAdj / r.monthly * 100)}%`} /><DR l="은퇴 10년 후" v={ww(r.real10)} /><DR l="은퇴 20년 후" v={ww(r.real20)} />
-    {r.med.length > 0 && <><div className="border-t border-white/[0.06] pt-2" /><p className="text-[10px] text-gray-600">연령대별 의료비</p>{r.med.map((m, i) => <div key={i} className="flex justify-between text-[11px]"><span className="text-gray-500">{m.age}</span><span className="text-gray-400 tabular-nums">연 {ww(m.ann)}</span><span className={`tabular-nums ${m.pct > 15 ? 'text-red-400' : 'text-gray-500'}`}>가용의 {m.pct}%</span></div>)}<DR l="의료비 총 추정" v={ww(r.medT)} /></>}
-  </div>
+  return <Card title="물가 / 의료비 리스크">
+    <D l="현재 가치" v={ww(r.monthly)} /><D l={`물가 반영 (${r.yrs}년 후)`} v={ww(r.inflAdj)} sub={`구매력 ${Math.round(r.inflAdj / r.monthly * 100)}%`} /><D l="은퇴 10년 후" v={ww(r.real10)} /><D l="은퇴 20년 후" v={ww(r.real20)} />
+    {r.med.length > 0 && <><Sep /><p className="text-[10px] text-gray-400">연령대별 의료비</p>{r.med.map((m, i) => <div key={i} className="flex justify-between text-[11px]"><span className="text-gray-500">{m.age}</span><span className="text-gray-500 tabular-nums">연 {ww(m.ann)}</span><span className={`tabular-nums ${m.pct > 15 ? 'text-red-500' : 'text-gray-500'}`}>가용의 {m.pct}%</span></div>)}<D l="의료비 총 추정" v={ww(r.medT)} b /></>}
+  </Card>
 }
 function ScenarioBlock({ r }: { r: R }) {
   return <Card title="추가 저축 시나리오"><table className="w-full text-[11px]"><thead><tr className="text-gray-400 border-b border-gray-100"><th className="text-left py-1.5 font-normal">추가/월</th><th className="text-right py-1.5 font-normal">월 가용</th><th className="text-right py-1.5 font-normal">증가</th><th className="text-center py-1.5 font-normal">등급</th></tr></thead><tbody>
@@ -814,7 +814,6 @@ function FI({ l, v, u, set, step = 1, min = 0, max, sub }: { l: string; v: numbe
 }
 function Card({ title, children }: { title: string; children: React.ReactNode }) { return <div className="bg-white border border-gray-100 rounded-2xl p-5"><p className="text-[14px] font-[700] text-gray-900 mb-3">{title}</p><div className="space-y-1.5">{children}</div></div> }
 function D({ l, v, b, sm, sub }: { l: string; v: string; b?: boolean; sm?: boolean; sub?: string }) { return <div className="flex justify-between gap-3"><div className="min-w-0"><p className={`${sm ? 'text-[11px] text-gray-400' : b ? 'text-[12px] font-[700] text-gray-900' : 'text-[11px] text-gray-600'}`}>{l}</p>{sub && <p className="text-[9px] text-gray-400">{sub}</p>}</div><p className={`shrink-0 tabular-nums ${b ? 'text-[13px] font-[800] text-gray-900' : sm ? 'text-[11px] text-gray-500' : 'text-[11px] text-gray-800 font-[500]'}`}>{v}</p></div> }
-function DR({ l, v, s }: { l: string; v: string; s?: string }) { return <div className="flex justify-between gap-3"><div><p className="text-[11px] text-gray-500">{l}</p>{s && <p className="text-[9px] text-gray-600">{s}</p>}</div><p className="text-[11px] text-white font-[500] shrink-0 tabular-nums">{v}</p></div> }
 function Sep() { return <div className="border-t border-gray-100 my-1" /> }
 function Bdg({ l, glow }: { l: string; glow?: boolean }) { const c: Record<string, string> = { S: 'bg-amber-500', A: 'bg-green-500', B: 'bg-blue-500', C: 'bg-orange-500', D: 'bg-red-500' }; return <span className={`inline-block w-5 h-5 ${c[l]} text-white rounded text-[9px] font-[800] leading-5 text-center ${glow ? 'ring-1 ring-green-300' : ''}`}>{l}</span> }
 function MC({ l, v, s, c }: { l: string; v: string; s?: string; c?: 'g' | 'r' }) { return <div className={`rounded-xl p-3 ${c === 'g' ? 'bg-green-50 border border-green-100' : c === 'r' ? 'bg-red-50 border border-red-100' : 'bg-gray-50 border border-gray-100'}`}><p className="text-[9px] text-gray-500">{l}</p><p className={`text-[13px] font-[800] mt-0.5 ${c === 'g' ? 'text-green-700' : c === 'r' ? 'text-red-700' : 'text-gray-900'}`}>{v}</p>{s && <p className="text-[8px] text-gray-400">{s}</p>}</div> }
