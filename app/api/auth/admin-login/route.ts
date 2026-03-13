@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
 import { createToken, COOKIE_NAME } from '@/lib/auth'
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'wnsgud20!'
+const ADMIN_PASSWORD = 'wnsgud20!'
 
 export async function POST(request: NextRequest) {
   try {
