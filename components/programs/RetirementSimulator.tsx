@@ -195,159 +195,112 @@ export default function RetirementSimulator() {
   const makeCard = useCallback((): HTMLCanvasElement | null => {
     if (!result) return null
     const P = prices, r = result
-    const W = 700, H = 1240, sc = 2 // A4 비율에 가까운 크기
+    const W = 700, H = 990, sc = 2
     const c = document.createElement('canvas'); c.width = W * sc; c.height = H * sc
     const x = c.getContext('2d')!; x.scale(sc, sc)
-    const L = 44, R2 = W - 44
+    const L = 40, R2 = W - 40, CW = R2 - L
     const gc: Record<string, string> = { S: '#f59e0b', A: '#22c55e', B: '#3b82f6', C: '#f97316', D: '#ef4444' }
     const col = gc[r.gr] || '#888'
 
-    const drawLine = (yy: number) => { x.strokeStyle = '#e5e5e5'; x.lineWidth = 1; x.beginPath(); x.moveTo(L, yy); x.lineTo(R2, yy); x.stroke() }
-    const drawRow = (label: string, val: string, yy: number, highlight?: boolean) => {
-      x.fillStyle = '#888'; x.font = '400 13px system-ui'; x.textAlign = 'left'; x.fillText(label, L, yy)
-      x.fillStyle = highlight ? col : '#222'; x.font = `${highlight ? '800' : '600'} 14px system-ui`
-      x.textAlign = 'right'; x.fillText(val, R2, yy); x.textAlign = 'left'
+    const line = (yy: number) => { x.strokeStyle = '#e0e0e0'; x.lineWidth = 1; x.beginPath(); x.moveTo(L, yy); x.lineTo(R2, yy); x.stroke() }
+    const row = (label: string, val: string, yy: number, hl?: boolean) => {
+      x.fillStyle = '#777'; x.font = '400 13px system-ui'; x.textAlign = 'left'; x.fillText(label, L, yy)
+      x.fillStyle = hl ? col : '#222'; x.font = `${hl ? '700' : '500'} 14px system-ui`; x.textAlign = 'right'; x.fillText(val, R2, yy); x.textAlign = 'left'
     }
-    const drawWrap = (text: string, yy: number, maxW: number, fontSize = 13) => {
-      x.font = `400 ${fontSize}px system-ui`
-      let line = '', ly = yy
-      for (const ch of text) { const t = line + ch; if (x.measureText(t).width > maxW) { x.fillText(line, L, ly); ly += fontSize + 6; line = ch } else line = t }
-      if (line) x.fillText(line, L, ly)
-      return ly
+    const wrap = (text: string, yy: number, mw: number, fs = 13) => {
+      x.font = `400 ${fs}px system-ui`; let ln = '', ly = yy
+      for (const ch of text) { const t = ln + ch; if (x.measureText(t).width > mw) { x.fillText(ln, L, ly); ly += fs + 5; ln = ch } else ln = t }
+      if (ln) x.fillText(ln, L, ly); return ly
     }
 
-    // 배경 (밝은 톤)
+    // 배경
     x.fillStyle = '#fafafa'; x.fillRect(0, 0, W, H)
-    x.fillStyle = 'rgba(0,0,0,.015)'; x.font = '900 500px system-ui'; x.fillText(r.gr, 280, 580)
+    x.fillStyle = 'rgba(0,0,0,.012)'; x.font = '900 420px system-ui'; x.fillText(r.gr, 250, 500)
 
-    // ─── 헤더 ───
-    x.fillStyle = '#999'; x.font = '300 11px system-ui'; x.fillText('노후연구소', L, 36)
-    x.fillStyle = '#aaa'; x.font = '300 11px system-ui'; x.fillText(P.updated + ' 물가 기준', L, 54)
-    x.fillStyle = '#111'; x.font = '900 28px system-ui'; x.fillText('은퇴 종합 진단서', L, 90)
+    // 헤더
+    x.fillStyle = '#999'; x.font = '300 11px system-ui'; x.fillText('노후연구소 | ' + P.updated + ' 물가 기준', L, 34)
+    x.fillStyle = '#111'; x.font = '900 26px system-ui'; x.fillText('은퇴 종합 진단서', L, 70)
 
     // 등급 뱃지
-    x.fillStyle = col
-    x.beginPath(); x.roundRect(R2 - 64, 28, 64, 64, 14); x.fill()
-    x.fillStyle = '#fff'; x.font = '900 36px system-ui'; x.textAlign = 'center'
-    x.fillText(r.gr, R2 - 32, 66); x.font = '500 10px system-ui'; x.fillText('등급', R2 - 32, 82)
-    x.textAlign = 'left'
+    x.fillStyle = col; x.beginPath(); x.roundRect(R2 - 56, 22, 56, 56, 12); x.fill()
+    x.fillStyle = '#fff'; x.font = '900 32px system-ui'; x.textAlign = 'center'; x.fillText(r.gr, R2 - 28, 56)
+    x.font = '500 9px system-ui'; x.fillText('등급', R2 - 28, 70); x.textAlign = 'left'
 
-    // 별명 + 등급명
-    x.fillStyle = col; x.font = '700 16px system-ui'; x.fillText(`"${r.nickname}"`, L, 120)
-    x.fillStyle = '#888'; x.font = '400 13px system-ui'; x.fillText(r.grN, L, 140)
+    // 별명
+    x.fillStyle = col; x.font = '700 15px system-ui'; x.fillText(`"${r.nickname}"`, L, 100)
+    x.fillStyle = '#888'; x.font = '400 12px system-ui'; x.fillText(r.grN, L, 118)
 
-    let y = 160; drawLine(y); y += 30
+    let y = 134; line(y); y += 24
 
-    // ─── 핵심 수치 ───
-    x.fillStyle = '#888'; x.font = '500 12px system-ui'; x.fillText('은퇴 후 월 가용액', L, y)
-    y += 8
-    x.fillStyle = '#111'; x.font = '900 48px system-ui'; x.fillText(ww(r.monthly), L, y + 44)
-    y += 60
+    // 핵심 수치 (월/한끼/하루 한 줄)
+    x.fillStyle = '#888'; x.font = '400 11px system-ui'; x.fillText('은퇴 후 월 가용액', L, y)
+    x.fillStyle = '#111'; x.font = '900 40px system-ui'; x.fillText(ww(r.monthly), L, y + 38); y += 50
+    x.fillStyle = '#666'; x.font = '400 11px system-ui'; x.fillText('한 끼', L, y)
+    x.fillStyle = col; x.font = '800 20px system-ui'; x.fillText(ww(r.perMeal), L + 42, y)
+    x.fillStyle = '#666'; x.font = '400 11px system-ui'; x.fillText('하루', L + 220, y)
+    x.fillStyle = '#333'; x.font = '700 16px system-ui'; x.fillText(ww(r.daily), L + 258, y)
+    if (r.perMeal < P.lunchAvg) { x.fillStyle = '#ef4444'; x.font = '500 11px system-ui'; x.fillText(`점심 ${ww(P.lunchAvg)}의 ${Math.round(r.perMeal / P.lunchAvg * 100)}%`, L + 420, y) }
+    y += 16; line(y); y += 20
 
-    // 한 끼 + 하루
-    x.fillStyle = '#666'; x.font = '400 12px system-ui'; x.fillText('한 끼', L, y)
-    x.fillStyle = col; x.font = '800 24px system-ui'; x.fillText(ww(r.perMeal), L + 50, y)
-    x.fillStyle = '#666'; x.font = '400 12px system-ui'; x.fillText('하루', L + 250, y)
-    x.fillStyle = '#333'; x.font = '700 18px system-ui'; x.fillText(ww(r.daily), L + 290, y)
-    y += 20
-
-    if (r.perMeal < P.lunchAvg) {
-      x.fillStyle = '#ef4444'; x.font = '600 12px system-ui'
-      x.fillText(`직장인 점심 ${ww(P.lunchAvg)}의 ${Math.round(r.perMeal / P.lunchAvg * 100)}%`, L, y)
-      y += 16
-    }
-    y += 10; drawLine(y); y += 24
-
-    // ─── 이 돈으로 한 달에 ───
-    x.fillStyle = '#555'; x.font = '700 13px system-ui'; x.fillText('이 돈으로 한 달에', L, y); y += 22
+    // 치킨/국밥/도시락 한 줄
     const ck = Math.floor(r.monthly / P.chicken), gb = Math.floor(r.monthly / P.gukbap), cv = Math.floor(r.monthly / P.cvs)
-    const funItems = [
-      [`치킨 (${ww(P.chicken)})`, `${ck}마리`, ck >= 15],
-      [`국밥 (${ww(P.gukbap)})`, `${gb}그릇`, gb >= 25],
-      [`편의점 도시락 (${ww(P.cvs)})`, `${cv}개`, cv >= 50],
-      [`시장 장보기 (${ww(P.market)})`, `${Math.floor(r.monthly / P.market)}번`, r.monthly / P.market >= 5],
-      [`소주 (${ww(P.soju)})`, `${Math.floor(r.monthly / P.soju)}병`, true],
-    ]
-    funItems.forEach(([label, val, ok]) => {
-      drawRow(label as string, val as string, y, ok as boolean); y += 24
-    })
-    y += 6; drawLine(y); y += 24
+    x.fillStyle = '#555'; x.font = '600 12px system-ui'
+    x.fillText(`치킨 ${ck}마리`, L, y); x.fillText(`국밥 ${gb}그릇`, L + 140, y); x.fillText(`도시락 ${cv}개`, L + 290, y)
+    x.fillStyle = '#aaa'; x.font = '400 10px system-ui'
+    x.fillText(`(${ww(P.chicken)})`, L + 80, y); x.fillText(`(${ww(P.gukbap)})`, L + 220, y); x.fillText(`(${ww(P.cvs)})`, L + 368, y)
+    y += 16; line(y); y += 20
 
-    // ─── 동년배 비교 ───
-    x.fillStyle = '#555'; x.font = '700 13px system-ui'; x.fillText('나의 위치', L, y); y += 22
-    drawRow(`${r.ag}대 동년배 순위`, `상위 ${r.pct}%`, y, r.pct <= 30); y += 24
-    drawRow('노후 준비도', `${r.fi}%`, y, r.fi >= 70); y += 24
-    drawRow('은퇴 시 총자산', ww(r.total), y); y += 24
-    drawRow('국민연금 월 수령', ww(r.penM), y); y += 24
-    drawRow('저축률', `${r.sr}%`, y, r.sr >= 20); y += 10
-    drawLine(y); y += 24
+    // 나의 위치 (3행)
+    x.fillStyle = '#555'; x.font = '600 12px system-ui'; x.fillText('나의 위치', L, y); y += 20
+    row(`${r.ag}대 동년배 순위`, `상위 ${r.pct}%`, y, r.pct <= 30); y += 22
+    row('노후 준비도', `${r.fi}%`, y, r.fi >= 70); y += 22
+    row('은퇴 시 총자산 / 국민연금', `${w(r.total)} / 월 ${ww(r.penM)}`, y); y += 8
+    line(y); y += 20
 
-    // ─── 할 수 있는 것 / 없는 것 ───
-    x.fillStyle = '#555'; x.font = '700 13px system-ui'; x.fillText('할 수 있는 것', L, y)
-    x.fillText('할 수 없는 것', L + 310, y); y += 20
-    const m = r.monthly
-    const canL: string[] = [], cantL: string[] = []
+    // 할 수 있는 것 / 없는 것 (각 4개)
+    const m = r.monthly, canL: string[] = [], cantL: string[] = []
     if (m >= 300000) canL.push('사 먹기'); else cantL.push('외식')
     if (m >= P.chicken * 2) canL.push('치킨 배달'); else cantL.push('치킨')
     if (m >= 200000) canL.push('손주 용돈'); else cantL.push('손주 용돈')
-    if (m >= 100000) canL.push('경조사'); else cantL.push('경조사')
     if (m >= 300000) canL.push('병원'); else cantL.push('병원')
-    if (m >= 500000) canL.push('국내 여행'); else cantL.push('여행')
+    if (m >= 500000) canL.push('여행'); else cantL.push('여행')
     if (m < 3000000) cantL.push('해외여행'); else canL.push('해외여행')
-    if (m < 4000000) cantL.push('골프/고급취미'); else canL.push('취미')
-    for (let i = 0; i < Math.max(canL.length, cantL.length); i++) {
-      if (canL[i]) { x.fillStyle = '#22c55e'; x.font = '700 12px system-ui'; x.fillText('V', L, y); x.fillStyle = '#555'; x.font = '400 12px system-ui'; x.fillText(canL[i], L + 18, y) }
-      if (cantL[i]) { x.fillStyle = '#ef4444'; x.font = '700 12px system-ui'; x.fillText('X', L + 310, y); x.fillStyle = '#555'; x.font = '400 12px system-ui'; x.fillText(cantL[i], L + 328, y) }
-      y += 20
+    x.fillStyle = '#555'; x.font = '600 12px system-ui'; x.fillText('할 수 있는 것', L, y); x.fillText('할 수 없는 것', L + CW / 2, y); y += 18
+    for (let i = 0; i < Math.max(canL.length, cantL.length, 4); i++) {
+      if (canL[i]) { x.fillStyle = '#22c55e'; x.font = '700 11px system-ui'; x.fillText('V', L, y); x.fillStyle = '#555'; x.font = '400 11px system-ui'; x.fillText(canL[i], L + 16, y) }
+      if (cantL[i]) { x.fillStyle = '#ef4444'; x.font = '700 11px system-ui'; x.fillText('X', L + CW / 2, y); x.fillStyle = '#555'; x.font = '400 11px system-ui'; x.fillText(cantL[i], L + CW / 2 + 16, y) }
+      y += 18
     }
-    y += 6; drawLine(y); y += 24
+    y += 4; line(y); y += 20
 
-    // ─── 하루 스토리 (3줄만) ───
-    x.fillStyle = '#555'; x.font = '700 13px system-ui'; x.fillText('은퇴 후 어느 하루', L, y); y += 20
-    const stories: Record<string, string[]> = {
-      S: ['카페에서 아메리카노 한 잔', '시장 칼국수로 점심', '마트에서 삼겹살 사서 가족 저녁'],
-      A: ['커피믹스 한 잔으로 시작', '집에서 김치찌개', '이마트 할인 시간에 장보기'],
-      B: ['밥 지어 먹고 김치볶음', '남은 밥에 계란 후라이', '마감할인 반찬 고르기'],
-      C: ['계란 3개, 아껴 먹어야 한다', '경로식당 2,000원', '라면 한 봉지가 저녁'],
-      D: ['간장 비빔밥이 아침', '무료급식소에 줄 서기', '폐기 직전 도시락 2,000원'],
-    }
-    const dayLines = stories[r.gr] || stories.D
-    x.fillStyle = '#555'; x.font = '400 12px system-ui'
-    dayLines.forEach(l => { x.fillText(`- ${l}`, L + 8, y); y += 20 })
-    y += 6; drawLine(y); y += 24
-
-    // ─── 종합 진단 ───
-    x.fillStyle = col; x.font = '700 14px system-ui'; x.fillText('종합 진단', L, y); y += 22
+    // 종합 진단 (풍부하게)
+    x.fillStyle = col; x.font = '700 14px system-ui'; x.fillText('종합 진단', L, y); y += 20
     const gap = S.need - r.monthly
-    let diag: string
-    if (r.gr === 'S') diag = '여유 있는 노후입니다. 물가 상승만 대비하면 안정적.'
-    else if (r.gr === 'A') diag = `괜찮지만 월 ${ww(gap > 0 ? gap : 0)} 더 모으면 걱정 없는 수준.`
-    else if (r.gr === 'B') diag = '밥은 먹을 수 있지만 병원비 한 번이면 그 달은 끝. 지금이 기회.'
-    else if (r.gr === 'C') diag = '끼니를 거르는 날이 생깁니다. 아파도 병원비가 무서워 참게 됩니다.'
-    else diag = '삼시세끼 해결이 안 됩니다. 무료급식소가 일상. 긴급 개편 필요.'
-    x.fillStyle = '#555'
-    y = drawWrap(diag, y, R2 - L, 13) + 20
+    let d1: string, d2: string
+    if (r.gr === 'S') { d1 = '여유 있는 노후입니다. 시장에서 제철 과일 사고, 가끔 외식도 됩니다.'; d2 = `다만 ${r.yrs}년 후 물가 반영 시 구매력 ${Math.round(r.inflAdj / r.monthly * 100)}%. 인플레이션 대비 필수.` }
+    else if (r.gr === 'A') { d1 = `먹고 사는 건 됩니다. 치킨은 시켜먹을 수 있지만, 경조사 겹치면 빠듯합니다.`; d2 = `월 ${ww(gap > 0 ? gap : 0)} 더 모으면 걱정 없는 수준. 저축률 ${r.sr}%${r.sr < 20 ? ' (권장 20%)' : ''}.` }
+    else if (r.gr === 'B') { d1 = `밥은 먹지만 병원비 한 번이면 그 달은 끝. 마감할인 반찬이 일상입니다.`; d2 = `적정 생활비 ${ww(S.need)} 대비 ${ww(gap)} 부족. 지금이 바꿀 수 있는 마지막 기회.` }
+    else if (r.gr === 'C') { d1 = '끼니를 거르는 날이 생깁니다. 아파도 병원비가 무서워 참게 됩니다.'; d2 = `난방비 아끼려고 이불 속에서 버티게 됩니다. 월 ${ww(gap)} 추가 저축이 시급합니다.` }
+    else { d1 = '삼시세끼 해결이 안 됩니다. 무료급식소, 폐기 직전 도시락이 일상.'; d2 = `국민연금 ${ww(r.penM)}으로는 공과금 내면 남는 게 없습니다. 긴급 개편 필요.` }
+    x.fillStyle = '#444'; y = wrap(d1, y, CW, 13) + 8
+    x.fillStyle = '#666'; y = wrap(d2, y, CW, 12) + 16
 
-    // ─── 처방 ───
-    x.fillStyle = '#555'; x.font = '700 13px system-ui'; x.fillText('잘 살려면', L, y); y += 20
+    // 처방
+    x.fillStyle = col; x.font = '700 13px system-ui'; x.fillText('잘 살려면', L, y); y += 18
     const rx: string[] = []
-    if (r.sr < 20) rx.push(`저축률 ${r.sr}% -> 20%로 올리기`)
+    if (r.sr < 20) rx.push(`저축률 ${r.sr}% → 20%로 올리기`)
     if (gap > 0) rx.push(`월 ${ww(gap)} 추가 저축/투자`)
-    rx.push(`은퇴까지 ${r.yrs}년, 지금이 복리 효과 극대화 구간`)
-    x.fillStyle = '#666'; x.font = '400 12px system-ui'
-    rx.forEach((a, i) => { x.fillText(`${i + 1}. ${a}`, L + 8, y); y += 20 })
+    rx.push(`은퇴까지 ${r.yrs}년, 복리 효과 극대화 구간`)
+    x.fillStyle = '#555'; x.font = '400 12px system-ui'
+    rx.forEach((a, i) => { x.fillText(`${i + 1}. ${a}`, L + 8, y); y += 18 })
 
-    // ─── 하단 CTA ───
-    y = H - 80
-    x.fillStyle = '#03C75A'
-    x.beginPath(); x.roundRect(L, y, R2 - L, 44, 12); x.fill()
-    x.fillStyle = '#fff'; x.font = '700 14px system-ui'; x.textAlign = 'center'
-    x.fillText('나도 분석해보기   nohu-lab.vercel.app', W / 2, y + 28)
-    x.textAlign = 'left'
-
-    x.fillStyle = '#999'; x.font = '400 11px system-ui'; x.textAlign = 'center'
-    x.fillText('노후연구소 카페   cafe.naver.com/eovhskfktmak', W / 2, H - 20)
-    x.textAlign = 'left'
+    // 하단 CTA
+    y = H - 70
+    x.fillStyle = '#03C75A'; x.beginPath(); x.roundRect(L, y, CW, 40, 10); x.fill()
+    x.fillStyle = '#fff'; x.font = '700 13px system-ui'; x.textAlign = 'center'
+    x.fillText('나도 분석해보기   nohu-lab.vercel.app', W / 2, y + 25); x.textAlign = 'left'
+    x.fillStyle = '#999'; x.font = '400 10px system-ui'; x.textAlign = 'center'
+    x.fillText('노후연구소 카페  cafe.naver.com/eovhskfktmak', W / 2, H - 16); x.textAlign = 'left'
 
     return c
   }, [result, prices])
@@ -493,96 +446,70 @@ export default function RetirementSimulator() {
     <div className="max-w-[440px] mx-auto px-4">
       <style>{CSS}</style>
 
-      {/* 1. 히어로 + 별명 + 핵심 수치 통합 */}
-      <Sec>
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 relative overflow-hidden">
-          <div className="absolute -right-6 -top-6 text-[160px] font-[900] leading-none select-none" style={{ color: r.grC, opacity: 0.06 }}>{r.gr}</div>
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <p className="text-[9px] text-gray-400">노후연구소 분석</p>
-                <p className="text-[15px] font-[800] mt-1" style={{ color: r.grC }}>"{r.nickname}"</p>
-                <p className="text-[11px] text-gray-500">{r.grN}</p>
-              </div>
-              <div className="w-14 h-14 rounded-xl flex flex-col items-center justify-center pop-in" style={{ backgroundColor: r.grC }}>
-                <span className="text-[24px] font-[900] leading-none text-white">{r.gr}</span>
-                <span className="text-[8px] text-white/70">등급</span>
-              </div>
+      {/* 전체 결과 1블록 */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 relative overflow-hidden">
+        <div className="absolute -right-6 -top-6 text-[140px] font-[900] leading-none select-none" style={{ color: r.grC, opacity: 0.05 }}>{r.gr}</div>
+        <div className="relative z-10">
+          {/* 등급 + 별명 */}
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="text-[9px] text-gray-400">노후연구소 분석</p>
+              <p className="text-[15px] font-[800] mt-1" style={{ color: r.grC }}>"{r.nickname}"</p>
+              <p className="text-[11px] text-gray-500">{r.grN}</p>
             </div>
-            <div className="border-t border-gray-100 pt-3 mt-1">
-              <p className="text-[10px] text-gray-400">은퇴 후 매달 쓸 수 있는 돈</p>
-              <p className="text-[40px] font-[900] tracking-tight leading-none text-gray-900 mt-1">{ww(r.monthly)}</p>
-              <div className="flex gap-4 mt-2">
-                <span className="text-[12px] text-gray-500">한 끼 <strong className="text-[16px] font-[800]" style={{ color: r.grC }}>{ww(r.perMeal)}</strong></span>
-                <span className="text-[12px] text-gray-500">하루 <strong className="text-[16px] font-[800] text-gray-800">{ww(r.daily)}</strong></span>
-              </div>
-              {r.perMeal < P.lunchAvg && (
-                <p className="text-[11px] text-red-500 mt-1">직장인 점심 {ww(P.lunchAvg)}의 {Math.round(r.perMeal / P.lunchAvg * 100)}%</p>
-              )}
-            </div>
-            <div className="flex gap-2 mt-3 text-center">
-              <div className="flex-1 bg-gray-50 rounded-lg py-2">
-                <p className="text-[9px] text-gray-400">동년배</p>
-                <p className="text-[13px] font-[800] text-gray-900">상위 {r.pct}%</p>
-              </div>
-              <div className="flex-1 bg-gray-50 rounded-lg py-2">
-                <p className="text-[9px] text-gray-400">준비도</p>
-                <p className="text-[13px] font-[800]" style={{ color: r.fi >= 70 ? '#22c55e' : '#ef4444' }}>{r.fi}%</p>
-              </div>
-              <div className="flex-1 bg-gray-50 rounded-lg py-2">
-                <p className="text-[9px] text-gray-400">은퇴 시 자산</p>
-                <p className="text-[13px] font-[800] text-gray-900">{w(r.total)}</p>
-              </div>
+            <div className="w-12 h-12 rounded-xl flex flex-col items-center justify-center" style={{ backgroundColor: r.grC }}>
+              <span className="text-[22px] font-[900] leading-none text-white">{r.gr}</span>
+              <span className="text-[7px] text-white/70">등급</span>
             </div>
           </div>
-        </div>
-      </Sec>
 
-      {/* 2. 이 돈으로 한 달에 (치킨/국밥 카드) */}
-      <Sec>
-        <div className="bg-white border border-gray-100 rounded-2xl p-4">
-          <p className="text-[12px] font-[700] text-gray-900 mb-3">이 돈으로 한 달에 <span className="text-[9px] text-gray-400 font-normal ml-1">{P.updated} 물가</span></p>
-          <div className="grid grid-cols-3 gap-2">
+          {/* 핵심 수치 */}
+          <div className="border-t border-gray-100 pt-3 mt-1">
+            <p className="text-[10px] text-gray-400">은퇴 후 매달</p>
+            <p className="text-[36px] font-[900] tracking-tight leading-none text-gray-900">{ww(r.monthly)}</p>
+            <div className="flex gap-4 mt-1.5 items-baseline">
+              <span className="text-[11px] text-gray-500">한 끼 <strong className="text-[15px] font-[800]" style={{ color: r.grC }}>{ww(r.perMeal)}</strong></span>
+              <span className="text-[11px] text-gray-500">하루 <strong className="text-[14px] font-[700] text-gray-800">{ww(r.daily)}</strong></span>
+              {r.perMeal < P.lunchAvg && <span className="text-[10px] text-red-500">점심 {ww(P.lunchAvg)}의 {Math.round(r.perMeal / P.lunchAvg * 100)}%</span>}
+            </div>
+          </div>
+
+          {/* 치킨/국밥 — 한 줄 */}
+          <div className="flex gap-1.5 mt-3">
             <FunCard top={`${chicken}`} unit="마리" label="치킨" sub={ww(P.chicken)} color={chicken >= 30 ? 'green' : chicken >= 15 ? 'yellow' : 'red'} />
             <FunCard top={`${gukbap}`} unit="그릇" label="국밥" sub={ww(P.gukbap)} color={gukbap >= 50 ? 'green' : gukbap >= 25 ? 'yellow' : 'red'} />
-            <FunCard top={`${cvs}`} unit="개" label="편의점도시락" sub={ww(P.cvs)} color={cvs >= 100 ? 'green' : cvs >= 50 ? 'yellow' : 'red'} />
+            <FunCard top={`${cvs}`} unit="개" label="도시락" sub={ww(P.cvs)} color={cvs >= 100 ? 'green' : cvs >= 50 ? 'yellow' : 'red'} />
           </div>
-          <p className="text-[11px] text-gray-500 text-center mt-3">
-            {chicken < 5 ? `한 달에 치킨 ${chicken}마리... 가족 4명이면 1인당 ${(chicken / 4).toFixed(1)}마리` :
-             chicken < 15 ? '2주에 치킨 한 마리 시킬 수 있는 수준' :
-             chicken < 30 ? '일주일에 한 번은 치킨 시켜먹을 수 있습니다' :
-             '매일 치킨 먹어도 되는 수준 (안 추천)'}
-          </p>
-        </div>
-      </Sec>
 
-      {/* 3. 할 수 있는 것 / 없는 것 + 진단 통합 */}
-      <Sec>
-        <div className={`bg-white border rounded-2xl p-4 ${r.fi < 70 ? 'border-red-200' : 'border-gray-100'}`}>
-          <CanCantInline r={r} prices={P} />
+          {/* 진단 */}
           <div className="border-t border-gray-100 mt-3 pt-3">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-1 h-6 rounded-full" style={{ backgroundColor: r.grC }} />
-              <p className="text-[13px] font-[700] text-gray-900">종합 진단</p>
-            </div>
-            <p className="text-[12px] text-gray-700 leading-[1.8]">
+            <p className="text-[12px] font-[700] text-gray-900 mb-1">종합 진단</p>
+            <p className="text-[12px] text-gray-700 leading-[1.7]">
               {r.gr === 'S' && `여유 있는 노후. 물가 상승만 대비하면 안정적.`}
-              {r.gr === 'A' && `먹고 사는 건 되지만, 월 ${ww(S.need - r.monthly > 0 ? S.need - r.monthly : 0)} 더 모으면 마음이 편해집니다.`}
-              {r.gr === 'B' && `밥은 먹을 수 있지만 병원비 한 번이면 그 달은 끝. 치킨 ${chicken}마리가 한 달 전부.`}
-              {r.gr === 'C' && '끼니를 거르는 날이 생깁니다. 아파도 병원비가 무서워 참게 됩니다.'}
-              {r.gr === 'D' && '삼시세끼 해결이 안 됩니다. 무료급식소가 일상이 됩니다.'}
+              {r.gr === 'A' && `먹고 사는 건 되지만, 월 ${ww(S.need - r.monthly > 0 ? S.need - r.monthly : 0)} 더 모으면 마음 편해집니다.`}
+              {r.gr === 'B' && `밥은 먹지만 병원비 한 번이면 그 달 끝. 치킨 ${chicken}마리가 전부.`}
+              {r.gr === 'C' && '끼니를 거르는 날이 생깁니다. 아파도 참게 됩니다.'}
+              {r.gr === 'D' && '삼시세끼 해결이 안 됩니다. 무료급식소가 일상.'}
             </p>
-            {r.gr !== 'S' && (
-              <div className="mt-2 bg-gray-50 rounded-lg p-2.5">
-                <p className="text-[11px] text-gray-600 font-medium">
-                  {r.sr < 20 ? `저축률 ${r.sr}% → 20%로 올리기. ` : ''}
-                  은퇴까지 {r.yrs}년, 지금이 복리 효과 극대화 구간
-                </p>
-              </div>
-            )}
+          </div>
+
+          {/* 동년배 + 준비도 */}
+          <div className="flex gap-2 mt-3 text-center">
+            <div className="flex-1 bg-gray-50 rounded-lg py-1.5">
+              <p className="text-[9px] text-gray-400">동년배</p>
+              <p className="text-[12px] font-[800] text-gray-900">상위 {r.pct}%</p>
+            </div>
+            <div className="flex-1 bg-gray-50 rounded-lg py-1.5">
+              <p className="text-[9px] text-gray-400">준비도</p>
+              <p className="text-[12px] font-[800]" style={{ color: r.fi >= 70 ? '#22c55e' : '#ef4444' }}>{r.fi}%</p>
+            </div>
+            <div className="flex-1 bg-gray-50 rounded-lg py-1.5">
+              <p className="text-[9px] text-gray-400">은퇴 시 자산</p>
+              <p className="text-[12px] font-[800] text-gray-900">{w(r.total)}</p>
+            </div>
           </div>
         </div>
-      </Sec>
+      </div>
 
       {/* ═══ GATED ═══ */}
       {member ? (
@@ -672,39 +599,6 @@ function FunCard({ top, unit, label, sub, color }: { top: string; unit: string; 
       <p className="text-[11px] font-[600] text-gray-800 mt-1">{label}</p>
       <p className="text-[9px] text-gray-400">{sub}</p>
     </div>
-  )
-}
-
-function CanCantInline({ r, prices }: { r: R; prices: MarketPrices }) {
-  const m = r.monthly
-  const can: string[] = [], cant: string[] = []
-  if (m >= 300000) can.push('사 먹기'); else cant.push('외식')
-  if (m >= prices.chicken * 2) can.push('치킨 배달'); else cant.push('치킨')
-  if (m >= 200000) can.push('손주 용돈'); else cant.push('손주 용돈')
-  if (m >= 300000) can.push('병원'); else cant.push('병원')
-  if (m >= 500000) can.push('국내 여행'); else cant.push('여행')
-  if (m < 3000000) cant.push('해외여행'); else can.push('해외여행')
-  if (m < 4000000) cant.push('골프'); else can.push('취미')
-  return (
-    <>
-      <p className="text-[12px] font-[700] text-gray-900 mb-2">할 수 있는 것 / 없는 것</p>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-        <div className="space-y-1">
-          {can.slice(0, 5).map((c, i) => (
-            <div key={i} className="flex items-center gap-1 text-[11px] text-gray-700">
-              <span className="text-green-500 font-bold text-[10px]">V</span>{c}
-            </div>
-          ))}
-        </div>
-        <div className="space-y-1">
-          {cant.slice(0, 5).map((c, i) => (
-            <div key={i} className="flex items-center gap-1 text-[11px] text-gray-700">
-              <span className="text-red-400 font-bold text-[10px]">X</span>{c}
-            </div>
-          ))}
-        </div>
-      </div>
-    </>
   )
 }
 
