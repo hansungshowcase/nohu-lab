@@ -32,12 +32,15 @@ function AdminContent() {
     fetchMembers()
     const sync = searchParams.get('sync')
     const count = searchParams.get('count')
+    const newCount = searchParams.get('new')
+    const updated = searchParams.get('updated')
+    const reason = searchParams.get('reason')
     if (sync === 'success') {
-      setMessage(`카페 회원 ${count}명 동기화 완료!`)
-      setTimeout(() => setMessage(''), 5000)
-    } else if (sync === 'failed' || sync === 'error' || sync === 'token_failed') {
-      setMessage('카페 회원 동기화에 실패했습니다.')
-      setTimeout(() => setMessage(''), 5000)
+      setMessage(`카페 회원 ${count}명 동기화 완료! (신규: ${newCount || 0}명, 업데이트: ${updated || 0}명)`)
+      setTimeout(() => setMessage(''), 8000)
+    } else if (sync === 'failed' || sync === 'error') {
+      setMessage(`카페 회원 동기화 실패${reason ? ': ' + reason : ''}`)
+      setTimeout(() => setMessage(''), 8000)
     }
   }, [searchParams])
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
 import { createToken, COOKIE_NAME } from '@/lib/auth'
 
-const CAFE_ID = 'eovhskfktmak'
+const CAFE_ID = '20898041'
 
 // 노후연구소 카페 등급 → 시스템 Tier 매핑
 // 일반회원 → Tier 1

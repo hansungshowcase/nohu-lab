@@ -2,16 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
 import { getCurrentUser } from '@/lib/auth'
 
-const CAFE_ID = 'eovhskfktmak'
+const CAFE_ID = '20898041'
 
 // 카페 등급 → DB tier (1~4)
-// 일반/코어 → 1, 우수 → 2, 프리미엄/시그니처 → 3, 헤리티지/스탭 → 4
 function mapCafeLevelToTier(levelName: string): number {
   const name = levelName.trim()
   if (name.includes('매니저') || name.includes('스탭') || name.includes('운영') || name === '헤리티지회원') return 4
   if (name === '시그니처회원' || name === '프리미엄회원') return 3
   if (name === '우수회원') return 2
-  return 1 // 일반회원, 코어회원
+  return 1
 }
 
 export async function GET(request: NextRequest) {
@@ -25,7 +24,7 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get('state')
 
   if (!code) {
-    return NextResponse.redirect(new URL('/admin?sync=failed', process.env.NEXT_PUBLIC_BASE_URL!))
+    return NextResponse.redirect(new URL('/admin?sync=failed&reason=no_code', process.env.NEXT_PUBLIC_BASE_URL!))
   }
 
   try {
@@ -36,7 +35,8 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenRes.json()
 
     if (!tokenData.access_token) {
-      return NextResponse.redirect(new URL('/admin?sync=token_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+      console.error('Token failed:', JSON.stringify(tokenData))
+      return NextResponse.redirect(new URL(`/admin?sync=failed&reason=token_failed`, process.env.NEXT_PUBLIC_BASE_URL!))
     }
 
     const accessToken = tokenData.access_token
@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
     // 2. 카페 회원 목록 조회
     let page = 1
     const allMembers: { nickname: string; levelName: string }[] = []
+    let apiError = ''
 
     while (true) {
       const membersRes = await fetch(
@@ -52,31 +53,65 @@ export async function GET(request: NextRequest) {
       )
       const membersData = await membersRes.json()
 
-      if (membersData.message?.status !== '200' || !membersData.message?.result?.members) {
+      console.log(`Cafe API page ${page}:`, JSON.stringify(membersData).substring(0, 500))
+
+      // API 에러 체크
+      if (membersData.error_code || membersData.errorCode) {
+        apiError = membersData.error_description || membersData.errorMessage || 'API 오류'
+        console.error('Cafe API error:', JSON.stringify(membersData))
         break
       }
 
-      const members = membersData.message.result.members
+      // 응답 형식에 따라 회원 추출
+      let members: Array<Record<string, string>> = []
+
+      if (membersData.message?.result?.members) {
+        members = membersData.message.result.members
+      } else if (membersData.result?.members) {
+        members = membersData.result.members
+      } else if (Array.isArray(membersData.members)) {
+        members = membersData.members
+      } else if (membersData.message?.status !== '200') {
+        apiError = `API status: ${membersData.message?.status || 'unknown'}`
+        console.error('Unexpected API response:', JSON.stringify(membersData))
+        break
+      }
+
       if (members.length === 0) break
 
       for (const m of members) {
-        allMembers.push({
-          nickname: m.nickname || m.nick || '',
-          levelName: m.memberLevelName || m.levelName || '일반회원',
-        })
+        const nickname = m.nickname || m.nick || m.memberNickName || ''
+        const levelName = m.memberLevelName || m.levelName || m.memberLevel || '일반회원'
+        if (nickname) {
+          allMembers.push({ nickname, levelName: String(levelName) })
+        }
       }
 
       if (members.length < 100) break
       page++
+      if (page > 100) break // 안전장치
+    }
+
+    // API 에러가 있고 회원도 없으면 실패
+    if (allMembers.length === 0 && apiError) {
+      return NextResponse.redirect(
+        new URL(`/admin?sync=failed&reason=${encodeURIComponent(apiError)}`, process.env.NEXT_PUBLIC_BASE_URL!)
+      )
+    }
+
+    if (allMembers.length === 0) {
+      return NextResponse.redirect(
+        new URL('/admin?sync=failed&reason=no_members', process.env.NEXT_PUBLIC_BASE_URL!)
+      )
     }
 
     // 3. DB에 동기화
     const supabase = getServiceSupabase()
     let syncCount = 0
+    let newCount = 0
+    let updateCount = 0
 
     for (const member of allMembers) {
-      if (!member.nickname) continue
-
       const tier = mapCafeLevelToTier(member.levelName)
 
       const { data: existing } = await supabase
@@ -86,30 +121,27 @@ export async function GET(request: NextRequest) {
         .single()
 
       if (existing) {
-        // 등급이 변경된 경우만 업데이트
         if (existing.tier !== tier) {
           await supabase
             .from('members')
             .update({ tier })
             .eq('id', existing.id)
+          updateCount++
         }
       } else {
-        // 신규 회원 추가
         await supabase
           .from('members')
-          .insert({
-            nickname: member.nickname,
-            phone: '',
-            tier,
-          })
+          .insert({ nickname: member.nickname, phone: '', tier })
+        newCount++
       }
       syncCount++
     }
 
     return NextResponse.redirect(
-      new URL(`/admin?sync=success&count=${syncCount}`, process.env.NEXT_PUBLIC_BASE_URL!)
+      new URL(`/admin?sync=success&count=${syncCount}&new=${newCount}&updated=${updateCount}`, process.env.NEXT_PUBLIC_BASE_URL!)
     )
-  } catch {
+  } catch (err) {
+    console.error('Sync error:', err)
     return NextResponse.redirect(new URL('/admin?sync=error', process.env.NEXT_PUBLIC_BASE_URL!))
   }
 }
