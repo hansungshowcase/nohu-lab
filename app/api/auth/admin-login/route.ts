@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const { data: admin } = await supabase
       .from('members')
       .select('*')
-      .eq('tier', 6)
+      .eq('tier', 4)
       .limit(1)
       .single()
 
