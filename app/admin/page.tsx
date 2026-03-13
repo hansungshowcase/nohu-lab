@@ -136,21 +136,24 @@ function AdminContent() {
   ]
 
   const [syncStatus, setSyncStatus] = useState<{
-    success?: boolean
     totalMembers?: number
-    inserted?: number
-    updated?: number
-    lastSync?: string
+    lastVerifySuccess?: string | null
+    lastVerifyAny?: string | null
+    lastVerifyStatus?: string | null
   } | null>(null)
 
   useEffect(() => {
-    if (tab === 'sync') {
-      fetch('/api/admin/sync-status')
-        .then(r => r.json())
-        .then(data => setSyncStatus(data))
-        .catch(() => {})
-    }
-  }, [tab])
+    fetch('/api/admin/sync-status')
+      .then(r => r.json())
+      .then(data => setSyncStatus(data))
+      .catch(() => {})
+  }, [])
+
+  // 동기화 경고 조건: 회원 1명 이하이거나, 마지막 확인 실패
+  const syncWarning = syncStatus && (
+    (syncStatus.totalMembers || 0) <= 1 ||
+    syncStatus.lastVerifyStatus === 'error'
+  )
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -180,6 +183,22 @@ function AdminContent() {
           </button>
         ))}
       </div>
+
+      {/* 동기화 경고 (모든 탭에서 표시) */}
+      {syncWarning && (
+        <div className="mb-4 bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3 cursor-pointer" onClick={() => setTab('sync')}>
+          <span className="text-xl mt-0.5">&#9888;&#65039;</span>
+          <div>
+            <p className="font-bold text-red-800">회원 동기화가 정상 작동하지 않고 있습니다</p>
+            <p className="text-sm text-red-700 mt-0.5">
+              {(syncStatus?.totalMembers || 0) <= 1
+                ? 'DB에 등록된 회원이 없습니다. 확장프로그램이 실행 중인지 확인하세요.'
+                : '마지막 회원 확인이 실패했습니다. 확장프로그램 상태를 확인하세요.'}
+            </p>
+            <p className="text-xs text-red-600 mt-1 underline">카페 동기화 탭에서 확인하기</p>
+          </div>
+        </div>
+      )}
 
       {/* 회원 관리 탭 */}
       {tab === 'members' && (
@@ -364,23 +383,6 @@ function AdminContent() {
       {/* 카페 동기화 탭 */}
       {tab === 'sync' && (
         <div className="space-y-6">
-          {/* 동기화 상태 경고 */}
-          {members.length <= 1 && (
-            <div className="bg-red-50 border-2 border-red-300 rounded-xl p-5 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">&#9888;&#65039;</span>
-                <h3 className="text-lg font-bold text-red-800">회원 동기화가 필요합니다!</h3>
-              </div>
-              <p className="text-sm text-red-700">
-                현재 DB에 등록된 회원이 {members.length}명뿐입니다.
-                Chrome 확장프로그램이 설치되어 있지 않거나, 실행 중이 아닐 수 있습니다.
-              </p>
-              <p className="text-sm text-red-700 font-bold">
-                확장프로그램이 실행되지 않으면 새로운 회원이 로그인할 수 없습니다.
-              </p>
-            </div>
-          )}
-
           <div className="bg-white rounded-lg border border-green-200 p-6 space-y-4">
             <h2 className="text-lg font-bold text-gray-900">실시간 회원 확인 (Chrome 확장프로그램)</h2>
             <p className="text-sm text-gray-700 leading-relaxed">
