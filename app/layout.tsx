@@ -15,21 +15,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "노후연구소",
-  description: "7개 질문으로 알아보는 나의 노후 등급. S등급 금수저 노후부터 D등급까지, 당신은?",
+  description: "노후연구소 - 은퇴 준비를 위한 다양한 도구",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   metadataBase: new URL('https://nohu-lab.vercel.app'),
   openGraph: {
-    title: '노후연구소 | 노후 등급 테스트',
-    description: '7개 질문으로 알아보는 나의 노후 등급. S등급 금수저 노후부터 D등급까지, 당신은?',
-    url: 'https://nohu-lab.vercel.app/programs/retirement-simulator',
+    title: '노후연구소',
+    description: '노후연구소 - 은퇴 준비를 위한 다양한 도구',
+    url: 'https://nohu-lab.vercel.app',
     siteName: '노후연구소',
     locale: 'ko_KR',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '노후연구소 | 노후 등급 테스트',
-    description: '7개 질문으로 알아보는 나의 노후 등급. 당신은?',
+    title: '노후연구소',
+    description: '노후연구소 - 은퇴 준비를 위한 다양한 도구',
   },
 };
 

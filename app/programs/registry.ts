@@ -46,15 +46,6 @@ export const programRegistry: Program[] = [
     category: '유틸리티',
     isActive: true,
   },
-  {
-    id: 'retirement-simulator',
-    name: '노후 등급 테스트',
-    description: '7개 질문으로 알아보는 나의 은퇴 후 등급',
-    minTier: 1,
-    icon: '🏖️',
-    category: '재무',
-    isActive: true,
-  },
 ]
 
 export function getProgramsByTier(tier: number): Program[] {
