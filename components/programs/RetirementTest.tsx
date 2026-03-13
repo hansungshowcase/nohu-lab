@@ -31,23 +31,32 @@ export default function RetirementTest() {
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [testCount, setTestCount] = useState(0)
+  const [isMember, setIsMember] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const a4CardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setTestCount(getTestCount())
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((user) => {
+        if (user && user.tier >= 1) setIsMember(true)
+      })
+      .catch(() => {})
   }, [])
 
   const handleStart = useCallback(() => {
-    const count = getTestCount()
-    if (count >= FREE_LIMIT) {
-      setShowLimitModal(true)
-      return
+    if (!isMember) {
+      const count = getTestCount()
+      if (count >= FREE_LIMIT) {
+        setShowLimitModal(true)
+        return
+      }
     }
     setPhase('quiz')
     setCurrentQ(0)
     setAnswers({})
-  }, [])
+  }, [isMember])
 
   const handleAnswer = useCallback((questionId: number, score: number) => {
     setAnswers((prev) => {
@@ -62,10 +71,12 @@ export default function RetirementTest() {
   }, [currentQ])
 
   const handleAnalysisComplete = useCallback(() => {
-    incrementTestCount()
-    setTestCount(getTestCount())
+    if (!isMember) {
+      incrementTestCount()
+      setTestCount(getTestCount())
+    }
     setPhase('result')
-  }, [])
+  }, [isMember])
 
   const handlePrev = useCallback(() => {
     if (currentQ > 0) {
@@ -112,19 +123,27 @@ export default function RetirementTest() {
     </div>
   ) : null
 
+  // Limit modal (rendered outside phase blocks so it works from any screen)
+  if (showLimitModal) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        {limitModal}
+      </div>
+    )
+  }
+
   // Intro screen
   if (phase === 'intro') {
     const remaining = Math.max(0, FREE_LIMIT - testCount)
 
     return (
       <div className="max-w-2xl mx-auto space-y-6">
-        {limitModal}
         <div className="bg-white rounded-2xl shadow-sm border border-green-100 overflow-hidden">
           <div className="bg-gradient-to-br from-green-500 to-green-700 text-white p-8 text-center">
             <div className="text-5xl mb-4">🏦</div>
             <h2 className="text-2xl font-bold">나의 노후 준비 점수는?</h2>
             <p className="text-green-100 mt-2 text-sm">
-              12개 질문으로 알아보는 나의 노후 준비 상태
+              15개 질문으로 알아보는 나의 노후 준비 상태
             </p>
           </div>
           <div className="p-6 space-y-4">
@@ -148,9 +167,13 @@ export default function RetirementTest() {
             </div>
             <div className="text-center text-sm text-gray-500 space-y-1">
               <p>소요 시간: 약 2분</p>
-              <p>총 12문항 · 비회원 {FREE_LIMIT}회 무료</p>
+              <p>총 15문항 · {isMember ? '회원 무제한 이용' : `비회원 ${FREE_LIMIT}회 무료`}</p>
             </div>
-            {remaining > 0 ? (
+            {isMember ? (
+              <div className="text-center text-xs text-green-600 font-medium">
+                회원님은 무제한 이용 가능합니다
+              </div>
+            ) : remaining > 0 ? (
               <div className="text-center text-xs text-green-600 font-medium">
                 무료 테스트 {remaining}회 남음
               </div>
@@ -244,7 +267,7 @@ export default function RetirementTest() {
 
   // Result screen
   const { total, categories } = calculateScores(answers)
-  const maxTotal = 48
+  const maxTotal = 60
   const result = getResultByScore(total)
 
   const scoreParams = categories
@@ -273,6 +296,7 @@ export default function RetirementTest() {
         maxTotal={maxTotal}
         result={result}
         categories={categories}
+        answers={answers}
       />
 
       {/* Share buttons */}

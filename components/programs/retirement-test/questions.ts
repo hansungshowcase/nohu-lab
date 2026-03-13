@@ -121,6 +121,48 @@ export const questions: Question[] = [
     ],
   },
 
+  // 재정 준비도 추가
+  {
+    id: 13,
+    category: 'finance',
+    categoryLabel: '재정 준비도',
+    text: '노후 의료비·간병비에 대비한 보험이 있나요?',
+    options: [
+      { label: '보험이 하나도 없다', score: 1 },
+      { label: '실손보험 정도만 있다', score: 2 },
+      { label: '실손보험 + 암/중대질병 보험이 있다', score: 3 },
+      { label: '간병보험까지 체계적으로 가입했다', score: 4 },
+    ],
+  },
+
+  // 생활/건강 추가
+  {
+    id: 14,
+    category: 'lifestyle',
+    categoryLabel: '생활/건강',
+    text: '은퇴 후에도 유지할 수 있는 사회적 관계가 있나요?',
+    options: [
+      { label: '직장 외 인간관계가 거의 없다', score: 1 },
+      { label: '가족 외에는 별로 없다', score: 2 },
+      { label: '동호회나 모임에 1~2개 참여 중이다', score: 3 },
+      { label: '다양한 커뮤니티에서 활발히 활동 중이다', score: 4 },
+    ],
+  },
+
+  // 주거/자산 추가
+  {
+    id: 15,
+    category: 'housing',
+    categoryLabel: '주거/자산',
+    text: '부동산 외 금융자산(예금, 주식, 펀드 등)의 비중은?',
+    options: [
+      { label: '금융자산이 거의 없다 (부동산 위주)', score: 1 },
+      { label: '전체 자산의 10~20% 정도', score: 2 },
+      { label: '전체 자산의 20~40%', score: 3 },
+      { label: '전체 자산의 40% 이상으로 분산되어 있다', score: 4 },
+    ],
+  },
+
   // 마인드/지식 준비도 (3문항)
   {
     id: 10,
@@ -187,11 +229,18 @@ export function calculateScores(answers: Record<number, number>): {
     }
   }
 
+  const catMaxMap: Record<CategoryKey, number> = {
+    finance: 16,
+    lifestyle: 16,
+    housing: 16,
+    mindset: 12,
+  }
+
   const categories: CategoryScore[] = Object.entries(catMap).map(([key, val]) => ({
     key: key as CategoryKey,
     label: val.label,
     score: val.score,
-    max: 12,
+    max: catMaxMap[key as CategoryKey],
   }))
 
   const total = categories.reduce((sum, c) => sum + c.score, 0)

@@ -63,6 +63,29 @@ export default function ShareButtons({
 
   const shareText = `나의 노후 준비 점수는 ${total}점! (${grade}) 당신은 몇 점?`
 
+  async function shareKakao() {
+    // Try Web Share API first (shows native share sheet with KakaoTalk on mobile)
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: '나의 노후 준비 점수',
+          text: shareText,
+          url: shareUrl,
+        })
+        return
+      } catch {
+        // user cancelled or not supported, fall through
+      }
+    }
+    // Fallback: copy link for manual sharing
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`)
+      alert('메시지가 복사되었습니다!\n카카오톡에 붙여넣기 해주세요.')
+    } catch {
+      prompt('아래 내용을 복사하여 카카오톡에 공유해주세요:', `${shareText} ${shareUrl}`)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-3 max-w-md mx-auto w-full">
       {/* Copy link */}
@@ -90,15 +113,14 @@ export default function ShareButtons({
         )}
       </button>
 
-      {/* Twitter/X share */}
-      <a
-        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition"
+      {/* KakaoTalk share */}
+      <button
+        onClick={shareKakao}
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-white rounded-xl font-medium hover:opacity-90 transition"
+        style={{ backgroundColor: '#FEE500', color: '#191919' }}
       >
-        𝕏 트위터로 공유하기
-      </a>
+        💬 카카오톡으로 공유하기
+      </button>
     </div>
   )
 }

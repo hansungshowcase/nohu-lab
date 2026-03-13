@@ -56,25 +56,25 @@ function ResultContent({ resultCode }: { resultCode: string }) {
     {
       key: 'finance',
       label: '재정 준비도',
-      score: parseInt(searchParams.get('f') || '0', 10) || Math.round(total / 4),
-      max: 12,
+      score: parseInt(searchParams.get('f') || '0', 10) || Math.round(total * 16 / 60),
+      max: 16,
     },
     {
       key: 'lifestyle',
       label: '생활/건강',
-      score: parseInt(searchParams.get('l') || '0', 10) || Math.round(total / 4),
-      max: 12,
+      score: parseInt(searchParams.get('l') || '0', 10) || Math.round(total * 16 / 60),
+      max: 16,
     },
     {
       key: 'housing',
       label: '주거/자산',
-      score: parseInt(searchParams.get('h') || '0', 10) || Math.round(total / 4),
-      max: 12,
+      score: parseInt(searchParams.get('h') || '0', 10) || Math.round(total * 16 / 60),
+      max: 16,
     },
     {
       key: 'mindset',
       label: '마인드/지식',
-      score: parseInt(searchParams.get('m') || '0', 10) || Math.round(total / 4),
+      score: parseInt(searchParams.get('m') || '0', 10) || Math.round(total * 12 / 60),
       max: 12,
     },
   ]
@@ -87,7 +87,7 @@ function ResultContent({ resultCode }: { resultCode: string }) {
         <ResultCard
           ref={cardRef}
           total={total}
-          maxTotal={48}
+          maxTotal={60}
           result={result}
           categories={categories}
         />
@@ -95,7 +95,7 @@ function ResultContent({ resultCode }: { resultCode: string }) {
         <ResultCardA4
           ref={a4CardRef}
           total={total}
-          maxTotal={48}
+          maxTotal={60}
           result={result}
           categories={categories}
         />

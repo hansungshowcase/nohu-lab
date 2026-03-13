@@ -16,8 +16,8 @@ export interface ResultType {
 export const resultTypes: ResultType[] = [
   {
     code: 'S',
-    minScore: 44,
-    maxScore: 48,
+    minScore: 55,
+    maxScore: 60,
     grade: '노후 마스터',
     icon: '🐢',
     color: '#16a34a',
@@ -32,8 +32,8 @@ export const resultTypes: ResultType[] = [
   },
   {
     code: 'A',
-    minScore: 37,
-    maxScore: 43,
+    minScore: 46,
+    maxScore: 54,
     grade: '든든한 준비생',
     icon: '🐜',
     color: '#2563eb',
@@ -48,8 +48,8 @@ export const resultTypes: ResultType[] = [
   },
   {
     code: 'B',
-    minScore: 30,
-    maxScore: 36,
+    minScore: 37,
+    maxScore: 45,
     grade: '슬슬 눈뜬 사람',
     icon: '🐣',
     color: '#ca8a04',
@@ -64,8 +64,8 @@ export const resultTypes: ResultType[] = [
   },
   {
     code: 'C',
-    minScore: 23,
-    maxScore: 29,
+    minScore: 28,
+    maxScore: 36,
     grade: '아직은 꿈나라',
     icon: '😴',
     color: '#ea580c',
@@ -80,8 +80,8 @@ export const resultTypes: ResultType[] = [
   },
   {
     code: 'D',
-    minScore: 16,
-    maxScore: 22,
+    minScore: 21,
+    maxScore: 27,
     grade: '노후? 그게 뭔데?',
     icon: '🙈',
     color: '#dc2626',
@@ -96,8 +96,8 @@ export const resultTypes: ResultType[] = [
   },
   {
     code: 'F',
-    minScore: 12,
-    maxScore: 15,
+    minScore: 15,
+    maxScore: 20,
     grade: '올해부터 시작!',
     icon: '🔥',
     color: '#9333ea',
