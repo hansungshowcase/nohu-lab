@@ -7,6 +7,7 @@
 - Vercel 계정: hansung1 (qhdl10100-6263)
 - **nohu-lab.vercel.app = cafe-webapp 프로젝트가 서빙 중. 새 프로젝트 만들지 말고 cafe-webapp에 배포할 것**
 - 배포 명령: `cd /c/Users/Administrator/nohu-lab && vercel --prod`
+- 배포 링크 받으면 먼저 `vercel inspect <링크>`로 어떤 프로젝트인지 확인 → 그 프로젝트에 배포
 - 배포 전 반드시 `vercel projects ls`로 현재 프로젝트 확인 후 올바른 프로젝트에 배포
 - **절대 Vercel 프로젝트를 삭제/생성하지 않기. 기존 프로젝트에 배포만 할 것**
 - **절대 다른 Vercel 프로젝트(cafe-settlement, nohu-vercel, nohu-settlement, easy-link) 건들지 않기**
