@@ -48,8 +48,8 @@ export const programRegistry: Program[] = [
   },
   {
     id: 'retirement-simulator',
-    name: '노후 시뮬레이터',
-    description: '세전 급여로 은퇴 후 생활을 시뮬레이션합니다',
+    name: '노후 자금 계산기',
+    description: '은퇴까지 얼마를 모아야 하는지 한눈에 계산',
     minTier: 1,
     icon: '🏖️',
     category: '재무',
