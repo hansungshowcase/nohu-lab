@@ -53,12 +53,17 @@ export default function ShareButtons({
       }
       if (window.Kakao?.isInitialized()) {
         setKakaoReady(true)
+        return true
       }
+      return false
     }
-    initKakao()
-    // SDK가 async 로드되므로 약간 기다릴 수 있음
-    const timer = setTimeout(initKakao, 1000)
-    return () => clearTimeout(timer)
+    if (initKakao()) return
+    // SDK async 로드 대기: 최대 5초간 500ms 간격으로 재시도
+    let attempts = 0
+    const interval = setInterval(() => {
+      if (initKakao() || ++attempts >= 10) clearInterval(interval)
+    }, 500)
+    return () => clearInterval(interval)
   }, [])
 
   async function copyLink() {
