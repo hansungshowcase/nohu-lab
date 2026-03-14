@@ -7,7 +7,9 @@ const steps = [
   { icon: '🏃', label: '생활/건강 점검 중...' },
   { icon: '🏠', label: '주거/자산 평가 중...' },
   { icon: '🧠', label: '마인드/지식 측정 중...' },
-  { icon: '📊', label: '종합 점수 계산 중...' },
+  { icon: '🏛️', label: '3층 연금체계 진단 중...' },
+  { icon: '⚠️', label: '3대 리스크 평가 중...' },
+  { icon: '📊', label: '종합 리포트 생성 중...' },
 ]
 
 interface AnalyzingScreenProps {
@@ -19,13 +21,13 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
   const [progress, setProgress] = useState(0)
 
   useEffect(() => {
-    const stepInterval = 800 // 800ms per step = 4000ms total
+    const stepInterval = 700 // 700ms per step = ~5000ms total
     const progressInterval = 40 // smooth progress bar
 
     const progressTimer = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) return 100
-        return prev + 100 / (4000 / progressInterval)
+        return prev + 100 / (5000 / progressInterval)
       })
     }, progressInterval)
 
@@ -38,7 +40,7 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
 
     const completeTimer = setTimeout(() => {
       onComplete()
-    }, 4000)
+    }, 5000)
 
     return () => {
       clearInterval(progressTimer)

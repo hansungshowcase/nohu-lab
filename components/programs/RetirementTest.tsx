@@ -143,7 +143,7 @@ export default function RetirementTest() {
             <div className="text-5xl mb-4">🏦</div>
             <h2 className="text-2xl font-bold">나의 노후 준비 점수는?</h2>
             <p className="text-green-100 mt-2 text-sm">
-              15개 질문으로 알아보는 나의 노후 준비 상태
+              20개 질문으로 알아보는 나의 노후 준비 상태
             </p>
           </div>
           <div className="p-6 space-y-4">
@@ -167,7 +167,7 @@ export default function RetirementTest() {
             </div>
             <div className="text-center text-sm text-gray-500 space-y-1">
               <p>소요 시간: 약 2분</p>
-              <p>총 15문항 · {isMember ? '회원 무제한 이용' : `비회원 ${FREE_LIMIT}회 무료`}</p>
+              <p>총 20문항 · {isMember ? '회원 무제한 이용' : `비회원 ${FREE_LIMIT}회 무료`}</p>
             </div>
             {isMember ? (
               <div className="text-center text-xs text-green-600 font-medium">
@@ -267,7 +267,7 @@ export default function RetirementTest() {
 
   // Result screen
   const { total, categories } = calculateScores(answers)
-  const maxTotal = 60
+  const maxTotal = 80
   const result = getResultByScore(total)
 
   const scoreParams = categories
