@@ -636,30 +636,47 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
           </div>
         </div>
 
-        {/* ===== 4대 영역 점수 바 ===== */}
+        {/* ===== 4대 영역 점수 비교 차트 ===== */}
         <div style={s({ padding: '18px 48px 12px' })}>
           <SectionHead title="4대 영역 종합 점수" sub="국민연금공단 노후준비서비스 기준" />
-          <div style={s({ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' })}>
+          {/* 수평 바 차트 */}
+          <div style={s({ display: 'flex', flexDirection: 'column', gap: '10px' })}>
             {categories.map((cat) => {
               const pct = Math.round((cat.score / cat.max) * 100)
               const ci = catIconMap[cat.key]
               const grade = pct >= 80 ? '우수' : pct >= 60 ? '양호' : pct >= 40 ? '보통' : '미흡'
               const gradeColor = pct >= 80 ? '#16a34a' : pct >= 60 ? '#2563eb' : pct >= 40 ? '#ca8a04' : '#dc2626'
               return (
-                <div key={cat.key} style={s({ padding: '10px 14px', border: '1px solid #f3f4f6', borderRadius: '10px' })}>
-                  <div style={s({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' })}>
-                    <span style={s({ fontSize: '11px', fontWeight: 700 })}>{ci && <Icon label={ci.label} color={ci.color} size={14} />} {cat.label}</span>
-                    <div style={s({ display: 'flex', alignItems: 'center', gap: '6px' })}>
-                      <span style={s({ fontSize: '9px', fontWeight: 700, color: gradeColor, padding: '1px 6px', borderRadius: '999px', backgroundColor: `${gradeColor}15` })}>{grade}</span>
-                      <span style={s({ fontSize: '12px', fontWeight: 800, color: gradeColor })}>{cat.score}/{cat.max}</span>
+                <div key={cat.key} style={s({ display: 'flex', alignItems: 'center', gap: '10px' })}>
+                  <div style={s({ width: '80px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' })}>
+                    {ci && <Icon label={ci.label} color={ci.color} size={16} />}
+                    <span style={s({ fontSize: '11px', fontWeight: 700, color: '#374151' })}>{cat.label}</span>
+                  </div>
+                  <div style={s({ flex: 1, position: 'relative' })}>
+                    <div style={s({ height: '22px', backgroundColor: '#f3f4f6', borderRadius: '4px', overflow: 'hidden', position: 'relative' })}>
+                      <div style={s({ height: '100%', width: `${pct}%`, backgroundColor: gradeColor, borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '6px' })}>
+                        {pct >= 25 && <span style={s({ fontSize: '10px', fontWeight: 800, color: '#fff' })}>{cat.score}/{cat.max}</span>}
+                      </div>
+                      {pct < 25 && <span style={s({ position: 'absolute', left: `${pct + 2}%`, top: '3px', fontSize: '10px', fontWeight: 800, color: gradeColor })}>{cat.score}/{cat.max}</span>}
                     </div>
+                    {/* 기준선들 */}
+                    {[25, 50, 75].map(line => (
+                      <div key={line} style={s({ position: 'absolute', left: `${line}%`, top: '0', height: '22px', width: '1px', backgroundColor: '#d1d5db' })} />
+                    ))}
                   </div>
-                  <div style={s({ height: '6px', backgroundColor: '#f3f4f6', borderRadius: '3px', overflow: 'hidden' })}>
-                    <div style={s({ height: '100%', width: `${pct}%`, backgroundColor: gradeColor, borderRadius: '3px' })} />
-                  </div>
+                  <span style={s({ width: '32px', fontSize: '9px', fontWeight: 700, color: gradeColor, textAlign: 'center', padding: '2px 0', borderRadius: '4px', backgroundColor: `${gradeColor}15` })}>{grade}</span>
                 </div>
               )
             })}
+            {/* 범례 */}
+            <div style={s({ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '4px' })}>
+              {[{ label: '미흡 (~39%)', color: '#dc2626' }, { label: '보통 (40~59%)', color: '#ca8a04' }, { label: '양호 (60~79%)', color: '#2563eb' }, { label: '우수 (80%~)', color: '#16a34a' }].map(l => (
+                <div key={l.label} style={s({ display: 'flex', alignItems: 'center', gap: '3px' })}>
+                  <div style={s({ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: l.color })} />
+                  <span style={s({ fontSize: '7.5px', color: '#9ca3af' })}>{l.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -775,13 +792,83 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
                 <div style={s({ fontSize: '8px', color: '#9ca3af' })}>국민+개인연금 추정</div>
               </div>
             </div>
-            {fundCalc.gap > 0 && (
-              <div style={s({ marginTop: '8px', padding: '10px 14px', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', textAlign: 'center' })}>
-                <span style={s({ fontSize: '10px', color: '#9a3412' })}>추가 확보 필요 자금: </span>
-                <span style={s({ fontSize: '14px', fontWeight: 800, color: '#ea580c' })}>{(fundCalc.gap / 10000).toFixed(1)}억원</span>
-                <span style={s({ fontSize: '9px', color: '#9a3412' })}> (퇴직금, 자산소득, 근로소득 등으로 충당 필요)</span>
+            {/* 갭 분석 바 차트 */}
+            <div style={s({ marginTop: '12px', padding: '12px 14px', backgroundColor: '#f9fafb', borderRadius: '10px', border: '1px solid #e5e7eb' })}>
+              <div style={s({ fontSize: '10px', fontWeight: 700, color: '#374151', marginBottom: '8px' })}>자금 갭 분석</div>
+              {/* 전체 바 */}
+              <div style={s({ position: 'relative', height: '28px', backgroundColor: '#fee2e2', borderRadius: '6px', overflow: 'hidden', marginBottom: '6px' })}>
+                {/* 연금 커버 부분 */}
+                <div style={s({ height: '100%', width: `${Math.min(100, Math.round(fundCalc.pensionEstimate / fundCalc.totalNeeded * 100))}%`, backgroundColor: '#2563eb', borderRadius: '6px 0 0 6px', display: 'flex', alignItems: 'center', paddingLeft: '8px' })}>
+                  <span style={s({ fontSize: '9px', fontWeight: 700, color: '#fff' })}>연금 {(fundCalc.pensionEstimate / 10000).toFixed(1)}억</span>
+                </div>
+                {/* 갭 부분 텍스트 */}
+                {fundCalc.gap > 0 && (
+                  <span style={s({ position: 'absolute', right: '8px', top: '7px', fontSize: '9px', fontWeight: 700, color: '#dc2626' })}>부족분 {(fundCalc.gap / 10000).toFixed(1)}억</span>
+                )}
               </div>
-            )}
+              <div style={s({ display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#9ca3af' })}>
+                <span>0</span>
+                <span>총 필요: {(fundCalc.totalNeeded / 10000).toFixed(1)}억원</span>
+              </div>
+              {/* 범례 */}
+              <div style={s({ display: 'flex', gap: '16px', marginTop: '6px' })}>
+                <div style={s({ display: 'flex', alignItems: 'center', gap: '4px' })}>
+                  <div style={s({ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#2563eb' })} />
+                  <span style={s({ fontSize: '8px', color: '#6b7280' })}>연금 커버 ({Math.round(fundCalc.pensionEstimate / fundCalc.totalNeeded * 100)}%)</span>
+                </div>
+                {fundCalc.gap > 0 && (
+                  <div style={s({ display: 'flex', alignItems: 'center', gap: '4px' })}>
+                    <div style={s({ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#fee2e2', border: '1px solid #fecaca' })} />
+                    <span style={s({ fontSize: '8px', color: '#6b7280' })}>추가 확보 필요 ({Math.round(fundCalc.gap / fundCalc.totalNeeded * 100)}%)</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== 20개 항목 점수 히트맵 ===== */}
+        {answers && Object.keys(answers).length > 0 && (
+          <div style={s({ padding: '8px 48px 12px' })}>
+            <SectionHead title="20개 항목 점수 한눈에 보기" sub="색상이 진할수록 높은 점수" />
+            <div style={s({ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' })}>
+              {categories.map((cat) => {
+                const catQuestionIds = cat.key === 'finance' ? [1,2,3,13,16] : cat.key === 'lifestyle' ? [4,5,6,14,17] : cat.key === 'housing' ? [7,8,9,15,18] : [10,11,12,19,20]
+                const ci = catIconMap[cat.key]
+                return (
+                  <div key={cat.key} style={s({ padding: '8px 10px', border: '1px solid #f3f4f6', borderRadius: '8px' })}>
+                    <div style={s({ fontSize: '10px', fontWeight: 700, color: '#374151', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' })}>
+                      {ci && <Icon label={ci.label} color={ci.color} size={12} />} {cat.label}
+                    </div>
+                    <div style={s({ display: 'flex', gap: '3px' })}>
+                      {catQuestionIds.map((qid) => {
+                        const score = answers[qid] || 0
+                        const qDiag = questionDiagnosis[qid]
+                        const bgColor = score >= 4 ? '#166534' : score >= 3 ? '#16a34a' : score >= 2 ? '#fbbf24' : '#ef4444'
+                        const textColor = score >= 3 ? '#fff' : score >= 2 ? '#78350f' : '#fff'
+                        return (
+                          <div key={qid} style={s({ flex: 1, textAlign: 'center' })}>
+                            <div style={s({ height: '24px', backgroundColor: bgColor, borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' })}>
+                              <span style={s({ fontSize: '11px', fontWeight: 800, color: textColor })}>{score}</span>
+                            </div>
+                            <div style={s({ fontSize: '6.5px', color: '#9ca3af', marginTop: '2px', lineHeight: '1.2' })}>{qDiag?.title.slice(0, 4) || ''}</div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            {/* 히트맵 범례 */}
+            <div style={s({ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '8px' })}>
+              {[{ label: '1점 (미흡)', color: '#ef4444' }, { label: '2점 (보통)', color: '#fbbf24' }, { label: '3점 (양호)', color: '#16a34a' }, { label: '4점 (우수)', color: '#166534' }].map(l => (
+                <div key={l.label} style={s({ display: 'flex', alignItems: 'center', gap: '3px' })}>
+                  <div style={s({ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: l.color })} />
+                  <span style={s({ fontSize: '7.5px', color: '#9ca3af' })}>{l.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
