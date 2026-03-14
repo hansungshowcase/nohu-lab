@@ -76,30 +76,30 @@ export default function ShareButtons({
     if (!target || saving) return
     setSaving(true)
     try {
-      // Temporarily move element on-screen for capture
-      const origPos = target.style.position
-      const origLeft = target.style.left
+      // Temporarily move on-screen for capture
+      const origStyle = target.style.cssText
       target.style.position = 'fixed'
       target.style.left = '0'
+      target.style.top = '0'
       target.style.zIndex = '-1'
-      target.style.opacity = '0.99'
 
-      const { toPng } = await import('html-to-image')
-      const dataUrl = await toPng(target, {
-        pixelRatio: 2,
+      // Wait for layout
+      await new Promise(r => setTimeout(r, 100))
+
+      const html2canvas = (await import('html2canvas')).default
+      const canvas = await html2canvas(target, {
+        scale: 2,
         backgroundColor: '#ffffff',
-        quality: 1,
+        useCORS: true,
+        logging: false,
       })
 
-      // Restore position
-      target.style.position = origPos
-      target.style.left = origLeft
-      target.style.zIndex = ''
-      target.style.opacity = ''
+      // Restore
+      target.style.cssText = origStyle
 
       const link = document.createElement('a')
       link.download = `노후준비_리포트_${total}점_${grade}.png`
-      link.href = dataUrl
+      link.href = canvas.toDataURL('image/png')
       link.click()
     } catch (err) {
       console.error('이미지 저장 실패:', err)

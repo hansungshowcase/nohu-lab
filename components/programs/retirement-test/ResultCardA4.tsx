@@ -205,29 +205,29 @@ function getCrossInsights(categories: CategoryScore[]): { icon: string; title: s
   const insights: { icon: string; title: string; insight: string }[] = []
 
   if (f.score >= 14 && l.score <= 8) {
-    insights.push({ icon: '⚠️', title: '돈은 있지만 건강이 위험', insight: '재정 준비는 잘 되어 있지만 건강관리가 부족합니다. 65세 이후 연간 의료비는 평균 550만원(건보공단 2024)이며 중증질환 시 수천만원이 소요됩니다. 아무리 많은 자산도 건강 없이는 의미가 없습니다.' })
+    insights.push({ icon: '[!]', title: '돈은 있지만 건강이 위험', insight: '재정 준비는 잘 되어 있지만 건강관리가 부족합니다. 65세 이후 연간 의료비는 평균 550만원(건보공단 2024)이며 중증질환 시 수천만원이 소요됩니다. 아무리 많은 자산도 건강 없이는 의미가 없습니다.' })
   }
   if (l.score >= 14 && f.score <= 8) {
-    insights.push({ icon: '⚠️', title: '건강하지만 재정이 불안', insight: '건강관리는 잘하고 있지만 재정 준비가 부족하면 건강한 몸으로 경제적 고통을 겪게 됩니다. 건강할 때가 돈을 벌 수 있는 최적의 시간입니다. 적극적으로 저축과 투자를 시작하세요.' })
+    insights.push({ icon: '[!]', title: '건강하지만 재정이 불안', insight: '건강관리는 잘하고 있지만 재정 준비가 부족하면 건강한 몸으로 경제적 고통을 겪게 됩니다. 건강할 때가 돈을 벌 수 있는 최적의 시간입니다. 적극적으로 저축과 투자를 시작하세요.' })
   }
   if (m.score >= 12 && f.score <= 8) {
-    insights.push({ icon: '💡', title: '아는 만큼 실천이 필요', insight: '노후에 대한 관심과 지식은 높지만 실제 재정 행동으로 이어지지 않고 있습니다. "분석 마비(Analysis Paralysis)" 상태일 수 있습니다. 완벽한 계획보다 불완전한 실행이 낫습니다.' })
+    insights.push({ icon: '[i]', title: '아는 만큼 실천이 필요', insight: '노후에 대한 관심과 지식은 높지만 실제 재정 행동으로 이어지지 않고 있습니다. "분석 마비(Analysis Paralysis)" 상태일 수 있습니다. 완벽한 계획보다 불완전한 실행이 낫습니다.' })
   }
   if (f.score >= 14 && m.score <= 8) {
-    insights.push({ icon: '💡', title: '습관은 좋지만 전략이 부족', insight: '저축 습관은 좋지만 금융 지식이 부족하면 비효율적인 상품에 돈이 묶여있을 수 있습니다. 수수료 연 1% 이상인 펀드는 인덱스 ETF(수수료 0.1% 이하)로 전환을 검토하세요.' })
+    insights.push({ icon: '[i]', title: '습관은 좋지만 전략이 부족', insight: '저축 습관은 좋지만 금융 지식이 부족하면 비효율적인 상품에 돈이 묶여있을 수 있습니다. 수수료 연 1% 이상인 펀드는 인덱스 ETF(수수료 0.1% 이하)로 전환을 검토하세요.' })
   }
   if (h.score >= 14 && f.score <= 8) {
-    insights.push({ icon: '🏠', title: '부동산에 편중된 자산', insight: '주거 자산은 확보했지만 금융 자산이 부족합니다. 한국 가계 평균 부동산 비중 약 79%로 유동성이 매우 낮습니다. 부동산 유동화(주택연금, 다운사이징)로 금융자산 비중 30% 이상을 목표로 하세요.' })
+    insights.push({ icon: '[H]', title: '부동산에 편중된 자산', insight: '주거 자산은 확보했지만 금융 자산이 부족합니다. 한국 가계 평균 부동산 비중 약 79%로 유동성이 매우 낮습니다. 부동산 유동화(주택연금, 다운사이징)로 금융자산 비중 30% 이상을 목표로 하세요.' })
   }
   const scores = categories.map(c => c.score)
   const maxGap = Math.max(...scores) - Math.min(...scores)
   if (maxGap <= 3 && f.score >= 12) {
-    insights.push({ icon: '✨', title: '균형 잡힌 준비', insight: '4개 영역이 균형있게 준비되어 있습니다. 매우 이상적인 상태입니다. 가장 점수가 낮은 영역을 한 단계만 올리면 전체 완성도가 크게 높아집니다.' })
+    insights.push({ icon: '[+]', title: '균형 잡힌 준비', insight: '4개 영역이 균형있게 준비되어 있습니다. 매우 이상적인 상태입니다. 가장 점수가 낮은 영역을 한 단계만 올리면 전체 완성도가 크게 높아집니다.' })
   } else if (maxGap >= 8) {
-    insights.push({ icon: '⚡', title: '영역 간 편차가 심함', insight: `가장 강한 영역과 약한 영역의 차이가 ${maxGap}점으로 큽니다. 약한 영역이 전체 노후 준비를 무너뜨리는 "가장 약한 고리" 효과를 만듭니다. 약한 영역부터 집중 보강하세요.` })
+    insights.push({ icon: '[!]', title: '영역 간 편차가 심함', insight: `가장 강한 영역과 약한 영역의 차이가 ${maxGap}점으로 큽니다. 약한 영역이 전체 노후 준비를 무너뜨리는 "가장 약한 고리" 효과를 만듭니다. 약한 영역부터 집중 보강하세요.` })
   }
   if (f.score <= 8 && m.score <= 8) {
-    insights.push({ icon: '🚨', title: '재정 인식 긴급 개선 필요', insight: '재정 준비와 금융 인식이 모두 낮은 상태는 가장 위험한 조합입니다. 국민연금공단(☎1355)에 전화하여 예상 수령액을 확인하고, 가까운 은행에서 무료 재무상담을 받으세요.' })
+    insights.push({ icon: '[!!]', title: '재정 인식 긴급 개선 필요', insight: '재정 준비와 금융 인식이 모두 낮은 상태는 가장 위험한 조합입니다. 국민연금공단(☎1355)에 전화하여 예상 수령액을 확인하고, 가까운 은행에서 무료 재무상담을 받으세요.' })
   }
 
   return insights.slice(0, 3)
@@ -240,14 +240,14 @@ function getPensionAnalysis(answers: Record<number, number>): { tier: string; ic
   return [
     {
       tier: '1층: 국민연금',
-      icon: '🏛️',
+      icon: '1',
       status: '가입 중 (의무)',
       color: '#16a34a',
       detail: '평균 수령액 월 67만원(전체) / 20년+ 가입 시 월 108만원. 수령 개시: 65세(1969년생 이후). 연기연금 신청 시 연 7.2%씩 증액(최대 5년=+36%). 추납·임의가입으로 가입기간을 늘리면 수령액이 증가합니다.',
     },
     {
       tier: '2층: 퇴직연금',
-      icon: '🏢',
+      icon: '2',
       status: q16 >= 3 ? '적극 운용 중' : q16 >= 2 ? '가입됨 (방치 가능성)' : '미확인/미가입',
       color: q16 >= 3 ? '#16a34a' : q16 >= 2 ? '#ca8a04' : '#dc2626',
       detail: q16 >= 3
@@ -258,7 +258,7 @@ function getPensionAnalysis(answers: Record<number, number>): { tier: string; ic
     },
     {
       tier: '3층: 개인연금',
-      icon: '👤',
+      icon: '3',
       status: q2 >= 3 ? '체계적 구축' : q2 >= 2 ? '부분 가입' : '미가입',
       color: q2 >= 3 ? '#16a34a' : q2 >= 2 ? '#ca8a04' : '#dc2626',
       detail: q2 >= 3
@@ -285,7 +285,7 @@ function getRiskAssessment(categories: CategoryScore[], answers: Record<number, 
       name: '장수리스크',
       level: longevityRisk,
       color: longevityRisk === '높음' ? '#dc2626' : longevityRisk === '중간' ? '#ca8a04' : '#16a34a',
-      icon: '⏰',
+      icon: 'T',
       detail: longevityRisk === '높음'
         ? '현재 준비 수준으로는 은퇴 후 25~30년을 버티기 어렵습니다. 한국인 평균수명 83.4세이지만 90세까지 대비 필요.'
         : longevityRisk === '중간'
@@ -296,7 +296,7 @@ function getRiskAssessment(categories: CategoryScore[], answers: Record<number, 
       name: '인플레이션 리스크',
       level: inflationRisk,
       color: inflationRisk === '높음' ? '#dc2626' : inflationRisk === '중간' ? '#ca8a04' : '#16a34a',
-      icon: '📈',
+      icon: 'I',
       detail: inflationRisk === '높음'
         ? '자산이 예금·부동산에 편중되어 물가상승에 취약합니다. 연 3% 인플레이션 시 20년 후 구매력이 45%로 줄어듭니다.'
         : inflationRisk === '중간'
@@ -307,7 +307,7 @@ function getRiskAssessment(categories: CategoryScore[], answers: Record<number, 
       name: '건강리스크',
       level: healthRisk,
       color: healthRisk === '높음' ? '#dc2626' : healthRisk === '중간' ? '#ca8a04' : '#16a34a',
-      icon: '🏥',
+      icon: 'H',
       detail: healthRisk === '높음'
         ? '운동·검진·보험 모두 부족합니다. 65세 이후 연평균 의료비 550만원, 중증질환 시 수천만원 소요됩니다.'
         : healthRisk === '중간'
@@ -357,17 +357,17 @@ function getDeepAdvice(total: number, categories: CategoryScore[], answers: Reco
   // 재정 심층 조언
   if (f.score <= 8) {
     advices.push({
-      title: '💰 재정: 긴급 행동 필요',
+      title: '[F] 재정: 긴급 행동 필요',
       advice: `재정 준비 점수 ${f.score}/20으로, 은퇴 후 최소 생활비(2인 가구 월 198만원, 통계청 2024) 확보가 어려운 상태입니다. 가장 시급한 조치: ①연금저축 계좌 개설(연 600만원 한도, 세액공제 16.5% = 연 99만원 절세), ②국민연금 예상 수령액 확인(nps.or.kr / ☎1355), ③월 소득의 최소 15%를 자동이체로 투자 계좌에 이체. 월 30만원을 연 6% 수익률로 20년 투자하면 약 1.4억이 됩니다. 10년 늦으면 절반밖에 안 됩니다.`,
     })
   } else if (f.score <= 14) {
     advices.push({
-      title: '💰 재정: 체계화 단계',
+      title: '[F] 재정: 체계화 단계',
       advice: `재정 점수 ${f.score}/20으로 기본기는 갖추고 있습니다. 다음 단계: ①3층 연금(국민+퇴직+개인)의 예상 수령액을 합산하여 소득대체율(목표 70%) 확인, ②연금저축+IRP 합산 연 900만원 세액공제 한도 최대 활용, ③퇴직연금이 원리금보장형에 방치되어 있다면 TDF로 전환(장기 수익률 연 2~3%p 차이). 수수료도 연 0.5% 이하인지 반드시 확인하세요.`,
     })
   } else {
     advices.push({
-      title: '💰 재정: 최적화 단계',
+      title: '[F] 재정: 최적화 단계',
       advice: `재정 점수 ${f.score}/20으로 우수합니다. 최적화 포인트: ①연금 수령 시기 전략(55세vs60세vs65세별 연금소득세 3.3~5.5% 차이 계산), ②건강보험 피부양자 자격 유지를 위한 금융소득 2,000만원 관리, ③연금소득 1,500만원 초과 시 종합소득세 vs 분리과세(16.5%) 유리한 쪽 선택. 세후 실수령액을 극대화하는 것이 이 단계의 핵심입니다.`,
     })
   }
@@ -375,17 +375,17 @@ function getDeepAdvice(total: number, categories: CategoryScore[], answers: Reco
   // 건강/생활 심층 조언
   if (l.score <= 8) {
     advices.push({
-      title: '🏃 건강: 건강이 최고의 노후 자산',
+      title: '[L] 건강: 건강이 최고의 노후 자산',
       advice: `건강 영역 ${l.score}/20으로 시급한 개선이 필요합니다. 65세 이후 연간 의료비 평균 550만원(건보공단 2024), 건강관리 부족 시 2~3배 증가합니다. ①이번 달 안에 건강검진 예약(40대+: 위·대장내시경 필수), ②하루 30분 걷기 시작(만보기 7,000보 목표), ③직장 외 사회적 관계 1개 만들기(동네 모임, 봉사, 평생교육원). 은퇴 후 6~8만 시간의 자유시간을 건강하게 보내려면 지금부터 투자해야 합니다.`,
     })
   } else if (l.score <= 14) {
     advices.push({
-      title: '🏃 건강: 습관 고도화',
+      title: '[L] 건강: 습관 고도화',
       advice: `건강 영역 ${l.score}/20으로 기본은 갖추고 있습니다. 고도화: ①유산소+근력운동 병행 점검(50대+ 근감소증 예방 위해 주 2회 근력운동 필수), ②정신건강 관리 루틴 확보(명상·감사일기·취미), ③사회적 관계를 세대 간 교류로 확장(멘토링, 봉사 → 은퇴 후 사회적 역할 유지). 건강검진 결과는 연도별로 기록하여 수치 변화를 모니터링하세요.`,
     })
   } else {
     advices.push({
-      title: '🏃 건강: 유지와 확장',
+      title: '[L] 건강: 유지와 확장',
       advice: `건강 영역 ${l.score}/20으로 우수합니다. 유지 전략: ①균형·유연성 운동 추가(낙상 예방, 요가/스트레칭), ②인지기능 유지를 위한 두뇌 활동(새 언어, 악기, 퍼즐), ③건강 취미를 소득원으로 연결(운동→시니어 건강지도사, 요리→쿠킹클래스). 현재의 건강 습관이 은퇴 후 의료비를 연 200만원 이상 절감시킬 수 있습니다.`,
     })
   }
@@ -393,17 +393,17 @@ function getDeepAdvice(total: number, categories: CategoryScore[], answers: Reco
   // 자산/주거 심층 조언
   if (h.score <= 8) {
     advices.push({
-      title: '🏠 자산: 기반 구축 시급',
+      title: '[H] 자산: 기반 구축 시급',
       advice: `자산 영역 ${h.score}/20으로 구조적 개선이 필요합니다. ①현재 자산·부채 목록 작성(부동산 시가, 금융자산, 대출 잔액·금리·만기 모두 정리), ②고금리 부채(연 5%+)부터 우선 상환(에벌랜치 전략), ③은퇴 후 월 생활비 항목별 계산(주거·식비·의료·교통·여가·보험). 한국 가구 평균 부동산 비중 79%로 유동성이 극히 낮습니다. 금융자산 비중 최소 30%까지 높이세요.`,
     })
   } else if (h.score <= 14) {
     advices.push({
-      title: '🏠 자산: 구조 최적화',
+      title: '[H] 자산: 구조 최적화',
       advice: `자산 영역 ${h.score}/20으로 기본 구조가 있습니다. ①주택연금 시뮬레이션(hf.go.kr, 3억 주택 65세 월 약 75만원 종신 수령), ②다운사이징 차액 연금화(월 50~100만원 추가 수입 가능), ③은퇴 5년 전까지 모든 부채 상환 완료 목표. 현재 주거가 10~20년 후에도 적합한지(엘리베이터, 병원 접근성, 대중교통)도 점검하세요.`,
     })
   } else {
     advices.push({
-      title: '🏠 자산: 수비 강화',
+      title: '[H] 자산: 수비 강화',
       advice: `자산 영역 ${h.score}/20으로 우수합니다. ①자산 배분 연 1회 리밸런싱(나이에 따라 안전자산 비중 증가), ②상속·증여 세금 최적화(10년 단위 증여 한도 활용), ③자산 인출 순서 최적화: 과세 계좌 → 이연과세(연금) → 비과세 계좌 순으로 인출하면 세금을 최소화할 수 있습니다.`,
     })
   }
@@ -411,17 +411,17 @@ function getDeepAdvice(total: number, categories: CategoryScore[], answers: Reco
   // 마인드 심층 조언
   if (m.score <= 8) {
     advices.push({
-      title: '🧠 마인드: 인식 전환이 첫걸음',
+      title: '[M] 마인드: 인식 전환이 첫걸음',
       advice: `마인드 영역 ${m.score}/20으로 인식과 행동 전환이 필요합니다. ①이번 주: 국민연금 예상 수령액 확인(nps.or.kr, 5분), ②이번 달: 배우자/가족과 은퇴 후 생활에 대해 30분 대화, ③금감원 금융교육센터(fss.or.kr/edu) 무료 온라인 강의 1개 수강. "소득 크레바스"(은퇴~연금수령 5~12년 공백기)를 인지하고 대비하세요. 주된 직장 퇴직 평균 53세, 국민연금 수령 65세입니다.`,
     })
   } else if (m.score <= 14) {
     advices.push({
-      title: '🧠 마인드: 지식을 실행으로',
+      title: '[M] 마인드: 지식을 실행으로',
       advice: `마인드 영역 ${m.score}/20으로 관심과 기본 지식이 있습니다. ①학습:실행 비율 3:7 유지(매달 1가지 반드시 실행), ②부부 합산 연금 전략 수립(개인보다 부부 단위가 효율적), ③은퇴 후 소득원 사이드 프로젝트 시작(주말/저녁, 소규모 테스트). 소득 크레바스 대비로 은퇴 시점 2~3년치 생활비를 별도 계좌에 확보하세요.`,
     })
   } else {
     advices.push({
-      title: '🧠 마인드: 전문가 수준으로',
+      title: '[M] 마인드: 전문가 수준으로',
       advice: `마인드 영역 ${m.score}/20으로 우수합니다. ①가족 단위 노후 계획 확장(부모 부양, 자녀 독립, 상속 계획 포함), ②세금·연금·보험 통합 최적화(전문 세무사/FP 상담 권장), ③은퇴 후 사회적 기여(멘토링, 재능기부, 사회적 기업). 노후 준비의 최종 단계는 "돈"이 아니라 "삶의 의미와 목적"을 설계하는 것입니다.`,
     })
   }
@@ -533,6 +533,18 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
 
     const s = (base: Record<string, string | number>): React.CSSProperties => base as React.CSSProperties
 
+    // html2canvas-safe icon: colored dot with letter (no emoji)
+    const Icon = ({ label, color, size = 16 }: { label: string; color: string; size?: number }) => (
+      <span style={s({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: `${size}px`, height: `${size}px`, borderRadius: '50%', backgroundColor: color, color: '#fff', fontSize: `${Math.round(size * 0.55)}px`, fontWeight: 800, lineHeight: '1', flexShrink: 0 })}>{label}</span>
+    )
+
+    const catIconMap: Record<string, { label: string; color: string }> = {
+      finance: { label: 'F', color: '#16a34a' },
+      lifestyle: { label: 'L', color: '#2563eb' },
+      housing: { label: 'H', color: '#ea580c' },
+      mindset: { label: 'M', color: '#7c3aed' },
+    }
+
     const SectionHead = ({ title, sub }: { title: string; sub?: string }) => (
       <div style={s({ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' })}>
         <div style={s({ width: '4px', height: '18px', borderRadius: '2px', backgroundColor: '#166534' })} />
@@ -552,7 +564,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
         })}
       >
         {/* ===== HEADER ===== */}
-        <div style={s({ background: 'linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%)', color: '#ffffff', padding: '28px 48px 24px' })}>
+        <div style={s({ backgroundColor: '#166534', color: '#ffffff', padding: '28px 48px 24px' })}>
           <div style={s({ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' })}>
             <div>
               <div style={s({ fontSize: '10px', letterSpacing: '3px', opacity: 0.6, marginBottom: '6px' })}>RETIREMENT READINESS REPORT</div>
@@ -583,7 +595,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
             </div>
             <div style={s({ flex: 1 })}>
               <div style={s({ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' })}>
-                <span style={s({ fontSize: '24px' })}>{result.icon}</span>
+                <Icon label={result.grade.charAt(0)} color={result.color} size={32} />
                 <span style={s({ fontSize: '18px', fontWeight: 800, color: result.color })}>{result.grade}</span>
                 <span style={s({ padding: '2px 8px', borderRadius: '999px', fontSize: '9px', fontWeight: 700, color: '#fff', backgroundColor: total >= 61 ? '#16a34a' : total >= 37 ? '#ca8a04' : '#dc2626' })}>
                   {total >= 73 ? '상위 5%' : total >= 61 ? '상위 20%' : total >= 49 ? '상위 40%' : total >= 37 ? '상위 60%' : '하위 30%'}
@@ -630,13 +642,13 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
           <div style={s({ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' })}>
             {categories.map((cat) => {
               const pct = Math.round((cat.score / cat.max) * 100)
-              const catIcons: Record<string, string> = { finance: '💰', lifestyle: '🏃', housing: '🏠', mindset: '🧠' }
+              const ci = catIconMap[cat.key]
               const grade = pct >= 80 ? '우수' : pct >= 60 ? '양호' : pct >= 40 ? '보통' : '미흡'
               const gradeColor = pct >= 80 ? '#16a34a' : pct >= 60 ? '#2563eb' : pct >= 40 ? '#ca8a04' : '#dc2626'
               return (
                 <div key={cat.key} style={s({ padding: '10px 14px', border: '1px solid #f3f4f6', borderRadius: '10px' })}>
                   <div style={s({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' })}>
-                    <span style={s({ fontSize: '11px', fontWeight: 700 })}>{catIcons[cat.key]} {cat.label}</span>
+                    <span style={s({ fontSize: '11px', fontWeight: 700 })}>{ci && <Icon label={ci.label} color={ci.color} size={14} />} {cat.label}</span>
                     <div style={s({ display: 'flex', alignItems: 'center', gap: '6px' })}>
                       <span style={s({ fontSize: '9px', fontWeight: 700, color: gradeColor, padding: '1px 6px', borderRadius: '999px', backgroundColor: `${gradeColor}15` })}>{grade}</span>
                       <span style={s({ fontSize: '12px', fontWeight: 800, color: gradeColor })}>{cat.score}/{cat.max}</span>
@@ -658,7 +670,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
             {pensionTiers.map((tier, i) => (
               <div key={i} style={s({ marginBottom: '8px', padding: '10px 14px', border: '1px solid #f3f4f6', borderRadius: '8px', borderLeft: `3px solid ${tier.color}` })}>
                 <div style={s({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' })}>
-                  <span style={s({ fontSize: '11px', fontWeight: 700, color: '#111827' })}>{tier.icon} {tier.tier}</span>
+                  <span style={s({ fontSize: '11px', fontWeight: 700, color: '#111827', display: 'flex', alignItems: 'center', gap: '4px' })}><Icon label={tier.icon} color={tier.color} size={16} /> {tier.tier}</span>
                   <span style={s({ fontSize: '9px', fontWeight: 700, color: tier.color, padding: '1px 8px', borderRadius: '999px', backgroundColor: `${tier.color}15` })}>{tier.status}</span>
                 </div>
                 <p style={s({ fontSize: '9.5px', color: '#4b5563', lineHeight: '1.65', margin: '0' })}>{tier.detail}</p>
@@ -674,9 +686,9 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
             <div style={s({ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' })}>
               {risks.map((risk, i) => (
                 <div key={i} style={s({ padding: '12px', border: `1px solid ${risk.color}33`, borderRadius: '10px', borderTop: `3px solid ${risk.color}` })}>
-                  <div style={s({ textAlign: 'center', marginBottom: '6px' })}>
-                    <div style={s({ fontSize: '18px' })}>{risk.icon}</div>
-                    <div style={s({ fontSize: '11px', fontWeight: 700, color: '#111827' })}>{risk.name}</div>
+                  <div style={s({ textAlign: 'center', marginBottom: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center' })}>
+                    <Icon label={risk.icon} color={risk.color} size={24} />
+                    <div style={s({ fontSize: '11px', fontWeight: 700, color: '#111827', marginTop: '4px' })}>{risk.name}</div>
                     <div style={s({ fontSize: '12px', fontWeight: 800, color: risk.color, marginTop: '2px' })}>{risk.level}</div>
                   </div>
                   <p style={s({ fontSize: '8.5px', color: '#6b7280', lineHeight: '1.55', margin: '0' })}>{risk.detail}</p>
@@ -707,7 +719,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
                   <div style={s({ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#dc2626', margin: '0 auto 2px' })} />
                   퇴직 53세
                 </div>
-                <div style={s({ flex: 2, height: '3px', backgroundColor: '#dc262655', margin: '0 2px', backgroundImage: 'repeating-linear-gradient(90deg, #dc262655 0, #dc262655 4px, transparent 4px, transparent 8px)' })} />
+                <div style={s({ flex: 2, height: '3px', backgroundColor: '#fca5a5', margin: '0 2px', borderTop: '2px dashed #dc2626' })} />
                 <div style={s({ textAlign: 'center', fontSize: '8px', color: '#6b7280', fontWeight: 700 })}>
                   <div style={s({ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#2563eb', margin: '0 auto 2px' })} />
                   연금 65세
@@ -779,10 +791,10 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
             <SectionHead title="20개 항목 개별 진단" sub="응답 기반 맞춤 분석" />
             {categories.map((cat) => {
               const catQuestionIds = cat.key === 'finance' ? [1,2,3,13,16] : cat.key === 'lifestyle' ? [4,5,6,14,17] : cat.key === 'housing' ? [7,8,9,15,18] : [10,11,12,19,20]
-              const catIcons: Record<string, string> = { finance: '💰', lifestyle: '🏃', housing: '🏠', mindset: '🧠' }
+              const ci = catIconMap[cat.key]
               return (
                 <div key={cat.key} style={s({ marginBottom: '10px' })}>
-                  <div style={s({ fontSize: '11px', fontWeight: 700, color: '#374151', marginBottom: '6px', padding: '4px 8px', backgroundColor: '#f9fafb', borderRadius: '6px' })}>{catIcons[cat.key]} {cat.label} ({cat.score}/{cat.max})</div>
+                  <div style={s({ fontSize: '11px', fontWeight: 700, color: '#374151', marginBottom: '6px', padding: '4px 8px', backgroundColor: '#f9fafb', borderRadius: '6px' })}>{ci && <Icon label={ci.label} color={ci.color} size={14} />} {cat.label} ({cat.score}/{cat.max})</div>
                   {catQuestionIds.map((qid) => {
                     const qDiag = questionDiagnosis[qid]
                     const score = answers[qid]
