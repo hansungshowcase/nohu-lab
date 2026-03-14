@@ -1,11 +1,10 @@
 'use client'
 
-import { useRef, Suspense } from 'react'
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getResultByCode } from '@/components/programs/retirement-test/results'
 import { CategoryScore } from '@/components/programs/retirement-test/questions'
 import ResultCard from '@/components/programs/retirement-test/ResultCard'
-import ResultCardA4 from '@/components/programs/retirement-test/ResultCardA4'
 import ShareButtons from '@/components/programs/retirement-test/ShareButtons'
 import Link from 'next/link'
 
@@ -29,8 +28,6 @@ export default function RetirementTestResultClient({
 
 function ResultContent({ resultCode }: { resultCode: string }) {
   const searchParams = useSearchParams()
-  const cardRef = useRef<HTMLDivElement>(null)
-  const a4CardRef = useRef<HTMLDivElement>(null)
 
   const result = getResultByCode(resultCode)
 
@@ -85,15 +82,6 @@ function ResultContent({ resultCode }: { resultCode: string }) {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
         <ResultCard
-          ref={cardRef}
-          total={total}
-          maxTotal={80}
-          result={result}
-          categories={categories}
-        />
-
-        <ResultCardA4
-          ref={a4CardRef}
           total={total}
           maxTotal={80}
           result={result}
@@ -104,8 +92,8 @@ function ResultContent({ resultCode }: { resultCode: string }) {
           shareUrl={shareUrl}
           total={total}
           grade={result.grade}
-          cardRef={cardRef}
-          a4CardRef={a4CardRef}
+          resultCode={result.code}
+          categories={categories}
         />
 
         {/* CTA */}

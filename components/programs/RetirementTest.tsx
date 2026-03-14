@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { questions, calculateScores } from './retirement-test/questions'
 import { getResultByScore, ResultCode } from './retirement-test/results'
 import ResultCard from './retirement-test/ResultCard'
-import ResultCardA4 from './retirement-test/ResultCardA4'
 import ShareButtons from './retirement-test/ShareButtons'
 import AnalyzingScreen from './retirement-test/AnalyzingScreen'
 
@@ -32,8 +31,7 @@ export default function RetirementTest() {
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [testCount, setTestCount] = useState(0)
   const [isMember, setIsMember] = useState(false)
-  const cardRef = useRef<HTMLDivElement>(null)
-  const a4CardRef = useRef<HTMLDivElement>(null)
+
 
   useEffect(() => {
     setTestCount(getTestCount())
@@ -282,21 +280,10 @@ export default function RetirementTest() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Result card */}
       <ResultCard
-        ref={cardRef}
         total={total}
         maxTotal={maxTotal}
         result={result}
         categories={categories}
-      />
-
-      {/* A4 report card (hidden, for capture) */}
-      <ResultCardA4
-        ref={a4CardRef}
-        total={total}
-        maxTotal={maxTotal}
-        result={result}
-        categories={categories}
-        answers={answers}
       />
 
       {/* Share buttons */}
@@ -304,8 +291,8 @@ export default function RetirementTest() {
         shareUrl={shareUrl}
         total={total}
         grade={result.grade}
-        cardRef={cardRef}
-        a4CardRef={a4CardRef}
+        resultCode={result.code}
+        categories={categories}
       />
 
       {/* Retry */}

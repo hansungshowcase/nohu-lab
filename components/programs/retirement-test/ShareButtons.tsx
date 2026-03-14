@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, RefObject } from 'react'
+import { useState, useEffect } from 'react'
 
 declare global {
   interface Window {
@@ -18,8 +18,8 @@ interface ShareButtonsProps {
   shareUrl: string
   total: number
   grade: string
-  cardRef: RefObject<HTMLDivElement | null>
-  a4CardRef?: RefObject<HTMLDivElement | null>
+  resultCode: string
+  categories: { key: string; score: number }[]
 }
 
 function fallbackCopy(text: string) {
@@ -39,8 +39,8 @@ export default function ShareButtons({
   shareUrl,
   total,
   grade,
-  cardRef,
-  a4CardRef,
+  resultCode,
+  categories,
 }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -58,7 +58,6 @@ export default function ShareButtons({
       return false
     }
     if (initKakao()) return
-    // SDK async 로드 대기: 최대 5초간 500ms 간격으로 재시도
     let attempts = 0
     const interval = setInterval(() => {
       if (initKakao() || ++attempts >= 10) clearInterval(interval)
@@ -77,35 +76,32 @@ export default function ShareButtons({
   }
 
   async function saveImage() {
-    const target = a4CardRef?.current || cardRef.current
-    if (!target || saving) return
+    if (saving) return
     setSaving(true)
     try {
-      // Temporarily move on-screen for capture
-      const origStyle = target.style.cssText
-      target.style.position = 'fixed'
-      target.style.left = '0'
-      target.style.top = '0'
-      target.style.zIndex = '-1'
-
-      // Wait for layout
-      await new Promise(r => setTimeout(r, 100))
-
-      const html2canvas = (await import('html2canvas')).default
-      const canvas = await html2canvas(target, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        logging: false,
+      const catMap: Record<string, string> = {}
+      categories.forEach(c => {
+        const k = c.key === 'finance' ? 'f' : c.key === 'lifestyle' ? 'l' : c.key === 'housing' ? 'h' : 'm'
+        catMap[k] = String(c.score)
       })
-
-      // Restore
-      target.style.cssText = origStyle
+      const params = new URLSearchParams({
+        s: String(total),
+        code: resultCode,
+        ...catMap,
+      })
+      const url = `/api/result-image?${params.toString()}`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error('이미지 생성 실패')
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
 
       const link = document.createElement('a')
+      link.href = blobUrl
       link.download = `노후준비_리포트_${total}점_${grade}.png`
-      link.href = canvas.toDataURL('image/png')
+      document.body.appendChild(link)
       link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
     } catch (err) {
       console.error('이미지 저장 실패:', err)
       alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
@@ -149,7 +145,7 @@ export default function ShareButtons({
       return
     }
 
-    // Fallback: 카카오 SDK 로드 실패 시 링크 복사
+    // Fallback: 카카오 SDK 미로드 시 링크 복사
     const fullText = `${shareText}\n${shareUrl}`
     try {
       navigator.clipboard.writeText(fullText)
