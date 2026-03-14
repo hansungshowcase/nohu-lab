@@ -43,3 +43,6 @@ next-env.d.ts
 .vercel
 scripts/sync-cafe-members.mjs
 .env*.local
+scripts/create-chat-table.mjs
+test-screenshots/
+test-chart.mjs

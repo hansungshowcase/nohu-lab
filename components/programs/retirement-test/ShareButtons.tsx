@@ -45,6 +45,7 @@ export default function ShareButtons({
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
   const [kakaoReady, setKakaoReady] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   useEffect(() => {
     function initKakao() {
@@ -65,15 +66,7 @@ export default function ShareButtons({
     return () => clearInterval(interval)
   }, [])
 
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-    } catch {
-      fallbackCopy(shareUrl)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const shareText = `나의 노후 준비 점수는 ${total}점! (${grade}) 당신은 몇 점?`
 
   function getImageUrl() {
     const catMap: Record<string, string> = {}
@@ -89,6 +82,16 @@ export default function ShareButtons({
     return `/api/result-image?${params.toString()}`
   }
 
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+    } catch {
+      fallbackCopy(shareUrl)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   async function saveImage() {
     if (saving) return
     setSaving(true)
@@ -99,26 +102,27 @@ export default function ShareButtons({
       const blob = await res.blob()
       const file = new File([blob], `노후준비_리포트_${total}점_${grade}.png`, { type: 'image/png' })
 
-      // 1순위: Web Share API (모바일 최적)
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: '노후 준비 종합 진단 리포트',
-          text: shareText,
-        })
-        return
+      // 1순위: Web Share API (모바일 공유 시트)
+      if (navigator.share) {
+        try {
+          if (navigator.canShare?.({ files: [file] })) {
+            await navigator.share({ files: [file], title: '노후 준비 진단 리포트' })
+            return
+          }
+        } catch (e) {
+          if ((e as Error).name === 'AbortError') return
+        }
       }
 
-      // 2순위: 새 탭에서 이미지 열기 (iOS Safari 등)
+      // 2순위: 이미지를 화면에 표시 (모바일 - 꾹 눌러 저장)
       const blobUrl = URL.createObjectURL(blob)
-      const newTab = window.open(blobUrl, '_blank')
-      if (newTab) {
-        alert('이미지가 새 탭에 열렸습니다. 꾹 눌러서 저장해주세요.')
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      if (isMobile) {
+        setImagePreview(blobUrl)
         return
       }
 
-      // 3순위: 다운로드 링크 (데스크탑)
+      // 3순위: 직접 다운로드 (데스크탑)
       const link = document.createElement('a')
       link.href = blobUrl
       link.download = file.name
@@ -134,8 +138,12 @@ export default function ShareButtons({
     }
   }
 
-  const shareText = `나의 노후 준비 점수는 ${total}점! (${grade}) 당신은 몇 점?`
-  const shareTextWithUrl = `${shareText}\n${shareUrl}`
+  function closePreview() {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview)
+      setImagePreview(null)
+    }
+  }
 
   function shareKakao() {
     if (kakaoReady && window.Kakao) {
@@ -170,7 +178,6 @@ export default function ShareButtons({
       return
     }
 
-    // Fallback: 카카오 SDK 미로드 시 링크 복사
     const fullText = `${shareText}\n${shareUrl}`
     try {
       navigator.clipboard.writeText(fullText)
@@ -181,40 +188,103 @@ export default function ShareButtons({
   }
 
   return (
-    <div className="flex flex-col gap-3 max-w-md mx-auto w-full">
-      {/* Copy link */}
-      <button
-        onClick={copyLink}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition"
-      >
-        {copied ? (
-          <>✓ 링크가 복사되었습니다!</>
-        ) : (
-          <>🔗 결과 링크 복사하기</>
-        )}
-      </button>
+    <>
+      <div className="flex flex-col gap-3 max-w-md mx-auto w-full">
+        {/* Copy link */}
+        <button
+          onClick={copyLink}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition"
+        >
+          {copied ? (
+            <>✓ 링크가 복사되었습니다!</>
+          ) : (
+            <>🔗 결과 링크 복사하기</>
+          )}
+        </button>
 
-      {/* Save image */}
-      <button
-        onClick={saveImage}
-        disabled={saving}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-green-600 text-green-700 rounded-xl font-medium hover:bg-green-50 transition disabled:opacity-50"
-      >
-        {saving ? (
-          <>저장 중...</>
-        ) : (
-          <>📷 결과 이미지 저장하기</>
-        )}
-      </button>
+        {/* Save image */}
+        <button
+          onClick={saveImage}
+          disabled={saving}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-green-600 text-green-700 rounded-xl font-medium hover:bg-green-50 transition disabled:opacity-50"
+        >
+          {saving ? (
+            <>저장 중...</>
+          ) : (
+            <>📷 결과 이미지 저장하기</>
+          )}
+        </button>
 
-      {/* KakaoTalk share */}
-      <button
-        onClick={shareKakao}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium hover:opacity-90 transition"
-        style={{ backgroundColor: '#FEE500', color: '#191919' }}
-      >
-        💬 카카오톡으로 공유하기
-      </button>
-    </div>
+        {/* KakaoTalk share */}
+        <button
+          onClick={shareKakao}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium hover:opacity-90 transition"
+          style={{ backgroundColor: '#FEE500', color: '#191919' }}
+        >
+          💬 카카오톡으로 공유하기
+        </button>
+      </div>
+
+      {/* 이미지 미리보기 오버레이 (모바일) */}
+      {imagePreview && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'flex-start',
+            padding: '16px', overflowY: 'auto',
+          }}
+          onClick={closePreview}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '12px',
+              textAlign: 'center',
+              width: '100%',
+              maxWidth: '400px',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <p style={{ fontSize: '15px', fontWeight: 700, color: '#111', margin: '0 0 4px' }}>
+              아래 이미지를 꾹 눌러서 저장하세요
+            </p>
+            <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>
+              이미지를 길게 누르면 &quot;사진에 저장&quot; 옵션이 나타납니다
+            </p>
+          </div>
+          <img
+            src={imagePreview}
+            alt="노후 준비 진단 리포트"
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              borderRadius: '8px',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+            }}
+            onClick={e => e.stopPropagation()}
+          />
+          <button
+            onClick={closePreview}
+            style={{
+              marginTop: '16px',
+              padding: '12px 32px',
+              backgroundColor: '#fff',
+              color: '#111',
+              borderRadius: '12px',
+              border: 'none',
+              fontSize: '15px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            닫기
+          </button>
+        </div>
+      )}
+    </>
   )
 }
