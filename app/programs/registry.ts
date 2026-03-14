@@ -7,7 +7,7 @@ export const programRegistry: Program[] = [
     name: '노후 준비 점수 테스트',
     description: '12개 질문으로 알아보는 나의 노후 준비 상태',
     minTier: 0,
-    icon: '🏦',
+    icon: '📊',
     category: '테스트',
     isActive: true,
     badge: '인기',
