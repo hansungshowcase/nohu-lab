@@ -52,11 +52,13 @@ export default function ProgramCard({ program, userTier }: Props) {
             <p className="text-[13px] text-gray-500 leading-relaxed">
               {program.description}
             </p>
-            <div className="mt-4 flex items-center text-[12px] text-green-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <span>바로가기</span>
-              <svg className="w-3.5 h-3.5 ml-1 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
+            <div className="mt-4">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 group-hover:from-green-600 group-hover:to-emerald-700 text-white text-[12px] font-semibold rounded-lg shadow-sm group-hover:shadow-md shadow-green-500/15 group-hover:shadow-green-500/25 transition-all duration-300">
+                바로 이용하기
+                <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </span>
             </div>
           </div>
         </div>
