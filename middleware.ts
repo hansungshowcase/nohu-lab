@@ -17,7 +17,8 @@ export async function middleware(request: NextRequest) {
 
   const isProtected =
     pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/admin')
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/chat')
 
   if (!isProtected) return NextResponse.next()
 
@@ -47,5 +48,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/programs/:path*', '/admin/:path*'],
+  matcher: ['/dashboard/:path*', '/programs/:path*', '/admin/:path*', '/chat/:path*'],
 }

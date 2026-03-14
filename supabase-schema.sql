@@ -72,6 +72,27 @@ ALTER TABLE verify_requests ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Service role full access on verify_requests" ON verify_requests
   FOR ALL USING (auth.role() = 'service_role');
 
+-- 5. chat_messages 테이블 (관리자-회원 1:1 채팅)
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+  sender_id UUID NOT NULL,
+  sender_nickname TEXT NOT NULL,
+  sender_role TEXT NOT NULL CHECK (sender_role IN ('member', 'admin')),
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_messages_room ON chat_messages(room_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created ON chat_messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_unread ON chat_messages(room_id, is_read) WHERE is_read = false;
+
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service role full access on chat_messages" ON chat_messages
+  FOR ALL USING (auth.role() = 'service_role');
+
 -- ==========================================
 -- 초기 데이터
 -- ==========================================

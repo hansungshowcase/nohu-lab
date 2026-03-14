@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import TierBadge from '@/components/TierBadge'
 import { TIER_MAP } from '@/lib/types'
@@ -21,7 +21,26 @@ interface NewMember {
   tier: number
 }
 
-type Tab = 'members' | 'programs' | 'dashboard' | 'sync'
+interface ChatRoom {
+  roomId: string
+  memberNickname: string
+  lastMessage: string
+  lastMessageAt: string
+  unreadCount: number
+}
+
+interface ChatMessage {
+  id: string
+  room_id: string
+  sender_id: string
+  sender_nickname: string
+  sender_role: 'member' | 'admin'
+  message: string
+  is_read: boolean
+  created_at: string
+}
+
+type Tab = 'members' | 'programs' | 'dashboard' | 'sync' | 'chat'
 
 function AdminContent() {
   const router = useRouter()
@@ -34,6 +53,16 @@ function AdminContent() {
   const [newMember, setNewMember] = useState<NewMember>({ nickname: '', tier: 1 })
   const [bulkInput, setBulkInput] = useState('')
   const [addMode, setAddMode] = useState<'single' | 'bulk'>('single')
+
+  // 채팅 관련 상태
+  const [chatRooms, setChatRooms] = useState<ChatRoom[]>([])
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(null)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatSending, setChatSending] = useState(false)
+  const [chatLoading, setChatLoading] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+  const chatPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     fetchMembers()
@@ -128,8 +157,88 @@ function AdminContent() {
     (t) => members.filter((m) => m.tier === t).length
   )
 
-  const tabs: { id: Tab; label: string }[] = [
+  // 채팅방 목록 로드
+  useEffect(() => {
+    if (tab === 'chat') {
+      fetchChatRooms()
+      const interval = setInterval(fetchChatRooms, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [tab])
+
+  // 선택된 방의 메시지 로드
+  useEffect(() => {
+    if (!selectedRoom) return
+    fetchChatMessages(selectedRoom)
+    chatPollRef.current = setInterval(() => fetchChatMessages(selectedRoom), 3000)
+    return () => {
+      if (chatPollRef.current) clearInterval(chatPollRef.current)
+    }
+  }, [selectedRoom])
+
+  // 메시지 스크롤
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
+
+  async function fetchChatRooms() {
+    try {
+      const res = await fetch('/api/chat/rooms')
+      if (res.ok) {
+        const data = await res.json()
+        setChatRooms(data)
+      }
+    } catch {}
+  }
+
+  async function fetchChatMessages(roomId: string) {
+    try {
+      const res = await fetch(`/api/chat/messages?roomId=${roomId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setChatMessages(data)
+        // 읽음 처리 후 방 목록 갱신
+        fetchChatRooms()
+      }
+    } catch {}
+  }
+
+  async function handleChatSend(e: React.FormEvent) {
+    e.preventDefault()
+    if (!chatInput.trim() || chatSending || !selectedRoom) return
+    setChatSending(true)
+    try {
+      const res = await fetch('/api/chat/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: chatInput.trim(), roomId: selectedRoom }),
+      })
+      if (res.ok) {
+        const newMsg = await res.json()
+        setChatMessages(prev => [...prev, newMsg])
+        setChatInput('')
+      }
+    } catch {} finally {
+      setChatSending(false)
+    }
+  }
+
+  function formatChatTime(dateStr: string) {
+    const d = new Date(dateStr)
+    const now = new Date()
+    const isToday = d.toDateString() === now.toDateString()
+    if (isToday) {
+      return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+    }
+    return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) + ' ' +
+      d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const totalUnread = chatRooms.reduce((sum, r) => sum + r.unreadCount, 0)
+
+  const tabs: { id: Tab; label: string; badge?: number }[] = [
     { id: 'members', label: '회원 관리' },
+    { id: 'chat', label: '채팅', badge: totalUnread },
     { id: 'sync', label: '카페 동기화' },
     { id: 'programs', label: '프로그램 관리' },
     { id: 'dashboard', label: '대시보드' },
@@ -173,13 +282,18 @@ function AdminContent() {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition relative ${
               tab === t.id
                 ? 'border-green-600 text-green-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             {t.label}
+            {t.badge && t.badge > 0 ? (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                {t.badge}
+              </span>
+            ) : null}
           </button>
         ))}
       </div>
@@ -493,6 +607,157 @@ function AdminContent() {
               <li>카페 회원 관리 페이지가 열려 있는가? (자동으로 열림)</li>
               <li>위 항목 모두 확인 후에도 안 되면 확장프로그램을 새로고침 해보세요</li>
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* 채팅 탭 */}
+      {tab === 'chat' && (
+        <div className="flex gap-4" style={{ height: 'calc(100vh - 250px)' }}>
+          {/* 채팅방 목록 */}
+          <div className={`${selectedRoom ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-80 border border-gray-200 rounded-xl bg-white overflow-hidden shrink-0`}>
+            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <h3 className="font-semibold text-sm text-gray-700">대화 목록</h3>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {chatRooms.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400 py-12">
+                  <svg className="w-12 h-12 text-gray-200 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                  </svg>
+                  <p className="text-sm">아직 대화가 없습니다</p>
+                </div>
+              ) : (
+                chatRooms.map((room) => (
+                  <button
+                    key={room.roomId}
+                    onClick={() => setSelectedRoom(room.roomId)}
+                    className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-green-50 transition ${
+                      selectedRoom === room.roomId ? 'bg-green-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-100 to-emerald-50 flex items-center justify-center border border-green-200/50 shrink-0">
+                          <span className="text-green-700 font-semibold text-xs">
+                            {room.memberNickname.charAt(0)}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm text-gray-900 truncate">{room.memberNickname}</div>
+                          <div className="text-xs text-gray-500 truncate mt-0.5">{room.lastMessage}</div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                        <span className="text-[10px] text-gray-400">{formatChatTime(room.lastMessageAt)}</span>
+                        {room.unreadCount > 0 && (
+                          <span className="min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                            {room.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* 채팅 메시지 영역 */}
+          <div className={`${selectedRoom ? 'flex' : 'hidden md:flex'} flex-col flex-1 border border-gray-200 rounded-xl bg-white overflow-hidden`}>
+            {selectedRoom ? (
+              <>
+                {/* 채팅 헤더 */}
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
+                  <button
+                    onClick={() => setSelectedRoom(null)}
+                    className="md:hidden p-1 hover:bg-gray-200 rounded-lg"
+                  >
+                    <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
+                  </button>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-emerald-50 flex items-center justify-center border border-green-200/50">
+                    <span className="text-green-700 font-semibold text-xs">
+                      {chatRooms.find(r => r.roomId === selectedRoom)?.memberNickname.charAt(0) || '?'}
+                    </span>
+                  </div>
+                  <span className="font-semibold text-sm text-gray-900">
+                    {chatRooms.find(r => r.roomId === selectedRoom)?.memberNickname || '회원'}
+                  </span>
+                </div>
+
+                {/* 메시지 목록 */}
+                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+                  {chatMessages.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                      대화를 시작하세요
+                    </div>
+                  ) : (
+                    chatMessages.map((msg) => {
+                      const isAdmin = msg.sender_role === 'admin'
+                      return (
+                        <div key={msg.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
+                          <div className="max-w-[75%]">
+                            {!isAdmin && (
+                              <div className="text-xs text-gray-500 mb-1 ml-1 font-medium">{msg.sender_nickname}</div>
+                            )}
+                            <div className={`px-4 py-2.5 rounded-2xl text-[14px] leading-relaxed ${
+                              isAdmin
+                                ? 'bg-green-600 text-white rounded-br-md'
+                                : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                            }`}>
+                              {msg.message}
+                            </div>
+                            <div className={`flex items-center gap-1 mt-1 ${isAdmin ? 'justify-end' : 'justify-start'}`}>
+                              {isAdmin && msg.is_read && (
+                                <span className="text-[10px] text-green-600">읽음</span>
+                              )}
+                              <span className="text-[10px] text-gray-400 px-1">{formatChatTime(msg.created_at)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+
+                {/* 입력 */}
+                <form onSubmit={handleChatSend} className="px-4 py-3 border-t border-gray-100 bg-gray-50">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="메시지를 입력하세요..."
+                      maxLength={1000}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-[14px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!chatInput.trim() || chatSending}
+                      className="px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-xl font-medium text-sm transition"
+                    >
+                      {chatSending ? (
+                        <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+                      ) : (
+                        '전송'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">
+                <div className="text-center">
+                  <svg className="w-16 h-16 mx-auto text-gray-200 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                  </svg>
+                  <p className="text-sm font-medium text-gray-500">대화를 선택하세요</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
