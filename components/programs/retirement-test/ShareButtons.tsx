@@ -75,29 +75,53 @@ export default function ShareButtons({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  function getImageUrl() {
+    const catMap: Record<string, string> = {}
+    categories.forEach(c => {
+      const k = c.key === 'finance' ? 'f' : c.key === 'lifestyle' ? 'l' : c.key === 'housing' ? 'h' : 'm'
+      catMap[k] = String(c.score)
+    })
+    const params = new URLSearchParams({
+      s: String(total),
+      code: resultCode,
+      ...catMap,
+    })
+    return `/api/result-image?${params.toString()}`
+  }
+
   async function saveImage() {
     if (saving) return
     setSaving(true)
     try {
-      const catMap: Record<string, string> = {}
-      categories.forEach(c => {
-        const k = c.key === 'finance' ? 'f' : c.key === 'lifestyle' ? 'l' : c.key === 'housing' ? 'h' : 'm'
-        catMap[k] = String(c.score)
-      })
-      const params = new URLSearchParams({
-        s: String(total),
-        code: resultCode,
-        ...catMap,
-      })
-      const url = `/api/result-image?${params.toString()}`
+      const url = getImageUrl()
       const res = await fetch(url)
       if (!res.ok) throw new Error('이미지 생성 실패')
       const blob = await res.blob()
-      const blobUrl = URL.createObjectURL(blob)
+      const file = new File([blob], `노후준비_리포트_${total}점_${grade}.png`, { type: 'image/png' })
 
+      // 1순위: Web Share API (모바일 최적)
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: '노후 준비 종합 진단 리포트',
+          text: shareText,
+        })
+        return
+      }
+
+      // 2순위: 새 탭에서 이미지 열기 (iOS Safari 등)
+      const blobUrl = URL.createObjectURL(blob)
+      const newTab = window.open(blobUrl, '_blank')
+      if (newTab) {
+        alert('이미지가 새 탭에 열렸습니다. 꾹 눌러서 저장해주세요.')
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+        return
+      }
+
+      // 3순위: 다운로드 링크 (데스크탑)
       const link = document.createElement('a')
       link.href = blobUrl
-      link.download = `노후준비_리포트_${total}점_${grade}.png`
+      link.download = file.name
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -111,6 +135,7 @@ export default function ShareButtons({
   }
 
   const shareText = `나의 노후 준비 점수는 ${total}점! (${grade}) 당신은 몇 점?`
+  const shareTextWithUrl = `${shareText}\n${shareUrl}`
 
   function shareKakao() {
     if (kakaoReady && window.Kakao) {
