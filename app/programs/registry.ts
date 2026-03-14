@@ -10,6 +10,7 @@ export const programRegistry: Program[] = [
     icon: '🏦',
     category: '테스트',
     isActive: true,
+    badge: '인기',
   },
   // minTier 1 - 코어회원
   {

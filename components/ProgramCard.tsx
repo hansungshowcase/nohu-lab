@@ -25,16 +25,26 @@ export default function ProgramCard({ program, userTier }: Props) {
   if (canAccess) {
     return (
       <Link href={`/programs/${program.id}`}>
-        <div className="group bg-white rounded-2xl p-5 border border-gray-100 card-hover h-full relative overflow-hidden">
+        <div className={`group bg-white rounded-2xl p-5 border ${program.badge ? 'border-green-200 ring-1 ring-green-100' : 'border-gray-100'} card-hover h-full relative overflow-hidden`}>
+          {program.badge && (
+            <div className="absolute top-0 right-0">
+              <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-2xl shadow-sm flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                {program.badge}
+              </div>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-br from-green-50/0 to-green-50/0 group-hover:from-green-50/50 group-hover:to-emerald-50/30 transition-all duration-500 rounded-2xl" />
           <div className="relative">
             <div className="flex items-start justify-between mb-4">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center group-hover:from-green-50 group-hover:to-emerald-50 transition-colors duration-300">
+              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${program.badge ? 'from-green-50 to-emerald-50' : 'from-gray-50 to-gray-100'} flex items-center justify-center group-hover:from-green-50 group-hover:to-emerald-50 transition-colors duration-300`}>
                 <span className="text-2xl">{program.icon}</span>
               </div>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ring-1 ${badgeStyle}`}>
-                {tierInfo.cafeName}
-              </span>
+              {!program.badge && (
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ring-1 ${badgeStyle}`}>
+                  {tierInfo.cafeName}
+                </span>
+              )}
             </div>
             <h3 className="font-semibold text-[15px] text-gray-900 mb-1.5 group-hover:text-green-700 transition-colors">
               {program.name}

@@ -15,6 +15,7 @@ export interface Program {
   icon: string
   category: string
   isActive: boolean
+  badge?: string
 }
 
 export interface TierInfo {
