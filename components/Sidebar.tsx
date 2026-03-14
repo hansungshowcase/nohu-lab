@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import TierBadge from './TierBadge'
@@ -18,29 +18,6 @@ export default function Sidebar({ user }: { user: User | null }) {
   const [open, setOpen] = useState(false)
   const categories = getAllCategories()
 
-  const [unreadChat, setUnreadChat] = useState(0)
-
-  // 안읽은 채팅 메시지 수 폴링
-  useEffect(() => {
-    if (!user || user.tier === 0) return
-    function fetchUnread() {
-      fetch('/api/chat/rooms')
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data && typeof data.unreadCount === 'number') {
-            setUnreadChat(data.unreadCount)
-          } else if (Array.isArray(data)) {
-            // 관리자: 전체 안읽은 수 합산
-            setUnreadChat(data.reduce((s: number, r: { unreadCount: number }) => s + r.unreadCount, 0))
-          }
-        })
-        .catch(() => {})
-    }
-    fetchUnread()
-    const interval = setInterval(fetchUnread, 10000)
-    return () => clearInterval(interval)
-  }, [user])
-
   if (!user) return null
 
   async function handleLogout() {
@@ -56,9 +33,6 @@ export default function Sidebar({ user }: { user: User | null }) {
       icon: cat === '유틸리티' ? '🔧' : cat === '콘텐츠' ? '📄' : cat === '분석' ? '📊' : cat === '테스트' ? '📋' : '📁',
     })),
     { href: '/dashboard/tier-guide', label: '등급 안내', icon: '🏆' },
-    ...(user.tier !== 0
-      ? [{ href: user.tier === 4 ? '/admin?tab=chat' : '/chat', label: '채팅', icon: '💬', badge: unreadChat }]
-      : []),
     ...(user.tier === 4
       ? [{ href: '/admin', label: '관리자 패널', icon: '⚙️' }]
       : []),
@@ -111,10 +85,9 @@ export default function Sidebar({ user }: { user: User | null }) {
         </div>
         {navItems.map((item) => {
           const isActive = pathname === item.href
-          const badge = 'badge' in item ? (item as { badge?: number }).badge : 0
           return (
             <Link
-              key={item.href + item.label}
+              key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-200 ${
@@ -125,13 +98,9 @@ export default function Sidebar({ user }: { user: User | null }) {
             >
               <span className="text-base w-5 text-center">{item.icon}</span>
               {item.label}
-              {badge && badge > 0 ? (
-                <span className="ml-auto min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-                  {badge}
-                </span>
-              ) : isActive ? (
+              {isActive && (
                 <div className="ml-auto w-1.5 h-1.5 rounded-full bg-green-500" />
-              ) : null}
+              )}
             </Link>
           )
         })}

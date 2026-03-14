@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Sidebar from './Sidebar'
+import ChatWidget from './ChatWidget'
 
 interface User {
   memberId: string
@@ -37,6 +38,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-premium">
       <Sidebar user={user} />
       <main className="flex-1 lg:ml-0 min-h-screen">{children}</main>
+      <ChatWidget user={user} />
     </div>
   )
 }
