@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceSupabase()
     const { data: admin, error: adminError } = await supabase
       .from('members')
-      .select('*')
+      .select('id, nickname, tier')
       .eq('tier', 4)
       .limit(1)
       .single()

@@ -42,26 +42,17 @@ export async function GET(request: NextRequest) {
     const tier = mapGradeToTier(req.grade_name || '')
     const nickname = req.nickname.trim()
 
-    // Upsert member
+    // Upsert member (tier + last_login 한번에)
     const { data: member, error: upsertError } = await supabase
       .from('members')
       .upsert(
-        { nickname, tier, phone: '' },
+        { nickname, tier, phone: '', last_login: new Date().toISOString() },
         { onConflict: 'nickname' }
       )
       .select()
       .single()
 
     if (upsertError || !member) {
-      return NextResponse.json({ status: 'error' })
-    }
-
-    // Update last_login
-    const { error: loginUpdateError } = await supabase
-      .from('members')
-      .update({ last_login: new Date().toISOString(), tier })
-      .eq('id', member.id)
-    if (loginUpdateError) {
       return NextResponse.json({ status: 'error' })
     }
 

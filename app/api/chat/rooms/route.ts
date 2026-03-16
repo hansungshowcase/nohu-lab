@@ -15,6 +15,7 @@ export async function GET() {
       .from('chat_messages')
       .select('room_id, sender_nickname, sender_role, message, is_read, created_at')
       .order('created_at', { ascending: false })
+      .limit(1000)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })

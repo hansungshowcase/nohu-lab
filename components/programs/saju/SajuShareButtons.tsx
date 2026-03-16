@@ -124,7 +124,8 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
       const captureScale = isMobile ? 1.5 : 2
 
-      const canvas = await html2canvas(container, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const canvas = await (html2canvas as any)(container, {
         scale: captureScale,
         backgroundColor: '#ffffff',
         useCORS: true,

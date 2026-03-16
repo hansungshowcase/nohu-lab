@@ -58,6 +58,9 @@ export async function GET(request: NextRequest) {
         state: state || '',
       }),
     })
+    if (!tokenRes.ok) {
+      return NextResponse.redirect(new URL('/?error=token_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+    }
     const tokenData = await tokenRes.json()
 
     if (!tokenData.access_token) {
@@ -70,6 +73,9 @@ export async function GET(request: NextRequest) {
     const profileRes = await fetch('https://openapi.naver.com/v1/nid/me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
+    if (!profileRes.ok) {
+      return NextResponse.redirect(new URL('/?error=profile_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+    }
     const profileData = await profileRes.json()
 
     if (profileData.resultcode !== '00') {

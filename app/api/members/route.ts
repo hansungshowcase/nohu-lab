@@ -12,7 +12,7 @@ export async function GET() {
   const supabase = getServiceSupabase()
   const { data, error } = await supabase
     .from('members')
-    .select('*')
+    .select('id, nickname, phone, tier, created_at, last_login')
     .order('created_at', { ascending: false })
 
   if (error) {

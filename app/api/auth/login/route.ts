@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     // DB에서 닉네임 검색
     const { data: member, error: memberError } = await supabase
       .from('members')
-      .select('*')
+      .select('id, nickname, tier')
       .eq('nickname', trimmed)
       .single()
 

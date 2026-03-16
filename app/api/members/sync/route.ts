@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
         tier: m.tier ? Math.min(Math.max(Number(m.tier), 1), 4) : mapCafeLevelToTier(m.levelName || '일반회원'),
       }))
 
-    for (let i = 0; i < batch.length; i += 50) {
-      const chunk = batch.slice(i, i + 50)
+    for (let i = 0; i < batch.length; i += 500) {
+      const chunk = batch.slice(i, i + 500)
       const { error } = await supabase
         .from('members')
         .upsert(chunk, { onConflict: 'nickname' })

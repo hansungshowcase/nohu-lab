@@ -47,10 +47,12 @@ export async function GET(request: NextRequest) {
         state: state || '',
       }),
     })
+    if (!tokenRes.ok) {
+      return NextResponse.redirect(new URL(`/admin?sync=failed&reason=token_failed`, process.env.NEXT_PUBLIC_BASE_URL!))
+    }
     const tokenData = await tokenRes.json()
 
     if (!tokenData.access_token) {
-      // token failed
       return NextResponse.redirect(new URL(`/admin?sync=failed&reason=token_failed`, process.env.NEXT_PUBLIC_BASE_URL!))
     }
 
@@ -125,8 +127,8 @@ export async function GET(request: NextRequest) {
     let syncCount = 0
     let errorCount = 0
 
-    for (let i = 0; i < allMembers.length; i += 50) {
-      const batch = allMembers.slice(i, i + 50).map(m => ({
+    for (let i = 0; i < allMembers.length; i += 500) {
+      const batch = allMembers.slice(i, i + 500).map(m => ({
         nickname: m.nickname,
         phone: '',
         tier: mapCafeLevelToTier(m.levelName),

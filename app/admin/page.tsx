@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import TierBadge from '@/components/TierBadge'
 import { TIER_MAP } from '@/lib/types'
@@ -169,9 +169,9 @@ function AdminContent() {
     m.nickname.toLowerCase().includes(search.toLowerCase())
   )
 
-  const tierCounts = [1, 2, 3, 4].map(
+  const tierCounts = useMemo(() => [1, 2, 3, 4].map(
     (t) => members.filter((m) => m.tier === t).length
-  )
+  ), [members])
 
   // 채팅방 목록 로드
   useEffect(() => {

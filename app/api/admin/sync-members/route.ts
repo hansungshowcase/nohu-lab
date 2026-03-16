@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     let syncCount = 0
     let errorCount = 0
 
-    for (let i = 0; i < members.length; i += 50) {
-      const batch = members.slice(i, i + 50).map((m: SyncMember) => ({
+    for (let i = 0; i < members.length; i += 500) {
+      const batch = members.slice(i, i + 500).map((m: SyncMember) => ({
         nickname: m.nickname,
         tier: Math.min(Math.max(m.tier, 1), 4),
         phone: '',
