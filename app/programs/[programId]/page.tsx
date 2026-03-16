@@ -38,7 +38,7 @@ export default function ProgramPage() {
       })
       .then(setUser)
       .catch((err) => {
-        if (err.name !== 'AbortError') setUser({ memberId: 'guest', nickname: '게스트', tier: 4 })
+        if (err.name !== 'AbortError') setUser({ memberId: 'guest', nickname: '게스트', tier: 0 })
       })
     return () => controller.abort()
   }, [])
