@@ -54,7 +54,23 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    // DB에 없으면 → 실시간 확인 요청 생성
+    // DB에 없으면 → 기존 pending 요청 확인 후 생성
+    const { data: existingReq } = await supabase
+      .from('verify_requests')
+      .select('id')
+      .eq('nickname', trimmed)
+      .eq('status', 'pending')
+      .gte('created_at', new Date(Date.now() - 2 * 60 * 1000).toISOString())
+      .limit(1)
+      .single()
+
+    if (existingReq) {
+      return NextResponse.json({
+        status: 'verifying',
+        verifyId: existingReq.id,
+      })
+    }
+
     const { data: verifyReq, error: verifyError } = await supabase
       .from('verify_requests')
       .insert({ nickname: trimmed, status: 'pending' })

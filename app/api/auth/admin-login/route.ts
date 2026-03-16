@@ -21,6 +21,8 @@ export async function POST(request: NextRequest) {
     const { password } = await request.json()
 
     if (typeof password !== 'string' || !safeCompare(password, getAdminPassword())) {
+      // 브루트포스 방지: 실패 시 1초 딜레이
+      await new Promise(r => setTimeout(r, 1000))
       return NextResponse.json(
         { error: '비밀번호가 일치하지 않습니다.' },
         { status: 401 }
