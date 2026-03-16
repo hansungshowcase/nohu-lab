@@ -83,6 +83,9 @@ export async function GET(request: NextRequest) {
     }
 
     const naverProfile = profileData.response
+    if (!naverProfile) {
+      return NextResponse.redirect(new URL('/?error=profile_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+    }
     const naverNickname = naverProfile.nickname || naverProfile.name || '회원'
 
     // 3. 카페 가입 여부 및 등급 확인 (디버그 모드)

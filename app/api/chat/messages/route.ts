@@ -5,7 +5,7 @@ import { getServiceSupabase } from '@/lib/supabase'
 // GET: 메시지 조회
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser()
-  if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
+  if (!user || user.tier === 0) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
   const supabase = getServiceSupabase()
   const { searchParams } = new URL(request.url)
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 // POST: 메시지 전송
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser()
-  if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
+  if (!user || user.tier === 0) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
   const body = await request.json()
   const { message, roomId: targetRoomId } = body

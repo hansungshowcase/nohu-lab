@@ -5,7 +5,7 @@ import { getServiceSupabase } from '@/lib/supabase'
 // GET: 채팅방 목록 (관리자용) 또는 안읽은 메시지 수 (회원용)
 export async function GET() {
   const user = await getCurrentUser()
-  if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
+  if (!user || user.tier === 0) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
   const supabase = getServiceSupabase()
 

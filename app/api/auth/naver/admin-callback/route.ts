@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
         `https://openapi.naver.com/v1/cafe/${CAFE_ID}/members?page=${page}&perPage=100`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       )
+      if (!membersRes.ok) break
       const membersData = await membersRes.json()
 
       // cafe API response logged server-side only in dev
