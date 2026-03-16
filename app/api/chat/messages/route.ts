@@ -30,12 +30,16 @@ export async function GET(request: NextRequest) {
 
   // 상대방 메시지를 읽음 처리
   const readRole = user.tier === 4 ? 'member' : 'admin'
-  await supabase
+  const { error: readError } = await supabase
     .from('chat_messages')
     .update({ is_read: true })
     .eq('room_id', roomId)
     .eq('sender_role', readRole)
     .eq('is_read', false)
+
+  if (readError) {
+    return NextResponse.json({ error: '읽음 처리 실패' }, { status: 500 })
+  }
 
   return NextResponse.json(data || [])
 }

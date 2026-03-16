@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
+import { getCurrentUser } from '@/lib/auth'
 
 export async function GET() {
+  const user = await getCurrentUser()
+  if (!user || user.tier !== 4) {
+    return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
+  }
+
   try {
     const supabase = getServiceSupabase()
 

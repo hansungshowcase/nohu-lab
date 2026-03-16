@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
   const { nickname, phone, tier } = await request.json()
 
-  if (!nickname) {
+  if (!nickname || typeof nickname !== 'string' || !nickname.trim()) {
     return NextResponse.json({ error: '닉네임은 필수입니다.' }, { status: 400 })
   }
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
 const COOKIE_NAME = 'cafe-auth-token'
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'default-secret-change-me-in-production')
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || '')
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

@@ -20,13 +20,13 @@ export async function GET(request: NextRequest) {
 
     const supabase = getServiceSupabase()
 
-    const { data: req } = await supabase
+    const { data: req, error: reqError } = await supabase
       .from('verify_requests')
       .select('*')
       .eq('id', id)
       .single()
 
-    if (!req) {
+    if (reqError || !req) {
       return NextResponse.json({ error: '요청 없음' }, { status: 404 })
     }
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const nickname = req.nickname.trim()
 
     // Upsert member
-    const { data: member } = await supabase
+    const { data: member, error: upsertError } = await supabase
       .from('members')
       .upsert(
         { nickname, tier, phone: '' },
@@ -52,15 +52,18 @@ export async function GET(request: NextRequest) {
       .select()
       .single()
 
-    if (!member) {
+    if (upsertError || !member) {
       return NextResponse.json({ status: 'error' })
     }
 
     // Update last_login
-    await supabase
+    const { error: loginUpdateError } = await supabase
       .from('members')
       .update({ last_login: new Date().toISOString(), tier })
       .eq('id', member.id)
+    if (loginUpdateError) {
+      return NextResponse.json({ status: 'error' })
+    }
 
     const token = await createToken({
       memberId: member.id,

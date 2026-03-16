@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
 
-const SYNC_SECRET = 'nohu-cafe-sync-2026'
+function getSyncSecret() {
+  const s = process.env.SYNC_SECRET
+  if (!s) throw new Error('SYNC_SECRET 환경변수가 설정되지 않았습니다.')
+  return s
+}
 
 interface SyncMember {
   nickname: string
@@ -12,7 +16,7 @@ export async function POST(request: NextRequest) {
   try {
     const { secret, members } = await request.json()
 
-    if (secret !== SYNC_SECRET) {
+    if (secret !== getSyncSecret()) {
       return NextResponse.json({ error: '인증 실패' }, { status: 401 })
     }
 
@@ -61,7 +65,6 @@ export async function POST(request: NextRequest) {
       updated: updatedMembers.length,
     })
   } catch (error) {
-    console.error('[sync-members] 오류:', error)
     return NextResponse.json({ error: '서버 오류' }, { status: 500 })
   }
 }

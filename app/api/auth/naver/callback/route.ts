@@ -40,9 +40,17 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. 액세스 토큰 발급
-    const tokenRes = await fetch(
-      `https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id=${process.env.NAVER_CLIENT_ID}&client_secret=${process.env.NAVER_CLIENT_SECRET}&code=${code}&state=${state}`
-    )
+    const tokenRes = await fetch('https://nid.naver.com/oauth2.0/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: process.env.NAVER_CLIENT_ID!,
+        client_secret: process.env.NAVER_CLIENT_SECRET!,
+        code: code!,
+        state: state || '',
+      }),
+    })
     const tokenData = await tokenRes.json()
 
     if (!tokenData.access_token) {
@@ -91,49 +99,31 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 디버그: 카페 API 응답을 URL에 포함 (임시)
     if (!cafeJoined) {
-      const debugStr = encodeURIComponent(JSON.stringify(debugResults).substring(0, 300))
       return NextResponse.redirect(
-        new URL(`/?error=not_cafe_member&debug=${debugStr}`, process.env.NEXT_PUBLIC_BASE_URL!)
+        new URL('/?error=not_cafe_member', process.env.NEXT_PUBLIC_BASE_URL!)
       )
     }
 
-    // 4. DB에 회원 등록/업데이트
+    // 4. DB에 회원 등록/업데이트 (upsert로 레이스 컨디션 방지)
     const supabase = getServiceSupabase()
 
-    const { data: existing } = await supabase
+    const { data: member, error: upsertError } = await supabase
       .from('members')
-      .select('*')
-      .eq('nickname', naverNickname)
+      .upsert({
+        nickname: naverNickname,
+        phone: naverProfile.mobile?.replace(/-/g, '') || '',
+        tier: cafeTier,
+        last_login: new Date().toISOString(),
+      }, { onConflict: 'nickname' })
+      .select()
       .single()
 
-    let memberId: string
-
-    if (existing) {
-      // 기존 회원 → 등급 업데이트 + 로그인 시간
-      await supabase
-        .from('members')
-        .update({
-          tier: cafeTier,
-          last_login: new Date().toISOString(),
-        })
-        .eq('id', existing.id)
-      memberId = existing.id
-    } else {
-      // 신규 회원 등록
-      const { data: newMember } = await supabase
-        .from('members')
-        .insert({
-          nickname: naverNickname,
-          phone: naverProfile.mobile?.replace(/-/g, '') || '',
-          tier: cafeTier,
-          last_login: new Date().toISOString(),
-        })
-        .select()
-        .single()
-      memberId = newMember?.id || ''
+    if (upsertError || !member) {
+      return NextResponse.redirect(new URL('/?error=server_error', process.env.NEXT_PUBLIC_BASE_URL!))
     }
+
+    const memberId = member.id
 
     // 5. JWT 발급
     const token = await createToken({

@@ -19,7 +19,7 @@ export async function PATCH(
   const updateData: Record<string, unknown> = {}
   if (body.tier !== undefined) updateData.tier = body.tier
   if (body.nickname !== undefined) updateData.nickname = body.nickname
-  if (body.phone !== undefined) updateData.phone = body.phone.replace(/-/g, '')
+  if (body.phone !== undefined) updateData.phone = typeof body.phone === 'string' ? body.phone.replace(/-/g, '') : ''
 
   const { data, error } = await supabase
     .from('members')

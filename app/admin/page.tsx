@@ -679,7 +679,7 @@ function AdminContent() {
                   </button>
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-emerald-50 flex items-center justify-center border border-green-200/50">
                     <span className="text-green-700 font-semibold text-xs">
-                      {chatRooms.find(r => r.roomId === selectedRoom)?.memberNickname.charAt(0) || '?'}
+                      {chatRooms.find(r => r.roomId === selectedRoom)?.memberNickname?.charAt(0) || '?'}
                     </span>
                   </div>
                   <span className="font-semibold text-sm text-gray-900">

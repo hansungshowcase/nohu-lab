@@ -50,16 +50,19 @@ export async function GET() {
       }
     }
 
-    // 닉네임이 없는 방은 DB에서 조회
+    // 닉네임이 없는 방은 DB에서 일괄 조회
     const rooms = Array.from(roomMap.values())
-    for (const room of rooms) {
-      if (!room.memberNickname) {
-        const { data: member } = await supabase
-          .from('members')
-          .select('nickname')
-          .eq('id', room.roomId)
-          .single()
-        room.memberNickname = member?.nickname || '알 수 없음'
+    const missingIds = rooms.filter(r => !r.memberNickname).map(r => r.roomId)
+    if (missingIds.length > 0) {
+      const { data: members } = await supabase
+        .from('members')
+        .select('id, nickname')
+        .in('id', missingIds)
+      const memberMap = new Map((members || []).map(m => [m.id, m.nickname]))
+      for (const room of rooms) {
+        if (!room.memberNickname) {
+          room.memberNickname = memberMap.get(room.roomId) || '알 수 없음'
+        }
       }
     }
 

@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
 
-const SYNC_SECRET = 'nohu-cafe-sync-2026'
+function getSyncSecret() {
+  const s = process.env.SYNC_SECRET
+  if (!s) throw new Error('SYNC_SECRET 환경변수가 설정되지 않았습니다.')
+  return s
+}
 
 // Chrome extension polls this to get pending verification requests
 export async function POST(request: NextRequest) {
   try {
     const { secret } = await request.json()
-    if (secret !== SYNC_SECRET) {
+    if (secret !== getSyncSecret()) {
       return NextResponse.json({ error: '인증 실패' }, { status: 401 })
     }
 
