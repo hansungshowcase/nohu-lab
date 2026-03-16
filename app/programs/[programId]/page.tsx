@@ -13,6 +13,7 @@ const programComponents: Record<string, React.LazyExoticComponent<React.Componen
   'hashtag-recommender': lazy(() => import('@/components/programs/HashtagRecommender')),
   'text-converter': lazy(() => import('@/components/programs/TextConverter')),
   'retirement-test': lazy(() => import('@/components/programs/RetirementTest')),
+  'saju-reading': lazy(() => import('@/components/programs/SajuReading')),
 }
 
 interface User {
