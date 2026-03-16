@@ -33,4 +33,5 @@
 ## 기술 스택
 - Next.js 16 (App Router) + React 19 + Tailwind 4
 - Supabase + JWT 인증
-- 스타일: green 팔레트, `max-w-2xl mx-auto space-y-6` 컨테이너
+- 스타일: orange 팔레트 (--accent: #ea580c), `max-w-2xl mx-auto space-y-6` 컨테이너
+- **green/emerald 색상 사용 금지** — 전체 UI는 orange/amber 테마

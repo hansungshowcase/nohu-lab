@@ -242,14 +242,14 @@ function getPensionAnalysis(answers: Record<number, number>): { tier: string; ic
       tier: '1층: 국민연금',
       icon: '1',
       status: '가입 중 (의무)',
-      color: '#16a34a',
+      color: '#ea580c',
       detail: '평균 수령액 월 67만원(전체) / 20년+ 가입 시 월 108만원. 수령 개시: 65세(1969년생 이후). 연기연금 신청 시 연 7.2%씩 증액(최대 5년=+36%). 추납·임의가입으로 가입기간을 늘리면 수령액이 증가합니다.',
     },
     {
       tier: '2층: 퇴직연금',
       icon: '2',
       status: q16 >= 3 ? '적극 운용 중' : q16 >= 2 ? '가입됨 (방치 가능성)' : '미확인/미가입',
-      color: q16 >= 3 ? '#16a34a' : q16 >= 2 ? '#ca8a04' : '#dc2626',
+      color: q16 >= 3 ? '#ea580c' : q16 >= 2 ? '#ca8a04' : '#dc2626',
       detail: q16 >= 3
         ? '퇴직연금을 적극 운용 중입니다. 55세 이후 연금 수령 시 퇴직소득세의 60~70%만 과세됩니다. 수수료 연 0.5% 이하인지 점검하세요.'
         : q16 >= 2
@@ -260,7 +260,7 @@ function getPensionAnalysis(answers: Record<number, number>): { tier: string; ic
       tier: '3층: 개인연금',
       icon: '3',
       status: q2 >= 3 ? '체계적 구축' : q2 >= 2 ? '부분 가입' : '미가입',
-      color: q2 >= 3 ? '#16a34a' : q2 >= 2 ? '#ca8a04' : '#dc2626',
+      color: q2 >= 3 ? '#ea580c' : q2 >= 2 ? '#ca8a04' : '#dc2626',
       detail: q2 >= 3
         ? '연금저축(600만)+IRP(300만) 합산 연 900만원 세액공제를 최대한 활용하세요. 총급여 5,500만원 이하 시 세액공제율 16.5%(최대 148.5만원 환급)입니다.'
         : q2 >= 2
@@ -284,7 +284,7 @@ function getRiskAssessment(categories: CategoryScore[], answers: Record<number, 
     {
       name: '장수리스크',
       level: longevityRisk,
-      color: longevityRisk === '높음' ? '#dc2626' : longevityRisk === '중간' ? '#ca8a04' : '#16a34a',
+      color: longevityRisk === '높음' ? '#dc2626' : longevityRisk === '중간' ? '#ca8a04' : '#ea580c',
       icon: 'T',
       detail: longevityRisk === '높음'
         ? '현재 준비 수준으로는 은퇴 후 25~30년을 버티기 어렵습니다. 한국인 평균수명 83.4세이지만 90세까지 대비 필요.'
@@ -295,7 +295,7 @@ function getRiskAssessment(categories: CategoryScore[], answers: Record<number, 
     {
       name: '인플레이션 리스크',
       level: inflationRisk,
-      color: inflationRisk === '높음' ? '#dc2626' : inflationRisk === '중간' ? '#ca8a04' : '#16a34a',
+      color: inflationRisk === '높음' ? '#dc2626' : inflationRisk === '중간' ? '#ca8a04' : '#ea580c',
       icon: 'I',
       detail: inflationRisk === '높음'
         ? '자산이 예금·부동산에 편중되어 물가상승에 취약합니다. 연 3% 인플레이션 시 20년 후 구매력이 45%로 줄어듭니다.'
@@ -306,7 +306,7 @@ function getRiskAssessment(categories: CategoryScore[], answers: Record<number, 
     {
       name: '건강리스크',
       level: healthRisk,
-      color: healthRisk === '높음' ? '#dc2626' : healthRisk === '중간' ? '#ca8a04' : '#16a34a',
+      color: healthRisk === '높음' ? '#dc2626' : healthRisk === '중간' ? '#ca8a04' : '#ea580c',
       icon: 'H',
       detail: healthRisk === '높음'
         ? '운동·검진·보험 모두 부족합니다. 65세 이후 연평균 의료비 550만원, 중증질환 시 수천만원 소요됩니다.'
@@ -326,7 +326,7 @@ function getCrevasseAnalysis(answers: Record<number, number>): { level: string; 
   if (combined >= 6) {
     return {
       level: '대비 양호',
-      color: '#16a34a',
+      color: '#ea580c',
       detail: '소득 크레바스에 대한 인식과 대비가 잘 되어 있습니다. 별도 자금이나 추가 소득원이 준비되어 공백기를 안전하게 넘길 수 있습니다.',
       strategy: ['브릿지 자금의 투자 방식 점검 (과도한 위험 회피)', '파트타임/컨설팅 등 근로소득 계획 구체화', '조기연금(60세) vs 정상연금(65세) 수령액 비교 시뮬레이션'],
     }
@@ -477,7 +477,7 @@ function getScenarios(total: number, categories: CategoryScore[]): { label: stri
   const baseline = base
   const pessimistic = Math.round(base * (1 - (16 - Math.min(f.score, 16)) / 30))
   return [
-    { label: '낙관', color: '#16a34a', monthly: `월 ${optimistic}만원`, desc: '현재 습관 유지 + 연금 최적화 + 추가 소득원 확보 + 건강 유지' },
+    { label: '낙관', color: '#ea580c', monthly: `월 ${optimistic}만원`, desc: '현재 습관 유지 + 연금 최적화 + 추가 소득원 확보 + 건강 유지' },
     { label: '기본', color: '#ca8a04', monthly: `월 ${baseline}만원`, desc: '현재 준비 수준 유지, 추가 대응 없음' },
     { label: '비관', color: '#dc2626', monthly: `월 ${pessimistic}만원`, desc: '조기 은퇴, 건강 악화, 또는 예상 외 대형 지출 발생 시' },
   ]
@@ -539,7 +539,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
     )
 
     const catIconMap: Record<string, { label: string; color: string }> = {
-      finance: { label: 'F', color: '#16a34a' },
+      finance: { label: 'F', color: '#ea580c' },
       lifestyle: { label: 'L', color: '#2563eb' },
       housing: { label: 'H', color: '#ea580c' },
       mindset: { label: 'M', color: '#7c3aed' },
@@ -547,7 +547,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
 
     const SectionHead = ({ title, sub }: { title: string; sub?: string }) => (
       <div style={s({ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' })}>
-        <div style={s({ width: '4px', height: '18px', borderRadius: '2px', backgroundColor: '#166534' })} />
+        <div style={s({ width: '4px', height: '18px', borderRadius: '2px', backgroundColor: '#9a3412' })} />
         <h3 style={s({ fontSize: '14px', fontWeight: 700, color: '#111827', margin: '0' })}>{title}</h3>
         {sub && <span style={s({ fontSize: '9px', color: '#9ca3af' })}>{sub}</span>}
       </div>
@@ -564,7 +564,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
         })}
       >
         {/* ===== HEADER ===== */}
-        <div style={s({ backgroundColor: '#166534', color: '#ffffff', padding: '28px 48px 24px' })}>
+        <div style={s({ backgroundColor: '#9a3412', color: '#ffffff', padding: '28px 48px 24px' })}>
           <div style={s({ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' })}>
             <div>
               <div style={s({ fontSize: '10px', letterSpacing: '3px', opacity: 0.6, marginBottom: '6px' })}>RETIREMENT READINESS REPORT</div>
@@ -597,7 +597,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
               <div style={s({ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' })}>
                 <Icon label={result.grade.charAt(0)} color={result.color} size={32} />
                 <span style={s({ fontSize: '18px', fontWeight: 800, color: result.color })}>{result.grade}</span>
-                <span style={s({ padding: '2px 8px', borderRadius: '999px', fontSize: '9px', fontWeight: 700, color: '#fff', backgroundColor: total >= 61 ? '#16a34a' : total >= 37 ? '#ca8a04' : '#dc2626' })}>
+                <span style={s({ padding: '2px 8px', borderRadius: '999px', fontSize: '9px', fontWeight: 700, color: '#fff', backgroundColor: total >= 61 ? '#ea580c' : total >= 37 ? '#ca8a04' : '#dc2626' })}>
                   {total >= 73 ? '상위 5%' : total >= 61 ? '상위 20%' : total >= 49 ? '상위 40%' : total >= 37 ? '상위 60%' : '하위 30%'}
                 </span>
               </div>
@@ -606,8 +606,8 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
                 <div style={s({ padding: '4px 12px', borderRadius: '6px', backgroundColor: result.bgColor, fontSize: '10px' })}>
                   필요 노후자금 <strong style={{ color: result.color }}>{result.estimatedFund}</strong>
                 </div>
-                <div style={s({ padding: '4px 12px', borderRadius: '6px', backgroundColor: '#f0fdf4', fontSize: '10px' })}>
-                  강점 <strong style={{ color: '#16a34a' }}>{strongest.label}</strong>
+                <div style={s({ padding: '4px 12px', borderRadius: '6px', backgroundColor: '#fff7ed', fontSize: '10px' })}>
+                  강점 <strong style={{ color: '#ea580c' }}>{strongest.label}</strong>
                 </div>
                 <div style={s({ padding: '4px 12px', borderRadius: '6px', backgroundColor: '#fef2f2', fontSize: '10px' })}>
                   보강 <strong style={{ color: '#dc2626' }}>{weakest.label}</strong>
@@ -645,7 +645,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
               const pct = Math.round((cat.score / cat.max) * 100)
               const ci = catIconMap[cat.key]
               const grade = pct >= 80 ? '우수' : pct >= 60 ? '양호' : pct >= 40 ? '보통' : '미흡'
-              const gradeColor = pct >= 80 ? '#16a34a' : pct >= 60 ? '#2563eb' : pct >= 40 ? '#ca8a04' : '#dc2626'
+              const gradeColor = pct >= 80 ? '#ea580c' : pct >= 60 ? '#2563eb' : pct >= 40 ? '#ca8a04' : '#dc2626'
               return (
                 <div key={cat.key} style={s({ display: 'flex', alignItems: 'center', gap: '10px' })}>
                   <div style={s({ width: '80px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px' })}>
@@ -670,7 +670,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
             })}
             {/* 범례 */}
             <div style={s({ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '4px' })}>
-              {[{ label: '미흡 (~39%)', color: '#dc2626' }, { label: '보통 (40~59%)', color: '#ca8a04' }, { label: '양호 (60~79%)', color: '#2563eb' }, { label: '우수 (80%~)', color: '#16a34a' }].map(l => (
+              {[{ label: '미흡 (~39%)', color: '#dc2626' }, { label: '보통 (40~59%)', color: '#ca8a04' }, { label: '양호 (60~79%)', color: '#2563eb' }, { label: '우수 (80%~)', color: '#ea580c' }].map(l => (
                 <div key={l.label} style={s({ display: 'flex', alignItems: 'center', gap: '3px' })}>
                   <div style={s({ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: l.color })} />
                   <span style={s({ fontSize: '7.5px', color: '#9ca3af' })}>{l.label}</span>
@@ -728,10 +728,10 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
               {/* Timeline */}
               <div style={s({ display: 'flex', alignItems: 'center', gap: '0', marginBottom: '8px', padding: '6px 0' })}>
                 <div style={s({ textAlign: 'center', fontSize: '8px', color: '#6b7280' })}>
-                  <div style={s({ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#16a34a', margin: '0 auto 2px' })} />
+                  <div style={s({ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#ea580c', margin: '0 auto 2px' })} />
                   근로소득
                 </div>
-                <div style={s({ flex: 1, height: '3px', backgroundColor: '#16a34a', margin: '0 2px' })} />
+                <div style={s({ flex: 1, height: '3px', backgroundColor: '#ea580c', margin: '0 2px' })} />
                 <div style={s({ textAlign: 'center', fontSize: '8px', color: '#6b7280', fontWeight: 700 })}>
                   <div style={s({ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#dc2626', margin: '0 auto 2px' })} />
                   퇴직 53세
@@ -844,7 +844,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
                       {catQuestionIds.map((qid) => {
                         const score = answers[qid] || 0
                         const qDiag = questionDiagnosis[qid]
-                        const bgColor = score >= 4 ? '#166534' : score >= 3 ? '#16a34a' : score >= 2 ? '#fbbf24' : '#ef4444'
+                        const bgColor = score >= 4 ? '#9a3412' : score >= 3 ? '#ea580c' : score >= 2 ? '#fbbf24' : '#ef4444'
                         const textColor = score >= 3 ? '#fff' : score >= 2 ? '#78350f' : '#fff'
                         return (
                           <div key={qid} style={s({ flex: 1, textAlign: 'center' })}>
@@ -862,7 +862,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
             </div>
             {/* 히트맵 범례 */}
             <div style={s({ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '8px' })}>
-              {[{ label: '1점 (미흡)', color: '#ef4444' }, { label: '2점 (보통)', color: '#fbbf24' }, { label: '3점 (양호)', color: '#16a34a' }, { label: '4점 (우수)', color: '#166534' }].map(l => (
+              {[{ label: '1점 (미흡)', color: '#ef4444' }, { label: '2점 (보통)', color: '#fbbf24' }, { label: '3점 (양호)', color: '#ea580c' }, { label: '4점 (우수)', color: '#9a3412' }].map(l => (
                 <div key={l.label} style={s({ display: 'flex', alignItems: 'center', gap: '3px' })}>
                   <div style={s({ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: l.color })} />
                   <span style={s({ fontSize: '7.5px', color: '#9ca3af' })}>{l.label}</span>
@@ -886,8 +886,8 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
                     const qDiag = questionDiagnosis[qid]
                     const score = answers[qid]
                     if (!qDiag || score === undefined) return null
-                    const scoreColor = score >= 3 ? '#16a34a' : score >= 2 ? '#ca8a04' : '#dc2626'
-                    const scoreBg = score >= 3 ? '#f0fdf4' : score >= 2 ? '#fefce8' : '#fef2f2'
+                    const scoreColor = score >= 3 ? '#ea580c' : score >= 2 ? '#ca8a04' : '#dc2626'
+                    const scoreBg = score >= 3 ? '#fff7ed' : score >= 2 ? '#fefce8' : '#fef2f2'
                     return (
                       <div key={qid} style={s({ marginBottom: '6px', padding: '8px 12px', border: '1px solid #f3f4f6', borderRadius: '8px', borderLeft: `3px solid ${scoreColor}` })}>
                         <div style={s({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' })}>
@@ -920,9 +920,9 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
                 <span style={s({ fontSize: '8.5px', color: '#9ca3af', textAlign: 'right' })}>{row.note}</span>
               </div>
             ))}
-            <div style={s({ display: 'grid', gridTemplateColumns: '2fr 1.5fr 3fr', padding: '6px 12px', backgroundColor: '#f0fdf4', borderTop: '1px solid #e5e7eb' })}>
+            <div style={s({ display: 'grid', gridTemplateColumns: '2fr 1.5fr 3fr', padding: '6px 12px', backgroundColor: '#fff7ed', borderTop: '1px solid #e5e7eb' })}>
               <span style={s({ fontSize: '10px', fontWeight: 800, color: '#111827' })}>합계</span>
-              <span style={s({ fontSize: '10px', fontWeight: 800, color: '#16a34a', textAlign: 'right' })}>{total >= 61 ? '200~300만원' : '150~250만원'}</span>
+              <span style={s({ fontSize: '10px', fontWeight: 800, color: '#ea580c', textAlign: 'right' })}>{total >= 61 ? '200~300만원' : '150~250만원'}</span>
               <span style={s({ fontSize: '8.5px', color: '#6b7280', textAlign: 'right' })}>개인 패턴에 따라 ±30% 변동</span>
             </div>
           </div>
@@ -972,7 +972,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
                 ? ['개인연금(연금저축/IRP) 가입', '건강검진 예약', `${weakest.label} 영역 개선 목표 설정`]
                 : ['연금저축 계좌 개설 (월 10만원)', '건강검진 예약', '관심 취미/운동 1가지 체험']
               },
-              { when: '3개월 내', color: '#16a34a', tasks: total >= 61
+              { when: '3개월 내', color: '#ea580c', tasks: total >= 61
                 ? ['부부 합산 연금 전략 수립', '세무사/FP 상담 예약', '상속·증여 계획 검토']
                 : total >= 37
                 ? ['퇴직연금 운용 방식 전환 검토', '보험 보장 적정성 점검', '소득 크레바스 대비 계획 수립']
@@ -999,7 +999,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
             {resources.map((res, i) => (
               <div key={i} style={s({ padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '8px' })}>
                 <div style={s({ fontSize: '10px', fontWeight: 700, color: '#111827' })}>{res.name}</div>
-                <div style={s({ fontSize: '9px', color: '#16a34a', fontWeight: 600, marginTop: '2px' })}>{res.url}</div>
+                <div style={s({ fontSize: '9px', color: '#ea580c', fontWeight: 600, marginTop: '2px' })}>{res.url}</div>
                 <div style={s({ fontSize: '8px', color: '#6b7280', marginTop: '2px' })}>{res.desc}</div>
               </div>
             ))}

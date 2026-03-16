@@ -522,11 +522,11 @@ export function pillarToHanja(p: Pillar): string {
 }
 
 export function getElementColor(el: number): string {
-  return ['#22c55e','#ef4444','#eab308','#ffffff','#3b82f6'][el]
+  return ['#f97316','#ef4444','#eab308','#ffffff','#3b82f6'][el]
 }
 
 export function getElementBg(el: number): string {
-  return ['bg-green-500','bg-red-500','bg-yellow-500','bg-gray-200','bg-blue-500'][el]
+  return ['bg-orange-500','bg-red-500','bg-yellow-500','bg-gray-200','bg-blue-500'][el]
 }
 
 export function getElementEmoji(el: number): string {
