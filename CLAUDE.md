@@ -1,16 +1,24 @@
 # CLAUDE.md - 프로젝트 규칙
 
+## 핵심 규칙 (최우선)
+- **작업 중인 프로젝트 외 다른 프로젝트 절대 접근/수정/삭제 금지**
+- nohu-lab 작업 중 → cafe-settlement 접근 금지 (env 읽기, link, 수정 모두)
+- cafe-settlement 작업 중 → nohu-lab 접근 금지
+- 환경변수가 부족하면 다른 프로젝트에서 가져오지 말고 사용자에게 직접 물어본다
+- URL → 프로젝트 매핑: nohu-lab.vercel.app → nohu-lab만, cafe-settlement.vercel.app → cafe-settlement만
+
 ## 작업 범위
-- C:\Users\Administrator\nohu-lab\ 안의 코드만 수정
+- 이 레포(nohu-lab) 안의 코드만 수정
 
 ## Vercel 배포 규칙
 - Vercel 계정: hansung1 (qhdl10100-6263)
-- **nohu-lab.vercel.app = cafe-webapp 프로젝트가 서빙 중. 새 프로젝트 만들지 말고 cafe-webapp에 배포할 것**
-- 배포 명령: `cd /c/Users/Administrator/nohu-lab && vercel --prod`
-- 배포 링크 받으면 먼저 `vercel inspect <링크>`로 어떤 프로젝트인지 확인 → 그 프로젝트에 배포
-- 배포 전 반드시 `vercel projects ls`로 현재 프로젝트 확인 후 올바른 프로젝트에 배포
+- **배포 대상: nohu-lab 프로젝트 (nohu-lab.vercel.app)**
+- 배포 명령: `vercel --prod`
+- **배포 전 반드시 사용자에게 "어떤 프로젝트에 배포할까요?" 물어보고 확인받은 후 배포할 것. 절대 임의로 배포하지 않기**
 - **절대 Vercel 프로젝트를 삭제/생성하지 않기. 기존 프로젝트에 배포만 할 것**
-- **절대 다른 Vercel 프로젝트(cafe-settlement, nohu-vercel, nohu-settlement, easy-link) 건들지 않기**
+- **절대 임의로 새 Vercel 프로젝트를 만들지 않기**
+- **절대 다른 Vercel 프로젝트(cafe-settlement 등) 건들지 않기**
+- 배포 전 반드시 `vercel projects ls`로 현재 프로젝트 확인 후 올바른 프로젝트에 배포
 - 환경변수 복구 후 `.env.local`에 백업 저장해둘 것
 
 ## 과거 실수 (반복 금지)

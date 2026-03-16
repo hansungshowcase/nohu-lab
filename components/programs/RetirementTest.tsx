@@ -35,12 +35,16 @@ export default function RetirementTest() {
 
   useEffect(() => {
     setTestCount(getTestCount())
-    fetch('/api/auth/me')
+    const controller = new AbortController()
+    fetch('/api/auth/me', { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : null))
       .then((user) => {
         if (user && user.tier >= 1) setIsMember(true)
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (err.name !== 'AbortError') setIsMember(false)
+      })
+    return () => controller.abort()
   }, [])
 
   const handleStart = useCallback(() => {

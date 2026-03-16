@@ -44,7 +44,17 @@ export default function HashtagRecommender() {
   }
 
   function copyAll() {
-    navigator.clipboard.writeText(tags.join(' '))
+    const text = tags.join(' ')
+    navigator.clipboard.writeText(text).catch(() => {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.left = '-9999px'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    })
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

@@ -54,7 +54,16 @@ export default function TextConverter() {
   const result = convert(input, mode)
 
   function handleCopy() {
-    navigator.clipboard.writeText(result)
+    navigator.clipboard.writeText(result).catch(() => {
+      const ta = document.createElement('textarea')
+      ta.value = result
+      ta.style.position = 'fixed'
+      ta.style.left = '-9999px'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    })
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

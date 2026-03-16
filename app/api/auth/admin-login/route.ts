@@ -1,14 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { timingSafeEqual } from 'crypto'
 import { getServiceSupabase } from '@/lib/supabase'
 import { createToken, COOKIE_NAME } from '@/lib/auth'
 
-const ADMIN_PASSWORD = 'wnsgud20!'
+function getAdminPassword() {
+  const pw = process.env.ADMIN_PASSWORD
+  if (!pw) throw new Error('ADMIN_PASSWORD 환경변수가 설정되지 않았습니다.')
+  return pw
+}
+
+function safeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) return false
+  return timingSafeEqual(bufA, bufB)
+}
 
 export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json()
 
-    if (password !== ADMIN_PASSWORD) {
+    if (typeof password !== 'string' || !safeCompare(password, getAdminPassword())) {
+      // 브루트포스 방지: 실패 시 1초 딜레이
+      await new Promise(r => setTimeout(r, 1000))
       return NextResponse.json(
         { error: '비밀번호가 일치하지 않습니다.' },
         { status: 401 }
@@ -17,24 +31,27 @@ export async function POST(request: NextRequest) {
 
     // DB에서 관리자 계정 조회
     const supabase = getServiceSupabase()
-    const { data: admin } = await supabase
+    const { data: admin, error: adminError } = await supabase
       .from('members')
-      .select('*')
+      .select('id, nickname, tier')
       .eq('tier', 4)
       .limit(1)
       .single()
 
-    if (!admin) {
+    if (adminError || !admin) {
       return NextResponse.json(
         { error: '관리자 계정이 없습니다.' },
         { status: 500 }
       )
     }
 
-    await supabase
+    const { error: loginError } = await supabase
       .from('members')
       .update({ last_login: new Date().toISOString() })
       .eq('id', admin.id)
+    if (loginError) {
+      return NextResponse.json({ error: '로그인 처리 실패' }, { status: 500 })
+    }
 
     const token = await createToken({
       memberId: admin.id,

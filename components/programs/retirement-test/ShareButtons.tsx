@@ -50,7 +50,7 @@ export default function ShareButtons({
   useEffect(() => {
     function initKakao() {
       if (window.Kakao && !window.Kakao.isInitialized()) {
-        window.Kakao.init('3913fde247b12ce25084eb42a9b17ed9')
+        window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_KEY || '')
       }
       if (window.Kakao?.isInitialized()) {
         setKakaoReady(true)
@@ -129,9 +129,8 @@ export default function ShareButtons({
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+      URL.revokeObjectURL(blobUrl)
     } catch (err) {
-      console.error('이미지 저장 실패:', err)
       alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
     } finally {
       setSaving(false)

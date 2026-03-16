@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import TierBadge from '@/components/TierBadge'
 import { TIER_MAP } from '@/lib/types'
@@ -86,22 +86,38 @@ function AdminContent() {
   }
 
   async function handleTierChange(id: string, tier: number) {
-    const res = await fetch(`/api/members/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tier }),
-    })
-    if (res.ok) {
-      setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, tier } : m)))
+    try {
+      const res = await fetch(`/api/members/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier }),
+      })
+      if (res.ok) {
+        setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, tier } : m)))
+      } else {
+        setMessage('등급 변경에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      }
+    } catch {
+      setMessage('네트워크 오류가 발생했습니다.')
+      setTimeout(() => setMessage(''), 3000)
     }
   }
 
   async function handleDelete(id: string, nickname: string) {
     if (!confirm(`${nickname} 회원을 삭제하시겠습니까?`)) return
-    const res = await fetch(`/api/members/${id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setMembers((prev) => prev.filter((m) => m.id !== id))
-      setMessage('삭제되었습니다.')
+    try {
+      const res = await fetch(`/api/members/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setMembers((prev) => prev.filter((m) => m.id !== id))
+        setMessage('삭제되었습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      } else {
+        setMessage('삭제에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      }
+    } catch {
+      setMessage('네트워크 오류가 발생했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
   }
@@ -153,9 +169,9 @@ function AdminContent() {
     m.nickname.toLowerCase().includes(search.toLowerCase())
   )
 
-  const tierCounts = [1, 2, 3, 4].map(
+  const tierCounts = useMemo(() => [1, 2, 3, 4].map(
     (t) => members.filter((m) => m.tier === t).length
-  )
+  ), [members])
 
   // 채팅방 목록 로드
   useEffect(() => {
@@ -182,13 +198,18 @@ function AdminContent() {
   }, [chatMessages])
 
   async function fetchChatRooms() {
+    setChatLoading(true)
     try {
       const res = await fetch('/api/chat/rooms')
       if (res.ok) {
         const data = await res.json()
         setChatRooms(data)
       }
-    } catch {}
+    } catch {
+      // 네트워크 오류 시 무시 (폴링이 재시도)
+    } finally {
+      setChatLoading(false)
+    }
   }
 
   async function fetchChatMessages(roomId: string) {
@@ -197,16 +218,17 @@ function AdminContent() {
       if (res.ok) {
         const data = await res.json()
         setChatMessages(data)
-        // 읽음 처리 후 방 목록 갱신
-        fetchChatRooms()
       }
-    } catch {}
+    } catch {
+      // 네트워크 오류 시 무시 (폴링이 재시도)
+    }
   }
 
   async function handleChatSend(e: React.FormEvent) {
     e.preventDefault()
     if (!chatInput.trim() || chatSending || !selectedRoom) return
     setChatSending(true)
+    const savedInput = chatInput
     try {
       const res = await fetch('/api/chat/messages', {
         method: 'POST',
@@ -217,8 +239,16 @@ function AdminContent() {
         const newMsg = await res.json()
         setChatMessages(prev => [...prev, newMsg])
         setChatInput('')
+        fetchChatRooms()
+      } else {
+        setMessage('메시지 전송에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
       }
-    } catch {} finally {
+    } catch {
+      setChatInput(savedInput)
+      setMessage('네트워크 오류가 발생했습니다.')
+      setTimeout(() => setMessage(''), 3000)
+    } finally {
       setChatSending(false)
     }
   }
@@ -252,10 +282,12 @@ function AdminContent() {
   } | null>(null)
 
   useEffect(() => {
-    fetch('/api/admin/sync-status')
-      .then(r => r.json())
-      .then(data => setSyncStatus(data))
-      .catch(() => {})
+    const controller = new AbortController()
+    fetch('/api/admin/sync-status', { signal: controller.signal })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setSyncStatus(data) })
+      .catch((err) => { if (err.name !== 'AbortError') { /* 네트워크 오류 무시 */ } })
+    return () => controller.abort()
   }, [])
 
   // 동기화 경고 조건: 회원 1명 이하이거나, 마지막 확인 실패
@@ -679,7 +711,7 @@ function AdminContent() {
                   </button>
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-emerald-50 flex items-center justify-center border border-green-200/50">
                     <span className="text-green-700 font-semibold text-xs">
-                      {chatRooms.find(r => r.roomId === selectedRoom)?.memberNickname.charAt(0) || '?'}
+                      {chatRooms.find(r => r.roomId === selectedRoom)?.memberNickname?.charAt(0) || '?'}
                     </span>
                   </div>
                   <span className="font-semibold text-sm text-gray-900">

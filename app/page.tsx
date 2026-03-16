@@ -28,6 +28,7 @@ export default function LoginPage() {
         attempts++
         try {
           const res = await fetch(`/api/auth/verify-status?id=${verifyId}`)
+          if (!res.ok) return
           const data = await res.json()
 
           if (data.status === 'pending') {
@@ -76,6 +77,11 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nickname: nickname.trim() }),
       })
+      if (!res.ok) {
+        setError('서버 오류가 발생했습니다.')
+        setLoading(false)
+        return
+      }
       const data = await res.json()
 
       if (data.success) {
@@ -88,11 +94,8 @@ export default function LoginPage() {
         return
       }
 
-      if (!res.ok) {
-        setError(data.error || '로그인에 실패했습니다.')
-        setLoading(false)
-        return
-      }
+      setError(data.error || '로그인에 실패했습니다.')
+      setLoading(false)
     } catch {
       setError('서버에 연결할 수 없습니다.')
       setLoading(false)
@@ -181,6 +184,7 @@ export default function LoginPage() {
               setLoading(true)
               try {
                 const res = await fetch('/api/auth/guest-login', { method: 'POST' })
+                if (!res.ok) { setError('서버 오류가 발생했습니다.'); setLoading(false); return }
                 const data = await res.json()
                 if (data.success) {
                   router.push('/dashboard')

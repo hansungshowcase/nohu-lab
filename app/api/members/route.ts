@@ -12,7 +12,7 @@ export async function GET() {
   const supabase = getServiceSupabase()
   const { data, error } = await supabase
     .from('members')
-    .select('*')
+    .select('id, nickname, phone, tier, created_at, last_login')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -39,8 +39,11 @@ export async function POST(request: NextRequest) {
 
   const { nickname, phone, tier } = await request.json()
 
-  if (!nickname) {
+  if (!nickname || typeof nickname !== 'string' || !nickname.trim()) {
     return NextResponse.json({ error: '닉네임은 필수입니다.' }, { status: 400 })
+  }
+  if (nickname.trim().length > 50) {
+    return NextResponse.json({ error: '닉네임은 50자 이내로 입력해주세요.' }, { status: 400 })
   }
 
   const supabase = getServiceSupabase()
@@ -49,8 +52,8 @@ export async function POST(request: NextRequest) {
     .from('members')
     .insert({
       nickname: nickname.trim(),
-      phone: phone?.replace(/-/g, '') || '',
-      tier: tier || 1,
+      phone: typeof phone === 'string' ? phone.replace(/-/g, '') : '',
+      tier: typeof tier === 'number' ? Math.min(Math.max(tier, 1), 4) : 1,
     })
     .select()
     .single()

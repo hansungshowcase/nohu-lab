@@ -5,7 +5,7 @@ import { getServiceSupabase } from '@/lib/supabase'
 // GET: 채팅방 목록 (관리자용) 또는 안읽은 메시지 수 (회원용)
 export async function GET() {
   const user = await getCurrentUser()
-  if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
+  if (!user || user.tier === 0) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
   const supabase = getServiceSupabase()
 
@@ -15,6 +15,7 @@ export async function GET() {
       .from('chat_messages')
       .select('room_id, sender_nickname, sender_role, message, is_read, created_at')
       .order('created_at', { ascending: false })
+      .limit(1000)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
@@ -50,16 +51,22 @@ export async function GET() {
       }
     }
 
-    // 닉네임이 없는 방은 DB에서 조회
+    // 닉네임이 없는 방은 DB에서 일괄 조회
     const rooms = Array.from(roomMap.values())
-    for (const room of rooms) {
-      if (!room.memberNickname) {
-        const { data: member } = await supabase
-          .from('members')
-          .select('nickname')
-          .eq('id', room.roomId)
-          .single()
-        room.memberNickname = member?.nickname || '알 수 없음'
+    const missingIds = rooms.filter(r => !r.memberNickname).map(r => r.roomId)
+    if (missingIds.length > 0) {
+      const { data: members, error: membersError } = await supabase
+        .from('members')
+        .select('id, nickname')
+        .in('id', missingIds)
+      if (membersError) {
+        return NextResponse.json({ error: '회원 조회 실패' }, { status: 500 })
+      }
+      const memberMap = new Map((members || []).map(m => [m.id, m.nickname]))
+      for (const room of rooms) {
+        if (!room.memberNickname) {
+          room.memberNickname = memberMap.get(room.roomId) || '알 수 없음'
+        }
       }
     }
 

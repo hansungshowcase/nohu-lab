@@ -16,53 +16,42 @@ export async function POST(request: NextRequest) {
     const { members, syncKey } = await request.json()
 
     // 동기화 키 확인 (간단한 인증)
-    if (syncKey !== process.env.SYNC_KEY && syncKey !== 'nohu-lab-sync-2026') {
+    if (!process.env.SYNC_KEY || syncKey !== process.env.SYNC_KEY) {
       return NextResponse.json({ error: '인증 실패' }, { status: 403 })
     }
 
     if (!Array.isArray(members) || members.length === 0) {
       return NextResponse.json({ error: '회원 데이터가 없습니다.' }, { status: 400 })
     }
+    if (members.length > 5000) {
+      return NextResponse.json({ error: '한 번에 최대 5000명까지 동기화 가능합니다.' }, { status: 400 })
+    }
 
     const supabase = getServiceSupabase()
     let syncCount = 0
-    let newCount = 0
-    let updateCount = 0
+    let errorCount = 0
 
-    for (const m of members) {
-      const nickname = (m.nickname || '').trim()
-      if (!nickname) continue
+    const batch = members
+      .filter((m: { nickname?: string }) => (m.nickname || '').trim())
+      .map((m: { nickname: string; tier?: number; levelName?: string }) => ({
+        nickname: m.nickname.trim(),
+        phone: '',
+        tier: m.tier ? Math.min(Math.max(Number(m.tier), 1), 4) : mapCafeLevelToTier(m.levelName || '일반회원'),
+      }))
 
-      const tier = m.tier ? Math.min(Math.max(m.tier, 1), 4) : mapCafeLevelToTier(m.levelName || '일반회원')
-
-      const { data: existing } = await supabase
+    for (let i = 0; i < batch.length; i += 500) {
+      const chunk = batch.slice(i, i + 500)
+      const { error } = await supabase
         .from('members')
-        .select('id, tier')
-        .eq('nickname', nickname)
-        .single()
-
-      if (existing) {
-        if (existing.tier !== tier) {
-          await supabase
-            .from('members')
-            .update({ tier })
-            .eq('id', existing.id)
-          updateCount++
-        }
-      } else {
-        await supabase
-          .from('members')
-          .insert({ nickname, phone: '', tier })
-        newCount++
-      }
-      syncCount++
+        .upsert(chunk, { onConflict: 'nickname' })
+      if (error) errorCount += chunk.length
+      else syncCount += chunk.length
     }
 
     return NextResponse.json({
       success: true,
       total: syncCount,
-      new: newCount,
-      updated: updateCount,
+      errors: errorCount,
     })
   } catch {
     return NextResponse.json({ error: '서버 오류' }, { status: 500 })
