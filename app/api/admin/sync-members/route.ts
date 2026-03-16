@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
 
-const SYNC_SECRET = 'nohu-cafe-sync-2026'
+const SYNC_SECRET = process.env.SYNC_SECRET || 'nohu-cafe-sync-2026'
 
 interface SyncMember {
   nickname: string

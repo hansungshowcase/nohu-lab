@@ -91,11 +91,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 디버그: 카페 API 응답을 URL에 포함 (임시)
     if (!cafeJoined) {
-      const debugStr = encodeURIComponent(JSON.stringify(debugResults).substring(0, 300))
       return NextResponse.redirect(
-        new URL(`/?error=not_cafe_member&debug=${debugStr}`, process.env.NEXT_PUBLIC_BASE_URL!)
+        new URL('/?error=not_cafe_member', process.env.NEXT_PUBLIC_BASE_URL!)
       )
     }
 
@@ -132,7 +130,10 @@ export async function GET(request: NextRequest) {
         })
         .select()
         .single()
-      memberId = newMember?.id || ''
+      if (!newMember?.id) {
+        return NextResponse.redirect(new URL('/?error=register_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+      }
+      memberId = newMember.id
     }
 
     // 5. JWT 발급
@@ -148,7 +149,7 @@ export async function GET(request: NextRequest) {
 
     response.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',

@@ -15,13 +15,17 @@ export async function POST(request: NextRequest) {
   try {
     const { members, syncKey } = await request.json()
 
-    // 동기화 키 확인 (간단한 인증)
-    if (syncKey !== process.env.SYNC_KEY && syncKey !== 'nohu-lab-sync-2026') {
+    // 동기화 키 확인
+    if (syncKey !== process.env.SYNC_KEY) {
       return NextResponse.json({ error: '인증 실패' }, { status: 403 })
     }
 
     if (!Array.isArray(members) || members.length === 0) {
       return NextResponse.json({ error: '회원 데이터가 없습니다.' }, { status: 400 })
+    }
+
+    if (members.length > 5000) {
+      return NextResponse.json({ error: '한 번에 최대 5000명까지 동기화 가능합니다.' }, { status: 400 })
     }
 
     const supabase = getServiceSupabase()
@@ -33,7 +37,8 @@ export async function POST(request: NextRequest) {
       const nickname = (m.nickname || '').trim()
       if (!nickname) continue
 
-      const tier = m.tier ? Math.min(Math.max(m.tier, 1), 4) : mapCafeLevelToTier(m.levelName || '일반회원')
+      const rawTier = Number(m.tier)
+      const tier = (rawTier && Number.isInteger(rawTier)) ? Math.min(Math.max(rawTier, 1), 4) : mapCafeLevelToTier(m.levelName || '일반회원')
 
       const { data: existing } = await supabase
         .from('members')

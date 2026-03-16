@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       .from('members')
       .select('*')
       .eq('tier', 4)
+      .order('created_at', { ascending: true })
       .limit(1)
       .single()
 

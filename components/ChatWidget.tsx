@@ -28,15 +28,17 @@ export default function ChatWidget({ user }: { user: User | null }) {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // 게스트(tier 0)이거나 관리자(tier 4)는 위젯 안 보임
-  if (!user || user.tier === 0 || user.tier === 4) return null
+  const shouldHide = !user || user.tier === 0 || user.tier === 4
 
   useEffect(() => {
+    if (shouldHide) return
     fetchUnread()
     const interval = setInterval(fetchUnread, 10000)
     return () => clearInterval(interval)
-  }, [])
+  }, [shouldHide])
 
   useEffect(() => {
+    if (shouldHide) return
     if (open) {
       fetchMessages()
       pollRef.current = setInterval(fetchMessages, 3000)
@@ -44,11 +46,13 @@ export default function ChatWidget({ user }: { user: User | null }) {
       if (pollRef.current) clearInterval(pollRef.current)
     }
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
-  }, [open])
+  }, [open, shouldHide])
 
   useEffect(() => {
     if (open) endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, open])
+
+  if (shouldHide) return null
 
   async function fetchUnread() {
     try {

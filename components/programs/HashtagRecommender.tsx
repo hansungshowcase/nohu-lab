@@ -30,7 +30,10 @@ export default function HashtagRecommender() {
 
     // 텍스트에서 직접 키워드를 추출하여 해시태그 생성
     const words = text.split(/\s+/).filter((w) => w.length >= 2)
-    words.slice(0, 5).forEach((w) => matched.add(`#${w}`))
+    words.slice(0, 5).forEach((w) => {
+      const clean = w.startsWith('#') ? w : `#${w}`
+      matched.add(clean)
+    })
 
     if (matched.size === 0) {
       // 기본 해시태그

@@ -2,6 +2,7 @@
 
 ## 작업 범위
 - C:\Users\Administrator\nohu-lab\ 안의 코드만 수정
+- **기존에 잘 동작하는 코드는 절대 수정하지 않기. 사용자가 명시적으로 요청한 부분만 변경할 것**
 
 ## Vercel 배포 규칙
 - Vercel 계정: hansung1 (qhdl10100-6263)

@@ -11,12 +11,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
 
   // 관리자: roomId 파라미터로 특정 회원 대화 조회
-  // 회원: 자신의 대화만 조회
-  let roomId = user.memberId
-  if (user.tier === 4) {
-    const paramRoom = searchParams.get('roomId')
-    if (paramRoom) roomId = paramRoom
-  }
+  // 회원: 자신의 대화만 조회 (roomId 파라미터 무시)
+  const paramRoom = searchParams.get('roomId')
+  const roomId = user.tier === 4 && paramRoom ? paramRoom : user.memberId
 
   const { data, error } = await supabase
     .from('chat_messages')

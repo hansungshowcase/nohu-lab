@@ -35,7 +35,7 @@ export default function ProgramPage() {
         return r.json()
       })
       .then(setUser)
-      .catch(() => setUser({ memberId: 'guest', nickname: '게스트', tier: 4 }))
+      .catch(() => setUser({ memberId: 'guest', nickname: '게스트', tier: 0 }))
   }, [router])
 
   if (!user) {

@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server'
+import { getCurrentUser } from '@/lib/auth'
 
-// 임시 디버그: 카페 API 응답 확인용
+// 디버그: 카페 API 응답 확인용 (관리자 전용)
 export async function GET() {
+  const user = await getCurrentUser()
+  if (!user || user.tier !== 4) {
+    return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
+  }
   // 먼저 토큰 발급 테스트 (클라이언트 크레덴셜은 안됨, 그냥 API 형식 확인)
   const results: Record<string, unknown> = {}
 

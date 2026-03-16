@@ -27,7 +27,8 @@ export default function DashboardPage() {
       })
       .then(setUser)
       .catch(() => router.push('/'))
-  }, [router])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (!user) {
     return (

@@ -45,16 +45,19 @@ export default function ImageResizer() {
 
   function handleDownload() {
     if (!image || !canvasRef.current) return
+    const maxDim = 10000
+    const w = Math.min(Math.max(width, 1), maxDim)
+    const h = Math.min(Math.max(height, 1), maxDim)
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')!
-    canvas.width = width
-    canvas.height = height
+    canvas.width = w
+    canvas.height = h
 
     const img = new Image()
     img.onload = () => {
-      ctx.drawImage(img, 0, 0, width, height)
+      ctx.drawImage(img, 0, 0, w, h)
       const link = document.createElement('a')
-      link.download = `resized_${width}x${height}.png`
+      link.download = `resized_${w}x${h}.png`
       link.href = canvas.toDataURL('image/png')
       link.click()
     }

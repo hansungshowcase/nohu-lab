@@ -121,15 +121,6 @@ export default function RetirementTest() {
     </div>
   ) : null
 
-  // Limit modal (rendered outside phase blocks so it works from any screen)
-  if (showLimitModal) {
-    return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        {limitModal}
-      </div>
-    )
-  }
-
   // Intro screen
   if (phase === 'intro') {
     const remaining = Math.max(0, FREE_LIMIT - testCount)
@@ -304,6 +295,8 @@ export default function RetirementTest() {
           다시 테스트하기
         </button>
       </div>
+
+      {limitModal}
     </div>
   )
 }

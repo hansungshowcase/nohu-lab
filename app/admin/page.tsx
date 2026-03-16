@@ -49,6 +49,7 @@ function AdminContent() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success')
   const [showAddForm, setShowAddForm] = useState(false)
   const [newMember, setNewMember] = useState<NewMember>({ nickname: '', tier: 1 })
   const [bulkInput, setBulkInput] = useState('')
@@ -65,8 +66,8 @@ function AdminContent() {
   const chatPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    fetchMembers()
-  }, [])
+    if (tab === 'members' || tab === 'dashboard') fetchMembers()
+  }, [tab])
 
   async function fetchMembers() {
     setLoading(true)
@@ -79,6 +80,7 @@ function AdminContent() {
       const data = await res.json()
       setMembers(Array.isArray(data) ? data : [])
     } catch {
+      setMessageType('error')
       setMessage('회원 목록을 불러올 수 없습니다.')
     } finally {
       setLoading(false)
@@ -86,13 +88,18 @@ function AdminContent() {
   }
 
   async function handleTierChange(id: string, tier: number) {
+    const prev = members.find((m) => m.id === id)?.tier
+    setMembers((ms) => ms.map((m) => (m.id === id ? { ...m, tier } : m)))
     const res = await fetch(`/api/members/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tier }),
     })
-    if (res.ok) {
-      setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, tier } : m)))
+    if (!res.ok && prev !== undefined) {
+      setMembers((ms) => ms.map((m) => (m.id === id ? { ...m, tier: prev } : m)))
+      setMessageType('error')
+      setMessage('등급 변경에 실패했습니다.')
+      setTimeout(() => setMessage(''), 3000)
     }
   }
 
@@ -101,6 +108,7 @@ function AdminContent() {
     const res = await fetch(`/api/members/${id}`, { method: 'DELETE' })
     if (res.ok) {
       setMembers((prev) => prev.filter((m) => m.id !== id))
+      setMessageType('success')
       setMessage('삭제되었습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
@@ -117,9 +125,11 @@ function AdminContent() {
     if (res.ok) {
       setMembers((prev) => [data, ...prev])
       setNewMember({ nickname: '', tier: 1 })
+      setMessageType('success')
       setMessage(`${newMember.nickname.trim()} 회원이 등록되었습니다.`)
       setTimeout(() => setMessage(''), 3000)
     } else {
+      setMessageType('error')
       setMessage(data.error || '등록에 실패했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
@@ -139,11 +149,13 @@ function AdminContent() {
     })
     const data = await res.json()
     if (res.ok) {
+      setMessageType('success')
       setMessage(`${data.added}명 등록 완료${data.skipped > 0 ? ` (중복 ${data.skipped}명 건너뜀)` : ''}`)
       setBulkInput('')
       fetchMembers()
       setTimeout(() => setMessage(''), 5000)
     } else {
+      setMessageType('error')
       setMessage(data.error || '등록에 실패했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
@@ -197,8 +209,6 @@ function AdminContent() {
       if (res.ok) {
         const data = await res.json()
         setChatMessages(data)
-        // 읽음 처리 후 방 목록 갱신
-        fetchChatRooms()
       }
     } catch {}
   }
@@ -271,7 +281,7 @@ function AdminContent() {
       </h1>
 
       {message && (
-        <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm whitespace-pre-line">
+        <div className={`mb-4 p-3 rounded-lg text-sm whitespace-pre-line ${messageType === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
           {message}
         </div>
       )}

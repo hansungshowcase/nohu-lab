@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
@@ -17,6 +17,10 @@ export default function LoginPage() {
       pollingRef.current = null
     }
   }, [])
+
+  useEffect(() => {
+    return () => stopPolling()
+  }, [stopPolling])
 
   async function pollVerifyStatus(verifyId: string) {
     setVerifying(true)

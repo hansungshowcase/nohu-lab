@@ -22,9 +22,9 @@ export async function GET() {
   // 연락처 마스킹
   const masked = data.map((m) => ({
     ...m,
-    phone_masked: m.phone.length === 11
-      ? `${m.phone.slice(0, 3)}-****-${m.phone.slice(7)}`
-      : m.phone,
+    phone_masked: (m.phone || '').length >= 8
+      ? `${m.phone.slice(0, 3)}-****-${m.phone.slice(-4)}`
+      : m.phone ? '****' : '',
   }))
 
   return NextResponse.json(masked)
@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase
     .from('members')
     .insert({
-      nickname: nickname.trim(),
+      nickname: nickname.trim().slice(0, 100),
       phone: phone?.replace(/-/g, '') || '',
-      tier: tier || 1,
+      tier: Math.min(Math.max(Number(tier) || 1, 1), 4),
     })
     .select()
     .single()

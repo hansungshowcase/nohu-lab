@@ -17,9 +17,12 @@ export async function PATCH(
   const supabase = getServiceSupabase()
 
   const updateData: Record<string, unknown> = {}
-  if (body.tier !== undefined) updateData.tier = body.tier
+  if (body.tier !== undefined) {
+    const t = Number(body.tier)
+    if (Number.isInteger(t) && t >= 1 && t <= 4) updateData.tier = t
+  }
   if (body.nickname !== undefined) updateData.nickname = body.nickname
-  if (body.phone !== undefined) updateData.phone = body.phone.replace(/-/g, '')
+  if (body.phone !== undefined && body.phone !== null) updateData.phone = String(body.phone).replace(/-/g, '')
 
   const { data, error } = await supabase
     .from('members')
@@ -46,6 +49,9 @@ export async function DELETE(
   }
 
   const { id } = await params
+  if (id === user.memberId) {
+    return NextResponse.json({ error: '자기 자신은 삭제할 수 없습니다.' }, { status: 400 })
+  }
   const supabase = getServiceSupabase()
 
   const { error } = await supabase.from('members').delete().eq('id', id)
