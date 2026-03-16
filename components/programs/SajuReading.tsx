@@ -67,7 +67,8 @@ function SajuReadingInner() {
 
   // 회원 여부 확인
   useEffect(() => {
-    fetch('/api/auth/me')
+    const controller = new AbortController()
+    fetch('/api/auth/me', { signal: controller.signal })
       .then(r => {
         if (!r.ok) throw new Error()
         return r.json()
@@ -77,7 +78,10 @@ function SajuReadingInner() {
           setIsMember(true)
         }
       })
-      .catch(() => setIsMember(false))
+      .catch((err) => {
+        if (err.name !== 'AbortError') setIsMember(false)
+      })
+    return () => controller.abort()
   }, [])
 
   // URL 파라미터로부터 자동 실행 (공유 링크)
@@ -201,12 +205,12 @@ function SajuReadingInner() {
           <h3 className="text-sm font-bold text-gray-700 mb-3">이런 걸 알 수 있어요</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { emoji: '🧬', text: '타고난 성격 유형' },
-              { emoji: '☯️', text: '오행 밸런스 분석' },
-              { emoji: '💰', text: '재물운 & 연애운' },
-              { emoji: '📈', text: '대운 흐름 분석' },
-              { emoji: '💕', text: '궁합 힌트' },
-              { emoji: '🍀', text: '맞춤 개운법' },
+              { emoji: '💰', text: '재물운 분석' },
+              { emoji: '❤️', text: '연애·결혼운' },
+              { emoji: '🏥', text: '건강 주의사항' },
+              { emoji: '📈', text: '인생 흐름 분석' },
+              { emoji: '🔮', text: '신살 해석' },
+              { emoji: '⚠️', text: '조심할 것' },
             ].map(item => (
               <div key={item.text} className="flex items-center gap-2 text-sm text-gray-600">
                 <span className="text-lg">{item.emoji}</span>

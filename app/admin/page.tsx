@@ -282,10 +282,12 @@ function AdminContent() {
   } | null>(null)
 
   useEffect(() => {
-    fetch('/api/admin/sync-status')
+    const controller = new AbortController()
+    fetch('/api/admin/sync-status', { signal: controller.signal })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setSyncStatus(data) })
-      .catch(() => {})
+      .catch((err) => { if (err.name !== 'AbortError') { /* 네트워크 오류 무시 */ } })
+    return () => controller.abort()
   }, [])
 
   // 동기화 경고 조건: 회원 1명 이하이거나, 마지막 확인 실패

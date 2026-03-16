@@ -101,7 +101,8 @@ export default function TierGuidePage() {
   const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    const controller = new AbortController()
+    fetch('/api/auth/me', { signal: controller.signal })
       .then((r) => {
         if (r.status === 401) throw new Error('unauthorized')
         if (!r.ok) throw new Error('server')
@@ -109,8 +110,10 @@ export default function TierGuidePage() {
       })
       .then(setUser)
       .catch((err) => {
+        if (err.name === 'AbortError') return
         if (err.message === 'unauthorized') router.push('/')
       })
+    return () => controller.abort()
   }, [])
 
   if (!user) {

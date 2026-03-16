@@ -50,14 +50,11 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     }
   }
 
-  /** Expand sm: breakpoint by injecting an iframe-like viewport context.
-   *  Instead of trying to add Tailwind class names (which won't have matching CSS rules),
-   *  we set the container width to 794px so that CSS media queries naturally activate. */
+  /** sm: breakpoint 클래스를 강제 활성화 (클론 전용) */
   const activateSmBreakpoint = (clone: HTMLElement) => {
     try {
       const allEls = [clone, ...Array.from(clone.querySelectorAll('*'))] as HTMLElement[]
       for (const node of allEls) {
-        // Remove any explicit 'hidden' that should only apply on mobile via sm:block pattern
         const classes = Array.from(node.classList)
         for (const cls of classes) {
           if (cls === 'hidden' && classes.some(c => c === 'sm:block' || c === 'sm:flex' || c === 'sm:grid' || c === 'sm:inline')) {
@@ -67,121 +64,168 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         }
       }
     } catch {
-      // If anything goes wrong with class manipulation, continue without it
+      // continue
     }
+  }
+
+  /** Blob URL로 다운로드 (모바일 호환성 향상) */
+  const downloadBlob = (canvas: HTMLCanvasElement, filename: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) { reject(new Error('Blob 생성 실패')); return }
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.download = filename
+        link.href = url
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        // 약간의 딜레이 후 정리
+        setTimeout(() => {
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+          resolve()
+        }, 200)
+      }, 'image/png')
+    })
   }
 
   const handleSaveImage = async () => {
     if (!cardRef.current || saving) return
     setSaving(true)
 
+    const CONTENT_WIDTH = A4_WIDTH - 64  // 730px (좌우 패딩 32px씩)
+    const CONTENT_MAX_HEIGHT = A4_HEIGHT - 64  // 1059px (상하 패딩 32px씩)
     let container: HTMLElement | null = null
 
     try {
-      const html2canvas = (await import('html2canvas')).default
+      // html2canvas 동적 import (에러 시 구체적 메시지)
+      let html2canvas: (el: HTMLElement, opts?: Record<string, unknown>) => Promise<HTMLCanvasElement>
+      try {
+        const mod = await import('html2canvas')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        html2canvas = (mod as any).default || mod
+      } catch (importErr) {
+        throw new Error(`html2canvas 로드 실패: ${importErr instanceof Error ? importErr.message : String(importErr)}`)
+      }
 
-      // Clone card into an off-screen A4-sized container for consistent capture
+      // 1) 카드 클론 생성
+      const clone = cardRef.current.cloneNode(true) as HTMLElement
+      clone.style.width = `${CONTENT_WIDTH}px`
+      clone.style.maxWidth = `${CONTENT_WIDTH}px`
+      clone.style.minWidth = `${CONTENT_WIDTH}px`
+      clone.style.margin = '0'
+      clone.style.padding = clone.style.padding || '0'
+      clone.style.transform = 'none'
+      clone.style.boxSizing = 'border-box'
+      clone.style.overflow = 'visible'
+
+      // sm: breakpoint 강제 활성화
+      activateSmBreakpoint(clone)
+
+      // 2) 측정용 offscreen wrapper
+      const measureWrapper = document.createElement('div')
+      measureWrapper.style.position = 'absolute'
+      measureWrapper.style.left = '-9999px'
+      measureWrapper.style.top = '0'
+      measureWrapper.style.width = `${CONTENT_WIDTH}px`
+      measureWrapper.style.overflow = 'visible'
+      measureWrapper.style.backgroundColor = '#ffffff'
+      measureWrapper.appendChild(clone)
+      document.body.appendChild(measureWrapper)
+
+      // 레이아웃 안정화 대기
+      await new Promise(r => setTimeout(r, 400))
+
+      // 3) 실제 콘텐츠 높이 측정
+      const realHeight = clone.scrollHeight
+
+      // 4) A4 최종 컨테이너 생성
       container = document.createElement('div')
       container.style.position = 'absolute'
       container.style.left = '-9999px'
       container.style.top = '0'
       container.style.width = `${A4_WIDTH}px`
-      container.style.minHeight = `${A4_HEIGHT}px`
+      container.style.height = `${A4_HEIGHT}px`
+      container.style.overflow = 'hidden'
       container.style.backgroundColor = '#ffffff'
-      container.style.display = 'flex'
-      container.style.flexDirection = 'column'
-      container.style.alignItems = 'center'
-      container.style.justifyContent = 'center'
-      container.style.padding = '32px'
       container.style.boxSizing = 'border-box'
+      container.style.padding = '32px'
 
-      const clone = cardRef.current.cloneNode(true) as HTMLElement
-      clone.style.width = `${A4_WIDTH - 64}px`
-      clone.style.maxWidth = `${A4_WIDTH - 64}px`
-      clone.style.transform = 'none'
-      clone.style.margin = '0'
+      // measureWrapper에서 clone 분리 후 container에 이동
+      measureWrapper.removeChild(clone)
+      document.body.removeChild(measureWrapper)
 
-      // Apply sm: breakpoint overrides
-      activateSmBreakpoint(clone)
+      // 5) 콘텐츠가 A4를 초과하면 scale 축소
+      if (realHeight > CONTENT_MAX_HEIGHT) {
+        const scale = CONTENT_MAX_HEIGHT / realHeight
+        clone.style.transformOrigin = 'top left'
+        clone.style.transform = `scale(${scale})`
+        // scale 후에도 원래 width 유지 (scale이 시각적으로만 줄이므로)
+      }
 
       container.appendChild(clone)
       document.body.appendChild(container)
 
-      // Wait for layout to settle
-      await new Promise(r => setTimeout(r, 300))
+      // scale 적용 후 레이아웃 안정화
+      await new Promise(r => setTimeout(r, 200))
 
-      // If content overflows A4 height, use CSS transform scale to fit
-      const contentHeight = container.scrollHeight
-      if (contentHeight > A4_HEIGHT) {
-        const scaleFactor = A4_HEIGHT / contentHeight
-        clone.style.transformOrigin = 'top center'
-        clone.style.transform = `scale(${scaleFactor})`
-        // Wait for re-layout after scale
-        await new Promise(r => setTimeout(r, 100))
-      }
-
-      const captureHeight = Math.max(A4_HEIGHT, Math.min(container.scrollHeight, A4_HEIGHT))
+      // 6) html2canvas 캡처
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
       const captureScale = isMobile ? 1.5 : 2
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const canvas = await (html2canvas as any)(container, {
+      const canvas = await html2canvas(container, {
         scale: captureScale,
         backgroundColor: '#ffffff',
         useCORS: true,
         logging: false,
         allowTaint: true,
         width: A4_WIDTH,
-        height: captureHeight,
+        height: A4_HEIGHT,
         windowWidth: A4_WIDTH,
-        windowHeight: captureHeight,
+        windowHeight: A4_HEIGHT,
       })
 
-      // Clean up container before processing result
+      // 컨테이너 정리
       document.body.removeChild(container)
       container = null
 
-      const dataUrl = canvas.toDataURL('image/png')
+      // 7) 파일명
+      const filename = `사주풀이_${STEMS[result.dayMaster]}${ELEMENTS[STEM_ELEMENT[result.dayMaster]]}.png`
 
-      // Mobile: try Web Share API, then fallback
+      // 8) 모바일 처리
       if (isMobile) {
         let shared = false
+
+        // Web Share API 시도
         if (navigator.share && navigator.canShare) {
           try {
-            const res = await fetch(dataUrl)
-            const blob = await res.blob()
-            const file = new File([blob], 'saju-result.png', { type: 'image/png' })
+            const blob = await new Promise<Blob>((resolve, reject) => {
+              canvas.toBlob((b) => b ? resolve(b) : reject(new Error('blob fail')), 'image/png')
+            })
+            const file = new File([blob], filename, { type: 'image/png' })
             if (navigator.canShare({ files: [file] })) {
               await navigator.share({ files: [file], title: '사주풀이 결과' })
               shared = true
             }
           } catch {
-            // Share was cancelled or failed — fall through to fallback
+            // Share 취소 또는 실패 — fallback으로
           }
         }
 
         if (!shared) {
-          // Fallback: download via anchor tag (works on most mobile browsers)
+          // Blob URL 방식 다운로드 (data URL보다 모바일 호환성 좋음)
           try {
-            const link = document.createElement('a')
-            link.download = 'saju-result.png'
-            link.href = dataUrl
-            link.style.display = 'none'
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
+            await downloadBlob(canvas, filename)
           } catch {
-            // Last resort: open image in new tab
+            // 최후 수단: 새 탭에서 이미지 열기
+            const dataUrl = canvas.toDataURL('image/png')
             const newTab = window.open()
             if (newTab) {
-              newTab.document.write(`
-                <html><head><title>사주풀이 결과</title>
+              newTab.document.write(`<html><head><title>사주풀이 결과</title>
                 <meta name="viewport" content="width=device-width,initial-scale=1">
-                <style>body{margin:0;display:flex;justify-content:center;align-items:flex-start;background:#fff;min-height:100vh;padding:16px}img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1)}</style>
-                </head><body>
-                <img src="${dataUrl}" alt="사주풀이 결과" />
-                </body></html>
-              `)
+                <style>body{margin:0;display:flex;justify-content:center;background:#fff;min-height:100vh;padding:16px}img{max-width:100%;height:auto}</style>
+                </head><body><img src="${dataUrl}" alt="사주풀이 결과" /></body></html>`)
               newTab.document.close()
             }
           }
@@ -193,18 +237,15 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         return
       }
 
-      // Desktop: download PNG
-      const link = document.createElement('a')
-      link.download = `사주풀이_${STEMS[result.dayMaster]}${ELEMENTS[STEM_ELEMENT[result.dayMaster]]}.png`
-      link.href = dataUrl
-      link.click()
+      // 9) 데스크톱: Blob URL 다운로드
+      await downloadBlob(canvas, filename)
 
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
-    } catch {
-      alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      alert(`이미지 저장 실패: ${msg}\n스크린샷을 이용해주세요.`)
     } finally {
-      // Ensure container is always cleaned up
       if (container && container.parentNode) {
         container.parentNode.removeChild(container)
       }
