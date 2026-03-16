@@ -143,7 +143,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
         {/* ═══ 건강 주의 ═══ */}
         <section
-          className="rounded-xl p-5 sm:p-6 border border-emerald-200/60 bg-[#f8fefb]"
+          className="rounded-xl p-5 sm:p-6 border border-orange-200/60 bg-[#fff8f0]"
           style={fadeStyle(sectionIdx++)}
         >
           <div className="flex items-center gap-2.5 mb-2">
@@ -172,7 +172,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
         {/* ═══ 신살(神殺) ═══ */}
         {result.shinsal.length > 0 && (
           <section
-            className="rounded-xl p-5 sm:p-6 border border-violet-200/60 bg-violet-50/40"
+            className="rounded-xl p-5 sm:p-6 border border-orange-200/60 bg-orange-50/40"
             style={fadeStyle(sectionIdx++)}
           >
             <h3 className="text-lg font-bold text-gray-900 mb-3">🔮 나의 신살(神殺)</h3>
@@ -183,12 +183,12 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
                 return (
                   <div
                     key={name}
-                    className="flex items-start gap-3 bg-white/70 rounded-lg px-4 py-3 border border-violet-100"
+                    className="flex items-start gap-3 bg-white/70 rounded-lg px-4 py-3 border border-orange-100"
                   >
                     <span className="text-xl flex-shrink-0 mt-0.5">{info.emoji}</span>
                     <div>
-                      <span className="text-base font-bold text-indigo-900">{info.title}</span>
-                      <span className="text-sm text-violet-700 ml-2">{info.shortDesc}</span>
+                      <span className="text-base font-bold text-orange-900">{info.title}</span>
+                      <span className="text-sm text-orange-700 ml-2">{info.shortDesc}</span>
                     </div>
                   </div>
                 )
@@ -267,8 +267,8 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
         {/* ═══ 푸터 ═══ */}
         <div className="text-center pt-2 pb-1" style={fadeStyle(sectionIdx++)}>
-          <div className="inline-block bg-gray-100 rounded-full px-4 py-1.5">
-            <p className="text-xs text-gray-700">
+          <div className="inline-block bg-orange-50 rounded-full px-4 py-1.5">
+            <p className="text-xs text-orange-700">
               노후연구소 AI 사주풀이 · nohu-lab.vercel.app · 재미로 봐주세요
             </p>
           </div>

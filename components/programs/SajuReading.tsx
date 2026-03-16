@@ -42,7 +42,7 @@ function incrementUsage(): number {
 
 export default function SajuReading() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-purple-500 border-t-transparent rounded-full" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" /></div>}>
       <SajuReadingInner />
     </Suspense>
   )
@@ -190,7 +190,7 @@ function SajuReadingInner() {
     const remaining = isMember ? '무제한' : `${Math.max(0, MAX_FREE_USES - getUsageCount())}회`
 
     return (
-      <div className="max-w-lg mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6">
         <div className="text-center py-4">
           <div className="text-6xl mb-4">🔮</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -201,7 +201,7 @@ function SajuReadingInner() {
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-5">
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-5">
           <h3 className="text-sm font-bold text-gray-700 mb-3">이런 걸 알 수 있어요</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
@@ -228,7 +228,7 @@ function SajuReadingInner() {
 
         <button
           onClick={() => setPhase('input')}
-          className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl text-lg hover:from-indigo-600 hover:to-purple-600 transition shadow-lg shadow-indigo-200"
+          className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-lg hover:from-orange-600 hover:to-amber-600 transition shadow-lg shadow-orange-200"
         >
           🔮 사주풀이 시작하기
         </button>
@@ -247,7 +247,7 @@ function SajuReadingInner() {
     const animalHint = animalIdx >= 0 ? `${BRANCHES_ANIMAL[animalIdx]}띠` : ''
 
     return (
-      <div className="max-w-lg mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6">
         <div className="text-center py-2">
           <div className="text-4xl mb-2">📅</div>
           <h2 className="text-xl font-bold text-gray-900">생년월일을 입력하세요</h2>
@@ -257,14 +257,14 @@ function SajuReadingInner() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              출생 연도 {animalHint && <span className="text-purple-500 text-xs">({animalHint})</span>}
+              출생 연도 {animalHint && <span className="text-orange-500 text-xs">({animalHint})</span>}
             </label>
             <input
               type="number"
               placeholder="예: 1990"
               value={birthYear}
               onChange={e => { setBirthYear(e.target.value); setFieldErrors(prev => ({ ...prev, year: undefined })) }}
-              className={`w-full px-4 py-3.5 border rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 ${fieldErrors.year ? 'border-red-400 bg-red-50/30' : 'border-gray-200'}`}
+              className={`w-full px-4 py-3.5 border rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 ${fieldErrors.year ? 'border-red-400 bg-red-50/30' : 'border-gray-200'}`}
               min={1920}
               max={new Date().getFullYear()}
             />
@@ -279,7 +279,7 @@ function SajuReadingInner() {
                 placeholder="1~12"
                 value={birthMonth}
                 onChange={e => { setBirthMonth(e.target.value); setFieldErrors(prev => ({ ...prev, month: undefined })) }}
-                className={`w-full px-4 py-3.5 border rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 ${fieldErrors.month ? 'border-red-400 bg-red-50/30' : 'border-gray-200'}`}
+                className={`w-full px-4 py-3.5 border rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 ${fieldErrors.month ? 'border-red-400 bg-red-50/30' : 'border-gray-200'}`}
                 min={1} max={12}
               />
               {fieldErrors.month && <p className="text-red-500 text-xs mt-1">⚠️ {fieldErrors.month}</p>}
@@ -291,7 +291,7 @@ function SajuReadingInner() {
                 placeholder="1~31"
                 value={birthDay}
                 onChange={e => { setBirthDay(e.target.value); setFieldErrors(prev => ({ ...prev, day: undefined })) }}
-                className={`w-full px-4 py-3.5 border rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 ${fieldErrors.day ? 'border-red-400 bg-red-50/30' : 'border-gray-200'}`}
+                className={`w-full px-4 py-3.5 border rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 ${fieldErrors.day ? 'border-red-400 bg-red-50/30' : 'border-gray-200'}`}
                 min={1} max={31}
               />
               {fieldErrors.day && <p className="text-red-500 text-xs mt-1">⚠️ {fieldErrors.day}</p>}
@@ -305,7 +305,7 @@ function SajuReadingInner() {
             <select
               value={birthHour}
               onChange={e => setBirthHour(parseInt(e.target.value))}
-              className="w-full px-4 py-3.5 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white"
+              className="w-full px-4 py-3.5 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 bg-white"
             >
               {HOUR_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -321,7 +321,7 @@ function SajuReadingInner() {
                 onClick={() => setGender('male')}
                 className={`py-3.5 rounded-xl text-sm font-medium transition border-2 ${
                   gender === 'male'
-                    ? 'bg-indigo-50 border-indigo-400 text-indigo-700'
+                    ? 'bg-orange-50 border-orange-400 text-orange-700'
                     : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
                 }`}
               >
@@ -343,7 +343,7 @@ function SajuReadingInner() {
 
         <button
           onClick={handleStart}
-          className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl text-lg hover:from-indigo-600 hover:to-purple-600 transition shadow-lg shadow-indigo-200"
+          className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-lg hover:from-orange-600 hover:to-amber-600 transition shadow-lg shadow-orange-200"
         >
           🔮 사주 분석하기
         </button>
@@ -361,18 +361,18 @@ function SajuReadingInner() {
   // ── 잠금 화면 (무료 횟수 소진) ──
   if (phase === 'locked') {
     return (
-      <div className="max-w-lg mx-auto text-center py-8 space-y-6">
+      <div className="max-w-2xl mx-auto text-center py-8 space-y-6">
         <div className="text-6xl">🔒</div>
         <h2 className="text-xl font-bold text-gray-900">무료 체험이 끝났습니다</h2>
         <p className="text-gray-500 text-sm">
-          노후연구소 카페에 가입하면<br />사주풀이를 <strong className="text-indigo-600">무제한</strong>으로 이용할 수 있습니다
+          노후연구소 카페에 가입하면<br />사주풀이를 <strong className="text-orange-600">무제한</strong>으로 이용할 수 있습니다
         </p>
 
         <a
           href={CAFE_JOIN_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="block w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl text-lg hover:from-green-600 hover:to-emerald-700 transition shadow-lg shadow-green-200"
+          className="block w-full py-4 bg-gradient-to-r from-orange-500 to-amber-600 text-white font-bold rounded-xl text-lg hover:from-orange-600 hover:to-amber-700 transition shadow-lg shadow-orange-200"
         >
           가입하고 무제한으로 이용하세요
         </a>
@@ -399,7 +399,7 @@ function SajuReadingInner() {
   // ── 결과 화면 ──
   if (phase === 'result' && result) {
     return (
-      <div className="max-w-lg mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6">
         <SajuResultCard ref={cardRef} result={result} />
 
         <SajuShareButtons result={result} cardRef={cardRef} />

@@ -58,8 +58,8 @@ const KEYFRAMES = `
   50% { opacity: 1; transform: scale(1) rotate(180deg); }
 }
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(147, 51, 234, 0.6), 0 0 60px rgba(99, 102, 241, 0.3); }
+  0%, 100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.6), 0 0 60px rgba(245, 158, 11, 0.3); }
 }
 `
 
@@ -122,9 +122,9 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
 
   return (
     <div
-      className="relative flex flex-col items-center justify-center min-h-[60vh] px-4 overflow-hidden"
+      className="relative flex flex-col items-center justify-center min-h-[60vh] px-4 py-8 overflow-visible"
       style={{
-        background: 'linear-gradient(135deg, #f5f3ff, #eef2ff, #faf5ff, #f0f9ff, #f5f3ff)',
+        background: 'linear-gradient(135deg, #fff7ed, #fffbeb, #fff7ed, #fef3c7, #fff7ed)',
         backgroundSize: '400% 400%',
         animation: 'gradientShift 8s ease infinite',
       }}
@@ -138,7 +138,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
             width: `${8 + i * 4}px`,
             height: `${8 + i * 4}px`,
             background: `radial-gradient(circle, ${
-              ['#a78bfa', '#818cf8', '#c084fc', '#7c3aed', '#6366f1', '#8b5cf6'][i]
+              ['#fb923c', '#f97316', '#fbbf24', '#ea580c', '#f59e0b', '#fdba74'][i]
             }, transparent)`,
             top: `${10 + i * 14}%`,
             left: `${5 + i * 16}%`,
@@ -153,7 +153,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
         {/* Expanding ring effect */}
         {!isComplete && (
           <div
-            className="absolute inset-0 rounded-full border-2 border-purple-400"
+            className="absolute inset-0 rounded-full border-2 border-orange-400"
             style={{
               animation: 'ringExpand 2s ease-out infinite',
             }}
@@ -214,7 +214,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
         <div className="h-6 mb-8 flex items-center justify-center">
           <p
             key={stepKey}
-            className="text-purple-600 text-sm font-medium"
+            className="text-orange-600 text-sm font-medium"
             style={{
               animation: 'fadeInUp 0.4s ease-out forwards',
             }}
@@ -240,7 +240,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
 
       {isComplete && (
         <p
-          className="text-purple-600 text-sm font-medium mb-8"
+          className="text-orange-600 text-sm font-medium mb-8"
           style={{
             animation: 'fadeInUp 0.4s ease-out 0.2s both',
           }}
@@ -259,7 +259,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
               width: `${progress}%`,
               background: isComplete
                 ? 'linear-gradient(90deg, #f97316, #ea580c)'
-                : 'linear-gradient(90deg, #8b5cf6, #6366f1, #a78bfa, #6366f1, #8b5cf6)',
+                : 'linear-gradient(90deg, #f97316, #f59e0b, #fb923c, #f59e0b, #f97316)',
               backgroundSize: isComplete ? '100% 100%' : '200% 100%',
               animation: isComplete ? 'none' : 'shimmer 1.5s linear infinite',
             }}
@@ -321,7 +321,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
               <span className="flex-1">{step.text}</span>
               {isCurrent && (
                 <span className="flex items-center gap-1">
-                  <span className="animate-spin inline-block h-4 w-4 border-2 border-purple-500 border-t-transparent rounded-full" />
+                  <span className="animate-spin inline-block h-4 w-4 border-2 border-orange-500 border-t-transparent rounded-full" />
                 </span>
               )}
               {isDone && (
