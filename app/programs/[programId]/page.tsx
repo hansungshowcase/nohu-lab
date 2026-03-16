@@ -37,7 +37,7 @@ export default function ProgramPage() {
       })
       .then(setUser)
       .catch(() => setUser({ memberId: 'guest', nickname: '게스트', tier: 4 }))
-  }, [router])
+  }, [])
 
   if (!user) {
     return (

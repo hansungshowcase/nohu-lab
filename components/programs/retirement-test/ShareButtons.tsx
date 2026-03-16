@@ -129,7 +129,7 @@ export default function ShareButtons({
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+      URL.revokeObjectURL(blobUrl)
     } catch (err) {
       alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
     } finally {

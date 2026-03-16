@@ -26,43 +26,27 @@ export async function POST(request: NextRequest) {
 
     const supabase = getServiceSupabase()
 
-    // 기존 회원 조회
-    const { data: existing } = await supabase
-      .from('members')
-      .select('nickname, tier')
+    // upsert로 신규 등록 + 등급 변경 일괄 처리
+    let syncCount = 0
+    let errorCount = 0
 
-    const existMap = new Map((existing || []).map(m => [m.nickname, m.tier]))
-
-    const newMembers: SyncMember[] = members.filter((m: SyncMember) => !existMap.has(m.nickname))
-    const updatedMembers: SyncMember[] = members.filter(
-      (m: SyncMember) => existMap.has(m.nickname) && existMap.get(m.nickname) !== m.tier
-    )
-
-    // 신규 등록
-    if (newMembers.length > 0) {
-      for (let i = 0; i < newMembers.length; i += 50) {
-        const batch = newMembers.slice(i, i + 50).map(m => ({
-          nickname: m.nickname,
-          tier: m.tier,
-          phone: '',
-        }))
-        await supabase.from('members').upsert(batch, { onConflict: 'nickname', ignoreDuplicates: true })
-      }
-    }
-
-    // 등급 변경
-    for (const m of updatedMembers) {
-      await supabase
+    for (let i = 0; i < members.length; i += 50) {
+      const batch = members.slice(i, i + 50).map((m: SyncMember) => ({
+        nickname: m.nickname,
+        tier: Math.min(Math.max(m.tier, 1), 4),
+        phone: '',
+      }))
+      const { error } = await supabase
         .from('members')
-        .update({ tier: m.tier })
-        .eq('nickname', m.nickname)
+        .upsert(batch, { onConflict: 'nickname' })
+      if (error) errorCount += batch.length
+      else syncCount += batch.length
     }
 
     return NextResponse.json({
       success: true,
-      total: members.length,
-      inserted: newMembers.length,
-      updated: updatedMembers.length,
+      total: syncCount,
+      errors: errorCount,
     })
   } catch (error) {
     return NextResponse.json({ error: '서버 오류' }, { status: 500 })

@@ -43,10 +43,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await supabase
+    const { error: loginError } = await supabase
       .from('members')
       .update({ last_login: new Date().toISOString() })
       .eq('id', admin.id)
+    if (loginError) {
+      return NextResponse.json({ error: '로그인 처리 실패' }, { status: 500 })
+    }
 
     const token = await createToken({
       memberId: admin.id,

@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     .from('members')
     .insert({
       nickname: nickname.trim(),
-      phone: phone?.replace(/-/g, '') || '',
-      tier: tier || 1,
+      phone: typeof phone === 'string' ? phone.replace(/-/g, '') : '',
+      tier: typeof tier === 'number' ? Math.min(Math.max(tier, 1), 4) : 1,
     })
     .select()
     .single()

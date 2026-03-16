@@ -75,23 +75,29 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       clone.style.maxWidth = `${A4_WIDTH - 64}px`
       clone.style.transform = 'none'
       clone.style.margin = '0'
+      clone.style.fontSize = '16px'  // base font size reset for consistent rendering
 
       container.appendChild(clone)
       document.body.appendChild(container)
 
       // Wait for layout to settle
-      await new Promise(r => setTimeout(r, 150))
+      await new Promise(r => setTimeout(r, 300))
+
+      const captureHeight = Math.max(A4_HEIGHT, container.scrollHeight)
+      // Mobile: use scale 1.5 to avoid memory issues on low-end devices
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+      const captureScale = isMobile ? 1.5 : 2
 
       const canvas = await (html2canvas as Function)(container, {
-        scale: 2,  // 2x for high-res output (1588 × 2246)
+        scale: captureScale,
         backgroundColor: '#f5f3ff',
         useCORS: true,
         logging: false,
         allowTaint: true,
         width: A4_WIDTH,
-        height: Math.max(A4_HEIGHT, container.scrollHeight),
+        height: captureHeight,
         windowWidth: A4_WIDTH,
-        windowHeight: Math.max(A4_HEIGHT, container.scrollHeight),
+        windowHeight: captureHeight,
       })
 
       document.body.removeChild(container)
@@ -99,7 +105,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       const dataUrl = canvas.toDataURL('image/png')
 
       // Mobile: Web Share API first, then fallback to new tab
-      if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      if (isMobile) {
         if (navigator.share) {
           try {
             const blob = await (await fetch(dataUrl)).blob()

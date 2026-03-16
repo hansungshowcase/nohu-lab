@@ -27,6 +27,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin?sync=failed&reason=no_code', process.env.NEXT_PUBLIC_BASE_URL!))
   }
 
+  const savedState = request.cookies.get('oauth_state')?.value
+  if (!savedState || savedState !== state) {
+    const res = NextResponse.redirect(new URL('/admin?sync=failed&reason=invalid_state', process.env.NEXT_PUBLIC_BASE_URL!))
+    res.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
+    return res
+  }
+
   try {
     // 1. 액세스 토큰 발급
     const tokenRes = await fetch('https://nid.naver.com/oauth2.0/token', {
