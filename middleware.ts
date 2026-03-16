@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
     const { payload } = await jwtVerify(token, JWT_SECRET)
 
     // /admin 경로는 tier 4만 접근 가능
-    if (pathname.startsWith('/admin') && payload.tier !== 4) {
+    if (pathname.startsWith('/admin') && Number(payload.tier) !== 4) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 

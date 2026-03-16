@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       const token = await createToken({
         memberId: member.id,
         nickname: member.nickname,
-        tier: member.tier as 1 | 2 | 3 | 4,
+        tier: ([1, 2, 3, 4].includes(member.tier) ? member.tier : 1) as 1 | 2 | 3 | 4,
       })
 
       const response = NextResponse.json({

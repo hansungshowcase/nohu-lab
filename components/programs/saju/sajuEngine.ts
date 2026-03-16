@@ -73,6 +73,13 @@ export interface Pillar {
   branch: number  // 지지 인덱스 (0~11)
 }
 
+export interface DaeunPeriod {
+  startAge: number
+  endAge: number
+  pillar: Pillar
+  tenGod: string
+}
+
 export interface SajuResult {
   yearPillar: Pillar
   monthPillar: Pillar
@@ -93,6 +100,8 @@ export interface SajuResult {
   birthDay: number
   birthHour: number | null
   animal: string              // 띠
+  daeun: DaeunPeriod[]        // 대운
+  daeunStartAge: number       // 대운 시작 나이
 }
 
 // ═══════════════════════════════════════════════
@@ -264,6 +273,52 @@ export function calculateSaju(
   const animalYear = ((year - 4) % 12 + 12) % 12
   const animal = BRANCHES_ANIMAL[animalYear]
 
+  // ═══════════════════════════════════════════════
+  // 대운(大運) 계산
+  // ═══════════════════════════════════════════════
+  const yearStemYY = STEM_YINYANG[yearPillar.stem]
+  const isForward = (gender === 'male' && yearStemYY === 1) || (gender === 'female' && yearStemYY === 0)
+
+  const mi = getMonthIndex(month, day)
+  const currentBound = MONTH_BOUNDS[mi]
+  const birthDate = new Date(year, month - 1, day)
+  let targetDate: Date
+
+  if (isForward) {
+    const nextIdx = (mi + 1) % 12
+    const nextBound = MONTH_BOUNDS[nextIdx]
+    let tYear = year
+    if (nextBound.solarMonth < month || (nextBound.solarMonth === month && nextBound.solarDay <= day)) tYear++
+    targetDate = new Date(tYear, nextBound.solarMonth - 1, nextBound.solarDay)
+  } else {
+    let tYear = year
+    if (currentBound.solarMonth > month || (currentBound.solarMonth === month && currentBound.solarDay > day)) tYear--
+    targetDate = new Date(tYear, currentBound.solarMonth - 1, currentBound.solarDay)
+  }
+
+  const daysDiff = Math.abs(Math.round((targetDate.getTime() - birthDate.getTime()) / 86400000))
+  const daeunStartAge = Math.max(1, Math.round(daysDiff / 3))
+
+  const daeun: DaeunPeriod[] = []
+  let dStem = monthPillar.stem
+  let dBranch = monthPillar.branch
+
+  for (let i = 0; i < 8; i++) {
+    if (isForward) {
+      dStem = (dStem + 1) % 10
+      dBranch = (dBranch + 1) % 12
+    } else {
+      dStem = (dStem - 1 + 10) % 10
+      dBranch = (dBranch - 1 + 12) % 12
+    }
+    daeun.push({
+      startAge: daeunStartAge + i * 10,
+      endAge: daeunStartAge + i * 10 + 9,
+      pillar: { stem: dStem, branch: dBranch },
+      tenGod: getTenGod(dayMasterElement, dayMasterYinYang, dStem),
+    })
+  }
+
   return {
     yearPillar,
     monthPillar,
@@ -284,6 +339,8 @@ export function calculateSaju(
     birthDay: day,
     birthHour: hour,
     animal,
+    daeun,
+    daeunStartAge,
   }
 }
 

@@ -86,22 +86,38 @@ function AdminContent() {
   }
 
   async function handleTierChange(id: string, tier: number) {
-    const res = await fetch(`/api/members/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tier }),
-    })
-    if (res.ok) {
-      setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, tier } : m)))
+    try {
+      const res = await fetch(`/api/members/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier }),
+      })
+      if (res.ok) {
+        setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, tier } : m)))
+      } else {
+        setMessage('등급 변경에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      }
+    } catch {
+      setMessage('네트워크 오류가 발생했습니다.')
+      setTimeout(() => setMessage(''), 3000)
     }
   }
 
   async function handleDelete(id: string, nickname: string) {
     if (!confirm(`${nickname} 회원을 삭제하시겠습니까?`)) return
-    const res = await fetch(`/api/members/${id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setMembers((prev) => prev.filter((m) => m.id !== id))
-      setMessage('삭제되었습니다.')
+    try {
+      const res = await fetch(`/api/members/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setMembers((prev) => prev.filter((m) => m.id !== id))
+        setMessage('삭제되었습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      } else {
+        setMessage('삭제에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      }
+    } catch {
+      setMessage('네트워크 오류가 발생했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
   }
@@ -182,13 +198,18 @@ function AdminContent() {
   }, [chatMessages])
 
   async function fetchChatRooms() {
+    setChatLoading(true)
     try {
       const res = await fetch('/api/chat/rooms')
       if (res.ok) {
         const data = await res.json()
         setChatRooms(data)
       }
-    } catch {}
+    } catch {
+      // 네트워크 오류 시 무시 (폴링이 재시도)
+    } finally {
+      setChatLoading(false)
+    }
   }
 
   async function fetchChatMessages(roomId: string) {
@@ -197,16 +218,17 @@ function AdminContent() {
       if (res.ok) {
         const data = await res.json()
         setChatMessages(data)
-        // 읽음 처리 후 방 목록 갱신
-        fetchChatRooms()
       }
-    } catch {}
+    } catch {
+      // 네트워크 오류 시 무시 (폴링이 재시도)
+    }
   }
 
   async function handleChatSend(e: React.FormEvent) {
     e.preventDefault()
     if (!chatInput.trim() || chatSending || !selectedRoom) return
     setChatSending(true)
+    const savedInput = chatInput
     try {
       const res = await fetch('/api/chat/messages', {
         method: 'POST',
@@ -217,8 +239,16 @@ function AdminContent() {
         const newMsg = await res.json()
         setChatMessages(prev => [...prev, newMsg])
         setChatInput('')
+        fetchChatRooms()
+      } else {
+        setMessage('메시지 전송에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
       }
-    } catch {} finally {
+    } catch {
+      setChatInput(savedInput)
+      setMessage('네트워크 오류가 발생했습니다.')
+      setTimeout(() => setMessage(''), 3000)
+    } finally {
       setChatSending(false)
     }
   }

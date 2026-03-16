@@ -103,12 +103,15 @@ export default function TierGuidePage() {
   useEffect(() => {
     fetch('/api/auth/me')
       .then((r) => {
-        if (!r.ok) throw new Error()
+        if (r.status === 401) throw new Error('unauthorized')
+        if (!r.ok) throw new Error('server')
         return r.json()
       })
       .then(setUser)
-      .catch(() => router.push('/'))
-  }, [router])
+      .catch((err) => {
+        if (err.message === 'unauthorized') router.push('/')
+      })
+  }, [])
 
   if (!user) {
     return (
@@ -132,7 +135,7 @@ export default function TierGuidePage() {
       <div className="space-y-4">
         {tiers.map((t, i) => (
           <div
-            key={t.name}
+            key={i}
             className={`animate-slide-up rounded-2xl border ${t.border} bg-gradient-to-br ${t.gradient} p-5 sm:p-6 card-hover`}
             style={{ animationDelay: `${100 + i * 80}ms` }}
           >

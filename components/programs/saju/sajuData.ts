@@ -291,6 +291,23 @@ export function getViralSummary(dayMaster: number, isStrong: boolean): string {
   return summaries[dayMaster][isStrong ? 0 : 1]
 }
 
+// ── 대운 해석 ──
+export function getDaeunInterpretation(tenGod: string): { title: string; description: string; emoji: string; stars: number } {
+  const map: Record<string, { title: string; description: string; emoji: string; stars: number }> = {
+    '비견': { title: '독립과 도전', emoji: '🏃', description: '자기 주관이 뚜렷해지고 독립적으로 성장하는 시기입니다. 동업이나 경쟁 상황이 생길 수 있으니 주체적으로 판단하세요.', stars: 3 },
+    '겁재': { title: '경쟁과 변화', emoji: '⚡', description: '예상치 못한 변화와 경쟁이 찾아오는 시기. 재물 관리에 특히 신중해야 하며, 충동적인 투자는 피하세요.', stars: 2 },
+    '식신': { title: '풍요와 안정', emoji: '🌸', description: '먹을 복과 창작 에너지가 넘치는 안정된 시기. 자격증 취득, 기술 연마, 콘텐츠 활동에 최적입니다.', stars: 4 },
+    '상관': { title: '자유와 표현', emoji: '🎨', description: '기존의 틀을 깨고 자유롭게 표현하는 시기. 예술·창작 활동이 빛나지만, 대인관계에서 말조심이 필요합니다.', stars: 3 },
+    '편재': { title: '큰 재물의 기회', emoji: '💎', description: '대박의 기회가 찾아오는 시기! 사업 확장, 투자, 부동산 등에서 큰 성과를 거둘 수 있습니다. 단, 과욕은 금물.', stars: 5 },
+    '정재': { title: '꾸준한 축적', emoji: '🏦', description: '안정적인 수입과 재물이 쌓이는 시기. 저축, 부동산, 장기 투자에 유리하며 착실한 노력이 보상받습니다.', stars: 4 },
+    '편관': { title: '시련 후 도약', emoji: '🔥', description: '압박과 도전이 있지만, 이를 극복하면 인생의 큰 전환점이 됩니다. 건강 관리와 스트레스 해소가 중요합니다.', stars: 2 },
+    '정관': { title: '명예와 승진', emoji: '👑', description: '사회적 인정과 지위 상승의 시기. 직장인에게 승진·이직 기회가 오며, 신뢰를 쌓으면 큰 결실을 맺습니다.', stars: 4 },
+    '편인': { title: '전환과 탐구', emoji: '🔍', description: '새로운 분야에 눈을 뜨는 시기. 이직, 전업, 유학 등 인생의 방향 전환이 있을 수 있습니다. 열린 마음이 필요합니다.', stars: 3 },
+    '정인': { title: '성장과 귀인', emoji: '🌟', description: '귀인의 도움으로 크게 성장하는 시기. 학업, 자격증, 자기계발에 최적이며 어머니·스승과의 인연이 깊어집니다.', stars: 4 },
+  }
+  return map[tenGod] || { title: '전환기', description: '변화의 시기입니다.', emoji: '🔄', stars: 3 }
+}
+
 // ── 궁합 간단 설명 ──
 export function getCompatibilityHint(dayMaster: number): string {
   const hints: string[] = [

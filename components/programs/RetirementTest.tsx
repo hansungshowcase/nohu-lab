@@ -40,7 +40,7 @@ export default function RetirementTest() {
       .then((user) => {
         if (user && user.tier >= 1) setIsMember(true)
       })
-      .catch(() => {})
+      .catch(() => setIsMember(false))
   }, [])
 
   const handleStart = useCallback(() => {

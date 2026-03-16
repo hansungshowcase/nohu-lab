@@ -50,7 +50,7 @@ export default function ShareButtons({
   useEffect(() => {
     function initKakao() {
       if (window.Kakao && !window.Kakao.isInitialized()) {
-        window.Kakao.init('3913fde247b12ce25084eb42a9b17ed9')
+        window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_KEY || '')
       }
       if (window.Kakao?.isInitialized()) {
         setKakaoReady(true)

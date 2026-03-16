@@ -144,7 +144,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       return
     }
     if (!w.Kakao.isInitialized()) {
-      w.Kakao.init('3913fde247b12ce25084eb42a9b17ed9')
+      w.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_KEY || '')
     }
     try {
       w.Kakao.Share.sendDefault({
