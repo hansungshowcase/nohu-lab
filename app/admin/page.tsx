@@ -283,8 +283,8 @@ function AdminContent() {
 
   useEffect(() => {
     fetch('/api/admin/sync-status')
-      .then(r => r.json())
-      .then(data => setSyncStatus(data))
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setSyncStatus(data) })
       .catch(() => {})
   }, [])
 
