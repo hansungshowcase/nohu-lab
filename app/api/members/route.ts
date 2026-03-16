@@ -42,6 +42,9 @@ export async function POST(request: NextRequest) {
   if (!nickname || typeof nickname !== 'string' || !nickname.trim()) {
     return NextResponse.json({ error: '닉네임은 필수입니다.' }, { status: 400 })
   }
+  if (nickname.trim().length > 50) {
+    return NextResponse.json({ error: '닉네임은 50자 이내로 입력해주세요.' }, { status: 400 })
+  }
 
   const supabase = getServiceSupabase()
 

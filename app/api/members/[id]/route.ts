@@ -18,7 +18,12 @@ export async function PATCH(
 
   const updateData: Record<string, unknown> = {}
   if (body.tier !== undefined) updateData.tier = typeof body.tier === 'number' ? Math.min(Math.max(body.tier, 1), 4) : 1
-  if (body.nickname !== undefined) updateData.nickname = body.nickname
+  if (body.nickname !== undefined) {
+    if (typeof body.nickname !== 'string' || body.nickname.trim().length > 50) {
+      return NextResponse.json({ error: '닉네임은 50자 이내로 입력해주세요.' }, { status: 400 })
+    }
+    updateData.nickname = body.nickname.trim()
+  }
   if (body.phone !== undefined) updateData.phone = typeof body.phone === 'string' ? body.phone.replace(/-/g, '') : ''
 
   const { data, error } = await supabase

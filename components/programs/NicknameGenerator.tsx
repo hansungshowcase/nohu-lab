@@ -34,7 +34,16 @@ export default function NicknameGenerator() {
   }
 
   function copyToClipboard(text: string) {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(text).catch(() => {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.left = '-9999px'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    })
   }
 
   return (

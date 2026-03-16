@@ -102,6 +102,7 @@ export interface SajuResult {
   animal: string              // 띠
   daeun: DaeunPeriod[]        // 대운
   daeunStartAge: number       // 대운 시작 나이
+  shinsal: string[]           // 신살 (해당하는 신살 이름 배열)
 }
 
 // ═══════════════════════════════════════════════
@@ -237,6 +238,80 @@ function analyzeElements(pillars: Pillar[], dayMasterElement: number) {
 }
 
 // ═══════════════════════════════════════════════
+// 신살(神殺) 계산
+// ═══════════════════════════════════════════════
+
+// 천을귀인: 일간별 귀인이 되는 지지
+// 갑=축미, 을=자신, 병=해유, 정=해유, 무=축미, 기=자신, 경=축미, 신=인오, 임=사묘, 계=사묘
+const CHEONUL_MAP: Record<number, number[]> = {
+  0: [1, 7],   // 갑 → 축, 미
+  1: [0, 8],   // 을 → 자, 신
+  2: [11, 9],  // 병 → 해, 유
+  3: [11, 9],  // 정 → 해, 유
+  4: [1, 7],   // 무 → 축, 미
+  5: [0, 8],   // 기 → 자, 신
+  6: [1, 7],   // 경 → 축, 미
+  7: [2, 6],   // 신 → 인, 오
+  8: [5, 3],   // 임 → 사, 묘
+  9: [5, 3],   // 계 → 사, 묘
+}
+
+// 양인살: 일간별 양인이 되는 지지
+// 갑=묘, 을=진, 병=오, 정=미, 무=오, 기=미, 경=유, 신=술, 임=자, 계=축
+const YANGIN_MAP: Record<number, number> = {
+  0: 3,   // 갑 → 묘
+  1: 4,   // 을 → 진
+  2: 6,   // 병 → 오
+  3: 7,   // 정 → 미
+  4: 6,   // 무 → 오
+  5: 7,   // 기 → 미
+  6: 9,   // 경 → 유
+  7: 10,  // 신 → 술
+  8: 0,   // 임 → 자
+  9: 1,   // 계 → 축
+}
+
+function calculateShinsal(dayMaster: number, pillars: Pillar[]): string[] {
+  const result: string[] = []
+  const dayBranch = pillars[2].branch // 일지
+
+  // 모든 기둥의 지지 수집
+  const allBranches = pillars.map(p => p.branch)
+
+  // 도화살: 일지가 자(0)/오(6)/묘(3)/유(9)
+  const doHwaBranches = [0, 6, 3, 9]
+  if (doHwaBranches.includes(dayBranch)) {
+    result.push('도화살')
+  }
+
+  // 역마살: 일지가 인(2)/신(8)/사(5)/해(11)
+  const yeokMaBranches = [2, 8, 5, 11]
+  if (yeokMaBranches.includes(dayBranch)) {
+    result.push('역마살')
+  }
+
+  // 천을귀인: 일간 기준, 사주 내 지지에 귀인 지지가 있으면 해당
+  const guiinBranches = CHEONUL_MAP[dayMaster]
+  if (guiinBranches && allBranches.some(b => guiinBranches.includes(b))) {
+    result.push('천을귀인')
+  }
+
+  // 화개살: 일지가 진(4)/술(10)/축(1)/미(7)
+  const hwaGaeBranches = [4, 10, 1, 7]
+  if (hwaGaeBranches.includes(dayBranch)) {
+    result.push('화개살')
+  }
+
+  // 양인살: 일간의 양인 지지가 사주 내에 있으면 해당
+  const yangInBranch = YANGIN_MAP[dayMaster]
+  if (yangInBranch !== undefined && allBranches.includes(yangInBranch)) {
+    result.push('양인살')
+  }
+
+  return result
+}
+
+// ═══════════════════════════════════════════════
 // 메인 사주 계산 함수
 // ═══════════════════════════════════════════════
 export function calculateSaju(
@@ -268,6 +343,9 @@ export function calculateSaju(
   if (hourPillar) {
     tenGods.push(getTenGod(dayMasterElement, dayMasterYinYang, hourPillar.stem))
   }
+
+  // 신살 계산
+  const shinsal = calculateShinsal(dayMaster, pillars)
 
   // 띠 계산
   const animalYear = ((year - 4) % 12 + 12) % 12
@@ -341,6 +419,7 @@ export function calculateSaju(
     animal,
     daeun,
     daeunStartAge,
+    shinsal,
   }
 }
 

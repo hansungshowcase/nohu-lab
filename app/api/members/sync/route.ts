@@ -23,6 +23,9 @@ export async function POST(request: NextRequest) {
     if (!Array.isArray(members) || members.length === 0) {
       return NextResponse.json({ error: '회원 데이터가 없습니다.' }, { status: 400 })
     }
+    if (members.length > 5000) {
+      return NextResponse.json({ error: '한 번에 최대 5000명까지 동기화 가능합니다.' }, { status: 400 })
+    }
 
     const supabase = getServiceSupabase()
     let syncCount = 0

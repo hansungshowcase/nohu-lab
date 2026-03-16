@@ -14,6 +14,9 @@ export async function POST(request: NextRequest) {
   if (!Array.isArray(nicknames) || nicknames.length === 0) {
     return NextResponse.json({ error: '닉네임 목록이 필요합니다.' }, { status: 400 })
   }
+  if (nicknames.length > 500) {
+    return NextResponse.json({ error: '한 번에 최대 500명까지 등록 가능합니다.' }, { status: 400 })
+  }
 
   const supabase = getServiceSupabase()
 

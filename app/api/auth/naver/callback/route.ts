@@ -154,8 +154,10 @@ export async function GET(request: NextRequest) {
 
     return response
   } catch {
-    return NextResponse.redirect(
+    const res = NextResponse.redirect(
       new URL('/?error=server_error', process.env.NEXT_PUBLIC_BASE_URL!)
     )
+    res.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
+    return res
   }
 }

@@ -3,15 +3,79 @@
 import { forwardRef } from 'react'
 import {
   SajuResult, STEMS, STEMS_HANJA,
+  BRANCHES, BRANCHES_HANJA,
+  STEM_ELEMENT, BRANCH_ELEMENT,
+  Pillar,
 } from './sajuEngine'
 import {
   DAY_MASTER_PROFILES, STRENGTH_INTERPRETATIONS,
   getYearFortune,
   getDaeunInterpretation,
+  SHINSAL_DATA,
 } from './sajuData'
 
 interface Props {
   result: SajuResult
+}
+
+// 오행 색상: 목=초록, 화=빨강, 토=노랑(갈색 계열), 금=회색, 수=파랑
+const ELEMENT_TEXT_COLOR = [
+  'text-green-600',   // 목
+  'text-red-500',     // 화
+  'text-yellow-600',  // 토
+  'text-gray-500',    // 금
+  'text-blue-500',    // 수
+] as const
+
+const ELEMENT_BG_COLOR = [
+  'bg-green-100',   // 목
+  'bg-red-100',     // 화
+  'bg-yellow-100',  // 토
+  'bg-gray-100',    // 금
+  'bg-blue-100',    // 수
+] as const
+
+function PillarCell({ pillar, label }: { pillar: Pillar | null; label: string }) {
+  if (!pillar) {
+    return (
+      <div className="flex-1 text-center">
+        <p className="text-[10px] sm:text-xs text-gray-400 mb-1">{label}</p>
+        <div className="rounded-lg bg-gray-50 border border-gray-200 py-2 sm:py-2.5 space-y-1">
+          <p className="text-lg sm:text-xl font-bold text-gray-300">?</p>
+          <div className="border-t border-gray-200 mx-2" />
+          <p className="text-lg sm:text-xl font-bold text-gray-300">?</p>
+        </div>
+      </div>
+    )
+  }
+
+  const stemEl = STEM_ELEMENT[pillar.stem]
+  const branchEl = BRANCH_ELEMENT[pillar.branch]
+
+  return (
+    <div className="flex-1 text-center">
+      <p className="text-[10px] sm:text-xs text-gray-400 mb-1">{label}</p>
+      <div className="rounded-lg bg-gray-50 border border-gray-200 py-2 sm:py-2.5 space-y-1">
+        <div>
+          <p className={`text-lg sm:text-xl font-bold ${ELEMENT_TEXT_COLOR[stemEl]}`}>
+            {STEMS[pillar.stem]}
+          </p>
+          <p className="text-[9px] sm:text-[10px] text-gray-400 -mt-0.5">
+            {STEMS_HANJA[pillar.stem]}
+          </p>
+        </div>
+        <div className="border-t border-gray-200 mx-2" />
+        <div>
+          <p className={`text-lg sm:text-xl font-bold ${ELEMENT_TEXT_COLOR[branchEl]}`}>
+            {BRANCHES[pillar.branch]}
+          </p>
+          <p className="text-[9px] sm:text-[10px] text-gray-400 -mt-0.5">
+            {BRANCHES_HANJA[pillar.branch]}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 const BAR_COLORS: Record<number, string> = {
@@ -56,6 +120,24 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
       </div>
 
       <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-3 sm:space-y-4">
+
+        {/* ═══ 사주 원국표 ═══ */}
+        <section className="bg-indigo-50/60 rounded-xl p-3 sm:p-4 border border-indigo-100">
+          <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-2">🏛️ 사주 원국표</h3>
+          <div className="flex gap-1.5 sm:gap-2">
+            <PillarCell pillar={result.hourPillar} label="시주" />
+            <PillarCell pillar={result.dayPillar} label="일주" />
+            <PillarCell pillar={result.monthPillar} label="월주" />
+            <PillarCell pillar={result.yearPillar} label="연주" />
+          </div>
+          <div className="flex gap-1.5 sm:gap-2 mt-1">
+            {[result.hourPillar, result.dayPillar, result.monthPillar, result.yearPillar].map((p, i) => (
+              <div key={i} className="flex-1 text-center text-[9px] sm:text-[10px] text-gray-400">
+                {p ? `${['목','화','토','금','수'][STEM_ELEMENT[p.stem]]}/${['목','화','토','금','수'][BRANCH_ELEMENT[p.branch]]}` : ''}
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* ═══ 나는 어떤 사람? ═══ */}
         <section className="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-100">
@@ -123,6 +205,29 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             ))}
           </div>
         </section>
+
+        {/* ═══ 신살(神殺) ═══ */}
+        {result.shinsal.length > 0 && (
+          <section className="bg-violet-50/60 rounded-xl p-3 sm:p-4 border border-violet-200">
+            <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-2">🔮 나의 신살(神殺)</h3>
+            <div className="flex flex-wrap gap-2">
+              {result.shinsal.map(name => {
+                const info = SHINSAL_DATA[name]
+                if (!info) return null
+                return (
+                  <div
+                    key={name}
+                    className="inline-flex items-center gap-1.5 bg-white rounded-full px-3 py-1.5 border border-violet-200 shadow-sm"
+                  >
+                    <span className="text-base sm:text-lg">{info.emoji}</span>
+                    <span className="text-[13px] sm:text-sm font-bold text-indigo-800">{info.title}</span>
+                    <span className="text-[11px] sm:text-xs text-violet-600">{info.shortDesc}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         {/* ═══ 인생 운세 흐름 (대운) ═══ */}
         <section>

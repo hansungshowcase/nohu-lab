@@ -138,11 +138,15 @@ export async function GET(request: NextRequest) {
       else syncCount += batch.length
     }
 
-    return NextResponse.redirect(
+    const response = NextResponse.redirect(
       new URL(`/admin?sync=success&count=${syncCount}&errors=${errorCount}`, process.env.NEXT_PUBLIC_BASE_URL!)
     )
+    response.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
+    return response
   } catch (err) {
     // sync error
-    return NextResponse.redirect(new URL('/admin?sync=error', process.env.NEXT_PUBLIC_BASE_URL!))
+    const response = NextResponse.redirect(new URL('/admin?sync=error', process.env.NEXT_PUBLIC_BASE_URL!))
+    response.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
+    return response
   }
 }

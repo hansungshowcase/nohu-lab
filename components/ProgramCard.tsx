@@ -18,6 +18,7 @@ const TIER_BADGE_STYLE: Record<number, string> = {
 }
 
 export default function ProgramCard({ program, userTier }: Props) {
+  const router = useRouter()
   const canAccess = userTier >= program.minTier
   const tierInfo = TIER_MAP[program.minTier]
   const badgeStyle = TIER_BADGE_STYLE[program.minTier] || TIER_BADGE_STYLE[1]
@@ -65,8 +66,6 @@ export default function ProgramCard({ program, userTier }: Props) {
       </Link>
     )
   }
-
-  const router = useRouter()
 
   return (
     <div

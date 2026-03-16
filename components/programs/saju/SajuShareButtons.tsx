@@ -16,6 +16,7 @@ const A4_HEIGHT = 1123
 export default function SajuShareButtons({ result, cardRef }: Props) {
   const [copyDone, setCopyDone] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
   const getShareUrl = useCallback(() => {
@@ -49,20 +50,44 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     }
   }
 
+  /** Expand sm: breakpoint by injecting an iframe-like viewport context.
+   *  Instead of trying to add Tailwind class names (which won't have matching CSS rules),
+   *  we set the container width to 794px so that CSS media queries naturally activate. */
+  const activateSmBreakpoint = (clone: HTMLElement) => {
+    try {
+      const allEls = [clone, ...Array.from(clone.querySelectorAll('*'))] as HTMLElement[]
+      for (const node of allEls) {
+        // Remove any explicit 'hidden' that should only apply on mobile via sm:block pattern
+        const classes = Array.from(node.classList)
+        for (const cls of classes) {
+          if (cls === 'hidden' && classes.some(c => c === 'sm:block' || c === 'sm:flex' || c === 'sm:grid' || c === 'sm:inline')) {
+            node.style.display = ''
+            node.classList.remove('hidden')
+          }
+        }
+      }
+    } catch {
+      // If anything goes wrong with class manipulation, continue without it
+    }
+  }
+
   const handleSaveImage = async () => {
     if (!cardRef.current || saving) return
     setSaving(true)
+
+    let container: HTMLElement | null = null
+
     try {
       const html2canvas = (await import('html2canvas')).default
 
       // Clone card into an off-screen A4-sized container for consistent capture
-      const container = document.createElement('div')
+      container = document.createElement('div')
       container.style.position = 'absolute'
       container.style.left = '-9999px'
       container.style.top = '0'
       container.style.width = `${A4_WIDTH}px`
       container.style.minHeight = `${A4_HEIGHT}px`
-      container.style.backgroundColor = '#f5f3ff'
+      container.style.backgroundColor = '#ffffff'
       container.style.display = 'flex'
       container.style.flexDirection = 'column'
       container.style.alignItems = 'center'
@@ -71,11 +96,13 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       container.style.boxSizing = 'border-box'
 
       const clone = cardRef.current.cloneNode(true) as HTMLElement
-      clone.style.width = `${A4_WIDTH - 64}px`  // 730px with 32px padding each side
+      clone.style.width = `${A4_WIDTH - 64}px`
       clone.style.maxWidth = `${A4_WIDTH - 64}px`
       clone.style.transform = 'none'
       clone.style.margin = '0'
-      clone.style.fontSize = '16px'  // base font size reset for consistent rendering
+
+      // Apply sm: breakpoint overrides
+      activateSmBreakpoint(clone)
 
       container.appendChild(clone)
       document.body.appendChild(container)
@@ -83,14 +110,23 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       // Wait for layout to settle
       await new Promise(r => setTimeout(r, 300))
 
-      const captureHeight = Math.max(A4_HEIGHT, container.scrollHeight)
-      // Mobile: use scale 1.5 to avoid memory issues on low-end devices
+      // If content overflows A4 height, use CSS transform scale to fit
+      const contentHeight = container.scrollHeight
+      if (contentHeight > A4_HEIGHT) {
+        const scaleFactor = A4_HEIGHT / contentHeight
+        clone.style.transformOrigin = 'top center'
+        clone.style.transform = `scale(${scaleFactor})`
+        // Wait for re-layout after scale
+        await new Promise(r => setTimeout(r, 100))
+      }
+
+      const captureHeight = Math.max(A4_HEIGHT, Math.min(container.scrollHeight, A4_HEIGHT))
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
       const captureScale = isMobile ? 1.5 : 2
 
-      const canvas = await (html2canvas as Function)(container, {
+      const canvas = await html2canvas(container, {
         scale: captureScale,
-        backgroundColor: '#f5f3ff',
+        backgroundColor: '#ffffff',
         useCORS: true,
         logging: false,
         allowTaint: true,
@@ -100,35 +136,59 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         windowHeight: captureHeight,
       })
 
+      // Clean up container before processing result
       document.body.removeChild(container)
+      container = null
 
       const dataUrl = canvas.toDataURL('image/png')
 
-      // Mobile: Web Share API first, then fallback to new tab
+      // Mobile: try Web Share API, then fallback
       if (isMobile) {
-        if (navigator.share) {
+        let shared = false
+        if (navigator.share && navigator.canShare) {
           try {
-            const blob = await (await fetch(dataUrl)).blob()
+            const res = await fetch(dataUrl)
+            const blob = await res.blob()
             const file = new File([blob], 'saju-result.png', { type: 'image/png' })
-            await navigator.share({ files: [file], title: '사주풀이 결과' })
-            setSaving(false)
-            return
-          } catch { /* fallback below */ }
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], title: '사주풀이 결과' })
+              shared = true
+            }
+          } catch {
+            // Share was cancelled or failed — fall through to fallback
+          }
         }
-        // Fallback: open in new tab for screenshot
-        const newTab = window.open()
-        if (newTab) {
-          newTab.document.write(`
-            <html><head><title>사주풀이 결과</title>
-            <meta name="viewport" content="width=device-width,initial-scale=1">
-            <style>body{margin:0;display:flex;justify-content:center;align-items:flex-start;background:#f5f3ff;min-height:100vh;padding:16px}img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1)}</style>
-            </head><body>
-            <img src="${dataUrl}" alt="사주풀이 결과" />
-            </body></html>
-          `)
-          newTab.document.close()
+
+        if (!shared) {
+          // Fallback: download via anchor tag (works on most mobile browsers)
+          try {
+            const link = document.createElement('a')
+            link.download = 'saju-result.png'
+            link.href = dataUrl
+            link.style.display = 'none'
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+          } catch {
+            // Last resort: open image in new tab
+            const newTab = window.open()
+            if (newTab) {
+              newTab.document.write(`
+                <html><head><title>사주풀이 결과</title>
+                <meta name="viewport" content="width=device-width,initial-scale=1">
+                <style>body{margin:0;display:flex;justify-content:center;align-items:flex-start;background:#fff;min-height:100vh;padding:16px}img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1)}</style>
+                </head><body>
+                <img src="${dataUrl}" alt="사주풀이 결과" />
+                </body></html>
+              `)
+              newTab.document.close()
+            }
+          }
         }
+
         setSaving(false)
+        setSaveSuccess(true)
+        setTimeout(() => setSaveSuccess(false), 3000)
         return
       }
 
@@ -137,10 +197,18 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       link.download = `사주풀이_${STEMS[result.dayMaster]}${ELEMENTS[STEM_ELEMENT[result.dayMaster]]}.png`
       link.href = dataUrl
       link.click()
-    } catch (e) {
+
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    } catch {
       alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
+    } finally {
+      // Ensure container is always cleaned up
+      if (container && container.parentNode) {
+        container.parentNode.removeChild(container)
+      }
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   const handleKakao = () => {
@@ -185,7 +253,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           disabled={saving}
           className="flex-1 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
         >
-          {saving ? '⏳ A4 이미지 생성 중...' : '📷 이미지 저장'}
+          {saving ? '⏳ A4 이미지 생성 중...' : saveSuccess ? '✅ 저장 완료!' : '📷 이미지 저장'}
         </button>
         <button
           onClick={handleKakao}
