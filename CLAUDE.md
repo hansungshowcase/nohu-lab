@@ -6,17 +6,17 @@
 
 ## Vercel 배포 규칙
 - Vercel 계정: hansung1 (qhdl10100-6263)
-- **nohu-lab.vercel.app = cafe-webapp 프로젝트가 서빙 중. 새 프로젝트 만들지 말고 cafe-webapp에 배포할 것**
-- 배포 명령: `cd /c/Users/Administrator/nohu-lab && vercel --prod`
-- 배포 링크 받으면 먼저 `vercel inspect <링크>`로 어떤 프로젝트인지 확인 → 그 프로젝트에 배포
+- **nohu-lab.vercel.app = nohu-lab 프로젝트가 서빙 중**
+- 배포 명령: `vercel --prod --yes`
+- 배포 후 `vercel alias set <배포URL> nohu-lab.vercel.app` 으로 도메인 연결 확인
 - 배포 전 반드시 `vercel projects ls`로 현재 프로젝트 확인 후 올바른 프로젝트에 배포
-- **절대 Vercel 프로젝트를 삭제/생성하지 않기. 기존 프로젝트에 배포만 할 것**
-- **절대 다른 Vercel 프로젝트(cafe-settlement, nohu-vercel, nohu-settlement, easy-link) 건들지 않기**
-- 환경변수 복구 후 `.env.local`에 백업 저장해둘 것
+- **절대 다른 Vercel 프로젝트(cafe-settlement) 건들지 않기**
 
-## 과거 실수 (반복 금지)
-- cafe-webapp이 nohu-lab.vercel.app을 서빙하고 있었는데, 안 쓰는 거라 판단하고 삭제 → 환경변수 전부 날아감
-- 기존 프로젝트는 절대 삭제하지 말 것
+## 절대 금지 사항
+- **Vercel 프로젝트를 새로 만들거나 삭제하지 않기** (사용자가 명시적으로 요청할 때만)
+- **GitHub 저장소를 새로 만들거나 삭제하지 않기** (사용자가 명시적으로 요청할 때만)
+- 기존 프로젝트: nohu-lab(=nohu-lab.vercel.app), cafe-settlement 이 2개만 사용
+- cafe-webapp은 중복 프로젝트로 삭제됨 (2026-03-16)
 
 ## GitHub
 - 레포: hansungshowcase/nohu-lab
@@ -27,3 +27,7 @@
 - Next.js 16 (App Router) + React 19 + Tailwind 4
 - Supabase + JWT 인증
 - 스타일: green 팔레트, `max-w-2xl mx-auto space-y-6` 컨테이너
+
+## 보고 규칙
+- 사용자에게 작업 완료를 보고하기 전에, 모든 수정사항과 기능이 완벽하게 작동하는지 **최소 5번 테스트**한 후 최종 보고할 것
+- 빌드 테스트, 엔진/로직 테스트, 실제 페이지 접근 테스트 등을 포함
