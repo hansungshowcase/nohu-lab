@@ -12,6 +12,16 @@ export const programRegistry: Program[] = [
     isActive: true,
     badge: '인기',
   },
+  {
+    id: 'saju-reading',
+    name: '사주풀이',
+    description: '생년월일로 알아보는 나의 타고난 운명과 올해 운세',
+    minTier: 0,
+    icon: '🔮',
+    category: '테스트',
+    isActive: true,
+    badge: 'NEW',
+  },
   // minTier 1 - 코어회원
   {
     id: 'text-counter',
