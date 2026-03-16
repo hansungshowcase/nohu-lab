@@ -20,9 +20,8 @@ export default function AdminLoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       })
-      const data = await res.json()
-
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
         setError(data.error || '로그인에 실패했습니다.')
         return
       }
