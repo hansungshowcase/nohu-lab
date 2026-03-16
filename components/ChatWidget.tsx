@@ -57,7 +57,9 @@ export default function ChatWidget({ user }: { user: User | null }) {
         const data = await res.json()
         if (typeof data.unreadCount === 'number') setUnread(data.unreadCount)
       }
-    } catch {}
+    } catch {
+      // 네트워크 오류 시 폴링이 재시도
+    }
   }
 
   async function fetchMessages() {
@@ -69,13 +71,16 @@ export default function ChatWidget({ user }: { user: User | null }) {
         setUnread(0)
         setLoaded(true)
       }
-    } catch {}
+    } catch {
+      // 네트워크 오류 시 폴링이 재시도
+    }
   }
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault()
     if (!input.trim() || sending) return
     setSending(true)
+    const savedInput = input
     try {
       const res = await fetch('/api/chat/messages', {
         method: 'POST',
@@ -87,7 +92,9 @@ export default function ChatWidget({ user }: { user: User | null }) {
         setMessages(prev => [...prev, msg])
         setInput('')
       }
-    } catch {} finally { setSending(false) }
+    } catch {
+      setInput(savedInput)
+    } finally { setSending(false) }
   }
 
   function formatTime(d: string) {

@@ -199,6 +199,25 @@ function getTenGod(dayMasterElement: number, dayMasterYY: number, targetStem: nu
 // ═══════════════════════════════════════════════
 // 오행 분석 & 용신 판단
 // ═══════════════════════════════════════════════
+// 계절별 왕상(旺相) 오행 매핑
+// 월지 → 해당 계절에서 왕(旺)하는 오행과 상(相)하는 오행
+// 왕: 해당 계절의 오행, 상: 왕이 생하는 오행
+function getSeasonStrong(monthBranch: number): number[] {
+  // 인묘(2,3) = 봄/목 → 왕=목(0), 상=화(1)
+  // 사오(5,6) = 여름/화 → 왕=화(1), 상=토(2)
+  // 신유(8,9) = 가을/금 → 왕=금(3), 상=수(4)
+  // 해자(11,0) = 겨울/수 → 왕=수(4), 상=목(0)
+  // 진술축미(4,10,1,7) = 토왕용사/토 → 왕=토(2), 상=금(3)
+  switch (monthBranch) {
+    case 2: case 3: return [0, 1]     // 봄: 목왕, 화상
+    case 5: case 6: return [1, 2]     // 여름: 화왕, 토상
+    case 8: case 9: return [3, 4]     // 가을: 금왕, 수상
+    case 11: case 0: return [4, 0]    // 겨울: 수왕, 목상
+    case 4: case 10: case 1: case 7: return [2, 3] // 토월: 토왕, 금상
+    default: return [2, 3]
+  }
+}
+
 function analyzeElements(pillars: Pillar[], dayMasterElement: number) {
   const counts = [0, 0, 0, 0, 0] // 목화토금수
 
@@ -215,11 +234,37 @@ function analyzeElements(pillars: Pillar[], dayMasterElement: number) {
   const missing = counts.map((c, i) => c === 0 ? i : -1).filter(i => i >= 0)
   const strongIdx = counts.indexOf(Math.max(...counts))
 
-  // 신강/신약 판단: 일간과 같은 오행 + 인성(나를 생하는) 오행의 합
-  const produceMe = (dayMasterElement + 4) % 5 // 나를 생하는 오행
-  const myStrength = counts[dayMasterElement] + counts[produceMe]
-  const totalStrength = counts.reduce((a, b) => a + b, 0)
-  const isDayMasterStrong = myStrength > totalStrength / 2
+  // ═══ 개선된 신강/신약 판단 (득령/통근/투간 3요소) ═══
+  const produceMeElement = (dayMasterElement + 4) % 5 // 인성 오행 (나를 생하는)
+  const monthBranch = pillars[1].branch
+  let strengthScore = 0
+
+  // 1) 득령(得令): 월지의 계절에서 일간 오행이 왕(旺)/상(相)이면 +2점
+  const seasonStrong = getSeasonStrong(monthBranch)
+  if (seasonStrong.includes(dayMasterElement)) {
+    strengthScore += 2
+  }
+
+  // 2) 통근(通根): 사주 지지에서 일간과 같은 오행 또는 생하는 오행이면 각 +1점
+  for (const p of pillars) {
+    const branchEl = BRANCH_ELEMENT[p.branch]
+    if (branchEl === dayMasterElement || branchEl === produceMeElement) {
+      strengthScore += 1
+    }
+  }
+
+  // 3) 투간(透干): 천간에 비겁(같은 오행) 또는 인성(나를 생하는 오행)이 있으면 각 +1점
+  //    (일간 자신은 제외)
+  for (let i = 0; i < pillars.length; i++) {
+    if (i === 2) continue // 일간 자신 제외
+    const stemEl = STEM_ELEMENT[pillars[i].stem]
+    if (stemEl === dayMasterElement || stemEl === produceMeElement) {
+      strengthScore += 1
+    }
+  }
+
+  // 총점 4점 이상이면 신강
+  const isDayMasterStrong = strengthScore >= 4
 
   // 용신 판단
   let usefulGod: number
@@ -257,36 +302,68 @@ const CHEONUL_MAP: Record<number, number[]> = {
 }
 
 // 양인살: 일간별 양인이 되는 지지
-// 갑=묘, 을=진, 병=오, 정=미, 무=오, 기=미, 경=유, 신=술, 임=자, 계=축
+// 갑=묘, 병=오, 정=사, 무=오, 기=사, 경=유, 신=신, 임=자, 계=해
 const YANGIN_MAP: Record<number, number> = {
   0: 3,   // 갑 → 묘
-  1: 4,   // 을 → 진
+  // 을은 음간이라 양인 해당 없음 (제외)
   2: 6,   // 병 → 오
-  3: 7,   // 정 → 미
+  3: 5,   // 정 → 사
   4: 6,   // 무 → 오
-  5: 7,   // 기 → 미
+  5: 5,   // 기 → 사
   6: 9,   // 경 → 유
-  7: 10,  // 신 → 술
+  7: 8,   // 신 → 신
   8: 0,   // 임 → 자
-  9: 1,   // 계 → 축
+  9: 11,  // 계 → 해
+}
+
+// 도화살: 삼합 기준 일지/년지로 판단
+// 인/오/술 → 묘(3), 사/유/축 → 오(6), 신/자/진 → 유(9), 해/묘/미 → 자(0)
+const DOHWA_MAP: Record<number, number> = {
+  2: 3, 6: 3, 10: 3,   // 인/오/술 → 묘
+  5: 6, 9: 6, 1: 6,    // 사/유/축 → 오
+  8: 9, 0: 9, 4: 9,    // 신/자/진 → 유
+  11: 0, 3: 0, 7: 0,   // 해/묘/미 → 자
+}
+
+// 역마살: 삼합의 충 방향
+// 인/오/술 → 신(8), 사/유/축 → 해(11), 신/자/진 → 인(2), 해/묘/미 → 사(5)
+const YEOKMA_MAP: Record<number, number> = {
+  2: 8, 6: 8, 10: 8,    // 인/오/술 → 신
+  5: 11, 9: 11, 1: 11,  // 사/유/축 → 해
+  8: 2, 0: 2, 4: 2,     // 신/자/진 → 인
+  11: 5, 3: 5, 7: 5,    // 해/묘/미 → 사
+}
+
+// 화개살: 삼합 기준
+// 인/오/술 → 술(10), 사/유/축 → 축(1), 신/자/진 → 진(4), 해/묘/미 → 미(7)
+const HWAGAE_MAP: Record<number, number> = {
+  2: 10, 6: 10, 10: 10,  // 인/오/술 → 술
+  5: 1, 9: 1, 1: 1,      // 사/유/축 → 축
+  8: 4, 0: 4, 4: 4,      // 신/자/진 → 진
+  11: 7, 3: 7, 7: 7,     // 해/묘/미 → 미
 }
 
 function calculateShinsal(dayMaster: number, pillars: Pillar[]): string[] {
   const result: string[] = []
   const dayBranch = pillars[2].branch // 일지
+  const yearBranch = pillars[0].branch // 년지
 
   // 모든 기둥의 지지 수집
   const allBranches = pillars.map(p => p.branch)
 
-  // 도화살: 일지가 자(0)/오(6)/묘(3)/유(9)
-  const doHwaBranches = [0, 6, 3, 9]
-  if (doHwaBranches.includes(dayBranch)) {
+  // 도화살: 일지(또는 년지) 기준 삼합에서 파생, 해당 지지가 사주에 있으면
+  const dohwaTarget = DOHWA_MAP[dayBranch]
+  const dohwaTargetYear = DOHWA_MAP[yearBranch]
+  if ((dohwaTarget !== undefined && allBranches.some(b => b === dohwaTarget)) ||
+      (dohwaTargetYear !== undefined && allBranches.some(b => b === dohwaTargetYear))) {
     result.push('도화살')
   }
 
-  // 역마살: 일지가 인(2)/신(8)/사(5)/해(11)
-  const yeokMaBranches = [2, 8, 5, 11]
-  if (yeokMaBranches.includes(dayBranch)) {
+  // 역마살: 일지(또는 년지) 기준 삼합의 충 방향, 해당 지지가 사주에 있으면
+  const yeokmaTarget = YEOKMA_MAP[dayBranch]
+  const yeokmaTargetYear = YEOKMA_MAP[yearBranch]
+  if ((yeokmaTarget !== undefined && allBranches.some(b => b === yeokmaTarget)) ||
+      (yeokmaTargetYear !== undefined && allBranches.some(b => b === yeokmaTargetYear))) {
     result.push('역마살')
   }
 
@@ -296,9 +373,11 @@ function calculateShinsal(dayMaster: number, pillars: Pillar[]): string[] {
     result.push('천을귀인')
   }
 
-  // 화개살: 일지가 진(4)/술(10)/축(1)/미(7)
-  const hwaGaeBranches = [4, 10, 1, 7]
-  if (hwaGaeBranches.includes(dayBranch)) {
+  // 화개살: 일지(또는 년지) 기준, 해당 지지가 사주에 있으면
+  const hwagaeTarget = HWAGAE_MAP[dayBranch]
+  const hwagaeTargetYear = HWAGAE_MAP[yearBranch]
+  if ((hwagaeTarget !== undefined && allBranches.some(b => b === hwagaeTarget)) ||
+      (hwagaeTargetYear !== undefined && allBranches.some(b => b === hwagaeTargetYear))) {
     result.push('화개살')
   }
 

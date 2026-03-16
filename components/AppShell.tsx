@@ -21,13 +21,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       setUser(null)
       return
     }
-    fetch('/api/auth/me')
+    const controller = new AbortController()
+    fetch('/api/auth/me', { signal: controller.signal })
       .then((r) => {
         if (!r.ok) throw new Error()
         return r.json()
       })
       .then(setUser)
-      .catch(() => setUser(null))
+      .catch((err) => {
+        if (err.name !== 'AbortError') setUser(null)
+      })
+    return () => controller.abort()
   }, [pathname, isLoginPage])
 
   if (isLoginPage) {

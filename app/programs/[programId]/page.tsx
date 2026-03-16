@@ -30,13 +30,17 @@ export default function ProgramPage() {
   const program = getProgramById(programId)
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    const controller = new AbortController()
+    fetch('/api/auth/me', { signal: controller.signal })
       .then((r) => {
         if (!r.ok) throw new Error()
         return r.json()
       })
       .then(setUser)
-      .catch(() => setUser({ memberId: 'guest', nickname: '게스트', tier: 4 }))
+      .catch((err) => {
+        if (err.name !== 'AbortError') setUser({ memberId: 'guest', nickname: '게스트', tier: 4 })
+      })
+    return () => controller.abort()
   }, [])
 
   if (!user) {
