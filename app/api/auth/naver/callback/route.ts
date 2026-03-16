@@ -100,6 +100,10 @@ export async function GET(request: NextRequest) {
           `https://openapi.naver.com/v1/cafe/member/${cid}`,
           { headers: { Authorization: `Bearer ${accessToken}` } }
         )
+        if (!cafeRes.ok) {
+          debugResults[cid] = { status: cafeRes.status, error: 'HTTP error' }
+          continue
+        }
         const cafeData = await cafeRes.json()
         debugResults[cid] = { status: cafeRes.status, data: cafeData }
 
