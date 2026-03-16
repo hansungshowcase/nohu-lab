@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     // DB에 없으면 → 기존 pending 요청 확인 후 생성
-    const { data: existingReq } = await supabase
+    const { data: existingReq, error: existingError } = await supabase
       .from('verify_requests')
       .select('id')
       .eq('nickname', trimmed)
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .single()
 
-    if (existingReq) {
+    if (!existingError && existingReq) {
       return NextResponse.json({
         status: 'verifying',
         verifyId: existingReq.id,

@@ -55,10 +55,13 @@ export async function GET() {
     const rooms = Array.from(roomMap.values())
     const missingIds = rooms.filter(r => !r.memberNickname).map(r => r.roomId)
     if (missingIds.length > 0) {
-      const { data: members } = await supabase
+      const { data: members, error: membersError } = await supabase
         .from('members')
         .select('id, nickname')
         .in('id', missingIds)
+      if (membersError) {
+        return NextResponse.json({ error: '회원 조회 실패' }, { status: 500 })
+      }
       const memberMap = new Map((members || []).map(m => [m.id, m.nickname]))
       for (const room of rooms) {
         if (!room.memberNickname) {

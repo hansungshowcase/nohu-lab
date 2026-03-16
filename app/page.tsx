@@ -94,11 +94,8 @@ export default function LoginPage() {
         return
       }
 
-      if (!res.ok) {
-        setError(data.error || '로그인에 실패했습니다.')
-        setLoading(false)
-        return
-      }
+      setError(data.error || '로그인에 실패했습니다.')
+      setLoading(false)
     } catch {
       setError('서버에 연결할 수 없습니다.')
       setLoading(false)

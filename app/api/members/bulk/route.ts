@@ -21,10 +21,14 @@ export async function POST(request: NextRequest) {
   const supabase = getServiceSupabase()
 
   // 기존 회원 닉네임 조회
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from('members')
     .select('nickname')
     .in('nickname', nicknames)
+
+  if (existingError) {
+    return NextResponse.json({ error: '기존 회원 조회 실패' }, { status: 500 })
+  }
 
   const existingSet = new Set((existing || []).map((m) => m.nickname))
 

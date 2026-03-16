@@ -17,6 +17,10 @@ export async function GET() {
       supabase.from('verify_requests').select('created_at, status').order('created_at', { ascending: false }).limit(1),
     ])
 
+    if (countResult.error || lastVerifyResult.error || lastAnyResult.error) {
+      return NextResponse.json({ error: '데이터 조회 실패' }, { status: 500 })
+    }
+
     return NextResponse.json({
       totalMembers: countResult.count || 0,
       lastVerifySuccess: lastVerifyResult.data?.[0]?.created_at || null,

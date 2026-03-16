@@ -19,13 +19,17 @@ export async function POST(request: NextRequest) {
 
     // Get pending requests (created within last 2 minutes)
     const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString()
-    const { data: requests } = await supabase
+    const { data: requests, error: queryError } = await supabase
       .from('verify_requests')
       .select('id, nickname')
       .eq('status', 'pending')
       .gte('created_at', twoMinAgo)
       .order('created_at', { ascending: true })
       .limit(5)
+
+    if (queryError) {
+      return NextResponse.json({ error: '조회 실패' }, { status: 500 })
+    }
 
     return NextResponse.json({ requests: requests || [] })
   } catch {
