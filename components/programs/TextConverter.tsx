@@ -78,7 +78,7 @@ export default function TextConverter() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="변환할 텍스트를 입력하세요"
-          className="w-full h-32 p-4 rounded-lg border border-green-200 bg-white text-gray-900 resize-y focus:ring-2 focus:ring-green-500 outline-none"
+          className="w-full h-32 p-4 rounded-lg border border-orange-200 bg-white text-gray-900 resize-y focus:ring-2 focus:ring-orange-500 outline-none"
         />
       </div>
 
@@ -89,8 +89,8 @@ export default function TextConverter() {
             onClick={() => setMode(m.id)}
             className={`px-3 py-1.5 rounded-lg text-sm transition ${
               mode === m.id
-                ? 'bg-green-600 text-white'
-                : 'bg-green-50 text-gray-700 hover:bg-green-100'
+                ? 'bg-orange-600 text-white'
+                : 'bg-orange-50 text-gray-700 hover:bg-orange-100'
             }`}
           >
             {m.label}
@@ -103,12 +103,12 @@ export default function TextConverter() {
           <label className="block text-sm text-gray-700 mb-1">
             변환 결과
           </label>
-          <div className="bg-green-50 rounded-lg p-4 text-gray-900 whitespace-pre-wrap min-h-[80px]">
+          <div className="bg-orange-50 rounded-lg p-4 text-gray-900 whitespace-pre-wrap min-h-[80px]">
             {result}
           </div>
           <button
             onClick={handleCopy}
-            className="mt-2 px-4 py-2 text-sm bg-green-100 text-gray-700 rounded-lg hover:bg-green-200 transition"
+            className="mt-2 px-4 py-2 text-sm bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
           >
             {copied ? '✅ 복사됨!' : '결과 복사'}
           </button>

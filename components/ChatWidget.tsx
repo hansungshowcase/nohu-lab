@@ -114,12 +114,12 @@ export default function ChatWidget({ user }: { user: User | null }) {
         <div className="fixed bottom-20 right-4 sm:right-6 w-[340px] max-w-[calc(100vw-2rem)] h-[480px] max-h-[calc(100vh-8rem)] bg-white rounded-2xl shadow-2xl shadow-black/15 border border-gray-200 flex flex-col z-50 animate-[slideUp_0.2s_ease-out]">
           {/* 헤더 */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 shrink-0">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
               <span className="text-white text-xs font-bold">N</span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-sm text-gray-900">노후연구소</div>
-              <div className="text-[11px] text-green-600">문의 및 상담</div>
+              <div className="text-[11px] text-orange-600">문의 및 상담</div>
             </div>
             <button
               onClick={() => setOpen(false)}
@@ -135,7 +135,7 @@ export default function ChatWidget({ user }: { user: User | null }) {
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5 min-h-0">
             {!loaded ? (
               <div className="flex items-center justify-center h-full">
-                <div className="animate-spin h-6 w-6 border-3 border-green-500 border-t-transparent rounded-full" />
+                <div className="animate-spin h-6 w-6 border-3 border-orange-500 border-t-transparent rounded-full" />
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 gap-2">
@@ -155,14 +155,14 @@ export default function ChatWidget({ user }: { user: User | null }) {
                       )}
                       <div className={`px-3 py-2 rounded-2xl text-[13px] leading-relaxed ${
                         isMine
-                          ? 'bg-green-600 text-white rounded-br-sm'
+                          ? 'bg-orange-600 text-white rounded-br-sm'
                           : 'bg-gray-100 text-gray-900 rounded-bl-sm'
                       }`}>
                         {msg.message}
                       </div>
                       <div className={`flex items-center gap-1 mt-0.5 ${isMine ? 'justify-end' : ''}`}>
                         {isMine && msg.is_read && (
-                          <span className="text-[9px] text-green-600">읽음</span>
+                          <span className="text-[9px] text-orange-600">읽음</span>
                         )}
                         <span className="text-[9px] text-gray-400 px-0.5">{formatTime(msg.created_at)}</span>
                       </div>
@@ -183,12 +183,12 @@ export default function ChatWidget({ user }: { user: User | null }) {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="메시지 입력..."
                 maxLength={1000}
-                className="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-[13px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-[13px] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || sending}
-                className="p-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-xl transition shrink-0"
+                className="p-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-300 text-white rounded-xl transition shrink-0"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
@@ -202,7 +202,7 @@ export default function ChatWidget({ user }: { user: User | null }) {
       {/* 플로팅 버튼 */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-5 right-4 sm:right-6 w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-full shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 flex items-center justify-center transition-all duration-200 z-50"
+        className="fixed bottom-5 right-4 sm:right-6 w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-full shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 flex items-center justify-center transition-all duration-200 z-50"
       >
         {open ? (
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

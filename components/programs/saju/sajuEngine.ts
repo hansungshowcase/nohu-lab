@@ -120,14 +120,20 @@ function getYearPillar(year: number, month: number, day: number): Pillar {
 // 월주 계산 (절기 기준)
 // ═══════════════════════════════════════════════
 function getMonthIndex(month: number, day: number): number {
-  // 12개 절기 경계에서 현재 날짜가 어디에 해당하는지
-  for (let i = 11; i >= 0; i--) {
-    const b = MONTH_BOUNDS[i]
-    if (month > b.solarMonth || (month === b.solarMonth && day >= b.solarDay)) {
-      return i
+  // MONTH_BOUNDS: 인월(2월)~자월(12월)~축월(1월) 순서
+  // 1월(index 11)이 끝에 있어 별도 처리 필요
+  if (month >= 2) {
+    for (let i = 10; i >= 0; i--) {
+      const b = MONTH_BOUNDS[i]
+      if (month > b.solarMonth || (month === b.solarMonth && day >= b.solarDay)) {
+        return i
+      }
     }
+    return 11 // 입춘(2/4) 이전 → 축월
   }
-  return 11 // 1월 소한 이전 → 축월(전년도 12월)
+  // 1월: 소한(1/5) 이후면 축월, 이전이면 자월
+  if (day >= MONTH_BOUNDS[11].solarDay) return 11
+  return 10
 }
 
 function getMonthPillar(yearStem: number, month: number, day: number): Pillar {
@@ -426,9 +432,11 @@ export function calculateSaju(
   // 신살 계산
   const shinsal = calculateShinsal(dayMaster, pillars)
 
-  // 띠 계산
-  const animalYear = ((year - 4) % 12 + 12) % 12
-  const animal = BRANCHES_ANIMAL[animalYear]
+  // 띠 계산 (입춘 기준)
+  let animalY = year
+  if (month < 2 || (month === 2 && day < 4)) animalY--
+  const animalIdx = ((animalY - 4) % 12 + 12) % 12
+  const animal = BRANCHES_ANIMAL[animalIdx]
 
   // ═══════════════════════════════════════════════
   // 대운(大運) 계산

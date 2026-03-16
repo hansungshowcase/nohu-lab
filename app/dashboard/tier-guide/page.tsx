@@ -27,10 +27,10 @@ const tiers = [
   {
     name: '코어회원',
     tier: 1,
-    gradient: 'from-emerald-50/80 to-green-50/30',
-    border: 'border-emerald-200/60',
-    badgeBg: 'bg-emerald-100 text-emerald-700',
-    accent: 'text-emerald-700',
+    gradient: 'from-amber-50/80 to-orange-50/30',
+    border: 'border-amber-200/60',
+    badgeBg: 'bg-amber-100 text-amber-700',
+    accent: 'text-amber-700',
     statBg: 'bg-white/80',
     icon: '🌿',
     description: '카페 일반 멤버',
@@ -179,7 +179,7 @@ export default function TierGuidePage() {
       </div>
 
       <div className="mt-10 animate-slide-up" style={{ animationDelay: '700ms' }}>
-        <div className="p-6 bg-gradient-to-br from-green-50/80 to-emerald-50/40 backdrop-blur-sm rounded-2xl border border-emerald-200/60 text-center">
+        <div className="p-6 bg-gradient-to-br from-orange-50/80 to-amber-50/40 backdrop-blur-sm rounded-2xl border border-amber-200/60 text-center">
           <p className="text-[13px] text-gray-500 mb-4">
             등업 신청은 노후연구소 카페의 등업게시판에서 가능합니다
           </p>
@@ -187,7 +187,7 @@ export default function TierGuidePage() {
             href="https://cafe.naver.com/eovhskfktmak"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold text-[14px] rounded-xl shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98]"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-[14px] rounded-xl shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98]"
           >
             등업하러 가기
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

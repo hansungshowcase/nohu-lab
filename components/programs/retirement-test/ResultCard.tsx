@@ -24,7 +24,7 @@ const ResultCard = forwardRef<HTMLDivElement, ResultCardProps>(
         style={{ width: '100%' }}
       >
         {/* Header */}
-        <div className="bg-green-600 text-white px-6 py-4 text-center">
+        <div className="bg-orange-600 text-white px-6 py-4 text-center">
           <div className="text-sm font-medium opacity-80">노후연구소</div>
           <div className="text-lg font-bold mt-1">나의 노후 준비 점수는?</div>
         </div>
@@ -121,7 +121,7 @@ const ResultCard = forwardRef<HTMLDivElement, ResultCardProps>(
           <ul className="space-y-2">
             {result.advices.map((advice, i) => (
               <li key={i} className="flex gap-2 text-sm text-gray-600">
-                <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                <span className="text-orange-500 mt-0.5 shrink-0">✓</span>
                 <span>{advice}</span>
               </li>
             ))}

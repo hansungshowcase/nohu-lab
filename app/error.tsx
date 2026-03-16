@@ -13,7 +13,7 @@ export default function ErrorPage({
       <p className="text-gray-500 mb-6 text-center">잠시 후 다시 시도해주세요.</p>
       <button
         onClick={reset}
-        className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition"
+        className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition"
       >
         다시 시도
       </button>

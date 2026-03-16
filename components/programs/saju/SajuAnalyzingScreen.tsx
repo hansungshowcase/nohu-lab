@@ -258,7 +258,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
             style={{
               width: `${progress}%`,
               background: isComplete
-                ? 'linear-gradient(90deg, #22c55e, #16a34a)'
+                ? 'linear-gradient(90deg, #f97316, #ea580c)'
                 : 'linear-gradient(90deg, #8b5cf6, #6366f1, #a78bfa, #6366f1, #8b5cf6)',
               backgroundSize: isComplete ? '100% 100%' : '200% 100%',
               animation: isComplete ? 'none' : 'shimmer 1.5s linear infinite',
@@ -282,7 +282,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
           <span className="text-xs text-gray-500">{Math.round(progress)}%</span>
           {isComplete && (
             <span
-              className="text-xs text-green-600 font-bold"
+              className="text-xs text-orange-600 font-bold"
               style={{ animation: 'fadeInUp 0.3s ease-out forwards' }}
             >
               완료!
@@ -303,7 +303,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
               key={i}
               className="flex items-center gap-3 text-sm transition-all duration-300"
               style={{
-                color: isDone ? '#16a34a' : isCurrent ? '#1f2937' : '#d1d5db',
+                color: isDone ? '#ea580c' : isCurrent ? '#1f2937' : '#d1d5db',
                 fontWeight: isCurrent ? 600 : 400,
                 transform: isCurrent ? 'scale(1.03)' : 'scale(1)',
                 animation: isDone && i === currentStep - 1 ? 'fadeInUp 0.3s ease-out' : undefined,
@@ -325,7 +325,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
                 </span>
               )}
               {isDone && (
-                <span className="text-green-500 text-xs">완료</span>
+                <span className="text-orange-500 text-xs">완료</span>
               )}
             </div>
           )

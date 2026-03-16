@@ -192,7 +192,7 @@ export default function ShareButtons({
         {/* Copy link */}
         <button
           onClick={copyLink}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition"
         >
           {copied ? (
             <>✓ 링크가 복사되었습니다!</>
@@ -205,7 +205,7 @@ export default function ShareButtons({
         <button
           onClick={saveImage}
           disabled={saving}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-green-600 text-green-700 rounded-xl font-medium hover:bg-green-50 transition disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-orange-600 text-orange-700 rounded-xl font-medium hover:bg-orange-50 transition disabled:opacity-50"
         >
           {saving ? (
             <>저장 중...</>

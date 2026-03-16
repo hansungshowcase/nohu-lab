@@ -17,7 +17,7 @@ export default function TextCounter() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="여기에 텍스트를 입력하세요..."
-        className="w-full h-48 p-4 rounded-lg border border-green-200 bg-white text-gray-900 resize-y focus:ring-2 focus:ring-green-500 outline-none"
+        className="w-full h-48 p-4 rounded-lg border border-orange-200 bg-white text-gray-900 resize-y focus:ring-2 focus:ring-orange-500 outline-none"
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
@@ -30,7 +30,7 @@ export default function TextCounter() {
         ].map((item) => (
           <div
             key={item.label}
-            className="bg-green-50 rounded-lg p-4 text-center"
+            className="bg-orange-50 rounded-lg p-4 text-center"
           >
             <div className="text-2xl font-bold text-gray-900">
               {item.value.toLocaleString()}
@@ -45,7 +45,7 @@ export default function TextCounter() {
       {text && (
         <button
           onClick={() => setText('')}
-          className="px-4 py-2 text-sm bg-green-100 text-gray-700 rounded-lg hover:bg-green-200 transition"
+          className="px-4 py-2 text-sm bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
         >
           초기화
         </button>

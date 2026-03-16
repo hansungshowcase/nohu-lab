@@ -43,7 +43,7 @@ export default function Sidebar({ user }: { user: User | null }) {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-gray-100">
         <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-sm shadow-green-200 group-hover:shadow-md group-hover:shadow-green-200 transition-shadow">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-sm shadow-orange-200 group-hover:shadow-md group-hover:shadow-orange-200 transition-shadow">
             <span className="text-white text-sm font-bold">N</span>
           </div>
           <div>
@@ -60,8 +60,8 @@ export default function Sidebar({ user }: { user: User | null }) {
       {/* User Info */}
       <div className="px-6 py-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-100 to-emerald-50 flex items-center justify-center border border-green-200/50">
-            <span className="text-green-700 font-semibold text-sm">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
+            <span className="text-orange-700 font-semibold text-sm">
               {user.nickname.charAt(0)}
             </span>
           </div>
@@ -92,14 +92,14 @@ export default function Sidebar({ user }: { user: User | null }) {
               onClick={() => setOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-200 ${
                 isActive
-                  ? 'bg-green-50 text-green-700 font-semibold shadow-sm'
+                  ? 'bg-orange-50 text-orange-700 font-semibold shadow-sm'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
               <span className="text-base w-5 text-center">{item.icon}</span>
               {item.label}
               {isActive && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-green-500" />
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-500" />
               )}
             </Link>
           )

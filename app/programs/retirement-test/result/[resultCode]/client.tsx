@@ -17,7 +17,7 @@ export default function RetirementTestResultClient({
     <Suspense
       fallback={
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full" />
+          <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" />
         </div>
       }
     >
@@ -40,7 +40,7 @@ function ResultContent({ resultCode }: { resultCode: string }) {
         </h1>
         <Link
           href="/programs/retirement-test"
-          className="mt-4 px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-medium"
+          className="mt-4 px-6 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition font-medium"
         >
           나도 테스트하기
         </Link>
@@ -87,7 +87,7 @@ function ResultContent({ resultCode }: { resultCode: string }) {
         <div className="text-center">
           <Link
             href="/programs/retirement-test"
-            className="inline-block w-full max-w-md px-6 py-4 bg-green-600 text-white text-lg font-bold rounded-xl hover:bg-green-700 transition"
+            className="inline-block w-full max-w-md px-6 py-4 bg-orange-600 text-white text-lg font-bold rounded-xl hover:bg-orange-700 transition"
           >
             🏦 나도 테스트하기
           </Link>

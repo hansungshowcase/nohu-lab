@@ -35,11 +35,11 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-orange-50 px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-100">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-orange-100">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">⚙️</span>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">
@@ -60,7 +60,7 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="관리자 비밀번호"
-                className="w-full px-4 py-3 rounded-lg border border-green-200 bg-white text-gray-900 focus:ring-2 focus:ring-green-400 focus:border-transparent outline-none transition"
+                className="w-full px-4 py-3 rounded-lg border border-orange-200 bg-white text-gray-900 focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none transition"
                 required
               />
             </div>
@@ -74,7 +74,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+              className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
