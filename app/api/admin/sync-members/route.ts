@@ -33,9 +33,10 @@ export async function POST(request: NextRequest) {
     let syncCount = 0
     let errorCount = 0
 
-    for (let i = 0; i < members.length; i += 500) {
-      const batch = members.slice(i, i + 500).map((m: SyncMember) => ({
-        nickname: m.nickname,
+    const validMembers = members.filter((m: SyncMember) => m.nickname && typeof m.nickname === 'string' && m.nickname.trim())
+    for (let i = 0; i < validMembers.length; i += 500) {
+      const batch = validMembers.slice(i, i + 500).map((m: SyncMember) => ({
+        nickname: m.nickname.trim(),
         tier: Math.min(Math.max(Number(m.tier) || 1, 1), 4),
         phone: '',
       }))
