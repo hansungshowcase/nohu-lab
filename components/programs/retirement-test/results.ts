@@ -20,8 +20,8 @@ export const resultTypes: ResultType[] = [
     maxScore: 80,
     grade: '노후 마스터',
     icon: '🐢',
-    color: '#16a34a',
-    bgColor: '#f0fdf4',
+    color: '#ea580c',
+    bgColor: '#fff7ed',
     estimatedFund: '이미 80%+ 확보',
     description: '당신은 이미 노후 준비의 달인! 체계적인 계획과 꾸준한 실천으로 든든한 미래를 만들어가고 있습니다.',
     advices: [
