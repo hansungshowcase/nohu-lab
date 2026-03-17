@@ -96,3 +96,16 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* 사주풀이 애니메이션 */
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out both;
+}
+
+/* 인쇄 스타일 */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; }
+  .bg-premium { background: white !important; }
+  main { margin: 0 !important; padding: 0 !important; }
+}
