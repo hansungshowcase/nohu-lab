@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
 const COOKIE_NAME = 'cafe-auth-token'
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || '')
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'MISSING_JWT_SECRET_DO_NOT_USE_IN_PRODUCTION')
 
 export interface TokenPayload {
   memberId: string
