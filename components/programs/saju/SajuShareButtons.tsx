@@ -81,13 +81,11 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         throw new Error('Invalid PNG data')
       }
 
-      // data URL → Blob 변환 (더 안정적인 다운로드)
-      const res = await fetch(dataUrl)
-      const blob = await res.blob()
-
-      // 모바일: Web Share API
+      // 모바일: Web Share API (Blob 필요)
       if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
         try {
+          const res = await fetch(dataUrl)
+          const blob = await res.blob()
           const file = new File([blob], 'saju-result.png', { type: 'image/png' })
           await navigator.share({ files: [file], title: '사주풀이 결과' })
           setSaving(false)
@@ -97,20 +95,16 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         } catch { /* fallback to download */ }
       }
 
-      // Blob URL로 다운로드 (영문 파일명으로 호환성 확보)
-      const blobUrl = URL.createObjectURL(blob)
+      // data URL로 직접 다운로드 (Blob URL의 파일 연결 문제 회피)
       const fileName = 'saju-result.png'
       try {
         const link = document.createElement('a')
         link.download = fileName
-        link.href = blobUrl
+        link.href = dataUrl
         link.style.display = 'none'
         document.body.appendChild(link)
         link.click()
-        setTimeout(() => {
-          document.body.removeChild(link)
-          URL.revokeObjectURL(blobUrl)
-        }, 3000)
+        setTimeout(() => document.body.removeChild(link), 1000)
       } catch {
         // fallback: 새 탭에서 이미지 열기
         window.open(dataUrl, '_blank')
@@ -159,29 +153,21 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
   }
 
   const handleKakao = () => {
-    const w = window as typeof window & { Kakao?: { isInitialized: () => boolean; init: (key: string) => void; Share: { sendDefault: (obj: Record<string, unknown>) => void } } }
-    if (!w.Kakao) {
-      alert('카카오톡 SDK를 불러오지 못했습니다. 링크 복사로 공유해주세요.')
-      handleCopyLink()
+    const text = `${profile.emoji} ${viral}\n\n내 사주풀이 결과 보기:\n${getShareUrl()}`
+    const shareUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=49a70b42eb588f908af788e24a790891&ka=sdk%2F1.0.0&text=${encodeURIComponent(text)}&link=${encodeURIComponent(getShareUrl())}`
+
+    // 모바일: 카카오톡 앱으로 직접 공유 시도
+    if (/Mobi|Android/i.test(navigator.userAgent)) {
+      const kakaoLink = `https://story.kakao.com/share?url=${encodeURIComponent(getShareUrl())}`
+      window.open(kakaoLink, '_blank')
       return
     }
-    if (!w.Kakao.isInitialized()) {
-      w.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_KEY || '3913fde247b12ce25084eb42a9b17ed9')
-    }
+
+    // PC: 새 창에서 카카오톡 공유
     try {
-      w.Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: `${profile.emoji} ${profile.title}`,
-          description: `${viral}\n\n나도 사주풀이 해보기!`,
-          imageUrl: 'https://nohu-lab.vercel.app/globe.svg',
-          link: { mobileWebUrl: getShareUrl(), webUrl: getShareUrl() },
-        },
-        buttons: [
-          { title: '나도 사주풀이 하기', link: { mobileWebUrl: getShareUrl(), webUrl: getShareUrl() } },
-        ],
-      })
+      window.open(shareUrl, '_blank', 'width=500,height=600')
     } catch {
+      // fallback: 링크 복사
       handleCopyLink()
     }
   }
@@ -195,34 +181,34 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       </div>
 
       {/* 공유 버튼 */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
         <button
           onClick={handleCopyLink}
-          className="group relative py-4 bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all flex flex-col items-center justify-center gap-1.5"
+          className="group relative py-4 bg-gradient-to-b from-blue-50 to-blue-100/50 border border-blue-200 hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5"
         >
-          <span className="w-10 h-10 rounded-full bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center text-lg transition-colors">
+          <span className="w-11 h-11 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center text-xl transition-all duration-200 group-hover:scale-110">
             {copyDone ? '✅' : '🔗'}
           </span>
-          <span className="text-gray-600">{copyDone ? '복사됨!' : '링크 복사'}</span>
+          <span className="text-blue-700">{copyDone ? '복사됨!' : '링크 복사'}</span>
         </button>
         <button
           onClick={handleSaveImage}
           disabled={saving}
-          className="group relative py-4 bg-white border border-orange-200 hover:border-orange-300 hover:shadow-md active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all flex flex-col items-center justify-center gap-1.5 disabled:opacity-50"
+          className="group relative py-4 bg-gradient-to-b from-purple-50 to-purple-100/50 border border-purple-200 hover:border-purple-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:hover:translate-y-0"
         >
-          <span className="w-10 h-10 rounded-full bg-orange-50 group-hover:bg-orange-100 flex items-center justify-center text-lg transition-colors">
+          <span className="w-11 h-11 rounded-full bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center text-xl transition-all duration-200 group-hover:scale-110">
             {saving ? '⏳' : saveSuccess ? '✅' : '📷'}
           </span>
-          <span className="text-orange-700">{saving ? '저장 중...' : saveSuccess ? '완료!' : '이미지 저장'}</span>
+          <span className="text-purple-700">{saving ? '저장 중...' : saveSuccess ? '완료!' : '이미지 저장'}</span>
         </button>
         <button
           onClick={handleKakao}
-          className="group relative py-4 bg-white border border-[#FEE500] hover:border-[#F5DC00] hover:shadow-md active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all flex flex-col items-center justify-center gap-1.5"
+          className="group relative py-4 bg-gradient-to-b from-[#FEE500]/40 to-[#FEE500]/60 border border-[#F5DC00] hover:border-[#EDCF00] hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5"
         >
-          <span className="w-10 h-10 rounded-full bg-[#FEE500]/30 group-hover:bg-[#FEE500]/50 flex items-center justify-center transition-colors">
+          <span className="w-11 h-11 rounded-full bg-[#FEE500]/50 group-hover:bg-[#FEE500]/80 flex items-center justify-center transition-all duration-200 group-hover:scale-110">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
           </span>
-          <span className="text-[#3C1E1E]">카카오톡</span>
+          <span className="text-[#3C1E1E]">카카오톡 공유하기</span>
         </button>
       </div>
     </div>

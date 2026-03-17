@@ -336,13 +336,13 @@ function SajuReadingInner() {
           <div className="flex gap-2.5">
             <button
               onClick={handlePrint}
-              className="flex-1 py-3.5 bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm active:scale-[0.97] text-gray-600 rounded-2xl text-[13px] sm:text-sm font-semibold transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 bg-gradient-to-b from-emerald-50 to-emerald-100/50 border border-emerald-200 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] text-emerald-700 rounded-2xl text-[13px] sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2"
             >
               <span className="text-base">🖨️</span> A4 인쇄
             </button>
             <button
               onClick={handleRetry}
-              className="flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:scale-[0.97] text-white rounded-2xl text-[13px] sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 shadow-sm"
+              className="flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] text-white rounded-2xl text-[13px] sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
             >
               <span className="text-base">🔄</span> 다시 풀기
             </button>
