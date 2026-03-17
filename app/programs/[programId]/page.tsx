@@ -30,19 +30,23 @@ export default function ProgramPage() {
   const program = getProgramById(programId)
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    const controller = new AbortController()
+    fetch('/api/auth/me', { signal: controller.signal })
       .then((r) => {
         if (!r.ok) throw new Error()
         return r.json()
       })
       .then(setUser)
-      .catch(() => setUser({ memberId: 'guest', nickname: '게스트', tier: 0 }))
-  }, [router])
+      .catch((err) => {
+        if (err.name !== 'AbortError') setUser({ memberId: 'guest', nickname: '게스트', tier: 0 })
+      })
+    return () => controller.abort()
+  }, [])
 
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" />
       </div>
     )
   }
@@ -56,7 +60,7 @@ export default function ProgramPage() {
         </h1>
         <button
           onClick={() => router.push('/dashboard')}
-          className="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+          className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
         >
           대시보드로 돌아가기
         </button>
@@ -77,7 +81,7 @@ export default function ProgramPage() {
         </p>
         <button
           onClick={() => router.push('/dashboard')}
-          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
         >
           대시보드로 돌아가기
         </button>
@@ -92,7 +96,7 @@ export default function ProgramPage() {
       <div className="flex items-center gap-3 mb-6 sm:mb-8">
         <button
           onClick={() => router.push('/dashboard')}
-          className="p-2 hover:bg-green-50 rounded-lg transition"
+          className="p-2 hover:bg-orange-50 rounded-lg transition"
         >
           ←
         </button>
@@ -107,7 +111,7 @@ export default function ProgramPage() {
         <Suspense
           fallback={
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full" />
+              <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" />
             </div>
           }
         >

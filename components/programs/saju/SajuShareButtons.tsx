@@ -1,8 +1,8 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { SajuResult, STEMS, ELEMENTS, STEM_ELEMENT } from './sajuEngine'
-import { DAY_MASTER_PROFILES, getViralSummary } from './sajuData'
+import { DAY_MASTER_PROFILES } from './sajuData'
 
 interface Props {
   result: SajuResult
@@ -14,26 +14,28 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
   const [saving, setSaving] = useState(false)
 
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
-  const viral = getViralSummary(result.dayMaster, result.isDayMasterStrong)
-
-  // 공유 URL 생성 (개인정보 보호를 위해 base64 인코딩)
   const getShareUrl = useCallback(() => {
-    const data = `${result.birthYear},${result.birthMonth},${result.birthDay},${result.birthHour ?? ''},${result.gender === 'male' ? 'm' : 'f'}`
-    const encoded = btoa(data)
-    return `${window.location.origin}/programs/saju-reading?d=${encoded}`
+    const params = new URLSearchParams({
+      y: String(result.birthYear),
+      m: String(result.birthMonth),
+      d: String(result.birthDay),
+      h: result.birthHour !== null ? String(result.birthHour) : '',
+      g: result.gender === 'male' ? 'm' : 'f',
+    })
+    return `${window.location.origin}/programs/saju-reading?${params.toString()}`
   }, [result])
 
-  // 링크 복사
   const handleCopyLink = async () => {
     try {
-      const text = `${profile.emoji} ${viral}\n\n내 사주풀이 결과 보기:\n${getShareUrl()}`
+      const text = `${profile.emoji} 내 사주풀이 결과 보기:\n${getShareUrl()}`
       await navigator.clipboard.writeText(text)
       setCopyDone(true)
       setTimeout(() => setCopyDone(false), 2000)
     } catch {
-      // fallback
       const ta = document.createElement('textarea')
       ta.value = getShareUrl()
+      ta.style.position = 'fixed'
+      ta.style.left = '-9999px'
       document.body.appendChild(ta)
       ta.select()
       document.execCommand('copy')
@@ -43,43 +45,54 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     }
   }
 
-  // 이미지 저장
   const handleSaveImage = async () => {
     if (!cardRef.current || saving) return
     setSaving(true)
+
     try {
-      const html2canvas = (await import('html2canvas')).default
+      // html2canvas 동적 import
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const html2canvas = (await import('html2canvas') as any).default
+
+      // 카드를 직접 캡처 (클론 없이, 가장 안정적)
       const canvas = await html2canvas(cardRef.current, {
         scale: 2,
-        backgroundColor: '#f5f3ff',
+        backgroundColor: '#ffffff',
         useCORS: true,
         logging: false,
       })
-      const dataUrl = canvas.toDataURL('image/png')
 
-      // 모바일: Web Share API 시도
-      if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+      // 파일명
+      const filename = `사주풀이_${STEMS[result.dayMaster]}${ELEMENTS[STEM_ELEMENT[result.dayMaster]]}.png`
+
+      // data URL → 다운로드
+      const dataUrl = canvas.toDataURL('image/png')
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+
+      if (isMobile && navigator.share) {
         try {
           const blob = await (await fetch(dataUrl)).blob()
-          const file = new File([blob], 'saju-result.png', { type: 'image/png' })
+          const file = new File([blob], filename, { type: 'image/png' })
           await navigator.share({ files: [file], title: '사주풀이 결과' })
-          setSaving(false)
           return
         } catch { /* fallback */ }
       }
 
-      // 데스크톱 또는 fallback: 다운로드
+      // PC + 모바일 공통: <a> 태그로 다운로드
       const link = document.createElement('a')
-      link.download = `사주풀이_${STEMS[result.dayMaster]}${ELEMENTS[STEM_ELEMENT[result.dayMaster]]}.png`
+      link.download = filename
       link.href = dataUrl
+      document.body.appendChild(link)
       link.click()
-    } catch (e) {
-      console.error('이미지 저장 실패:', e)
+      document.body.removeChild(link)
+    } catch (err) {
+      // 실패 시 스크린샷 안내
+      alert('이미지 저장에 실패했습니다.\n길게 눌러서 스크린샷을 이용해주세요.')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
-  // 카카오톡 공유
   const handleKakao = () => {
     const w = window as typeof window & { Kakao?: { isInitialized: () => boolean; init: (key: string) => void; Share: { sendDefault: (obj: Record<string, unknown>) => void } } }
     if (!w.Kakao) {
@@ -87,14 +100,14 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       return
     }
     if (!w.Kakao.isInitialized()) {
-      w.Kakao.init('3913fde247b12ce25084eb42a9b17ed9')
+      w.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_KEY || '')
     }
     try {
       w.Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
-          title: `${profile.emoji} ${profile.title}`,
-          description: `${viral}\n\n나도 사주풀이 해보기!`,
+          title: `${profile.emoji} 나의 사주풀이 결과`,
+          description: '나도 사주풀이 해보기!',
           imageUrl: 'https://nohu-lab.vercel.app/og-saju.png',
           link: { mobileWebUrl: getShareUrl(), webUrl: getShareUrl() },
         },
@@ -122,7 +135,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           disabled={saving}
           className="flex-1 py-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
         >
-          {saving ? '저장 중...' : '📷 이미지 저장'}
+          {saving ? '⏳ 저장 중...' : '📷 이미지 저장'}
         </button>
         <button
           onClick={handleKakao}

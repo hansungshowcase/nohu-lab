@@ -50,7 +50,7 @@ export default function ShareButtons({
   useEffect(() => {
     function initKakao() {
       if (window.Kakao && !window.Kakao.isInitialized()) {
-        window.Kakao.init('3913fde247b12ce25084eb42a9b17ed9')
+        window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_KEY || '')
       }
       if (window.Kakao?.isInitialized()) {
         setKakaoReady(true)
@@ -129,9 +129,8 @@ export default function ShareButtons({
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+      URL.revokeObjectURL(blobUrl)
     } catch (err) {
-      console.error('이미지 저장 실패:', err)
       alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
     } finally {
       setSaving(false)
@@ -193,7 +192,7 @@ export default function ShareButtons({
         {/* Copy link */}
         <button
           onClick={copyLink}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition"
         >
           {copied ? (
             <>✓ 링크가 복사되었습니다!</>
@@ -206,7 +205,7 @@ export default function ShareButtons({
         <button
           onClick={saveImage}
           disabled={saving}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-green-600 text-green-700 rounded-xl font-medium hover:bg-green-50 transition disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-orange-600 text-orange-700 rounded-xl font-medium hover:bg-orange-50 transition disabled:opacity-50"
         >
           {saving ? (
             <>저장 중...</>

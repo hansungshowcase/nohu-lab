@@ -5,7 +5,7 @@ import { getServiceSupabase } from '@/lib/supabase'
 // GET: 메시지 조회
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser()
-  if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
+  if (!user || user.tier === 0) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
   const supabase = getServiceSupabase()
   const { searchParams } = new URL(request.url)
@@ -15,32 +15,37 @@ export async function GET(request: NextRequest) {
   const paramRoom = searchParams.get('roomId')
   const roomId = user.tier === 4 && paramRoom ? paramRoom : user.memberId
 
-  const { data, error } = await supabase
-    .from('chat_messages')
-    .select('*')
-    .eq('room_id', roomId)
-    .order('created_at', { ascending: true })
+  // 메시지 조회 + 읽음 처리 병렬 실행
+  const readRole = user.tier === 4 ? 'member' : 'admin'
+  const [messagesResult, readResult] = await Promise.all([
+    supabase
+      .from('chat_messages')
+      .select('id, room_id, sender_id, sender_nickname, sender_role, message, is_read, created_at')
+      .eq('room_id', roomId)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('chat_messages')
+      .update({ is_read: true })
+      .eq('room_id', roomId)
+      .eq('sender_role', readRole)
+      .eq('is_read', false),
+  ])
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (messagesResult.error) {
+    return NextResponse.json({ error: messagesResult.error.message }, { status: 500 })
   }
 
-  // 상대방 메시지를 읽음 처리
-  const readRole = user.tier === 4 ? 'member' : 'admin'
-  await supabase
-    .from('chat_messages')
-    .update({ is_read: true })
-    .eq('room_id', roomId)
-    .eq('sender_role', readRole)
-    .eq('is_read', false)
+  if (readResult.error) {
+    return NextResponse.json({ error: '읽음 처리 실패' }, { status: 500 })
+  }
 
-  return NextResponse.json(data || [])
+  return NextResponse.json(messagesResult.data || [])
 }
 
 // POST: 메시지 전송
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser()
-  if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
+  if (!user || user.tier === 0) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
   const body = await request.json()
   const { message, roomId: targetRoomId } = body

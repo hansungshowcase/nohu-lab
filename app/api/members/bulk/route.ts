@@ -14,6 +14,9 @@ export async function POST(request: NextRequest) {
   if (!Array.isArray(nicknames) || nicknames.length === 0) {
     return NextResponse.json({ error: '닉네임 목록이 필요합니다.' }, { status: 400 })
   }
+  if (nicknames.length > 500) {
+    return NextResponse.json({ error: '한 번에 최대 500명까지 등록 가능합니다.' }, { status: 400 })
+  }
 
   if (nicknames.length > 1000) {
     return NextResponse.json({ error: '한 번에 최대 1000명까지 등록 가능합니다.' }, { status: 400 })
@@ -22,10 +25,14 @@ export async function POST(request: NextRequest) {
   const supabase = getServiceSupabase()
 
   // 기존 회원 닉네임 조회
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from('members')
     .select('nickname')
     .in('nickname', nicknames)
+
+  if (existingError) {
+    return NextResponse.json({ error: '기존 회원 조회 실패' }, { status: 500 })
+  }
 
   const existingSet = new Set((existing || []).map((m) => m.nickname))
 

@@ -12,7 +12,7 @@ export async function GET() {
   const supabase = getServiceSupabase()
   const { data, error } = await supabase
     .from('members')
-    .select('*')
+    .select('id, nickname, phone, tier, created_at, last_login')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -22,9 +22,9 @@ export async function GET() {
   // 연락처 마스킹
   const masked = data.map((m) => ({
     ...m,
-    phone_masked: (m.phone || '').length >= 8
-      ? `${m.phone.slice(0, 3)}-****-${m.phone.slice(-4)}`
-      : m.phone ? '****' : '',
+    phone_masked: m.phone.length === 11
+      ? `${m.phone.slice(0, 3)}-****-${m.phone.slice(7)}`
+      : m.phone,
   }))
 
   return NextResponse.json(masked)
@@ -39,8 +39,11 @@ export async function POST(request: NextRequest) {
 
   const { nickname, phone, tier } = await request.json()
 
-  if (!nickname) {
+  if (!nickname || typeof nickname !== 'string' || !nickname.trim()) {
     return NextResponse.json({ error: '닉네임은 필수입니다.' }, { status: 400 })
+  }
+  if (nickname.trim().length > 50) {
+    return NextResponse.json({ error: '닉네임은 50자 이내로 입력해주세요.' }, { status: 400 })
   }
 
   const supabase = getServiceSupabase()
@@ -48,9 +51,9 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase
     .from('members')
     .insert({
-      nickname: nickname.trim().slice(0, 100),
-      phone: phone?.replace(/-/g, '') || '',
-      tier: Math.min(Math.max(Number(tier) || 1, 1), 4),
+      nickname: nickname.trim(),
+      phone: typeof phone === 'string' ? phone.replace(/-/g, '') : '',
+      tier: typeof tier === 'number' ? Math.min(Math.max(tier, 1), 4) : 1,
     })
     .select()
     .single()

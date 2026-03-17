@@ -2,280 +2,276 @@
 
 import { forwardRef } from 'react'
 import {
-  SajuResult, STEMS, STEMS_HANJA, BRANCHES, BRANCHES_HANJA,
-  ELEMENTS, getElementEmoji, pillarToString, pillarToHanja, Pillar,
-  STEM_ELEMENT, BRANCH_ELEMENT, STEM_YINYANG,
+  SajuResult, STEMS, STEMS_HANJA,
 } from './sajuEngine'
 import {
   DAY_MASTER_PROFILES, STRENGTH_INTERPRETATIONS,
-  MISSING_ELEMENT_ADVICE, USEFUL_GOD_TIPS,
-  getYearFortune, getViralSummary, getCompatibilityHint,
+  getYearFortune,
+  getDaeunInterpretation,
+  SHINSAL_DATA,
 } from './sajuData'
 
 interface Props {
   result: SajuResult
 }
 
-function PillarDisplay({ label, pillar, tenGod }: { label: string; pillar: Pillar; tenGod?: string }) {
-  const stemEl = STEM_ELEMENT[pillar.stem]
-  const branchEl = BRANCH_ELEMENT[pillar.branch]
-  const stemColors = ['text-green-600','text-red-500','text-yellow-600','text-gray-500','text-blue-500']
-  const branchColors = ['text-green-600','text-red-500','text-yellow-600','text-gray-500','text-blue-500']
-
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <span className="text-[10px] text-gray-400">{label}</span>
-      {tenGod && <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{tenGod}</span>}
-      <div className="bg-white border-2 border-gray-200 rounded-xl p-2 w-16 text-center shadow-sm">
-        <div className={`text-2xl font-bold ${stemColors[stemEl]}`}>
-          {STEMS_HANJA[pillar.stem]}
-        </div>
-        <div className="text-[10px] text-gray-400 my-0.5">{STEMS[pillar.stem]}({ELEMENTS[stemEl]})</div>
-        <div className="border-t border-gray-100 my-1" />
-        <div className={`text-2xl font-bold ${branchColors[branchEl]}`}>
-          {BRANCHES_HANJA[pillar.branch]}
-        </div>
-        <div className="text-[10px] text-gray-400 mt-0.5">{BRANCHES[pillar.branch]}({ELEMENTS[branchEl]})</div>
-      </div>
-    </div>
-  )
+const BAR_COLORS: Record<number, string> = {
+  5: 'bg-amber-500',
+  4: 'bg-amber-400',
+  3: 'bg-amber-300',
+  2: 'bg-amber-200',
+  1: 'bg-amber-100',
 }
 
-function ElementBar({ element, count, max, idx }: { element: string; count: number; max: number; idx: number }) {
-  const colors = ['bg-green-500','bg-red-500','bg-yellow-500','bg-gray-400','bg-blue-500']
-  const emojis = ['🌳','🔥','🏔️','⚔️','💧']
-  const pct = max > 0 ? (count / max) * 100 : 0
-
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm w-6">{emojis[idx]}</span>
-      <span className="text-sm w-8 text-gray-600">{element}</span>
-      <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
-        <div
-          className={`h-full rounded-full ${colors[idx]} transition-all duration-700`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="text-sm w-8 text-right text-gray-500">{count.toFixed(1)}</span>
-    </div>
-  )
-}
-
-function StarRating({ stars }: { stars: number }) {
-  return (
-    <span className="text-yellow-400">
-      {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
-    </span>
-  )
-}
+/* ── 순차 fade-in 애니메이션용 인라인 스타일 ── */
+const fadeStyle = (index: number): React.CSSProperties => ({
+  opacity: 0,
+  animation: `sajuFadeUp 0.5s ease-out ${index * 0.12}s forwards`,
+})
 
 const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
-  const profile = DAY_MASTER_PROFILES[result.dayMaster]
-  const strength = result.isDayMasterStrong
-    ? STRENGTH_INTERPRETATIONS.strong
-    : STRENGTH_INTERPRETATIONS.weak
+  const profile = DAY_MASTER_PROFILES[result.dayMaster] || DAY_MASTER_PROFILES[0]
+  const strength = result.isDayMasterStrong ? STRENGTH_INTERPRETATIONS.strong : STRENGTH_INTERPRETATIONS.weak
   const fortune = getYearFortune(result.dayMasterElement, new Date().getFullYear())
-  const viralSummary = getViralSummary(result.dayMaster, result.isDayMasterStrong)
-  const maxEl = Math.max(...result.elementCounts)
-  const usefulGodTip = USEFUL_GOD_TIPS[result.usefulGod]
+  const currentYear = new Date().getFullYear()
+  const currentAge = currentYear - result.birthYear
 
-  const hasHourPillar = result.hourPillar !== null && result.hourPillar !== undefined
-  const pillars: { label: string; pillar: Pillar; tenGod?: string; hidden?: boolean }[] = [
-    { label: '시주(時柱)', pillar: result.hourPillar || { stem: 0, branch: 0 }, tenGod: result.tenGods[3] || '', hidden: !hasHourPillar },
-    { label: '일주(日柱)', pillar: result.dayPillar, tenGod: '나' },
-    { label: '월주(月柱)', pillar: result.monthPillar, tenGod: result.tenGods[1] },
-    { label: '년주(年柱)', pillar: result.yearPillar, tenGod: result.tenGods[0] },
-  ]
+  let sectionIdx = 0
 
   return (
-    <div ref={ref} className="bg-gradient-to-b from-indigo-50 via-white to-purple-50 rounded-2xl overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5 text-center text-white">
-        <p className="text-indigo-200 text-xs mb-1">노후연구소 사주풀이</p>
-        <div className="text-4xl mb-2">{profile.emoji}</div>
-        <h2 className="text-xl font-bold">{profile.title}</h2>
-        <p className="text-indigo-200 text-sm mt-1">{viralSummary}</p>
+    <div ref={ref} className="bg-[#faf8f5] rounded-2xl overflow-hidden shadow-xl border border-amber-100/60">
+
+      {/* keyframes 정의 */}
+      <style>{`
+        @keyframes sajuFadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      {/* ═══ 헤더 ═══ */}
+      <div
+        className="relative px-5 sm:px-7 py-6 sm:py-7 text-white overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+          ...fadeStyle(sectionIdx++),
+        }}
+      >
+        {/* 배경 장식 */}
+        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-amber-400/10 -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-amber-400/5 translate-y-1/2 -translate-x-1/2" />
+
+        <div className="relative flex items-center gap-4">
+          <div className="text-4xl sm:text-5xl flex-shrink-0 drop-shadow-lg">{profile.emoji}</div>
+          <div className="flex-1 min-w-0">
+            <p className="text-amber-300/80 text-xs sm:text-sm tracking-widest font-medium">
+              노후연구소 AI 사주풀이
+            </p>
+            <h2 className="text-lg sm:text-xl font-bold leading-tight mt-1 text-amber-50">
+              {profile.title}
+            </h2>
+            <p className="text-amber-200/90 text-sm sm:text-base mt-1">
+              {STEMS[result.dayMaster]}({STEMS_HANJA[result.dayMaster]}) · {profile.element} · {strength.label}
+            </p>
+          </div>
+        </div>
+        <div className="relative flex items-center justify-between mt-3 text-sm text-amber-200/80">
+          <span>
+            {result.birthYear}.{result.birthMonth}.{result.birthDay}
+            {result.birthHour !== null ? ` ${result.birthHour}시` : ''} · {result.gender === 'male' ? '남' : '여'} · {result.animal}띠
+          </span>
+        </div>
       </div>
 
-      <div className="px-5 py-6 space-y-6">
-        {/* 사주팔자 표시 */}
-        <div>
-          <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-            📋 나의 사주팔자
-          </h3>
-          <div className="flex justify-center gap-2">
-            {pillars.map((p, i) => (
-              result.hourPillar || i > 0 ? (
-                <PillarDisplay key={i} label={p.label} pillar={p.pillar} tenGod={p.tenGod} />
-              ) : (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] text-gray-400">{p.label}</span>
-                  <span className="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-400">-</span>
-                  <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-2 w-16 text-center">
-                    <div className="text-2xl text-gray-300">?</div>
-                    <div className="text-[10px] text-gray-300 my-0.5">시간</div>
-                    <div className="border-t border-gray-100 my-1" />
-                    <div className="text-2xl text-gray-300">?</div>
-                    <div className="text-[10px] text-gray-300 mt-0.5">미입력</div>
-                  </div>
-                </div>
-              )
-            ))}
-          </div>
-          <div className="text-center mt-2">
-            <span className="text-xs text-gray-400">
-              {result.birthYear}년 {result.birthMonth}월 {result.birthDay}일
-              {result.birthHour !== null ? ` ${result.birthHour}시` : ''} 생 · {result.animal}띠 · {result.gender === 'male' ? '남' : '여'}
-            </span>
-          </div>
-        </div>
+      <div className="px-5 sm:px-7 py-5 sm:py-6 space-y-4">
 
-        {/* 일간 성격 */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-            🧬 일간(日干) 분석 — {STEMS[result.dayMaster]}{profile.element}
-          </h3>
-          <p className="text-sm text-gray-600 leading-relaxed">{profile.description}</p>
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            {profile.personality.map(k => (
-              <span key={k} className="bg-indigo-50 text-indigo-600 text-xs px-2 py-1 rounded-full">#{k}</span>
-            ))}
-          </div>
-        </div>
-
-        {/* 신강/신약 */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-            {strength.emoji} {strength.label}
-          </h3>
-          <p className="text-sm text-gray-600">{strength.description}</p>
-          <p className="text-sm text-purple-600 mt-2 font-medium">{strength.advice}</p>
-        </div>
-
-        {/* 오행 밸런스 */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-            ☯️ 오행 밸런스
-          </h3>
-          <div className="space-y-2">
-            {ELEMENTS.map((el, i) => (
-              <ElementBar key={el} element={el} count={result.elementCounts[i]} max={maxEl} idx={i} />
-            ))}
-          </div>
-          {result.missingElements.length > 0 && (
-            <div className="mt-3 p-3 bg-amber-50 rounded-lg">
-              <p className="text-xs text-amber-700 font-medium">
-                ⚠️ 부족한 오행: {result.missingElements.map(i => `${getElementEmoji(i)} ${ELEMENTS[i]}`).join(', ')}
-              </p>
-              {result.missingElements.map(i => (
-                <div key={i} className="mt-2">
-                  <ul className="text-xs text-amber-600 space-y-0.5">
-                    {MISSING_ELEMENT_ADVICE[i].items.map((item, j) => (
-                      <li key={j}>• {item}</li>
-                    ))}
-                  </ul>
-                </div>
+        {/* ═══ 올해 운세 (가장 큰 섹션) ═══ */}
+        <section
+          className="rounded-xl p-5 sm:p-6 border border-amber-200/60"
+          style={{
+            background: 'linear-gradient(135deg, #fffbf0 0%, #fff7e6 100%)',
+            ...fadeStyle(sectionIdx++),
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-bold text-gray-900">
+              🗓️ {currentYear}년 운세
+            </h3>
+            <div className="flex gap-0.5">
+              {Array.from({ length: 5 }, (_, i) => (
+                <span
+                  key={i}
+                  className="text-xl"
+                  style={{ color: i < fortune.stars ? '#f59e0b' : '#d1d5db' }}
+                >
+                  ★
+                </span>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+          <div className="text-base font-bold text-amber-800 mb-2">{fortune.title}</div>
+          <p className="text-sm sm:text-base text-gray-800 leading-relaxed">{fortune.description}</p>
+          <div className="mt-3 bg-amber-100/50 rounded-lg px-4 py-3 border border-amber-200/40">
+            <p className="text-sm sm:text-base text-amber-900 font-semibold">💡 올해의 조언</p>
+            <p className="text-sm sm:text-base text-gray-800 mt-1 leading-relaxed">{fortune.advice}</p>
+          </div>
+        </section>
 
-        {/* 강점 & 약점 */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-green-50 rounded-xl p-3">
-            <h4 className="text-xs font-bold text-green-700 mb-2">💪 강점</h4>
-            <ul className="text-xs text-green-600 space-y-1">
-              {profile.strengths.map(s => <li key={s}>✓ {s}</li>)}
-            </ul>
+        {/* ═══ 재물운 ═══ */}
+        <section
+          className="rounded-xl p-5 sm:p-6 border border-yellow-200/60 bg-[#fffef8]"
+          style={fadeStyle(sectionIdx++)}
+        >
+          <div className="flex items-center gap-2.5 mb-2">
+            <span className="text-xl">💰</span>
+            <h3 className="text-lg font-bold text-gray-900">재물운</h3>
           </div>
-          <div className="bg-red-50 rounded-xl p-3">
-            <h4 className="text-xs font-bold text-red-700 mb-2">⚡ 주의점</h4>
-            <ul className="text-xs text-red-600 space-y-1">
-              {profile.weaknesses.map(w => <li key={w}>• {w}</li>)}
-            </ul>
-          </div>
-        </div>
+          <p className="text-sm sm:text-base text-gray-800 leading-relaxed">{strength.money}</p>
+        </section>
 
-        {/* 재물운 & 연애운 */}
-        <div className="space-y-3">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <h3 className="text-sm font-bold text-gray-700 mb-2">💰 재물운</h3>
-            <p className="text-sm text-gray-600">{strength.money}</p>
+        {/* ═══ 연애/결혼운 ═══ */}
+        <section
+          className="rounded-xl p-5 sm:p-6 border border-rose-200/60 bg-[#fff9f9]"
+          style={fadeStyle(sectionIdx++)}
+        >
+          <div className="flex items-center gap-2.5 mb-2">
+            <span className="text-xl">❤️</span>
+            <h3 className="text-lg font-bold text-gray-900">연애·결혼운</h3>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <h3 className="text-sm font-bold text-gray-700 mb-2">❤️ 연애/관계</h3>
-            <p className="text-sm text-gray-600">{profile.loveStyle}</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <h3 className="text-sm font-bold text-gray-700 mb-2">💕 궁합 힌트</h3>
-            <p className="text-sm text-gray-600">{getCompatibilityHint(result.dayMaster)}</p>
-          </div>
-        </div>
+          <p className="text-sm sm:text-base text-gray-800 leading-relaxed">{profile.loveStyle}</p>
+        </section>
 
-        {/* 건강 & 직업 */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-            <h4 className="text-xs font-bold text-gray-700 mb-2">🏥 건강 조언</h4>
-            <p className="text-xs text-gray-500">{profile.healthTip}</p>
+        {/* ═══ 건강 주의 ═══ */}
+        <section
+          className="rounded-xl p-5 sm:p-6 border border-emerald-200/60 bg-[#f8fefb]"
+          style={fadeStyle(sectionIdx++)}
+        >
+          <div className="flex items-center gap-2.5 mb-2">
+            <span className="text-xl">🏥</span>
+            <h3 className="text-lg font-bold text-gray-900">건강 주의</h3>
           </div>
-          <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-            <h4 className="text-xs font-bold text-gray-700 mb-2">💼 적합 직업</h4>
-            <ul className="text-xs text-gray-500 space-y-0.5">
-              {profile.careerFit.slice(0, 4).map(c => <li key={c}>• {c}</li>)}
-            </ul>
+          <p className="text-sm sm:text-base text-gray-800 leading-relaxed">{profile.healthTip}</p>
+        </section>
+
+        {/* ═══ 조심할 것 ═══ */}
+        <section
+          className="rounded-xl p-5 sm:p-6 border border-red-200 bg-red-50/70"
+          style={fadeStyle(sectionIdx++)}
+        >
+          <h3 className="text-lg font-bold text-red-900 mb-3">⚠️ 이것만은 조심하세요</h3>
+          <div className="space-y-1.5">
+            {profile.weaknesses.map(w => (
+              <div key={w} className="flex items-start gap-2">
+                <span className="text-red-400 mt-0.5 flex-shrink-0">●</span>
+                <span className="text-sm sm:text-base text-red-800">{w}</span>
+              </div>
+            ))}
           </div>
-        </div>
+        </section>
 
-        {/* 올해 운세 */}
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-100">
-          <h3 className="text-sm font-bold text-gray-700 mb-2">
-            🗓️ {new Date().getFullYear()}년 운세
-          </h3>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-medium text-purple-700">{fortune.title}</span>
-            <StarRating stars={fortune.stars} />
-          </div>
-          <p className="text-sm text-gray-600 mb-2">{fortune.description}</p>
-          <p className="text-xs text-purple-600 font-medium">💡 {fortune.advice}</p>
-        </div>
-
-        {/* 용신 개운법 */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
-          <h3 className="text-sm font-bold text-gray-700 mb-2">
-            🍀 개운법 — 용신: {usefulGodTip.element}
-          </h3>
-          <p className="text-xs text-gray-500 mb-2">{usefulGodTip.description}</p>
-          <ul className="text-sm text-gray-600 space-y-1">
-            {usefulGodTip.tips.map((t, i) => <li key={i}>✨ {t}</li>)}
-          </ul>
-        </div>
-
-        {/* 행운의 요소 */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <h3 className="text-sm font-bold text-gray-700 mb-3">🎯 나의 행운 키워드</h3>
-          <div className="grid grid-cols-2 gap-3 text-center">
-            <div className="bg-gray-50 rounded-lg p-3">
-              <div className="text-xs text-gray-400 mb-1">행운의 색</div>
-              <div className="text-sm font-bold text-gray-700">🎨 {profile.luckyColor}</div>
+        {/* ═══ 신살(神殺) ═══ */}
+        {result.shinsal.length > 0 && (
+          <section
+            className="rounded-xl p-5 sm:p-6 border border-violet-200/60 bg-violet-50/40"
+            style={fadeStyle(sectionIdx++)}
+          >
+            <h3 className="text-lg font-bold text-gray-900 mb-3">🔮 나의 신살(神殺)</h3>
+            <div className="space-y-2.5">
+              {result.shinsal.map(name => {
+                const info = SHINSAL_DATA[name]
+                if (!info) return null
+                return (
+                  <div
+                    key={name}
+                    className="flex items-start gap-3 bg-white/70 rounded-lg px-4 py-3 border border-violet-100"
+                  >
+                    <span className="text-xl flex-shrink-0 mt-0.5">{info.emoji}</span>
+                    <div>
+                      <span className="text-base font-bold text-indigo-900">{info.title}</span>
+                      <span className="text-sm text-violet-700 ml-2">{info.shortDesc}</span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <div className="text-xs text-gray-400 mb-1">행운의 숫자</div>
-              <div className="text-sm font-bold text-gray-700">🔢 {profile.luckyNumber}</div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <div className="text-xs text-gray-400 mb-1">행운의 방향</div>
-              <div className="text-sm font-bold text-gray-700">🧭 {profile.luckyDirection}</div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <div className="text-xs text-gray-400 mb-1">띠</div>
-              <div className="text-sm font-bold text-gray-700">🐾 {result.animal}띠</div>
-            </div>
-          </div>
-        </div>
+          </section>
+        )}
 
-        {/* Footer */}
-        <div className="text-center pt-2 pb-1">
-          <p className="text-xs text-gray-300">노후연구소 사주풀이 · nohu-lab.vercel.app</p>
+        {/* ═══ 인생 흐름 그래프 (대운) ═══ */}
+        <section style={fadeStyle(sectionIdx++)}>
+          <h3 className="text-lg font-bold text-gray-900 mb-3">📈 인생 흐름</h3>
+          <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200">
+            {/* 바 차트 */}
+            <div className="flex items-end gap-1.5 sm:gap-2" style={{ height: 90 }}>
+              {result.daeun.map((d, i) => {
+                const interp = getDaeunInterpretation(d.tenGod)
+                const isCurrent = currentAge >= d.startAge && currentAge <= d.endAge
+                const barHeight = (interp.stars / 5) * 100
+                return (
+                  <div
+                    key={i}
+                    className="flex-1 flex flex-col items-center gap-0.5"
+                    style={{ height: '100%', justifyContent: 'flex-end' }}
+                  >
+                    <span className="text-xs sm:text-sm leading-none">{interp.emoji}</span>
+                    <div
+                      className={`w-full rounded-t-md ${BAR_COLORS[interp.stars]} transition-all ${
+                        isCurrent
+                          ? 'ring-2 ring-amber-600 ring-offset-1 shadow-md'
+                          : 'opacity-60'
+                      }`}
+                      style={{ height: `${barHeight}%`, minHeight: 6 }}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+            {/* 나이 라벨 */}
+            <div className="flex gap-1.5 sm:gap-2 mt-2">
+              {result.daeun.map((d, i) => {
+                const isCurrent = currentAge >= d.startAge && currentAge <= d.endAge
+                return (
+                  <div
+                    key={i}
+                    className={`flex-1 text-center text-xs sm:text-sm ${
+                      isCurrent ? 'text-amber-800 font-bold' : 'text-gray-700'
+                    }`}
+                  >
+                    {d.startAge}세
+                  </div>
+                )
+              })}
+            </div>
+            {/* 현재 대운 해석 */}
+            {result.daeun.map((d, i) => {
+              const isCurrent = currentAge >= d.startAge && currentAge <= d.endAge
+              if (!isCurrent) return null
+              const interp = getDaeunInterpretation(d.tenGod)
+              return (
+                <div
+                  key={i}
+                  className="mt-3 rounded-lg p-4 border border-amber-200/60"
+                  style={{ background: 'linear-gradient(135deg, #fffbf0, #fff7e6)' }}
+                >
+                  <p className="text-base font-bold text-amber-900">
+                    {interp.emoji} 지금 ({d.startAge}~{d.endAge}세) — {interp.title}
+                  </p>
+                  <p className="text-sm sm:text-base text-gray-800 leading-relaxed mt-1.5">
+                    {interp.description}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* ═══ 푸터 ═══ */}
+        <div className="text-center pt-2 pb-1" style={fadeStyle(sectionIdx++)}>
+          <div className="inline-block bg-gray-100 rounded-full px-4 py-1.5">
+            <p className="text-xs text-gray-700">
+              노후연구소 AI 사주풀이 · nohu-lab.vercel.app · 재미로 봐주세요
+            </p>
+          </div>
         </div>
       </div>
     </div>

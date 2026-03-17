@@ -38,11 +38,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/?error=naver_denied', process.env.NEXT_PUBLIC_BASE_URL!))
   }
 
+  const savedState = request.cookies.get('oauth_state')?.value
+  if (!savedState || savedState !== state) {
+    const res = NextResponse.redirect(new URL('/?error=invalid_state', process.env.NEXT_PUBLIC_BASE_URL!))
+    res.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
+    return res
+  }
+
   try {
     // 1. 액세스 토큰 발급
-    const tokenRes = await fetch(
-      `https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id=${process.env.NAVER_CLIENT_ID}&client_secret=${process.env.NAVER_CLIENT_SECRET}&code=${code}&state=${state}`
-    )
+    const tokenRes = await fetch('https://nid.naver.com/oauth2.0/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: process.env.NAVER_CLIENT_ID!,
+        client_secret: process.env.NAVER_CLIENT_SECRET!,
+        code: code!,
+        state: state || '',
+      }),
+    })
+    if (!tokenRes.ok) {
+      return NextResponse.redirect(new URL('/?error=token_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+    }
     const tokenData = await tokenRes.json()
 
     if (!tokenData.access_token) {
@@ -55,6 +73,9 @@ export async function GET(request: NextRequest) {
     const profileRes = await fetch('https://openapi.naver.com/v1/nid/me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
+    if (!profileRes.ok) {
+      return NextResponse.redirect(new URL('/?error=profile_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+    }
     const profileData = await profileRes.json()
 
     if (profileData.resultcode !== '00') {
@@ -62,6 +83,9 @@ export async function GET(request: NextRequest) {
     }
 
     const naverProfile = profileData.response
+    if (!naverProfile) {
+      return NextResponse.redirect(new URL('/?error=profile_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+    }
     const naverNickname = naverProfile.nickname || naverProfile.name || '회원'
 
     // 3. 카페 가입 여부 및 등급 확인 (디버그 모드)
@@ -97,44 +121,25 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 4. DB에 회원 등록/업데이트
+    // 4. DB에 회원 등록/업데이트 (upsert로 레이스 컨디션 방지)
     const supabase = getServiceSupabase()
 
-    const { data: existing } = await supabase
+    const { data: member, error: upsertError } = await supabase
       .from('members')
-      .select('*')
-      .eq('nickname', naverNickname)
+      .upsert({
+        nickname: naverNickname,
+        phone: naverProfile.mobile?.replace(/-/g, '') || '',
+        tier: cafeTier,
+        last_login: new Date().toISOString(),
+      }, { onConflict: 'nickname' })
+      .select()
       .single()
 
-    let memberId: string
-
-    if (existing) {
-      // 기존 회원 → 등급 업데이트 + 로그인 시간
-      await supabase
-        .from('members')
-        .update({
-          tier: cafeTier,
-          last_login: new Date().toISOString(),
-        })
-        .eq('id', existing.id)
-      memberId = existing.id
-    } else {
-      // 신규 회원 등록
-      const { data: newMember } = await supabase
-        .from('members')
-        .insert({
-          nickname: naverNickname,
-          phone: naverProfile.mobile?.replace(/-/g, '') || '',
-          tier: cafeTier,
-          last_login: new Date().toISOString(),
-        })
-        .select()
-        .single()
-      if (!newMember?.id) {
-        return NextResponse.redirect(new URL('/?error=register_failed', process.env.NEXT_PUBLIC_BASE_URL!))
-      }
-      memberId = newMember.id
+    if (upsertError || !member) {
+      return NextResponse.redirect(new URL('/?error=server_error', process.env.NEXT_PUBLIC_BASE_URL!))
     }
+
+    const memberId = member.id
 
     // 5. JWT 발급
     const token = await createToken({
@@ -149,16 +154,19 @@ export async function GET(request: NextRequest) {
 
     response.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
     })
+    response.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
 
     return response
   } catch {
-    return NextResponse.redirect(
+    const res = NextResponse.redirect(
       new URL('/?error=server_error', process.env.NEXT_PUBLIC_BASE_URL!)
     )
+    res.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
+    return res
   }
 }

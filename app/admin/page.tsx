@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import TierBadge from '@/components/TierBadge'
 import { TIER_MAP } from '@/lib/types'
@@ -49,7 +49,6 @@ function AdminContent() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
-  const [messageType, setMessageType] = useState<'success' | 'error'>('success')
   const [showAddForm, setShowAddForm] = useState(false)
   const [newMember, setNewMember] = useState<NewMember>({ nickname: '', tier: 1 })
   const [bulkInput, setBulkInput] = useState('')
@@ -66,8 +65,8 @@ function AdminContent() {
   const chatPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    if (tab === 'members' || tab === 'dashboard') fetchMembers()
-  }, [tab])
+    fetchMembers()
+  }, [])
 
   async function fetchMembers() {
     setLoading(true)
@@ -80,7 +79,6 @@ function AdminContent() {
       const data = await res.json()
       setMembers(Array.isArray(data) ? data : [])
     } catch {
-      setMessageType('error')
       setMessage('회원 목록을 불러올 수 없습니다.')
     } finally {
       setLoading(false)
@@ -88,28 +86,38 @@ function AdminContent() {
   }
 
   async function handleTierChange(id: string, tier: number) {
-    const prev = members.find((m) => m.id === id)?.tier
-    setMembers((ms) => ms.map((m) => (m.id === id ? { ...m, tier } : m)))
-    const res = await fetch(`/api/members/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tier }),
-    })
-    if (!res.ok && prev !== undefined) {
-      setMembers((ms) => ms.map((m) => (m.id === id ? { ...m, tier: prev } : m)))
-      setMessageType('error')
-      setMessage('등급 변경에 실패했습니다.')
+    try {
+      const res = await fetch(`/api/members/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier }),
+      })
+      if (res.ok) {
+        setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, tier } : m)))
+      } else {
+        setMessage('등급 변경에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      }
+    } catch {
+      setMessage('네트워크 오류가 발생했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
   }
 
   async function handleDelete(id: string, nickname: string) {
     if (!confirm(`${nickname} 회원을 삭제하시겠습니까?`)) return
-    const res = await fetch(`/api/members/${id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setMembers((prev) => prev.filter((m) => m.id !== id))
-      setMessageType('success')
-      setMessage('삭제되었습니다.')
+    try {
+      const res = await fetch(`/api/members/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setMembers((prev) => prev.filter((m) => m.id !== id))
+        setMessage('삭제되었습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      } else {
+        setMessage('삭제에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      }
+    } catch {
+      setMessage('네트워크 오류가 발생했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
   }
@@ -125,11 +133,9 @@ function AdminContent() {
     if (res.ok) {
       setMembers((prev) => [data, ...prev])
       setNewMember({ nickname: '', tier: 1 })
-      setMessageType('success')
       setMessage(`${newMember.nickname.trim()} 회원이 등록되었습니다.`)
       setTimeout(() => setMessage(''), 3000)
     } else {
-      setMessageType('error')
       setMessage(data.error || '등록에 실패했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
@@ -149,13 +155,11 @@ function AdminContent() {
     })
     const data = await res.json()
     if (res.ok) {
-      setMessageType('success')
       setMessage(`${data.added}명 등록 완료${data.skipped > 0 ? ` (중복 ${data.skipped}명 건너뜀)` : ''}`)
       setBulkInput('')
       fetchMembers()
       setTimeout(() => setMessage(''), 5000)
     } else {
-      setMessageType('error')
       setMessage(data.error || '등록에 실패했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
@@ -165,9 +169,9 @@ function AdminContent() {
     m.nickname.toLowerCase().includes(search.toLowerCase())
   )
 
-  const tierCounts = [1, 2, 3, 4].map(
+  const tierCounts = useMemo(() => [1, 2, 3, 4].map(
     (t) => members.filter((m) => m.tier === t).length
-  )
+  ), [members])
 
   // 채팅방 목록 로드
   useEffect(() => {
@@ -194,13 +198,18 @@ function AdminContent() {
   }, [chatMessages])
 
   async function fetchChatRooms() {
+    setChatLoading(true)
     try {
       const res = await fetch('/api/chat/rooms')
       if (res.ok) {
         const data = await res.json()
         setChatRooms(data)
       }
-    } catch {}
+    } catch {
+      // 네트워크 오류 시 무시 (폴링이 재시도)
+    } finally {
+      setChatLoading(false)
+    }
   }
 
   async function fetchChatMessages(roomId: string) {
@@ -210,13 +219,16 @@ function AdminContent() {
         const data = await res.json()
         setChatMessages(data)
       }
-    } catch {}
+    } catch {
+      // 네트워크 오류 시 무시 (폴링이 재시도)
+    }
   }
 
   async function handleChatSend(e: React.FormEvent) {
     e.preventDefault()
     if (!chatInput.trim() || chatSending || !selectedRoom) return
     setChatSending(true)
+    const savedInput = chatInput
     try {
       const res = await fetch('/api/chat/messages', {
         method: 'POST',
@@ -227,8 +239,16 @@ function AdminContent() {
         const newMsg = await res.json()
         setChatMessages(prev => [...prev, newMsg])
         setChatInput('')
+        fetchChatRooms()
+      } else {
+        setMessage('메시지 전송에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
       }
-    } catch {} finally {
+    } catch {
+      setChatInput(savedInput)
+      setMessage('네트워크 오류가 발생했습니다.')
+      setTimeout(() => setMessage(''), 3000)
+    } finally {
       setChatSending(false)
     }
   }
@@ -262,10 +282,12 @@ function AdminContent() {
   } | null>(null)
 
   useEffect(() => {
-    fetch('/api/admin/sync-status')
-      .then(r => r.json())
-      .then(data => setSyncStatus(data))
-      .catch(() => {})
+    const controller = new AbortController()
+    fetch('/api/admin/sync-status', { signal: controller.signal })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setSyncStatus(data) })
+      .catch((err) => { if (err.name !== 'AbortError') { /* 네트워크 오류 무시 */ } })
+    return () => controller.abort()
   }, [])
 
   // 동기화 경고 조건: 회원 1명 이하이거나, 마지막 확인 실패
@@ -281,20 +303,20 @@ function AdminContent() {
       </h1>
 
       {message && (
-        <div className={`mb-4 p-3 rounded-lg text-sm whitespace-pre-line ${messageType === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+        <div className="mb-4 p-3 bg-orange-50 text-orange-700 rounded-lg text-sm whitespace-pre-line">
           {message}
         </div>
       )}
 
       {/* 탭 */}
-      <div className="flex gap-2 mb-6 border-b border-green-100">
+      <div className="flex gap-2 mb-6 border-b border-orange-100">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition relative ${
               tab === t.id
-                ? 'border-green-600 text-green-600'
+                ? 'border-orange-600 text-orange-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -333,11 +355,11 @@ function AdminContent() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="닉네임 검색..."
-              className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
+              className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
             />
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium"
             >
               {showAddForm ? '닫기' : '+ 회원 등록'}
             </button>
@@ -345,7 +367,7 @@ function AdminContent() {
               href="https://cafe.naver.com/ManageWholeMember.nhn?clubid=20898041"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-white border border-green-300 text-green-700 rounded-lg text-sm font-medium hover:bg-green-50"
+              className="px-4 py-2 bg-white border border-orange-300 text-orange-700 rounded-lg text-sm font-medium hover:bg-orange-50"
             >
               카페 회원 목록 보기
             </a>
@@ -353,17 +375,17 @@ function AdminContent() {
 
           {/* 회원 등록 폼 */}
           {showAddForm && (
-            <div className="bg-white rounded-lg border border-green-200 p-4 space-y-4">
+            <div className="bg-white rounded-lg border border-orange-200 p-4 space-y-4">
               <div className="flex gap-2">
                 <button
                   onClick={() => setAddMode('single')}
-                  className={`px-3 py-1.5 rounded-lg text-sm ${addMode === 'single' ? 'bg-green-600 text-white' : 'bg-green-50 text-gray-700'}`}
+                  className={`px-3 py-1.5 rounded-lg text-sm ${addMode === 'single' ? 'bg-orange-600 text-white' : 'bg-orange-50 text-gray-700'}`}
                 >
                   개별 등록
                 </button>
                 <button
                   onClick={() => setAddMode('bulk')}
-                  className={`px-3 py-1.5 rounded-lg text-sm ${addMode === 'bulk' ? 'bg-green-600 text-white' : 'bg-green-50 text-gray-700'}`}
+                  className={`px-3 py-1.5 rounded-lg text-sm ${addMode === 'bulk' ? 'bg-orange-600 text-white' : 'bg-orange-50 text-gray-700'}`}
                 >
                   일괄 등록
                 </button>
@@ -378,7 +400,7 @@ function AdminContent() {
                       value={newMember.nickname}
                       onChange={(e) => setNewMember({ ...newMember, nickname: e.target.value })}
                       placeholder="카페에서 확인한 닉네임"
-                      className="w-full px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
+                      className="w-full px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
                     />
                   </div>
                   <div>
@@ -386,7 +408,7 @@ function AdminContent() {
                     <select
                       value={newMember.tier}
                       onChange={(e) => setNewMember({ ...newMember, tier: parseInt(e.target.value) })}
-                      className="px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
+                      className="px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
                     >
                       {[1, 2, 3, 4].map((t) => (
                         <option key={t} value={t}>{TIER_MAP[t].name}</option>
@@ -395,7 +417,7 @@ function AdminContent() {
                   </div>
                   <button
                     onClick={handleAddMember}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
+                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium"
                   >
                     등록
                   </button>
@@ -410,7 +432,7 @@ function AdminContent() {
                       value={bulkInput}
                       onChange={(e) => setBulkInput(e.target.value)}
                       placeholder={"닉네임1\n닉네임2\n닉네임3"}
-                      className="w-full h-32 px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900 resize-y"
+                      className="w-full h-32 px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900 resize-y"
                     />
                   </div>
                   <div className="flex items-center gap-3">
@@ -419,7 +441,7 @@ function AdminContent() {
                       <select
                         value={newMember.tier}
                         onChange={(e) => setNewMember({ ...newMember, tier: parseInt(e.target.value) })}
-                        className="px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
+                        className="px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
                       >
                         {[1, 2, 3, 4].map((t) => (
                           <option key={t} value={t}>{TIER_MAP[t].name}</option>
@@ -428,7 +450,7 @@ function AdminContent() {
                     </div>
                     <button
                       onClick={handleBulkAdd}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium mt-auto"
+                      className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium mt-auto"
                     >
                       일괄 등록 ({bulkInput.split('\n').filter((n) => n.trim()).length}명)
                     </button>
@@ -444,13 +466,13 @@ function AdminContent() {
           {/* 회원 목록 테이블 */}
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full mx-auto" />
+              <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full mx-auto" />
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-green-50">
+                  <tr className="bg-orange-50">
                     <th className="text-left px-4 py-3 font-medium text-gray-700">닉네임</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-700">등급</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-700">마지막 로그인</th>
@@ -459,7 +481,7 @@ function AdminContent() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filtered.map((member) => (
-                    <tr key={member.id} className="hover:bg-green-50">
+                    <tr key={member.id} className="hover:bg-orange-50">
                       <td className="px-4 py-3 text-gray-900 font-medium">
                         {member.nickname}
                       </td>
@@ -467,7 +489,7 @@ function AdminContent() {
                         <select
                           value={member.tier}
                           onChange={(e) => handleTierChange(member.id, parseInt(e.target.value))}
-                          className="px-2 py-1 rounded border border-green-200 bg-white text-gray-900 text-sm"
+                          className="px-2 py-1 rounded border border-orange-200 bg-white text-gray-900 text-sm"
                         >
                           {[1, 2, 3, 4].map((t) => (
                             <option key={t} value={t}>{TIER_MAP[t].name}</option>
@@ -507,7 +529,7 @@ function AdminContent() {
       {/* 카페 동기화 탭 */}
       {tab === 'sync' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-green-200 p-6 space-y-4">
+          <div className="bg-white rounded-lg border border-orange-200 p-6 space-y-4">
             <h2 className="text-lg font-bold text-gray-900">실시간 회원 확인 (Chrome 확장프로그램)</h2>
             <p className="text-sm text-gray-700 leading-relaxed">
               사용자가 닉네임으로 로그인하면, Chrome 확장프로그램이 <b>실시간으로</b> 네이버 카페 회원 여부를 확인합니다.<br />
@@ -526,21 +548,21 @@ function AdminContent() {
             </div>
 
             {syncStatus && (
-              <div className={`rounded-lg p-4 ${syncStatus.totalMembers && syncStatus.totalMembers > 1 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
-                <div className={`font-bold text-base ${syncStatus.totalMembers && syncStatus.totalMembers > 1 ? 'text-green-800' : 'text-yellow-800'}`}>
+              <div className={`rounded-lg p-4 ${syncStatus.totalMembers && syncStatus.totalMembers > 1 ? 'bg-orange-50 border border-orange-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                <div className={`font-bold text-base ${syncStatus.totalMembers && syncStatus.totalMembers > 1 ? 'text-orange-800' : 'text-yellow-800'}`}>
                   DB 등록 회원: {syncStatus.totalMembers || 0}명
                 </div>
               </div>
             )}
           </div>
 
-          <div className="bg-white rounded-lg border border-green-200 p-6 space-y-4">
+          <div className="bg-white rounded-lg border border-orange-200 p-6 space-y-4">
             <h2 className="text-lg font-bold text-gray-900">확장프로그램 설치 방법</h2>
 
             <a
               href="/cafe-sync-extension.zip"
               download
-              className="flex items-center justify-center gap-3 w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-base transition"
+              className="flex items-center justify-center gap-3 w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl text-base transition"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -548,7 +570,7 @@ function AdminContent() {
               확장프로그램 다운로드 (cafe-sync-extension.zip)
             </a>
 
-            <div className="bg-green-50 rounded-lg p-5 space-y-3">
+            <div className="bg-orange-50 rounded-lg p-5 space-y-3">
               <h3 className="font-bold text-gray-900 text-base">1단계: 다운로드 &amp; 압축 해제</h3>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
                 <li>위 버튼을 클릭해서 zip 파일 다운로드</li>
@@ -556,7 +578,7 @@ function AdminContent() {
               </ol>
             </div>
 
-            <div className="bg-green-50 rounded-lg p-5 space-y-3">
+            <div className="bg-orange-50 rounded-lg p-5 space-y-3">
               <h3 className="font-bold text-gray-900 text-base">2단계: Chrome에 설치</h3>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
                 <li>Chrome 주소창에 <code className="bg-white px-1.5 py-0.5 rounded text-xs border font-bold">chrome://extensions</code> 입력 후 이동</li>
@@ -575,20 +597,20 @@ function AdminContent() {
                 <div className="flex items-center gap-3 bg-amber-50 rounded-lg px-4 py-3">
                   <span className="text-lg">👤</span>
                   <div>
-                    <p className="text-base font-bold text-gray-900">네이버 계정: <code className="bg-white px-2 py-0.5 rounded border text-green-700">qhdl20</code></p>
+                    <p className="text-base font-bold text-gray-900">네이버 계정: <code className="bg-white px-2 py-0.5 rounded border text-orange-700">qhdl20</code></p>
                     <p className="text-xs text-gray-500 mt-0.5">노후연구소 카페 관리자 계정</p>
                   </div>
                 </div>
               </div>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
-                <li><a href="https://nid.naver.com/nidlogin.login" target="_blank" rel="noopener noreferrer" className="text-green-700 underline font-bold">네이버 로그인 페이지</a>에서 <code className="bg-white px-1.5 py-0.5 rounded text-xs border font-bold">qhdl20</code> 계정으로 로그인</li>
-                <li><a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="text-green-700 underline font-bold">노후연구소 카페</a>에 접속해서 관리 메뉴가 보이는지 확인</li>
+                <li><a href="https://nid.naver.com/nidlogin.login" target="_blank" rel="noopener noreferrer" className="text-orange-700 underline font-bold">네이버 로그인 페이지</a>에서 <code className="bg-white px-1.5 py-0.5 rounded text-xs border font-bold">qhdl20</code> 계정으로 로그인</li>
+                <li><a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="text-orange-700 underline font-bold">노후연구소 카페</a>에 접속해서 관리 메뉴가 보이는지 확인</li>
                 <li>카페 &gt; <b>관리</b> &gt; <b>회원 관리</b> 페이지에 접근 가능하면 OK</li>
               </ol>
               <p className="text-xs text-red-600 font-bold">* 다른 네이버 계정으로 로그인하면 회원 확인이 안 됩니다!</p>
             </div>
 
-            <div className="bg-green-50 rounded-lg p-5 space-y-3">
+            <div className="bg-orange-50 rounded-lg p-5 space-y-3">
               <h3 className="font-bold text-gray-900 text-base">4단계: 정상 작동 확인</h3>
               <ol className="list-decimal list-inside space-y-2 text-sm text-gray-800">
                 <li>확장프로그램 아이콘 클릭 &gt; <b>&quot;실행 중&quot;</b> 확인</li>
@@ -642,14 +664,14 @@ function AdminContent() {
                   <button
                     key={room.roomId}
                     onClick={() => setSelectedRoom(room.roomId)}
-                    className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-green-50 transition ${
-                      selectedRoom === room.roomId ? 'bg-green-50' : ''
+                    className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-orange-50 transition ${
+                      selectedRoom === room.roomId ? 'bg-orange-50' : ''
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-100 to-emerald-50 flex items-center justify-center border border-green-200/50 shrink-0">
-                          <span className="text-green-700 font-semibold text-xs">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50 shrink-0">
+                          <span className="text-orange-700 font-semibold text-xs">
                             {room.memberNickname.charAt(0)}
                           </span>
                         </div>
@@ -687,9 +709,9 @@ function AdminContent() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                     </svg>
                   </button>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-emerald-50 flex items-center justify-center border border-green-200/50">
-                    <span className="text-green-700 font-semibold text-xs">
-                      {chatRooms.find(r => r.roomId === selectedRoom)?.memberNickname.charAt(0) || '?'}
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center border border-orange-200/50">
+                    <span className="text-orange-700 font-semibold text-xs">
+                      {chatRooms.find(r => r.roomId === selectedRoom)?.memberNickname?.charAt(0) || '?'}
                     </span>
                   </div>
                   <span className="font-semibold text-sm text-gray-900">
@@ -714,14 +736,14 @@ function AdminContent() {
                             )}
                             <div className={`px-4 py-2.5 rounded-2xl text-[14px] leading-relaxed ${
                               isAdmin
-                                ? 'bg-green-600 text-white rounded-br-md'
+                                ? 'bg-orange-600 text-white rounded-br-md'
                                 : 'bg-gray-100 text-gray-900 rounded-bl-md'
                             }`}>
                               {msg.message}
                             </div>
                             <div className={`flex items-center gap-1 mt-1 ${isAdmin ? 'justify-end' : 'justify-start'}`}>
                               {isAdmin && msg.is_read && (
-                                <span className="text-[10px] text-green-600">읽음</span>
+                                <span className="text-[10px] text-orange-600">읽음</span>
                               )}
                               <span className="text-[10px] text-gray-400 px-1">{formatChatTime(msg.created_at)}</span>
                             </div>
@@ -742,12 +764,12 @@ function AdminContent() {
                       onChange={(e) => setChatInput(e.target.value)}
                       placeholder="메시지를 입력하세요..."
                       maxLength={1000}
-                      className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-[14px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-[14px] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     />
                     <button
                       type="submit"
                       disabled={!chatInput.trim() || chatSending}
-                      className="px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-xl font-medium text-sm transition"
+                      className="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-300 text-white rounded-xl font-medium text-sm transition"
                     >
                       {chatSending ? (
                         <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
@@ -781,7 +803,7 @@ function AdminContent() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-green-50">
+                <tr className="bg-orange-50">
                   <th className="text-left px-4 py-3 font-medium text-gray-700">프로그램</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-700">카테고리</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-700">최소 등급</th>
@@ -790,7 +812,7 @@ function AdminContent() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {programRegistry.map((p) => (
-                  <tr key={p.id} className="hover:bg-green-50">
+                  <tr key={p.id} className="hover:bg-orange-50">
                     <td className="px-4 py-3 text-gray-900">
                       {p.icon} {p.name}
                     </td>
@@ -799,7 +821,7 @@ function AdminContent() {
                       <TierBadge tier={p.minTier} />
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full ${p.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      <span className={`text-xs px-2 py-1 rounded-full ${p.isActive ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
                         {p.isActive ? '활성' : '비활성'}
                       </span>
                     </td>
@@ -815,14 +837,14 @@ function AdminContent() {
       {tab === 'dashboard' && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="bg-white rounded-lg p-4 border border-green-100">
+            <div className="bg-white rounded-lg p-4 border border-orange-100">
               <div className="text-2xl font-bold text-gray-900">
                 {members.length}
               </div>
               <div className="text-sm text-gray-500">전체 회원</div>
             </div>
             {[1, 2, 3, 4].map((t) => (
-              <div key={t} className="bg-white rounded-lg p-4 border border-green-100">
+              <div key={t} className="bg-white rounded-lg p-4 border border-orange-100">
                 <div className="text-2xl font-bold text-gray-900">
                   {tierCounts[t - 1]}
                 </div>
@@ -845,7 +867,7 @@ function AdminContent() {
                 .map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-green-100"
+                    className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-orange-100"
                   >
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-gray-900">{m.nickname}</span>

@@ -51,12 +51,12 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-green-100 overflow-hidden p-8">
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden p-8">
         <div className="flex flex-col items-center">
           {/* Spinning circle */}
           <div className="relative w-24 h-24 mb-6">
-            <div className="absolute inset-0 rounded-full border-4 border-green-100" />
-            <div className="absolute inset-0 rounded-full border-4 border-green-500 border-t-transparent animate-spin" />
+            <div className="absolute inset-0 rounded-full border-4 border-orange-100" />
+            <div className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center text-3xl">
               {steps[currentStep].icon}
             </div>
@@ -74,7 +74,7 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
           <div className="w-full max-w-xs mb-6">
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-green-500 rounded-full transition-all duration-100"
+                className="h-full bg-orange-500 rounded-full transition-all duration-100"
                 style={{ width: `${Math.min(progress, 100)}%` }}
               />
             </div>
@@ -95,9 +95,9 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
                 <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 transition-all duration-300 ${
                     idx < currentStep
-                      ? 'bg-green-500 text-white'
+                      ? 'bg-orange-500 text-white'
                       : idx === currentStep
-                        ? 'bg-green-100 text-green-600 animate-pulse'
+                        ? 'bg-orange-100 text-orange-600 animate-pulse'
                         : 'bg-gray-100 text-gray-400'
                   }`}
                 >
@@ -108,7 +108,7 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
                     idx === currentStep
                       ? 'text-gray-900 font-medium'
                       : idx < currentStep
-                        ? 'text-green-600'
+                        ? 'text-orange-600'
                         : 'text-gray-400'
                   }`}
                 >
@@ -124,7 +124,7 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
               <div
                 key={idx}
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  idx <= currentStep ? 'bg-green-500' : 'bg-gray-200'
+                  idx <= currentStep ? 'bg-orange-500' : 'bg-gray-200'
                 }`}
               />
             ))}

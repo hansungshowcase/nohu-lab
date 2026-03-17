@@ -71,7 +71,7 @@ export default function ImageResizer() {
       {!image ? (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-green-200 rounded-lg p-12 text-center cursor-pointer hover:border-green-500 transition"
+          className="border-2 border-dashed border-orange-200 rounded-lg p-12 text-center cursor-pointer hover:border-orange-500 transition"
         >
           <div className="text-4xl mb-3">🖼️</div>
           <p className="text-gray-600">
@@ -87,7 +87,7 @@ export default function ImageResizer() {
         </div>
       ) : (
         <>
-          <div className="bg-green-50 rounded-lg p-4">
+          <div className="bg-orange-50 rounded-lg p-4">
             <img
               src={image}
               alt="Preview"
@@ -107,7 +107,7 @@ export default function ImageResizer() {
                 type="number"
                 value={width}
                 onChange={(e) => handleWidthChange(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
+                className="w-full px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
               />
             </div>
             <div className="flex-1">
@@ -118,7 +118,7 @@ export default function ImageResizer() {
                 type="number"
                 value={height}
                 onChange={(e) => handleHeightChange(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-green-200 bg-white text-gray-900"
+                className="w-full px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
               />
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function ImageResizer() {
           <div className="flex gap-3">
             <button
               onClick={handleDownload}
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+              className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition"
             >
               다운로드
             </button>
@@ -146,7 +146,7 @@ export default function ImageResizer() {
                 setWidth(0)
                 setHeight(0)
               }}
-              className="px-6 py-2 bg-green-100 text-gray-700 rounded-lg hover:bg-green-200 transition"
+              className="px-6 py-2 bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
             >
               다른 이미지
             </button>

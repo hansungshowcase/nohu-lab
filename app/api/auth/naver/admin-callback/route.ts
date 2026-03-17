@@ -27,15 +27,32 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin?sync=failed&reason=no_code', process.env.NEXT_PUBLIC_BASE_URL!))
   }
 
+  const savedState = request.cookies.get('oauth_state')?.value
+  if (!savedState || savedState !== state) {
+    const res = NextResponse.redirect(new URL('/admin?sync=failed&reason=invalid_state', process.env.NEXT_PUBLIC_BASE_URL!))
+    res.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
+    return res
+  }
+
   try {
     // 1. 액세스 토큰 발급
-    const tokenRes = await fetch(
-      `https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id=${process.env.NAVER_CLIENT_ID}&client_secret=${process.env.NAVER_CLIENT_SECRET}&code=${code}&state=${state}`
-    )
+    const tokenRes = await fetch('https://nid.naver.com/oauth2.0/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: process.env.NAVER_CLIENT_ID!,
+        client_secret: process.env.NAVER_CLIENT_SECRET!,
+        code: code!,
+        state: state || '',
+      }),
+    })
+    if (!tokenRes.ok) {
+      return NextResponse.redirect(new URL(`/admin?sync=failed&reason=token_failed`, process.env.NEXT_PUBLIC_BASE_URL!))
+    }
     const tokenData = await tokenRes.json()
 
     if (!tokenData.access_token) {
-      console.error('Token failed: error_code=', tokenData.error, 'error_description=', tokenData.error_description)
       return NextResponse.redirect(new URL(`/admin?sync=failed&reason=token_failed`, process.env.NEXT_PUBLIC_BASE_URL!))
     }
 
@@ -51,14 +68,15 @@ export async function GET(request: NextRequest) {
         `https://openapi.naver.com/v1/cafe/${CAFE_ID}/members?page=${page}&perPage=100`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       )
+      if (!membersRes.ok) break
       const membersData = await membersRes.json()
 
-      console.log(`Cafe API page ${page}:`, JSON.stringify(membersData).substring(0, 500))
+      // cafe API response logged server-side only in dev
 
       // API 에러 체크
       if (membersData.error_code || membersData.errorCode) {
         apiError = membersData.error_description || membersData.errorMessage || 'API 오류'
-        console.error('Cafe API error:', JSON.stringify(membersData))
+        // cafe API error
         break
       }
 
@@ -73,7 +91,7 @@ export async function GET(request: NextRequest) {
         members = membersData.members
       } else if (membersData.message?.status !== '200') {
         apiError = `API status: ${membersData.message?.status || 'unknown'}`
-        console.error('Unexpected API response:', JSON.stringify(membersData))
+        // unexpected API response
         break
       }
 
@@ -105,43 +123,33 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 3. DB에 동기화
+    // 3. DB에 동기화 (upsert로 레이스 컨디션 방지)
     const supabase = getServiceSupabase()
     let syncCount = 0
-    let newCount = 0
-    let updateCount = 0
+    let errorCount = 0
 
-    for (const member of allMembers) {
-      const tier = mapCafeLevelToTier(member.levelName)
-
-      const { data: existing } = await supabase
+    for (let i = 0; i < allMembers.length; i += 500) {
+      const batch = allMembers.slice(i, i + 500).map(m => ({
+        nickname: m.nickname,
+        phone: '',
+        tier: mapCafeLevelToTier(m.levelName),
+      }))
+      const { error } = await supabase
         .from('members')
-        .select('id, tier')
-        .eq('nickname', member.nickname)
-        .single()
-
-      if (existing) {
-        if (existing.tier !== tier) {
-          await supabase
-            .from('members')
-            .update({ tier })
-            .eq('id', existing.id)
-          updateCount++
-        }
-      } else {
-        await supabase
-          .from('members')
-          .insert({ nickname: member.nickname, phone: '', tier })
-        newCount++
-      }
-      syncCount++
+        .upsert(batch, { onConflict: 'nickname' })
+      if (error) errorCount += batch.length
+      else syncCount += batch.length
     }
 
-    return NextResponse.redirect(
-      new URL(`/admin?sync=success&count=${syncCount}&new=${newCount}&updated=${updateCount}`, process.env.NEXT_PUBLIC_BASE_URL!)
+    const response = NextResponse.redirect(
+      new URL(`/admin?sync=success&count=${syncCount}&errors=${errorCount}`, process.env.NEXT_PUBLIC_BASE_URL!)
     )
+    response.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
+    return response
   } catch (err) {
-    console.error('Sync error:', err)
-    return NextResponse.redirect(new URL('/admin?sync=error', process.env.NEXT_PUBLIC_BASE_URL!))
+    // sync error
+    const response = NextResponse.redirect(new URL('/admin?sync=error', process.env.NEXT_PUBLIC_BASE_URL!))
+    response.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
+    return response
   }
 }

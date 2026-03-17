@@ -3,9 +3,9 @@
 :root {
   --background: #fafbfc;
   --foreground: #111827;
-  --accent: #16a34a;
-  --accent-light: #dcfce7;
-  --accent-soft: #f0fdf4;
+  --accent: #ea580c;
+  --accent-light: #fff7ed;
+  --accent-soft: #ffedd5;
 }
 
 @theme inline {
@@ -76,19 +76,19 @@ body {
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px -12px rgba(22, 163, 74, 0.15),
+  box-shadow: 0 12px 40px -12px rgba(234, 88, 12, 0.15),
               0 4px 16px -4px rgba(0, 0, 0, 0.06);
 }
 
 /* Subtle gradient bg */
 .bg-premium {
-  background: linear-gradient(135deg, #fafbfc 0%, #f0fdf4 50%, #fafbfc 100%);
+  background: linear-gradient(135deg, #fafbfc 0%, #fff7ed 50%, #fafbfc 100%);
 }
 
 /* Loading spinner */
 .spinner {
   border: 3px solid #e5e7eb;
-  border-top-color: #16a34a;
+  border-top-color: #ea580c;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

@@ -20,13 +20,13 @@ export async function GET(request: NextRequest) {
 
     const supabase = getServiceSupabase()
 
-    const { data: req } = await supabase
+    const { data: req, error: reqError } = await supabase
       .from('verify_requests')
       .select('*')
       .eq('id', id)
       .single()
 
-    if (!req) {
+    if (reqError || !req) {
       return NextResponse.json({ error: '요청 없음' }, { status: 404 })
     }
 
@@ -42,30 +42,24 @@ export async function GET(request: NextRequest) {
     const tier = mapGradeToTier(req.grade_name || '')
     const nickname = req.nickname.trim()
 
-    // Upsert member
-    const { data: member } = await supabase
+    // Upsert member (tier + last_login 한번에)
+    const { data: member, error: upsertError } = await supabase
       .from('members')
       .upsert(
-        { nickname, tier, phone: '' },
+        { nickname, tier, phone: '', last_login: new Date().toISOString() },
         { onConflict: 'nickname' }
       )
       .select()
       .single()
 
-    if (!member) {
+    if (upsertError || !member) {
       return NextResponse.json({ status: 'error' })
     }
-
-    // Update last_login
-    await supabase
-      .from('members')
-      .update({ last_login: new Date().toISOString(), tier })
-      .eq('id', member.id)
 
     const token = await createToken({
       memberId: member.id,
       nickname: member.nickname,
-      tier: member.tier as 1 | 2 | 3 | 4,
+      tier: ([1, 2, 3, 4].includes(member.tier) ? member.tier : 1) as 1 | 2 | 3 | 4,
     })
 
     const response = NextResponse.json({

@@ -47,7 +47,17 @@ export default function HashtagRecommender() {
   }
 
   function copyAll() {
-    navigator.clipboard.writeText(tags.join(' '))
+    const text = tags.join(' ')
+    navigator.clipboard.writeText(text).catch(() => {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.left = '-9999px'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    })
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -62,7 +72,7 @@ export default function HashtagRecommender() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="예: 오늘 여행에서 맛있는 음식을 먹었다"
-          className="w-full h-32 p-4 rounded-lg border border-green-200 bg-white text-gray-900 resize-y focus:ring-2 focus:ring-green-500 outline-none"
+          className="w-full h-32 p-4 rounded-lg border border-orange-200 bg-white text-gray-900 resize-y focus:ring-2 focus:ring-orange-500 outline-none"
         />
       </div>
 
@@ -74,7 +84,7 @@ export default function HashtagRecommender() {
           <span
             key={k}
             onClick={() => setText((prev) => prev + ' ' + k)}
-            className="text-xs bg-green-50 text-gray-600 px-2 py-1 rounded cursor-pointer hover:bg-green-100 transition"
+            className="text-xs bg-orange-50 text-gray-600 px-2 py-1 rounded cursor-pointer hover:bg-orange-100 transition"
           >
             {k}
           </span>
@@ -84,7 +94,7 @@ export default function HashtagRecommender() {
       <button
         onClick={recommend}
         disabled={!text.trim()}
-        className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition"
+        className="px-6 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white rounded-lg transition"
       >
         해시태그 추천받기
       </button>
@@ -103,7 +113,7 @@ export default function HashtagRecommender() {
           </div>
           <button
             onClick={copyAll}
-            className="px-4 py-2 text-sm bg-green-100 text-gray-700 rounded-lg hover:bg-green-200 transition"
+            className="px-4 py-2 text-sm bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
           >
             {copied ? '✅ 복사됨!' : '전체 복사'}
           </button>

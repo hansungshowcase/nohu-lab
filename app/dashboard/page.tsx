@@ -20,14 +20,19 @@ export default function DashboardPage() {
   const categories = ['전체', ...getAllCategories()]
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    const controller = new AbortController()
+    fetch('/api/auth/me', { signal: controller.signal })
       .then((r) => {
-        if (!r.ok) throw new Error()
+        if (r.status === 401) throw new Error('unauthorized')
+        if (!r.ok) throw new Error('server')
         return r.json()
       })
       .then(setUser)
-      .catch(() => router.push('/'))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      .catch((err) => {
+        if (err.name === 'AbortError') return
+        if (err.message === 'unauthorized') router.push('/')
+      })
+    return () => controller.abort()
   }, [])
 
   if (!user) {
