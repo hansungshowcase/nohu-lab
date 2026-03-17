@@ -61,6 +61,47 @@ const HIDDEN_WEIGHTS: number[][] = [
   [0.3, 0.3, 0.4], // 해
 ]
 
+// 천간합 (Heavenly Stem Combinations) - 합이 되면 오행이 변할 수 있음
+// 갑기합토, 을경합금, 병신합수, 정임합목, 무계합화
+export const STEM_COMBINATIONS: [number, number, number][] = [
+  [0, 5, 2], // 갑+기 → 토
+  [1, 6, 3], // 을+경 → 금
+  [2, 7, 4], // 병+신 → 수
+  [3, 8, 0], // 정+임 → 목
+  [4, 9, 1], // 무+계 → 화
+]
+
+// 지지충 (Earthly Branch Clashes) - 정반대 에너지 충돌
+export const BRANCH_CLASHES: [number, number][] = [
+  [0, 6],   // 자오충
+  [1, 7],   // 축미충
+  [2, 8],   // 인신충
+  [3, 9],   // 묘유충
+  [4, 10],  // 진술충
+  [5, 11],  // 사해충
+]
+
+// 지지합 (Earthly Branch Combinations) - 육합
+export const BRANCH_COMBINATIONS: [number, number, number][] = [
+  [0, 1, 2],   // 자축합토
+  [2, 11, 0],  // 인해합목
+  [3, 10, 1],  // 묘술합화
+  [4, 9, 3],   // 진유합금
+  [5, 8, 4],   // 사신합수
+  [6, 7, 2],   // 오미합토(화)
+]
+
+// 지지형 (Earthly Branch Penalties) - 자형, 삼형
+export const BRANCH_PENALTIES: [number, number][] = [
+  [2, 5],   // 인사형
+  [5, 8],   // 사신형
+  [2, 8],   // 인신형 (삼형)
+  [1, 10],  // 축술형
+  [10, 7],  // 술미형
+  [1, 7],   // 축미형 (삼형)
+  [0, 3],   // 자묘형
+]
+
 // ═══════════════════════════════════════════════
 // 절기(節氣) 기반 월 경계 (양력 근사값)
 // ═══════════════════════════════════════════════
@@ -141,6 +182,7 @@ export interface SajuResult {
   elementBalance: number     // 오행 균형도 (0~100)
   monthlyFortunes: MonthlyFortune[]
   majorLucks: MajorLuck[]
+  pillarInteractions: PillarInteraction[]
   currentMonthFortune: MonthlyFortune | null
 }
 
@@ -230,6 +272,93 @@ function getTenGod(dayMasterElement: number, dayMasterYY: number, targetStem: nu
 }
 
 // ═══════════════════════════════════════════════
+// 사주 내 충/합/형 분석
+// ═══════════════════════════════════════════════
+export interface PillarInteraction {
+  type: 'clash' | 'combine' | 'penalty'
+  description: string
+  effect: string
+}
+
+function analyzePillarInteractions(pillars: Pillar[]): PillarInteraction[] {
+  const interactions: PillarInteraction[] = []
+  const branchList = pillars.map(p => p.branch)
+  const stemList = pillars.map(p => p.stem)
+  const pillarNames = ['년주', '월주', '일주', '시주']
+
+  // 지지충 체크
+  for (let i = 0; i < branchList.length; i++) {
+    for (let j = i + 1; j < branchList.length; j++) {
+      for (const [a, b] of BRANCH_CLASHES) {
+        if ((branchList[i] === a && branchList[j] === b) || (branchList[i] === b && branchList[j] === a)) {
+          const clashEffects: Record<string, string> = {
+            '년주-월주': '부모와의 갈등이나 초년기 어려움이 있을 수 있습니다',
+            '년주-일주': '가문이나 배경과 다른 삶을 살 수 있습니다',
+            '년주-시주': '조상 덕이 약하지만 자수성가 운이 있습니다',
+            '월주-일주': '직장/사회생활에서 변동이 잦을 수 있습니다',
+            '월주-시주': '중년기 이후 큰 변화가 올 수 있습니다',
+            '일주-시주': '배우자나 자녀 관계에서 신경 쓸 일이 있습니다',
+          }
+          const key = `${pillarNames[i]}-${pillarNames[j]}`
+          interactions.push({
+            type: 'clash',
+            description: `${pillarNames[i]}↔${pillarNames[j]} 충(衝)`,
+            effect: clashEffects[key] || '변화와 도전의 에너지가 있습니다',
+          })
+        }
+      }
+    }
+  }
+
+  // 지지합 체크
+  for (let i = 0; i < branchList.length; i++) {
+    for (let j = i + 1; j < branchList.length; j++) {
+      for (const [a, b] of BRANCH_COMBINATIONS) {
+        if ((branchList[i] === a && branchList[j] === b) || (branchList[i] === b && branchList[j] === a)) {
+          interactions.push({
+            type: 'combine',
+            description: `${pillarNames[i]}↔${pillarNames[j]} 합(合)`,
+            effect: '조화로운 에너지가 흘러 좋은 인연과 기회가 따릅니다',
+          })
+        }
+      }
+    }
+  }
+
+  // 천간합 체크
+  for (let i = 0; i < stemList.length; i++) {
+    for (let j = i + 1; j < stemList.length; j++) {
+      for (const [a, b] of STEM_COMBINATIONS) {
+        if ((stemList[i] === a && stemList[j] === b) || (stemList[i] === b && stemList[j] === a)) {
+          interactions.push({
+            type: 'combine',
+            description: `${pillarNames[i]}↔${pillarNames[j]} 천간합`,
+            effect: '천간의 조화로 귀인의 도움이나 좋은 기회를 만납니다',
+          })
+        }
+      }
+    }
+  }
+
+  // 지지형 체크
+  for (let i = 0; i < branchList.length; i++) {
+    for (let j = i + 1; j < branchList.length; j++) {
+      for (const [a, b] of BRANCH_PENALTIES) {
+        if ((branchList[i] === a && branchList[j] === b) || (branchList[i] === b && branchList[j] === a)) {
+          interactions.push({
+            type: 'penalty',
+            description: `${pillarNames[i]}↔${pillarNames[j]} 형(刑)`,
+            effect: '갈등이나 시련이 있지만, 이를 통해 성장할 수 있습니다',
+          })
+        }
+      }
+    }
+  }
+
+  return interactions
+}
+
+// ═══════════════════════════════════════════════
 // 오행 분석 & 용신 판단 (정확도 향상)
 // ═══════════════════════════════════════════════
 function analyzeElements(pillars: Pillar[], dayMasterElement: number, monthBranch: number) {
@@ -245,6 +374,19 @@ function analyzeElements(pillars: Pillar[], dayMasterElement: number, monthBranc
     const weights = HIDDEN_WEIGHTS[p.branch]
     for (let i = 0; i < hidden.length; i++) {
       counts[STEM_ELEMENT[hidden[i]]] += weights[i]
+    }
+  }
+
+  // 충이 있으면 해당 오행 약화
+  for (let i = 0; i < pillars.length; i++) {
+    for (let j = i + 1; j < pillars.length; j++) {
+      for (const [a, b] of BRANCH_CLASHES) {
+        if ((pillars[i].branch === a && pillars[j].branch === b) || (pillars[i].branch === b && pillars[j].branch === a)) {
+          // 충이면 양쪽 지지 오행 0.3 감소
+          counts[BRANCH_ELEMENT[pillars[i].branch]] = Math.max(0, counts[BRANCH_ELEMENT[pillars[i].branch]] - 0.3)
+          counts[BRANCH_ELEMENT[pillars[j].branch]] = Math.max(0, counts[BRANCH_ELEMENT[pillars[j].branch]] - 0.3)
+        }
+      }
     }
   }
 
@@ -461,6 +603,8 @@ export function calculateSaju(
   const currentMonth = new Date().getMonth() + 1
   const currentMonthFortune = monthlyFortunes.find(f => f.month === currentMonth) || null
 
+  const pillarInteractions = analyzePillarInteractions(pillars)
+
   return {
     yearPillar,
     monthPillar,
@@ -485,6 +629,7 @@ export function calculateSaju(
     elementBalance: analysis.elementBalance,
     monthlyFortunes,
     majorLucks,
+    pillarInteractions,
     currentMonthFortune,
   }
 }

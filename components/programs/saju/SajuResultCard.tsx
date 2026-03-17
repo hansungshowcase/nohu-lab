@@ -4,12 +4,12 @@ import { forwardRef } from 'react'
 import {
   SajuResult, STEMS, STEMS_HANJA, BRANCHES_HANJA,
   ELEMENTS, Pillar,
-  STEM_ELEMENT, BRANCH_ELEMENT, STEM_YINYANG, ELEMENTS_HANJA,
+  STEM_ELEMENT, BRANCH_ELEMENT, STEM_YINYANG,
   MonthlyFortune, MajorLuck,
 } from './sajuEngine'
 import {
-  DAY_MASTER_PROFILES, USEFUL_GOD_TIPS,
-  getYearFortune, getViralSummary, getCompatibilityHint,
+  DAY_MASTER_PROFILES,
+  getYearFortune, getViralSummary, getCompatibilityHint, getMonthlyDetail,
 } from './sajuData'
 
 interface Props {
@@ -111,7 +111,8 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
   const fortune = getYearFortune(result.dayMasterElement, new Date().getFullYear())
   const viralSummary = getViralSummary(result.dayMaster, result.isDayMasterStrong)
-  const usefulGodTip = USEFUL_GOD_TIPS[result.usefulGod]
+  const currentMonth = new Date().getMonth() + 1
+  const monthDetail = getMonthlyDetail(currentMonth, result.dayMasterElement, fortune.stars)
 
   const pillars: { label: string; pillar: Pillar; tenGod?: string; isMe?: boolean }[] = [
     { label: '시주(時)', pillar: result.hourPillar || { stem: 0, branch: 0 }, tenGod: result.tenGods[3] || '' },
@@ -173,15 +174,28 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             </div>
           </div>
 
-          {/* ═══ 이달의 운세 (가장 궁금한 것) ═══ */}
+          {/* ═══ 이달의 운세 — 구체적 예측 ═══ */}
           {result.currentMonthFortune && (
             <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl p-2.5 text-white">
               <div className="flex items-center justify-between">
-                <h3 className="text-[10px] font-bold">📅 {new Date().getMonth() + 1}월 — 이달의 운세</h3>
+                <h3 className="text-[10px] font-bold">📅 {currentMonth}월 — 이달의 운세</h3>
                 <span className="text-yellow-300 text-[10px]">{'★'.repeat(result.currentMonthFortune.rating)}{'☆'.repeat(5-result.currentMonthFortune.rating)}</span>
               </div>
               <p className="text-[11px] font-bold text-white/90 mt-0.5">{result.currentMonthFortune.keyword}</p>
-              <p className="text-[9px] text-white/75 mt-0.5">{result.currentMonthFortune.advice}</p>
+              <div className="grid grid-cols-3 gap-1.5 mt-1.5">
+                <div className="bg-white/15 rounded-lg p-1.5">
+                  <div className="text-[8px] font-bold text-yellow-300">💰 이달 재물</div>
+                  <p className="text-[8px] text-white/80 mt-0.5">{monthDetail.money}</p>
+                </div>
+                <div className="bg-white/15 rounded-lg p-1.5">
+                  <div className="text-[8px] font-bold text-pink-300">❤️ 이달 연애</div>
+                  <p className="text-[8px] text-white/80 mt-0.5">{monthDetail.love}</p>
+                </div>
+                <div className="bg-white/15 rounded-lg p-1.5">
+                  <div className="text-[8px] font-bold text-red-300">⚠️ 이달 주의</div>
+                  <p className="text-[8px] text-white/80 mt-0.5">{monthDetail.warning}</p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -194,6 +208,28 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <p className="text-[10px] font-medium text-purple-700">{fortune.title}</p>
             <p className="text-[9px] text-gray-600 mt-0.5">{fortune.description}</p>
             <p className="text-[9px] text-purple-600 font-medium mt-0.5">💡 {fortune.advice}</p>
+            <div className="grid grid-cols-2 gap-1.5 mt-2">
+              <div className="bg-white/60 rounded-lg p-1.5">
+                <h4 className="text-[9px] font-bold text-amber-700">💰 재물운</h4>
+                <p className="text-[8px] text-gray-600 leading-relaxed mt-0.5">{fortune.money}</p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-1.5">
+                <h4 className="text-[9px] font-bold text-pink-700">❤️ 연애운</h4>
+                <p className="text-[8px] text-gray-600 leading-relaxed mt-0.5">{fortune.love}</p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-1.5">
+                <h4 className="text-[9px] font-bold text-blue-700">💼 직장/사업운</h4>
+                <p className="text-[8px] text-gray-600 leading-relaxed mt-0.5">{fortune.career}</p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-1.5">
+                <h4 className="text-[9px] font-bold text-green-700">🏥 건강운</h4>
+                <p className="text-[8px] text-gray-600 leading-relaxed mt-0.5">{fortune.health}</p>
+              </div>
+            </div>
+            <div className="bg-red-50 rounded-lg p-1.5 mt-1.5 border border-red-100">
+              <h4 className="text-[9px] font-bold text-red-700">⚠️ 올해 주의사항</h4>
+              <p className="text-[8px] text-red-600 leading-relaxed mt-0.5">{fortune.warning}</p>
+            </div>
           </div>
 
           {/* ═══ 월별 운세 캘린더 ═══ */}
@@ -205,19 +241,39 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <MonthlyFortuneGrid fortunes={result.monthlyFortunes} />
           </div>
 
-          {/* ═══ 재물운 · 연애운 · 궁합 ═══ */}
-          <div className="grid grid-cols-3 gap-1.5">
-            <div className="bg-amber-50 rounded-lg p-2 border border-amber-100">
-              <h4 className="text-[9px] font-bold text-amber-800 mb-0.5">💰 재물운</h4>
-              <p className="text-[8px] text-gray-600 leading-relaxed">{profile.loveStyle ? (result.isDayMasterStrong ? '자수성가형! 직접 벌어 직접 쓰는 스타일. 사업이 잘 맞아요.' : '안정 투자가 적합! 적금, 부동산 등 안전한 자산 관리가 어울려요.') : ''}</p>
+          {/* ═══ 사주 속 숨은 운명 (충/합/형) ═══ */}
+          {result.pillarInteractions.length > 0 && (
+            <div>
+              <h3 className="text-[10px] font-bold text-gray-800 mb-1.5 flex items-center gap-1">
+                <span className="w-0.5 h-3 bg-red-500 rounded-full inline-block" />
+                사주 속 숨은 운명
+              </h3>
+              <div className="space-y-1">
+                {result.pillarInteractions.slice(0, 4).map((pi, i) => (
+                  <div key={i} className={`rounded-lg p-1.5 border text-[9px] ${
+                    pi.type === 'clash' ? 'bg-red-50 border-red-200' :
+                    pi.type === 'penalty' ? 'bg-orange-50 border-orange-200' :
+                    'bg-green-50 border-green-200'
+                  }`}>
+                    <span className={`font-bold ${
+                      pi.type === 'clash' ? 'text-red-700' : pi.type === 'penalty' ? 'text-orange-700' : 'text-green-700'
+                    }`}>{pi.type === 'clash' ? '⚡' : pi.type === 'penalty' ? '🔥' : '🤝'} {pi.description}</span>
+                    <span className="text-gray-600 ml-1">{pi.effect}</span>
+                  </div>
+                ))}
+              </div>
             </div>
+          )}
+
+          {/* ═══ 연애 성향 + 궁합 ═══ */}
+          <div className="grid grid-cols-2 gap-1.5">
             <div className="bg-pink-50 rounded-lg p-2 border border-pink-100">
-              <h4 className="text-[9px] font-bold text-pink-800 mb-0.5">❤️ 연애운</h4>
-              <p className="text-[8px] text-gray-600 leading-relaxed line-clamp-3">{profile.loveStyle}</p>
+              <h4 className="text-[9px] font-bold text-pink-800 mb-0.5">❤️ 나의 연애 성향</h4>
+              <p className="text-[8px] text-gray-600 leading-relaxed">{profile.loveStyle}</p>
             </div>
             <div className="bg-rose-50 rounded-lg p-2 border border-rose-100">
-              <h4 className="text-[9px] font-bold text-rose-800 mb-0.5">💕 궁합</h4>
-              <p className="text-[8px] text-gray-600 leading-relaxed line-clamp-3">{getCompatibilityHint(result.dayMaster)}</p>
+              <h4 className="text-[9px] font-bold text-rose-800 mb-0.5">💕 궁합 힌트</h4>
+              <p className="text-[8px] text-gray-600 leading-relaxed">{getCompatibilityHint(result.dayMaster)}</p>
             </div>
           </div>
 
@@ -228,39 +284,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               대운(大運) — 인생의 큰 흐름 (10년 주기)
             </h3>
             <MajorLuckTimeline lucks={result.majorLucks} />
-          </div>
-
-          {/* ═══ 개운법 + 행운 키워드 ═══ */}
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-2 border border-amber-100">
-              <h3 className="text-[9px] font-bold text-gray-800 mb-0.5">
-                🍀 개운법 — 용신: {ELEMENTS_HANJA[result.usefulGod]}{usefulGodTip.element}
-              </h3>
-              <ul className="text-[8px] text-gray-700 space-y-0.5">
-                {usefulGodTip.tips.slice(0, 3).map((t, i) => <li key={i}>✨ {t}</li>)}
-              </ul>
-            </div>
-            <div className="rounded-lg p-2 border border-gray-200">
-              <h3 className="text-[9px] font-bold text-gray-800 mb-1">🎯 행운 키워드</h3>
-              <div className="grid grid-cols-2 gap-1">
-                <div className="bg-gray-50 rounded p-1 text-center">
-                  <div className="text-[8px] text-gray-400">색</div>
-                  <div className="text-[9px] font-bold text-gray-700">{profile.luckyColor}</div>
-                </div>
-                <div className="bg-gray-50 rounded p-1 text-center">
-                  <div className="text-[8px] text-gray-400">숫자</div>
-                  <div className="text-[9px] font-bold text-gray-700">{profile.luckyNumber}</div>
-                </div>
-                <div className="bg-gray-50 rounded p-1 text-center">
-                  <div className="text-[8px] text-gray-400">방향</div>
-                  <div className="text-[9px] font-bold text-gray-700">{profile.luckyDirection}</div>
-                </div>
-                <div className="bg-gray-50 rounded p-1 text-center">
-                  <div className="text-[8px] text-gray-400">띠궁합</div>
-                  <div className="text-[9px] font-bold text-gray-700">{result.animal}띠</div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* ═══ Footer ═══ */}
