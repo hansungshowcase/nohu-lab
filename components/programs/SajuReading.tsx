@@ -27,7 +27,7 @@ const HOUR_OPTIONS = [
 
 export default function SajuReading() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-purple-500 border-t-transparent rounded-full" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" /></div>}>
       <SajuReadingInner />
     </Suspense>
   )
@@ -134,16 +134,16 @@ function SajuReadingInner() {
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 sm:p-6">
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-4 sm:p-6">
           <h3 className="text-sm font-bold text-gray-700 mb-3 sm:mb-4">이런 걸 알 수 있어요</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {[
               { emoji: '🧬', text: '타고난 성격 유형' },
               { emoji: '☯️', text: '오행 밸런스 분석' },
-              { emoji: '💰', text: '재물운 & 연애운' },
-              { emoji: '🗓️', text: '올해 운세' },
-              { emoji: '🌊', text: '대운 흐름' },
-              { emoji: '🍀', text: '맞춤 개운법' },
+              { emoji: '💰', text: '재물운' },
+              { emoji: '❤️', text: '연애운' },
+              { emoji: '💼', text: '직업운' },
+              { emoji: '🗓️', text: '이달의 운세' },
             ].map(item => (
               <div key={item.text} className="flex items-center gap-2 text-[13px] sm:text-sm text-gray-600">
                 <span className="text-lg sm:text-xl">{item.emoji}</span>
@@ -153,15 +153,15 @@ function SajuReadingInner() {
           </div>
         </div>
 
-        <div className="bg-amber-50 rounded-xl p-3 sm:p-4 text-center">
-          <p className="text-[13px] sm:text-sm text-amber-700">
+        <div className="bg-orange-50 rounded-xl p-3 sm:p-4 text-center">
+          <p className="text-[13px] sm:text-sm text-orange-700">
             ⏱️ 소요시간 약 <strong>30초</strong> · 무료 · 회원가입 불필요
           </p>
         </div>
 
         <button
           onClick={() => setPhase('input')}
-          className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl text-base sm:text-lg hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg shadow-indigo-200 hover:shadow-xl active:scale-[0.98]"
+          className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-base sm:text-lg hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-200 hover:shadow-xl active:scale-[0.98]"
         >
           🔮 사주풀이 시작하기
         </button>
@@ -190,14 +190,14 @@ function SajuReadingInner() {
         <div className="space-y-3 sm:space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              출생 연도 {animalHint && <span className="text-purple-500 text-xs">({animalHint})</span>}
+              출생 연도 {animalHint && <span className="text-orange-500 text-xs">({animalHint})</span>}
             </label>
             <input
               type="number"
               placeholder="예: 1990"
               value={birthYear}
               onChange={e => setBirthYear(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
               min={1920}
               max={new Date().getFullYear()}
             />
@@ -211,7 +211,7 @@ function SajuReadingInner() {
                 placeholder="1~12"
                 value={birthMonth}
                 onChange={e => setBirthMonth(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
                 min={1} max={12}
               />
             </div>
@@ -222,7 +222,7 @@ function SajuReadingInner() {
                 placeholder="1~31"
                 value={birthDay}
                 onChange={e => setBirthDay(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
                 min={1} max={31}
               />
             </div>
@@ -235,7 +235,7 @@ function SajuReadingInner() {
             <select
               value={birthHour}
               onChange={e => setBirthHour(parseInt(e.target.value, 10))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 bg-white"
             >
               {HOUR_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -251,7 +251,7 @@ function SajuReadingInner() {
                 onClick={() => setGender('male')}
                 className={`py-3 rounded-xl text-sm font-medium transition border-2 ${
                   gender === 'male'
-                    ? 'bg-indigo-50 border-indigo-400 text-indigo-700'
+                    ? 'bg-orange-50 border-orange-400 text-orange-700'
                     : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
                 }`}
               >
@@ -279,7 +279,7 @@ function SajuReadingInner() {
 
         <button
           onClick={handleStart}
-          className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl text-base sm:text-lg hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg shadow-indigo-200 hover:shadow-xl active:scale-[0.98]"
+          className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl text-base sm:text-lg hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-200 hover:shadow-xl active:scale-[0.98]"
         >
           🔮 사주 분석하기
         </button>
