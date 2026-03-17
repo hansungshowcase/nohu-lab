@@ -10,7 +10,7 @@ import {
 import {
   DAY_MASTER_PROFILES, STRENGTH_INTERPRETATIONS,
   getYearFortune, getViralSummary, getMonthlyDetail,
-  getSinsalReading, getEnergyStageReading,
+  getSinsalReading, getEnergyStageReading, getGongmangReading,
 } from './sajuData'
 
 interface Props {
@@ -141,6 +141,8 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const strength = STRENGTH_INTERPRETATIONS[result.isDayMasterStrong ? 'strong' : 'weak']
   const totalElements = result.elementCounts.reduce((a, b) => a + b, 0) || 1
   const year = new Date().getFullYear()
+  const gongmangReading = getGongmangReading(result.gongmang)
+  const currentDaeun = result.daeun.find(d => d.isCurrent)
 
   const pillars: { label: string; pillar: Pillar; tenGod?: string; isMe?: boolean }[] = [
     { label: '시주(時)', pillar: result.hourPillar || { stem: 0, branch: 0 }, tenGod: result.tenGods[3] || '' },
@@ -227,6 +229,26 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <div className="mt-3 bg-white rounded-lg p-3 border border-indigo-50">
               <p className="text-xs font-bold text-indigo-700 mb-1">{strength.emoji} {strength.label} — {strength.description}</p>
               <p className="text-[12px] text-gray-600 leading-relaxed">{strength.advice}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ 격국 (Chart Structure) ═══ */}
+        <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-slate-200">
+          <div className="flex items-start gap-2.5">
+            <span className="text-2xl flex-shrink-0">🏛️</span>
+            <div>
+              <p className="text-sm font-bold text-slate-800 mb-1">{result.gyeokguk.name}</p>
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                  result.gyeokguk.quality === 'good' ? 'bg-green-100 text-green-700' :
+                  result.gyeokguk.quality === 'challenging' ? 'bg-amber-100 text-amber-700' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  {result.gyeokguk.quality === 'good' ? '길격(吉格)' : result.gyeokguk.quality === 'challenging' ? '흉격(凶格) — 제화 필요' : '보통격'}
+                </span>
+              </div>
+              <p className="text-[13px] text-gray-700 leading-[1.7]">{result.gyeokguk.description}</p>
             </div>
           </div>
         </div>
@@ -458,6 +480,55 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             </div>
           </div>
         )}
+
+        {/* ═══ 12. 공망 분석 ═══ */}
+        {gongmangReading && (
+          <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
+            <div className="flex items-start gap-2.5">
+              <span className="text-2xl flex-shrink-0">{gongmangReading.icon}</span>
+              <div>
+                <p className="text-sm font-bold text-gray-800 mb-1">{gongmangReading.title}</p>
+                <p className="text-[13px] text-gray-700 leading-[1.7]">{gongmangReading.description}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ 13. 대운 흐름 ═══ */}
+        <div>
+          <SectionHeader color="bg-teal-500">🌊 나의 대운(大運) 흐름</SectionHeader>
+          <p className="text-[12px] text-gray-500 mb-3">10년마다 바뀌는 인생의 큰 물결입니다. {currentDaeun ? `현재 ${currentDaeun.tenGod}운이 흐르고 있습니다.` : ''}</p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {result.daeun.map((d, i) => {
+              const elColors = ['text-green-700','text-red-600','text-yellow-700','text-gray-600','text-blue-700']
+              const elBgs = ['bg-green-50','bg-red-50','bg-yellow-50','bg-gray-50','bg-blue-50']
+              return (
+                <div key={i} className={`rounded-lg p-2 text-center border ${d.isCurrent ? 'border-teal-400 bg-teal-50 ring-1 ring-teal-300' : 'border-gray-100 bg-white'}`}>
+                  <p className="text-[9px] text-gray-400">{d.startAge}~{d.startAge + 9}세</p>
+                  <div className={`text-base font-black ${elColors[d.element]}`}>
+                    {STEMS_HANJA[d.stem]}{BRANCHES_HANJA[d.branch]}
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${elBgs[d.element]} ${elColors[d.element]}`}>
+                    {d.tenGod}
+                  </span>
+                  {d.isCurrent && <p className="text-[8px] text-teal-600 font-bold mt-0.5">← 현재</p>}
+                </div>
+              )
+            })}
+          </div>
+          {currentDaeun && (
+            <div className="mt-3 bg-teal-50 rounded-lg p-3 border border-teal-200">
+              <p className="text-xs font-bold text-teal-800 mb-1">🔮 현재 대운: {STEMS[currentDaeun.stem]}{BRANCHES[currentDaeun.branch]} ({currentDaeun.tenGod}운)</p>
+              <p className="text-[12px] text-gray-700 leading-relaxed">
+                {currentDaeun.tenGod === '비견' || currentDaeun.tenGod === '겁재' ? '자기 실력을 키우고 독립적으로 성장하는 시기입니다. 동업보다는 혼자 힘으로 개척하세요.' :
+                 currentDaeun.tenGod === '식신' || currentDaeun.tenGod === '상관' ? '창의력과 표현력이 빛나는 시기입니다. 새로운 사업, 콘텐츠, 예술 활동에서 성과를 낼 수 있어요.' :
+                 currentDaeun.tenGod === '편재' || currentDaeun.tenGod === '정재' ? '재물운이 활발한 시기입니다. 투자와 사업에서 좋은 성과를 기대할 수 있으며, 경제적 여유가 생깁니다.' :
+                 currentDaeun.tenGod === '편관' || currentDaeun.tenGod === '정관' ? '사회적 지위와 명예가 올라가는 시기입니다. 승진, 합격, 사회적 인정을 받을 수 있어요. 다만 압박과 스트레스에도 주의하세요.' :
+                 '학습과 자기계발에 최적인 시기입니다. 자격증 취득, 학위 취득, 전문성 강화에 투자하면 큰 성과를 거둡니다.'}
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* ═══ Footer ═══ */}
         <div className="text-center pt-3 border-t border-gray-100">

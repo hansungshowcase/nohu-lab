@@ -2,7 +2,7 @@
 // 사주풀이 해석 데이터
 // ═══════════════════════════════════════════════
 
-import { ELEMENTS, SinsalInfo } from './sajuEngine'
+import { ELEMENTS, SinsalInfo, GongmangInfo, BRANCHES } from './sajuEngine'
 
 // ── 일간별 성격 유형 ──
 export interface DayMasterProfile {
@@ -593,7 +593,55 @@ export function getSinsalReading(sinsal: SinsalInfo): { title: string; descripti
     })
   }
 
+  if (sinsal.hasMunchang) {
+    readings.push({
+      icon: '📚',
+      title: '문창귀인 — 학문·시험의 기운',
+      description: '학업과 시험에 강한 기운을 타고났습니다. 공부를 시작하면 빠르게 습득하며, 자격증 시험이나 승진 시험에서 좋은 결과를 얻기 쉽습니다. 글쓰기, 교육, 연구 분야에서 두각을 나타냅니다.',
+    })
+  }
+
+  if (sinsal.hasYangin) {
+    readings.push({
+      icon: '⚡',
+      title: '양인살 — 강한 결단의 기운',
+      description: '보통 사람보다 훨씬 강한 추진력과 결단력을 타고났습니다. 위기 상황에서 빛을 발하며, 리더십이 탁월합니다. 다만 과도한 자기주장이나 급한 성격은 인간관계에서 마찰을 일으킬 수 있으니 절제가 중요합니다.',
+    })
+  }
+
+  if (sinsal.hasGeobsal) {
+    readings.push({
+      icon: '🛡️',
+      title: '겁살 — 경쟁과 도전의 기운',
+      description: '경쟁심이 강하고 도전적인 기운을 타고났습니다. 승부사 기질이 있어 치열한 경쟁 속에서 성과를 냅니다. 다만 무모한 도전이나 무리한 투자에는 주의가 필요하며, 안전을 우선시하는 것이 좋습니다.',
+    })
+  }
+
   return readings
+}
+
+// ═══════════════════════════════════════════════
+// 공망 해석
+// ═══════════════════════════════════════════════
+export function getGongmangReading(gongmang: GongmangInfo): { title: string; description: string; icon: string } | null {
+  if (gongmang.affectedPillars.length === 0) return null
+
+  const pillarDescs: Record<string, string> = {
+    '년주': '조부모·어른과의 인연이 약할 수 있으며, 초년기(0~15세)에 어려움이 있었을 수 있습니다. 하지만 이것은 독립심을 키우는 계기가 되어 스스로 운명을 개척하는 힘이 됩니다.',
+    '월주': '부모님이나 직장과의 인연에 변화가 있을 수 있습니다. 직업을 여러 번 바꾸거나, 부모님과 일찍 독립하게 될 수 있어요. 자기만의 전문 분야를 깊이 파는 것이 성공의 열쇠입니다.',
+    '일주': '배우자와의 인연이 독특할 수 있습니다. 만혼하거나 특별한 인연을 만나게 되며, 내면의 세계가 풍부해 영적·학문적 깊이가 있습니다.',
+    '시주': '자녀와의 인연이 일반적이지 않을 수 있으며, 말년에 독자적인 길을 걷게 됩니다. 종교, 철학, 예술 등 정신적 세계에서 큰 깨달음을 얻을 수 있어요.',
+  }
+
+  const affected = gongmang.affectedPillars
+  const branchNames = gongmang.voidBranches.map(b => BRANCHES[b]).join('·')
+  const descriptions = affected.map(p => pillarDescs[p] || '').filter(Boolean).join(' ')
+
+  return {
+    icon: '🕳️',
+    title: `공망(空亡) — ${branchNames} 공망 (${affected.join(', ')}에 해당)`,
+    description: `${descriptions} 공망은 "비어 있는" 기운으로, 해당 영역에서 일반적이지 않은 특별한 경험을 하게 됩니다. 오히려 물질적 집착에서 자유로워 정신적 성장이 빠를 수 있어요.`,
+  }
 }
 
 // ═══════════════════════════════════════════════

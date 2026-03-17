@@ -102,6 +102,30 @@ export const BRANCH_PENALTIES: [number, number][] = [
   [0, 3],   // 자묘형
 ]
 
+// 지지삼합 (Three Harmony) - 세 지지가 모이면 오행이 생성됨
+export const BRANCH_THREE_HARMONY: [number, number, number, number][] = [
+  [8, 0, 4, 4],   // 신자진 → 수(水)
+  [2, 6, 10, 1],  // 인오술 → 화(火)
+  [5, 9, 1, 3],   // 사유축 → 금(金)
+  [11, 3, 7, 0],  // 해묘미 → 목(木)
+]
+
+// 공망 (空亡 / Void) - 일주 갑자순 기준 빈 지지 2개
+// 갑자순(0~9): 술해(10,11), 갑술순(10~19): 신유(8,9), ...
+export function getGongmang(dayPillar: { stem: number; branch: number }): number[] {
+  // 60갑자에서 일주의 순번 계산
+  const pillarIdx = (dayPillar.stem + (dayPillar.branch - dayPillar.stem + 120) % 12 * 5) // simplified
+  // 더 정확한 방법: 갑자순의 시작점 찾기
+  // 현재 기둥의 천간이 '갑(0)'인 경우를 역추적
+  const stepsFromJia = dayPillar.stem // 갑에서 몇 번째 천간인지
+  // 해당 갑 시작의 지지
+  const jiaBranch = ((dayPillar.branch - stepsFromJia) % 12 + 12) % 12
+  // 공망 = 해당 순에서 10~11번째 지지 (순 시작 지지 + 10, +11)
+  const void1 = (jiaBranch + 10) % 12
+  const void2 = (jiaBranch + 11) % 12
+  return [void1, void2]
+}
+
 // ═══════════════════════════════════════════════
 // 절기(節氣) 기반 월 경계 (양력 근사값)
 // ═══════════════════════════════════════════════
@@ -146,8 +170,34 @@ export interface SinsalInfo {
   hasDohwa: boolean     // 도화살
   hasHwagae: boolean    // 화개살
   hasCheoneul: boolean  // 천을귀인
+  hasMunchang: boolean  // 문창귀인
+  hasYangin: boolean    // 양인살
+  hasGeobsal: boolean   // 겁살
   dayEnergyStage: number // 십이운성 index (0-11)
   dayEnergyName: string  // 십이운성 이름
+}
+
+// 대운 (Major Luck Cycle) 인터페이스
+export interface DaeunInfo {
+  startAge: number
+  stem: number
+  branch: number
+  element: number
+  tenGod: string
+  isCurrent: boolean
+}
+
+// 공망 정보
+export interface GongmangInfo {
+  voidBranches: number[]  // 공망에 해당하는 지지 인덱스
+  affectedPillars: string[] // 공망에 걸린 기둥 이름
+}
+
+// 격국 (Chart Structure)
+export interface GyeokgukInfo {
+  name: string         // 격국 이름
+  description: string  // 설명
+  quality: 'good' | 'neutral' | 'challenging'  // 품격
 }
 
 // 세운(올해) 분석 결과
@@ -220,6 +270,9 @@ export interface SajuResult {
   elementBalance: number
   sinsal: SinsalInfo
   yearAnalysis: YearAnalysis
+  daeun: DaeunInfo[]
+  gongmang: GongmangInfo
+  gyeokguk: GyeokgukInfo
 }
 
 // ═══════════════════════════════════════════════
@@ -359,6 +412,37 @@ function getCheoneulTargets(dayStem: number): number[] {
   return map[dayStem] || []
 }
 
+// 문창귀인: 일간 기준
+function getMunchangTargets(dayStem: number): number[] {
+  // 갑→사, 을→오, 병→신, 정→유, 무→신, 기→유, 경→해, 신→자, 임→인, 계→묘
+  const map: Record<number, number[]> = {
+    0: [5], 1: [6], 2: [8], 3: [9], 4: [8],
+    5: [9], 6: [11], 7: [0], 8: [2], 9: [3],
+  }
+  return map[dayStem] || []
+}
+
+// 양인살: 일간 기준 (양간만 해당, 음간은 없음)
+function getYanginTarget(dayStem: number): number {
+  // 갑→묘(3), 병→오(6), 무→오(6), 경→유(9), 임→자(0)
+  // 음간은 -1 (해당 없음)
+  const map: Record<number, number> = {
+    0: 3, 1: -1, 2: 6, 3: -1, 4: 6,
+    5: -1, 6: 9, 7: -1, 8: 0, 9: -1,
+  }
+  return map[dayStem] ?? -1
+}
+
+// 겁살: 일지 삼합 기준
+function getGeobsalTarget(dayBranch: number): number {
+  // 인오술(2,6,10) → 해(11), 사유축(5,9,1) → 인(2),
+  // 신자진(8,0,4) → 사(5), 해묘미(11,3,7) → 신(8)
+  if (dayBranch === 2 || dayBranch === 6 || dayBranch === 10) return 11
+  if (dayBranch === 5 || dayBranch === 9 || dayBranch === 1) return 2
+  if (dayBranch === 8 || dayBranch === 0 || dayBranch === 4) return 5
+  return 8
+}
+
 // ═══════════════════════════════════════════════
 // 십이운성 계산
 // ═══════════════════════════════════════════════
@@ -416,6 +500,18 @@ function calculateSinsal(pillars: Pillar[], dayStem: number, dayBranch: number):
   const cheoneulTargets = getCheoneulTargets(dayStem)
   const hasCheoneul = allBranches.some(b => cheoneulTargets.includes(b))
 
+  // 문창귀인
+  const munchangTargets = getMunchangTargets(dayStem)
+  const hasMunchang = allBranches.some(b => munchangTargets.includes(b))
+
+  // 양인살
+  const yanginTarget = getYanginTarget(dayStem)
+  const hasYangin = yanginTarget >= 0 && allBranches.some(b => b === yanginTarget)
+
+  // 겁살
+  const geobsalTarget = getGeobsalTarget(dayBranch)
+  const hasGeobsal = allBranches.some(b => b === geobsalTarget)
+
   // 십이운성 (일간 vs 일지)
   const stage = getTwelveStage(dayStem, dayBranch)
 
@@ -424,6 +520,9 @@ function calculateSinsal(pillars: Pillar[], dayStem: number, dayBranch: number):
     hasDohwa,
     hasHwagae,
     hasCheoneul,
+    hasMunchang,
+    hasYangin,
+    hasGeobsal: hasGeobsal,
     dayEnergyStage: stage.index,
     dayEnergyName: stage.name,
   }
@@ -609,6 +708,105 @@ function analyzeYear(
 }
 
 // ═══════════════════════════════════════════════
+// 대운 (Major Luck Cycles) 계산
+// ═══════════════════════════════════════════════
+function calculateDaeun(
+  yearStem: number, monthPillar: Pillar, gender: 'male' | 'female',
+  dayMasterElement: number, dayMasterYinYang: number,
+  birthYear: number
+): DaeunInfo[] {
+  // 양남음녀 = 순행, 음남양녀 = 역행
+  const yearYinYang = STEM_YINYANG[yearStem]
+  const isForward = (gender === 'male' && yearYinYang === 1) || (gender === 'female' && yearYinYang === 0)
+
+  // 대운 시작 나이 (간이 계산: 보통 1~9세 사이, 여기서는 3세로 근사)
+  // 정확한 계산은 생일~절기 날짜 차이가 필요하지만, 근사값 사용
+  const startAge = 3
+
+  const result: DaeunInfo[] = []
+  const currentAge = new Date().getFullYear() - birthYear
+
+  for (let i = 1; i <= 8; i++) {
+    const age = startAge + (i - 1) * 10
+    let stem: number, branch: number
+    if (isForward) {
+      stem = (monthPillar.stem + i) % 10
+      branch = (monthPillar.branch + i) % 12
+    } else {
+      stem = ((monthPillar.stem - i) % 10 + 10) % 10
+      branch = ((monthPillar.branch - i) % 12 + 12) % 12
+    }
+    const isCurrent = currentAge >= age && currentAge < age + 10
+    const tenGod = getTenGod(dayMasterElement, dayMasterYinYang, stem)
+
+    result.push({
+      startAge: age,
+      stem,
+      branch,
+      element: STEM_ELEMENT[stem],
+      tenGod,
+      isCurrent,
+    })
+  }
+
+  return result
+}
+
+// ═══════════════════════════════════════════════
+// 공망 (Void) 분석
+// ═══════════════════════════════════════════════
+function calculateGongmang(dayPillar: Pillar, pillars: Pillar[]): GongmangInfo {
+  const voidBranches = getGongmang(dayPillar)
+  const pillarNames = ['년주', '월주', '일주', '시주']
+  const affectedPillars: string[] = []
+
+  for (let i = 0; i < pillars.length; i++) {
+    if (voidBranches.includes(pillars[i].branch)) {
+      affectedPillars.push(pillarNames[i])
+    }
+  }
+
+  return { voidBranches, affectedPillars }
+}
+
+// ═══════════════════════════════════════════════
+// 격국 (Chart Structure) 판단
+// ═══════════════════════════════════════════════
+function determineGyeokguk(
+  dayMaster: number, dayMasterElement: number, monthPillar: Pillar,
+  isDayMasterStrong: boolean, dayMasterYinYang: number
+): GyeokgukInfo {
+  // 월지의 정기(正氣)로 격국 판단
+  const monthHidden = HIDDEN_STEMS[monthPillar.branch]
+  const mainHidden = monthHidden[monthHidden.length - 1] // 정기
+  const tenGod = getTenGod(dayMasterElement, dayMasterYinYang, mainHidden)
+
+  // 정격 (Normal Structures) - 월지 정기의 십신으로 격국 결정
+  const gyeokMap: Record<string, { name: string; desc: string; quality: 'good' | 'neutral' | 'challenging' }> = {
+    '비견': { name: '건록격(建祿格)', desc: '자립심이 강하고 독립적으로 성공하는 격국입니다. 남에게 기대지 않고 자기 힘으로 일어서며, 실무 능력이 뛰어나 어떤 분야에서든 인정받습니다.', quality: 'neutral' },
+    '겁재': { name: '양인격(羊刃格)', desc: '강한 추진력과 결단력의 격국입니다. 리더십이 뛰어나지만 때로는 과감함이 독이 될 수 있어요. 승부욕이 강해 경쟁에서 빛을 발합니다.', quality: 'neutral' },
+    '식신': { name: '식신격(食神格)', desc: '타고난 복(福)의 격국! 평생 먹고사는 걱정이 적고, 온화한 성품으로 사람들에게 사랑받습니다. 예술적 재능과 창의력이 뛰어나 콘텐츠·요리·교육 분야에서 성공합니다.', quality: 'good' },
+    '상관': { name: '상관격(傷官格)', desc: '천재적 재능의 격국! 두뇌가 명석하고 표현력이 탁월합니다. 기존 질서를 깨는 혁신가 기질이 있어 예술, 기술, 법률 분야에서 두각을 나타냅니다. 자유로운 영혼이에요.', quality: 'neutral' },
+    '편재': { name: '편재격(偏財格)', desc: '사업 수완이 뛰어난 격국! 돈을 굴리는 감각이 타고났으며, 대인관계가 넓어 사교계의 인기인입니다. 투자, 무역, 영업 분야에서 큰 성공을 거둘 수 있습니다.', quality: 'good' },
+    '정재': { name: '정재격(正財格)', desc: '안정적으로 재물을 모으는 격국! 성실하고 계획적이며, 꾸준히 노력해 부를 쌓습니다. 재테크와 저축에 능하고, 가정적이며 책임감이 강합니다.', quality: 'good' },
+    '편관': { name: '편관격(偏官格/七殺格)', desc: '카리스마 넘치는 리더의 격국! 강한 추진력으로 큰 일을 해내며, 군인·경찰·CEO 등 지도자 기질이 강합니다. 도전과 모험을 두려워하지 않는 용기의 소유자예요.', quality: 'challenging' },
+    '정관': { name: '정관격(正官格)', desc: '사회적으로 가장 존경받는 격국! 품행이 바르고 리더십이 뛰어나 공직, 대기업, 전문직에서 승승장구합니다. 명예와 체면을 중시하며, 안정적인 성공을 거둡니다.', quality: 'good' },
+    '편인': { name: '편인격(偏印格)', desc: '비범한 재능의 격국! 남다른 시각과 독특한 사고방식으로 특수 분야에서 전문가가 됩니다. 점술, IT, 연구, 의학 등 전문 영역에서 탁월한 성과를 냅니다.', quality: 'neutral' },
+    '정인': { name: '정인격(正印格)', desc: '학문과 지혜의 격국! 교육, 연구, 학술 분야에서 크게 성공합니다. 어머니의 덕이 있고, 어른들의 도움을 받기 쉽습니다. 인자하고 품위 있는 성품이에요.', quality: 'good' },
+  }
+
+  const result = gyeokMap[tenGod] || { name: '보통격', desc: '균형 잡힌 사주입니다.', quality: 'neutral' as const }
+
+  // 종격 판단 (일간이 극도로 약하거나 강할 때)
+  // 간이 판단: dayMasterScore 기준
+  return {
+    name: result.name,
+    description: result.desc,
+    quality: result.quality,
+  }
+}
+
+// ═══════════════════════════════════════════════
 // 메인 사주 계산 함수
 // ═══════════════════════════════════════════════
 export function calculateSaju(
@@ -649,6 +847,15 @@ export function calculateSaju(
   // 세운 분석
   const yearAnalysis = analyzeYear(pillars, dayMaster, dayMasterElement, dayMasterYinYang, tenGods, analysis.usefulGod)
 
+  // 대운 계산
+  const daeun = calculateDaeun(yearPillar.stem, monthPillar, gender, dayMasterElement, dayMasterYinYang, year)
+
+  // 공망 분석
+  const gongmang = calculateGongmang(dayPillar, pillars)
+
+  // 격국 판단
+  const gyeokguk = determineGyeokguk(dayMaster, dayMasterElement, monthPillar, analysis.isDayMasterStrong, dayMasterYinYang)
+
   return {
     yearPillar,
     monthPillar,
@@ -673,6 +880,9 @@ export function calculateSaju(
     elementBalance: analysis.elementBalance,
     sinsal,
     yearAnalysis,
+    daeun,
+    gongmang,
+    gyeokguk,
   }
 }
 
