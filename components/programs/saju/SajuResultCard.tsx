@@ -79,8 +79,9 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const maxEl = Math.max(...result.elementCounts)
   const usefulGodTip = USEFUL_GOD_TIPS[result.usefulGod]
 
-  const pillars: { label: string; pillar: Pillar; tenGod?: string }[] = [
-    { label: '시주(時柱)', pillar: result.hourPillar || { stem: 0, branch: 0 }, tenGod: result.tenGods[3] || '' },
+  const hasHourPillar = result.hourPillar !== null && result.hourPillar !== undefined
+  const pillars: { label: string; pillar: Pillar; tenGod?: string; hidden?: boolean }[] = [
+    { label: '시주(時柱)', pillar: result.hourPillar || { stem: 0, branch: 0 }, tenGod: result.tenGods[3] || '', hidden: !hasHourPillar },
     { label: '일주(日柱)', pillar: result.dayPillar, tenGod: '나' },
     { label: '월주(月柱)', pillar: result.monthPillar, tenGod: result.tenGods[1] },
     { label: '년주(年柱)', pillar: result.yearPillar, tenGod: result.tenGods[0] },

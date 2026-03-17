@@ -16,16 +16,11 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
   const viral = getViralSummary(result.dayMaster, result.isDayMasterStrong)
 
-  // 공유 URL 생성 (사주 결과를 쿼리 파라미터로 인코딩)
+  // 공유 URL 생성 (개인정보 보호를 위해 base64 인코딩)
   const getShareUrl = useCallback(() => {
-    const params = new URLSearchParams({
-      y: String(result.birthYear),
-      m: String(result.birthMonth),
-      d: String(result.birthDay),
-      h: result.birthHour !== null ? String(result.birthHour) : '',
-      g: result.gender === 'male' ? 'm' : 'f',
-    })
-    return `${window.location.origin}/programs/saju-reading?${params.toString()}`
+    const data = `${result.birthYear},${result.birthMonth},${result.birthDay},${result.birthHour ?? ''},${result.gender === 'male' ? 'm' : 'f'}`
+    const encoded = btoa(data)
+    return `${window.location.origin}/programs/saju-reading?d=${encoded}`
   }, [result])
 
   // 링크 복사

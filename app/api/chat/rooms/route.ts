@@ -6,6 +6,7 @@ import { getServiceSupabase } from '@/lib/supabase'
 export async function GET() {
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
+  if (user.tier === 0) return NextResponse.json({ unreadCount: 0 })
 
   const supabase = getServiceSupabase()
 

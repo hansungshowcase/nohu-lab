@@ -48,17 +48,17 @@ export async function POST(request: NextRequest) {
 
       if (existing) {
         if (existing.tier !== tier) {
-          await supabase
+          const { error: updateErr } = await supabase
             .from('members')
             .update({ tier })
             .eq('id', existing.id)
-          updateCount++
+          if (!updateErr) updateCount++
         }
       } else {
-        await supabase
+        const { error: insertErr } = await supabase
           .from('members')
           .insert({ nickname, phone: '', tier })
-        newCount++
+        if (!insertErr) newCount++
       }
       syncCount++
     }

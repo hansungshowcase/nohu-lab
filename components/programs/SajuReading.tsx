@@ -49,15 +49,20 @@ function SajuReadingInner() {
 
   // URL 파라미터로부터 자동 실행 (공유 링크)
   useEffect(() => {
-    const y = searchParams.get('y')
-    const m = searchParams.get('m')
-    const d = searchParams.get('d')
-    const h = searchParams.get('h')
-    const g = searchParams.get('g')
-    if (y && m && d) {
+    const encoded = searchParams.get('d')
+    if (!encoded) return
+    try {
+      const decoded = atob(encoded)
+      const parts = decoded.split(',')
+      if (parts.length < 4) return
+      const [y, m, d, h, g] = parts
+      if (!y || !m || !d) return
+      const yi = parseInt(y), mi = parseInt(m), di = parseInt(d)
+      if (isNaN(yi) || isNaN(mi) || isNaN(di)) return
+      if (yi < 1920 || yi > new Date().getFullYear() || mi < 1 || mi > 12 || di < 1 || di > 31) return
       const hour = h ? parseInt(h) : null
       const gen = g === 'f' ? 'female' : 'male'
-      const saju = calculateSaju(parseInt(y), parseInt(m), parseInt(d), hour, gen)
+      const saju = calculateSaju(yi, mi, di, hour, gen)
       setResult(saju)
       setBirthYear(y)
       setBirthMonth(m)
@@ -65,7 +70,7 @@ function SajuReadingInner() {
       if (h) setBirthHour(parseInt(h))
       setGender(gen)
       setPhase('result')
-    }
+    } catch { /* 잘못된 인코딩 무시 */ }
   }, [searchParams])
 
   const validate = (): boolean => {

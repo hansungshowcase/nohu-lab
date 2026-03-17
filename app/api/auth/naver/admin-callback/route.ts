@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenRes.json()
 
     if (!tokenData.access_token) {
-      console.error('Token failed:', JSON.stringify(tokenData))
+      console.error('Token failed: error_code=', tokenData.error, 'error_description=', tokenData.error_description)
       return NextResponse.redirect(new URL(`/admin?sync=failed&reason=token_failed`, process.env.NEXT_PUBLIC_BASE_URL!))
     }
 
