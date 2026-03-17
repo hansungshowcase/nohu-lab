@@ -53,23 +53,23 @@ function SajuReadingInner() {
     const h = searchParams.get('h')
     const g = searchParams.get('g')
     if (y && m && d) {
-      const hour = h ? parseInt(h) : null
+      const hour = h ? parseInt(h, 10) : null
       const gen = g === 'f' ? 'female' : 'male'
-      const saju = calculateSaju(parseInt(y), parseInt(m), parseInt(d), hour, gen)
+      const saju = calculateSaju(parseInt(y, 10), parseInt(m, 10), parseInt(d, 10), hour, gen)
       setResult(saju)
       setBirthYear(y)
       setBirthMonth(m)
       setBirthDay(d)
-      if (h) setBirthHour(parseInt(h))
+      if (h) setBirthHour(parseInt(h, 10))
       setGender(gen)
       setPhase('result')
     }
   }, [searchParams])
 
   const validate = (): boolean => {
-    const y = parseInt(birthYear)
-    const m = parseInt(birthMonth)
-    const d = parseInt(birthDay)
+    const y = parseInt(birthYear, 10)
+    const m = parseInt(birthMonth, 10)
+    const d = parseInt(birthDay, 10)
     if (!y || y < 1920 || y > new Date().getFullYear()) {
       setError('올바른 출생 연도를 입력하세요 (1920~현재)')
       return false
@@ -97,9 +97,9 @@ function SajuReadingInner() {
 
   const handleStart = () => {
     if (!validate()) return
-    const y = parseInt(birthYear)
-    const m = parseInt(birthMonth)
-    const d = parseInt(birthDay)
+    const y = parseInt(birthYear, 10)
+    const m = parseInt(birthMonth, 10)
+    const d = parseInt(birthDay, 10)
     const hour = birthHour >= 0 ? birthHour : null
     const saju = calculateSaju(y, m, d, hour, gender)
     setResult(saju)
@@ -175,7 +175,7 @@ function SajuReadingInner() {
 
   // ── 입력 화면 ──
   if (phase === 'input') {
-    const yearNum = parseInt(birthYear) || 0
+    const yearNum = parseInt(birthYear, 10) || 0
     const animalIdx = yearNum >= 1920 ? ((yearNum - 4) % 12 + 12) % 12 : -1
     const animalHint = animalIdx >= 0 ? `${BRANCHES_ANIMAL[animalIdx]}띠` : ''
 
@@ -234,7 +234,7 @@ function SajuReadingInner() {
             </label>
             <select
               value={birthHour}
-              onChange={e => setBirthHour(parseInt(e.target.value))}
+              onChange={e => setBirthHour(parseInt(e.target.value, 10))}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white"
             >
               {HOUR_OPTIONS.map(opt => (

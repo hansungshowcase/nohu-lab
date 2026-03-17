@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import TierBadge from './TierBadge'
@@ -16,13 +16,19 @@ export default function Sidebar({ user }: { user: User | null }) {
   const router = useRouter()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const fullUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : pathname
+  const [fullUrl, setFullUrl] = useState(pathname)
+
+  useEffect(() => {
+    setFullUrl(window.location.pathname + window.location.search)
+  }, [pathname])
   const categories = getAllCategories()
 
   if (!user) return null
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' })
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch { /* 네트워크 오류 무시 */ }
     router.push('/')
   }
 
