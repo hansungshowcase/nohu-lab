@@ -95,19 +95,13 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         } catch { /* fallback to download */ }
       }
 
-      // data URL로 직접 다운로드 (Blob URL의 파일 연결 문제 회피)
-      const fileName = 'saju-result.png'
-      try {
-        const link = document.createElement('a')
-        link.download = fileName
-        link.href = dataUrl
-        link.style.display = 'none'
-        document.body.appendChild(link)
-        link.click()
-        setTimeout(() => document.body.removeChild(link), 1000)
-      } catch {
-        // fallback: 새 탭에서 이미지 열기
-        window.open(dataUrl, '_blank')
+      // 새 탭에서 이미지 표시 (우클릭/길게 눌러 저장)
+      const newTab = window.open('', '_blank')
+      if (newTab) {
+        newTab.document.write(`<!DOCTYPE html><html><head><title>사주풀이 결과</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:sans-serif;flex-direction:column;gap:16px}img{max-width:95vw;max-height:85vh;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.12)}p{color:#888;font-size:14px}</style></head><body><img src="${dataUrl}" alt="사주풀이 결과"/><p>이미지를 길게 누르거나 우클릭하여 저장하세요</p></body></html>`)
+        newTab.document.close()
+      } else {
+        window.location.href = dataUrl
       }
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2000)
@@ -125,26 +119,14 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           scrollX: 0,
           windowWidth: 720,
         } as Parameters<typeof html2canvas>[1])
-        await new Promise<void>((resolve) => {
-          canvas.toBlob((blob) => {
-            if (!blob) {
-              alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
-              resolve()
-              return
-            }
-            const blobUrl = URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.download = 'saju-result.png'
-            link.href = blobUrl
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
-            setSaveSuccess(true)
-            setTimeout(() => setSaveSuccess(false), 2000)
-            resolve()
-          }, 'image/png', 1.0)
-        })
+        const fallbackDataUrl = canvas.toDataURL('image/png', 1.0)
+        const newTab = window.open('', '_blank')
+        if (newTab) {
+          newTab.document.write(`<!DOCTYPE html><html><head><title>사주풀이 결과</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:sans-serif;flex-direction:column;gap:16px}img{max-width:95vw;max-height:85vh;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.12)}p{color:#888;font-size:14px}</style></head><body><img src="${fallbackDataUrl}" alt="사주풀이 결과"/><p>이미지를 길게 누르거나 우클릭하여 저장하세요</p></body></html>`)
+          newTab.document.close()
+        }
+        setSaveSuccess(true)
+        setTimeout(() => setSaveSuccess(false), 2000)
       } catch {
         alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
       }
