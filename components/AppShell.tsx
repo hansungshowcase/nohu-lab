@@ -56,22 +56,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar user={user} />
       <main className="flex-1 lg:ml-0 min-h-screen">
         {showGuestBanner && (
-          <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-2 flex items-center justify-between gap-2 animate-slide-up">
+          <a
+            href={CAFE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-2 flex items-center justify-between gap-2 animate-slide-up cursor-pointer hover:from-orange-600 hover:to-amber-600 transition-all"
+          >
             <div className="flex items-center gap-1.5 text-xs font-medium flex-1 min-w-0">
               <span className="text-sm shrink-0">🔒</span>
               <span>비회원은 프로그램 <strong>2회</strong> 제한 · 회원가입하면 무제한!</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <a
-                href={CAFE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1 bg-white text-orange-600 text-xs font-bold rounded-md hover:bg-orange-50 transition whitespace-nowrap"
-              >
-                회원가입
-              </a>
+              <span className="px-4 py-1.5 bg-white text-orange-600 text-sm font-bold rounded-lg shadow-sm whitespace-nowrap">
+                회원가입 →
+              </span>
               <button
-                onClick={() => { setShowGuestBanner(false); sessionStorage.setItem('guest-banner-dismissed', '1') }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowGuestBanner(false); sessionStorage.setItem('guest-banner-dismissed', '1') }}
                 className="p-1 hover:bg-white/20 rounded-lg transition"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -79,7 +79,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 </svg>
               </button>
             </div>
-          </div>
+          </a>
         )}
         {children}
       </main>
