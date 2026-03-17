@@ -126,7 +126,7 @@ export default function TierGuidePage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-      <div className="mb-8 sm:mb-10 ml-12 lg:ml-0 animate-fade-in">
+      <div className="mb-8 sm:mb-10 ml-0 animate-fade-in">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
           등급 안내
         </h1>
