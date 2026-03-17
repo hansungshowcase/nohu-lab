@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
@@ -13,10 +13,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
+
 export const metadata: Metadata = {
   title: "노후연구소",
   description: "노후연구소 - 은퇴 준비를 위한 다양한 도구",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
   metadataBase: new URL('https://nohu-lab.vercel.app'),
   openGraph: {
     title: '노후연구소',

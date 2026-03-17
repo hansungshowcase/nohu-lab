@@ -5,7 +5,7 @@ export const programRegistry: Program[] = [
   {
     id: 'retirement-test',
     name: '노후 준비 점수 테스트',
-    description: '12개 질문으로 알아보는 나의 노후 준비 상태',
+    description: '20개 질문으로 알아보는 나의 노후 준비 상태',
     minTier: 0,
     icon: '📊',
     category: '테스트',
@@ -68,6 +68,16 @@ export const programRegistry: Program[] = [
     icon: '🔄',
     category: '유틸리티',
     isActive: true,
+  },
+  {
+    id: 'pension-timing',
+    name: '연금 수령 황금 타이밍',
+    description: '조기·정상·연기수령 비교로 나에게 최적인 연금 개시 시점을 찾아드립니다',
+    minTier: 0,
+    icon: '⏰',
+    category: '재무',
+    isActive: true,
+    badge: 'NEW',
   },
 ]
 

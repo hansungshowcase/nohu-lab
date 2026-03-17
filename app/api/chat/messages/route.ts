@@ -11,12 +11,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
 
   // 관리자: roomId 파라미터로 특정 회원 대화 조회
-  // 회원: 자신의 대화만 조회
-  let roomId = user.memberId
-  if (user.tier === 4) {
-    const paramRoom = searchParams.get('roomId')
-    if (paramRoom) roomId = paramRoom
-  }
+  // 회원: 자신의 대화만 조회 (roomId 파라미터 무시)
+  const paramRoom = searchParams.get('roomId')
+  const roomId = user.tier === 4 && paramRoom ? paramRoom : user.memberId
 
   // 메시지 조회 + 읽음 처리 병렬 실행
   const readRole = user.tier === 4 ? 'member' : 'admin'
@@ -52,6 +49,10 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   const { message, roomId: targetRoomId } = body
+
+  if (user.tier === 0) {
+    return NextResponse.json({ error: '비회원은 채팅을 이용할 수 없습니다.' }, { status: 403 })
+  }
 
   if (!message || typeof message !== 'string' || message.trim().length === 0) {
     return NextResponse.json({ error: '메시지를 입력하세요' }, { status: 400 })
