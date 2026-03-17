@@ -8,7 +8,7 @@ import {
 } from './sajuEngine'
 import {
   DAY_MASTER_PROFILES, STRENGTH_INTERPRETATIONS,
-  getYearFortune, getViralSummary, getMonthlyDetail,
+  getYearFortune, getViralSummary,
   getUsefulGodAdvice, TEN_GOD_INTERPRETATIONS,
   SINSAL_INTERPRETATIONS, TWELVE_STAGE_INTERPRETATIONS,
   getDaeunInterpretation,
@@ -98,8 +98,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
   const fortune = getYearFortune(result.dayMasterElement, new Date().getFullYear(), result.isDayMasterStrong, result.dayMaster)
   const viralSummary = getViralSummary(result.dayMaster, result.isDayMasterStrong)
-  const currentMonth = new Date().getMonth() + 1
-  const monthDetail = getMonthlyDetail(currentMonth, result.dayMasterElement)
   const strength = STRENGTH_INTERPRETATIONS[result.isDayMasterStrong ? 'strong' : 'weak']
   const totalElements = result.elementCounts.reduce((a, b) => a + b, 0) || 1
   const year = new Date().getFullYear()
@@ -380,6 +378,28 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               <p className="text-[13px] sm:text-sm text-gray-800 leading-[1.85]">{fortune.health}</p>
             </div>
 
+            {/* 인간관계운 */}
+            {fortune.relationship && (
+              <div className="bg-violet-50 rounded-xl p-4 sm:p-5 border border-violet-200">
+                <h4 className="text-sm sm:text-base font-black text-violet-800 mb-2">🤝 인간관계운</h4>
+                <p className="text-[13px] sm:text-sm text-gray-800 leading-[1.85]">{fortune.relationship}</p>
+              </div>
+            )}
+
+            {/* 주요 사건 */}
+            {fortune.keyEvents && fortune.keyEvents.length > 0 && (
+              <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl p-4 sm:p-5 text-white">
+                <h4 className="text-sm sm:text-base font-black mb-3">📅 올해 주요 시기</h4>
+                <div className="space-y-2">
+                  {fortune.keyEvents.map((event, i) => (
+                    <div key={i} className="bg-white/15 rounded-lg px-3 py-2">
+                      <p className="text-[12px] sm:text-[13px] text-white/95 leading-relaxed">{event}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 행동지침 */}
             {fortune.action && fortune.action.length > 0 && (
               <div className="bg-emerald-50 rounded-xl p-4 sm:p-5 border border-emerald-200">
@@ -412,26 +432,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           </div>
         </div>
 
-        {/* ═══ 4. 이달의 운세 ═══ */}
-        <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-4 sm:p-5 text-white">
-          <h3 className="text-sm sm:text-base font-black mb-3">{currentMonth}월 운세</h3>
-          <div className="space-y-2.5">
-            <div className="bg-white/15 rounded-xl p-3 sm:p-3.5">
-              <div className="text-[11px] sm:text-[12px] font-bold text-yellow-200 mb-1">💰 재물</div>
-              <p className="text-[12px] sm:text-[13px] text-white/95 leading-relaxed">{monthDetail.money}</p>
-            </div>
-            <div className="bg-white/15 rounded-xl p-3 sm:p-3.5">
-              <div className="text-[11px] sm:text-[12px] font-bold text-pink-200 mb-1">❤️ 연애</div>
-              <p className="text-[12px] sm:text-[13px] text-white/95 leading-relaxed">{monthDetail.love}</p>
-            </div>
-            <div className="bg-white/15 rounded-xl p-3 sm:p-3.5">
-              <div className="text-[11px] sm:text-[12px] font-bold text-red-200 mb-1">⚠️ 주의</div>
-              <p className="text-[12px] sm:text-[13px] text-white/95 leading-relaxed">{monthDetail.warning}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══ 5. 행운/주의 달 ═══ */}
+        {/* ═══ 4. 행운/주의 달 ═══ */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="bg-green-50 rounded-xl p-3 sm:p-4 border border-green-200 text-center">
             <p className="text-[10px] sm:text-[11px] text-green-600 font-medium mb-1">행운의 달</p>
