@@ -166,25 +166,25 @@ export default function LoginPage() {
       <div className="hidden sm:block absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-orange-100/40 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
       <div className="hidden sm:block absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-amber-100/30 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
 
-      <div className="w-full max-w-[460px] relative">
+      <div className="w-full max-w-[420px] relative">
         <div className="animate-fade-in bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-orange-900/5 p-6 sm:p-10 border border-white/60">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-orange-500/20">
-              <span className="text-white font-bold text-2xl">N</span>
+            <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-orange-500/20">
+              <span className="text-white font-bold text-xl">N</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">
               노후연구소
             </h1>
-            <p className="text-sm sm:text-base text-gray-500 mt-2 font-medium">
+            <p className="text-[13px] text-gray-400 mt-1.5 font-medium">
               카페 닉네임으로 로그인하세요
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-600 mb-2">
+              <label className="block text-[12px] font-semibold text-gray-500 mb-2 uppercase tracking-wider">
                 카페 닉네임
               </label>
               <input
@@ -192,25 +192,25 @@ export default function LoginPage() {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder="닉네임을 입력하세요"
-                className="w-full px-5 py-4 rounded-xl border border-gray-200 bg-white text-gray-900 text-lg placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all duration-200"
+                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-base placeholder:text-gray-300 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all duration-200"
                 required
                 disabled={loading}
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 text-sm p-4 rounded-xl whitespace-pre-line border border-red-100">
+              <div className="bg-red-50 text-red-600 text-[13px] p-3.5 rounded-xl whitespace-pre-line border border-red-100">
                 {error}
               </div>
             )}
 
             {verifying && (
-              <div className="bg-amber-50 text-amber-700 text-sm p-4 rounded-xl border border-amber-100">
+              <div className="bg-amber-50 text-amber-700 text-[13px] p-3.5 rounded-xl border border-amber-100">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-5 h-5 spinner shrink-0" style={{ borderTopColor: '#d97706' }} />
+                  <div className="w-4 h-4 spinner shrink-0" style={{ borderTopColor: '#d97706' }} />
                   <span>카페 회원 여부를 확인하고 있습니다... ({verifySeconds}초)</span>
                 </div>
-                <p className="text-xs text-amber-500 mt-2 ml-7">확장프로그램이 카페에서 검색 중입니다.</p>
+                <p className="text-[11px] text-amber-500 mt-1.5 ml-6">확장프로그램이 카페에서 검색 중입니다. 최대 60초 소요됩니다.</p>
               </div>
             )}
 
@@ -218,7 +218,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleRetry}
-                className="w-full py-3.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-base font-semibold rounded-xl border border-amber-200 transition-all"
+                className="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-[13px] font-medium rounded-xl border border-amber-200 transition-all"
               >
                 🔄 다시 확인하기
               </button>
@@ -227,7 +227,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 disabled:from-orange-300 disabled:to-amber-300 text-white font-bold text-lg rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30"
+              className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 disabled:from-orange-300 disabled:to-amber-300 text-white font-semibold text-base rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30"
             >
               {loading ? (
                 <>
@@ -241,10 +241,10 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="relative flex items-center my-7">
-            <div className="flex-grow border-t border-gray-200" />
-            <span className="mx-4 text-xs text-gray-400 font-medium">또는</span>
-            <div className="flex-grow border-t border-gray-200" />
+          <div className="relative flex items-center my-6">
+            <div className="flex-grow border-t border-gray-100" />
+            <span className="mx-4 text-[11px] text-gray-300 font-medium uppercase tracking-wider">or</span>
+            <div className="flex-grow border-t border-gray-100" />
           </div>
 
           {/* Guest login */}
@@ -269,13 +269,13 @@ export default function LoginPage() {
               }
             }}
             disabled={loading}
-            className="w-full py-4 bg-white hover:bg-gray-50 disabled:bg-gray-50 text-gray-700 font-semibold text-base rounded-xl transition-all duration-200 border-2 border-gray-200 hover:border-gray-300"
+            className="w-full py-3.5 bg-white hover:bg-gray-50 disabled:bg-gray-50 text-gray-600 font-medium text-base rounded-xl transition-all duration-200 border border-gray-200 hover:border-gray-300"
           >
             비회원으로 둘러보기
           </button>
 
           {/* Footer */}
-          <p className="text-center text-sm text-gray-500 mt-7 leading-relaxed">
+          <p className="text-center text-[12px] text-gray-400 mt-6 leading-relaxed">
             카페 등급에 따라 사용 가능한 도구가 다릅니다
           </p>
 
@@ -284,13 +284,13 @@ export default function LoginPage() {
               href="https://cafe.naver.com/eovhskfktmak"
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full py-3.5 border-2 border-orange-200 text-orange-600 font-semibold text-base rounded-xl hover:bg-orange-50 hover:border-orange-300 transition-all duration-200 text-center"
+              className="block w-full py-3 border border-gray-200 text-gray-600 font-medium text-[13px] rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-center"
             >
-              카페 회원가입 하러가기
+              카페 회원가입
             </a>
             <a
               href="/admin/login"
-              className="inline-block text-xs text-gray-400 hover:text-gray-600 transition-colors mt-2"
+              className="inline-block text-[11px] text-gray-300 hover:text-gray-500 transition-colors mt-1"
             >
               관리자 로그인
             </a>
