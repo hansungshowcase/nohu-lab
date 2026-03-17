@@ -18,10 +18,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '한 번에 최대 500명까지 등록 가능합니다.' }, { status: 400 })
   }
 
-  if (nicknames.length > 1000) {
-    return NextResponse.json({ error: '한 번에 최대 1000명까지 등록 가능합니다.' }, { status: 400 })
-  }
-
   const supabase = getServiceSupabase()
 
   // 기존 회원 닉네임 조회
@@ -57,7 +53,7 @@ export async function POST(request: NextRequest) {
     .insert(newMembers)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: '회원 등록에 실패했습니다.' }, { status: 500 })
   }
 
   return NextResponse.json({

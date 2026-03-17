@@ -50,10 +50,6 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { message, roomId: targetRoomId } = body
 
-  if (user.tier === 0) {
-    return NextResponse.json({ error: '비회원은 채팅을 이용할 수 없습니다.' }, { status: 403 })
-  }
-
   if (!message || typeof message !== 'string' || message.trim().length === 0) {
     return NextResponse.json({ error: '메시지를 입력하세요' }, { status: 400 })
   }
@@ -83,7 +79,7 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
   }
 
   return NextResponse.json(data)
