@@ -22,14 +22,21 @@ export default function LoginPage() {
     return () => stopPolling()
   }, [stopPolling])
 
+  const [verifySeconds, setVerifySeconds] = useState(0)
+  const [lastVerifyId, setLastVerifyId] = useState<string | null>(null)
+
   async function pollVerifyStatus(verifyId: string) {
     setVerifying(true)
+    setVerifySeconds(0)
+    setLastVerifyId(verifyId)
     let attempts = 0
-    const maxAttempts = 20
+    const maxAttempts = 40
+    const interval = 1500
 
     return new Promise<void>((resolve) => {
       pollingRef.current = setInterval(async () => {
         attempts++
+        setVerifySeconds(Math.round(attempts * interval / 1000))
         try {
           const res = await fetch(`/api/auth/verify-status?id=${verifyId}`)
           if (!res.ok) return
@@ -39,7 +46,7 @@ export default function LoginPage() {
             if (attempts >= maxAttempts) {
               stopPolling()
               setVerifying(false)
-              setError('회원 확인 시간이 초과되었습니다.\n관리자의 확장프로그램이 실행 중인지 확인해주세요.')
+              setError('회원 확인 시간이 초과되었습니다.\n확장프로그램이 실행 중인지 확인 후 다시 시도해주세요.')
               setLoading(false)
               resolve()
             }
@@ -51,8 +58,11 @@ export default function LoginPage() {
 
           if (data.status === 'found') {
             router.push('/dashboard')
-          } else {
+          } else if (data.status === 'not_found') {
             setError('노후연구소 카페에 가입되지 않은 닉네임입니다.\n카페에 먼저 가입해주세요.')
+            setLoading(false)
+          } else {
+            setError('회원 확인 중 오류가 발생했습니다.\n다시 시도해주세요.')
             setLoading(false)
           }
           resolve()
@@ -65,8 +75,16 @@ export default function LoginPage() {
             resolve()
           }
         }
-      }, 2000)
+      }, interval)
     })
+  }
+
+  async function handleRetry() {
+    if (lastVerifyId) {
+      setError('')
+      setLoading(true)
+      await pollVerifyStatus(lastVerifyId)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -151,10 +169,23 @@ export default function LoginPage() {
             )}
 
             {verifying && (
-              <div className="bg-amber-50 text-amber-700 text-[13px] p-3.5 rounded-xl flex items-center gap-2.5 border border-amber-100">
-                <div className="w-4 h-4 spinner shrink-0" style={{ borderTopColor: '#d97706' }} />
-                카페 회원 여부를 확인하고 있습니다...
+              <div className="bg-amber-50 text-amber-700 text-[13px] p-3.5 rounded-xl border border-amber-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-4 h-4 spinner shrink-0" style={{ borderTopColor: '#d97706' }} />
+                  <span>카페 회원 여부를 확인하고 있습니다... ({verifySeconds}초)</span>
+                </div>
+                <p className="text-[11px] text-amber-500 mt-1.5 ml-6">확장프로그램이 카페에서 검색 중입니다. 최대 60초 소요됩니다.</p>
               </div>
+            )}
+
+            {!verifying && !loading && lastVerifyId && error && (
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-[13px] font-medium rounded-xl border border-amber-200 transition-all"
+              >
+                🔄 다시 확인하기
+              </button>
             )}
 
             <button
