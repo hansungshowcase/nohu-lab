@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
 
 // POST: 메시지 전송
 export async function POST(request: NextRequest) {
+  try {
   const user = await getCurrentUser()
   if (!user || user.tier === 0) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
@@ -83,4 +84,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(data)
+  } catch {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 })
+  }
 }
