@@ -323,25 +323,25 @@ function SajuReadingInner() {
       <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4 animate-fadeIn">
         <SajuResultCard ref={cardRef} result={result} />
 
-        <div className="no-print space-y-3 px-1">
+        <div className="no-print space-y-4 px-1">
           <SajuShareButtons result={result} cardRef={cardRef} />
 
-          <div className="flex gap-2">
+          <div className="flex gap-2.5">
             <button
               onClick={handlePrint}
-              className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-600 rounded-xl text-[13px] sm:text-sm font-medium transition flex items-center justify-center gap-1.5"
+              className="flex-1 py-3.5 bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm active:scale-[0.97] text-gray-600 rounded-2xl text-[13px] sm:text-sm font-semibold transition-all flex items-center justify-center gap-2"
             >
-              🖨️ A4 인쇄
+              <span className="text-base">🖨️</span> A4 인쇄
             </button>
             <button
               onClick={handleRetry}
-              className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-600 rounded-xl text-[13px] sm:text-sm font-medium transition flex items-center justify-center gap-1.5"
+              className="flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 active:scale-[0.97] text-white rounded-2xl text-[13px] sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 shadow-sm"
             >
-              🔄 다시 풀기
+              <span className="text-base">🔄</span> 다시 풀기
             </button>
           </div>
 
-          <p className="text-center text-xs text-gray-300 pb-4">
+          <p className="text-center text-[11px] text-gray-300 pb-4">
             본 결과는 전통 사주명리학을 기반으로 한 재미 콘텐츠입니다
           </p>
         </div>

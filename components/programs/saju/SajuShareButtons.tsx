@@ -97,9 +97,9 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         } catch { /* fallback to download */ }
       }
 
-      // Blob URL로 다운로드
+      // Blob URL로 다운로드 (영문 파일명으로 호환성 확보)
       const blobUrl = URL.createObjectURL(blob)
-      const fileName = `사주풀이_${STEMS[result.dayMaster]}${ELEMENTS[STEM_ELEMENT[result.dayMaster]]}_결과.png`
+      const fileName = 'saju-result.png'
       try {
         const link = document.createElement('a')
         link.download = fileName
@@ -107,7 +107,6 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         link.style.display = 'none'
         document.body.appendChild(link)
         link.click()
-        // 짧은 딜레이 후 제거 (브라우저 호환)
         setTimeout(() => {
           document.body.removeChild(link)
           URL.revokeObjectURL(blobUrl)
@@ -188,30 +187,42 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
   }
 
   return (
-    <div className="space-y-2 sm:space-y-3">
-      <p className="text-center text-[13px] sm:text-sm text-gray-500 font-medium">친구에게 공유하고 함께 비교해보세요!</p>
-      <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+    <div className="space-y-4">
+      {/* 공유 헤더 */}
+      <div className="text-center">
+        <p className="text-sm sm:text-base font-bold text-gray-800">결과를 공유해보세요</p>
+        <p className="text-xs text-gray-400 mt-0.5">친구와 사주를 비교하면 더 재밌어요</p>
+      </div>
+
+      {/* 공유 버튼 */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <button
           onClick={handleCopyLink}
-          className="py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 active:scale-95 text-gray-700 rounded-xl text-xs sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
+          className="group relative py-4 bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all flex flex-col items-center justify-center gap-1.5"
         >
-          <span className="text-base sm:text-lg">{copyDone ? '✅' : '🔗'}</span>
-          <span>{copyDone ? '복사됨!' : '링크 복사'}</span>
+          <span className="w-10 h-10 rounded-full bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center text-lg transition-colors">
+            {copyDone ? '✅' : '🔗'}
+          </span>
+          <span className="text-gray-600">{copyDone ? '복사됨!' : '링크 복사'}</span>
         </button>
         <button
           onClick={handleSaveImage}
           disabled={saving}
-          className="py-3 bg-orange-50 hover:bg-orange-100 active:bg-orange-200 active:scale-95 text-orange-700 rounded-xl text-xs sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1 disabled:opacity-50"
+          className="group relative py-4 bg-white border border-orange-200 hover:border-orange-300 hover:shadow-md active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all flex flex-col items-center justify-center gap-1.5 disabled:opacity-50"
         >
-          <span className="text-base sm:text-lg">{saving ? '⏳' : saveSuccess ? '✅' : '📷'}</span>
-          <span>{saving ? '저장 중...' : saveSuccess ? '완료!' : '이미지 저장'}</span>
+          <span className="w-10 h-10 rounded-full bg-orange-50 group-hover:bg-orange-100 flex items-center justify-center text-lg transition-colors">
+            {saving ? '⏳' : saveSuccess ? '✅' : '📷'}
+          </span>
+          <span className="text-orange-700">{saving ? '저장 중...' : saveSuccess ? '완료!' : '이미지 저장'}</span>
         </button>
         <button
           onClick={handleKakao}
-          className="py-3 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#EDCF00] active:scale-95 text-[#3C1E1E] rounded-xl text-xs sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
+          className="group relative py-4 bg-white border border-[#FEE500] hover:border-[#F5DC00] hover:shadow-md active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all flex flex-col items-center justify-center gap-1.5"
         >
-          <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
-          <span>카카오톡</span>
+          <span className="w-10 h-10 rounded-full bg-[#FEE500]/30 group-hover:bg-[#FEE500]/50 flex items-center justify-center transition-colors">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
+          </span>
+          <span className="text-[#3C1E1E]">카카오톡</span>
         </button>
       </div>
     </div>
