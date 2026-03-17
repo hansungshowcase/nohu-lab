@@ -49,9 +49,9 @@ export default function ChatWidget({ user }: { user: User | null }) {
       fetchMessages()
       pollRef.current = setInterval(fetchMessages, 3000)
     } else {
-      if (pollRef.current) clearInterval(pollRef.current)
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
     }
-    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+    return () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null } }
   }, [open, shouldHide])
 
   useEffect(() => {
