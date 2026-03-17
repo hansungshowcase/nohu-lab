@@ -123,45 +123,45 @@ function SajuReadingInner() {
   // ── 인트로 화면 ──
   if (phase === 'intro') {
     return (
-      <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn">
-        <div className="text-center py-6">
-          <div className="text-7xl mb-4 animate-bounce">🔮</div>
-          <h2 className="text-3xl font-black text-gray-900 mb-2">
+      <div className="max-w-2xl mx-auto px-1 space-y-4 sm:space-y-6 animate-fadeIn">
+        <div className="text-center py-4 sm:py-6">
+          <div className="text-5xl sm:text-7xl mb-3 sm:mb-4 animate-bounce">🔮</div>
+          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
             AI 사주풀이
           </h2>
-          <p className="text-gray-500 text-lg">
+          <p className="text-gray-500 text-base sm:text-lg">
             생년월일로 알아보는 나의 타고난 운명
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6">
-          <h3 className="text-sm font-bold text-gray-700 mb-4">이런 걸 알 수 있어요</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 sm:p-6">
+          <h3 className="text-sm font-bold text-gray-700 mb-3 sm:mb-4">이런 걸 알 수 있어요</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {[
               { emoji: '🧬', text: '타고난 성격 유형' },
               { emoji: '☯️', text: '오행 밸런스 분석' },
               { emoji: '💰', text: '재물운 & 연애운' },
               { emoji: '🗓️', text: '올해 운세' },
-              { emoji: '💕', text: '궁합 힌트' },
+              { emoji: '🌊', text: '대운 흐름' },
               { emoji: '🍀', text: '맞춤 개운법' },
             ].map(item => (
-              <div key={item.text} className="flex items-center gap-2 text-sm text-gray-600">
-                <span className="text-xl">{item.emoji}</span>
+              <div key={item.text} className="flex items-center gap-2 text-[13px] sm:text-sm text-gray-600">
+                <span className="text-lg sm:text-xl">{item.emoji}</span>
                 <span>{item.text}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-amber-50 rounded-xl p-4 text-center">
-          <p className="text-sm text-amber-700">
+        <div className="bg-amber-50 rounded-xl p-3 sm:p-4 text-center">
+          <p className="text-[13px] sm:text-sm text-amber-700">
             ⏱️ 소요시간 약 <strong>30초</strong> · 무료 · 회원가입 불필요
           </p>
         </div>
 
         <button
           onClick={() => setPhase('input')}
-          className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl text-lg hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg shadow-indigo-200 hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
+          className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl text-base sm:text-lg hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg shadow-indigo-200 hover:shadow-xl active:scale-[0.98]"
         >
           🔮 사주풀이 시작하기
         </button>
@@ -180,14 +180,14 @@ function SajuReadingInner() {
     const animalHint = animalIdx >= 0 ? `${BRANCHES_ANIMAL[animalIdx]}띠` : ''
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn">
+      <div className="max-w-2xl mx-auto px-1 space-y-4 sm:space-y-6 animate-fadeIn">
         <div className="text-center py-2">
-          <div className="text-5xl mb-2">📅</div>
-          <h2 className="text-2xl font-bold text-gray-900">생년월일을 입력하세요</h2>
-          <p className="text-sm text-gray-400 mt-1">양력 기준으로 입력해주세요</p>
+          <div className="text-4xl sm:text-5xl mb-2">📅</div>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">생년월일을 입력하세요</h2>
+          <p className="text-[13px] sm:text-sm text-gray-400 mt-1">양력 기준으로 입력해주세요</p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               출생 연도 {animalHint && <span className="text-purple-500 text-xs">({animalHint})</span>}
@@ -279,14 +279,14 @@ function SajuReadingInner() {
 
         <button
           onClick={handleStart}
-          className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl text-lg hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg shadow-indigo-200 hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
+          className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl text-base sm:text-lg hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg shadow-indigo-200 hover:shadow-xl active:scale-[0.98]"
         >
           🔮 사주 분석하기
         </button>
 
         <button
           onClick={() => setPhase('intro')}
-          className="w-full py-2 text-gray-400 text-sm hover:text-gray-600 transition"
+          className="w-full py-3 text-gray-400 text-sm hover:text-gray-600 transition"
         >
           ← 돌아가기
         </button>
@@ -302,24 +302,24 @@ function SajuReadingInner() {
   // ── 결과 화면 ──
   if (phase === 'result' && result) {
     return (
-      <div className="max-w-2xl mx-auto space-y-4 animate-fadeIn">
+      <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4 animate-fadeIn">
         <SajuResultCard ref={cardRef} result={result} />
 
-        <div className="no-print space-y-3">
+        <div className="no-print space-y-3 px-1">
           <SajuShareButtons result={result} cardRef={cardRef} />
 
           <div className="flex gap-2">
             <button
               onClick={handlePrint}
-              className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-medium transition flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-600 rounded-xl text-[13px] sm:text-sm font-medium transition flex items-center justify-center gap-1.5"
             >
-              🖨️ A4 인쇄하기
+              🖨️ A4 인쇄
             </button>
             <button
               onClick={handleRetry}
-              className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-medium transition flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-600 rounded-xl text-[13px] sm:text-sm font-medium transition flex items-center justify-center gap-1.5"
             >
-              🔄 다시 풀어보기
+              🔄 다시 풀기
             </button>
           </div>
 

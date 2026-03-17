@@ -5,7 +5,6 @@ import {
   SajuResult, STEMS, STEMS_HANJA, BRANCHES, BRANCHES_HANJA,
   ELEMENTS, ELEMENTS_HANJA, Pillar,
   STEM_ELEMENT, BRANCH_ELEMENT, STEM_YINYANG,
-  STEMS as ENGINE_STEMS, BRANCHES as ENGINE_BRANCHES,
 } from './sajuEngine'
 import {
   DAY_MASTER_PROFILES, STRENGTH_INTERPRETATIONS,
@@ -17,7 +16,7 @@ interface Props {
   result: SajuResult
 }
 
-/* ── 사주 기둥 박스 ── */
+/* ── 사주 기둥 박스 (모바일 최적화) ── */
 function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pillar; tenGod?: string; isMe?: boolean }) {
   const stemEl = STEM_ELEMENT[pillar.stem]
   const branchEl = BRANCH_ELEMENT[pillar.branch]
@@ -26,19 +25,19 @@ function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pil
   const yinyang = STEM_YINYANG[pillar.stem] === 1 ? '양' : '음'
 
   return (
-    <div className={`flex flex-col items-center ${isMe ? 'relative' : ''}`}>
-      {isMe && <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] bg-indigo-500 text-white px-2 py-0.5 rounded-full whitespace-nowrap font-bold">★ 나</div>}
-      <span className="text-[10px] text-gray-400 mb-0.5">{label}</span>
-      <span className={`text-[9px] px-1.5 py-0.5 rounded mb-1 ${isMe ? 'bg-indigo-100 text-indigo-600 font-bold' : 'bg-gray-100 text-gray-500'}`}>{tenGod || '-'}</span>
-      <div className={`border-2 rounded-xl w-[60px] overflow-hidden ${isMe ? 'border-indigo-400 shadow-sm shadow-indigo-100' : 'border-gray-200'}`}>
-        <div className={`${elBgs[stemEl]} p-1.5 text-center`}>
-          <div className={`text-xl font-black ${elColors[stemEl]}`}>{STEMS_HANJA[pillar.stem]}</div>
-          <div className="text-[8px] text-gray-500">{STEMS[pillar.stem]}·{ELEMENTS[stemEl]}·{yinyang}</div>
+    <div className={`flex flex-col items-center flex-1 min-w-0 ${isMe ? 'relative' : ''}`}>
+      {isMe && <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[8px] sm:text-[9px] bg-indigo-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full whitespace-nowrap font-bold">★ 나</div>}
+      <span className="text-[9px] sm:text-[10px] text-gray-400 mb-0.5 truncate">{label}</span>
+      <span className={`text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0.5 rounded mb-1 truncate ${isMe ? 'bg-indigo-100 text-indigo-600 font-bold' : 'bg-gray-100 text-gray-500'}`}>{tenGod || '-'}</span>
+      <div className={`border-2 rounded-xl w-full max-w-[60px] overflow-hidden ${isMe ? 'border-indigo-400 shadow-sm shadow-indigo-100' : 'border-gray-200'}`}>
+        <div className={`${elBgs[stemEl]} p-1 sm:p-1.5 text-center`}>
+          <div className={`text-lg sm:text-xl font-black ${elColors[stemEl]}`}>{STEMS_HANJA[pillar.stem]}</div>
+          <div className="text-[7px] sm:text-[8px] text-gray-500 truncate">{STEMS[pillar.stem]}·{ELEMENTS[stemEl]}·{yinyang}</div>
         </div>
         <div className="border-t border-gray-100" />
-        <div className={`${elBgs[branchEl]} p-1.5 text-center`}>
-          <div className={`text-xl font-black ${elColors[branchEl]}`}>{BRANCHES_HANJA[pillar.branch]}</div>
-          <div className="text-[8px] text-gray-500">{BRANCHES[pillar.branch]}·{ELEMENTS[branchEl]}</div>
+        <div className={`${elBgs[branchEl]} p-1 sm:p-1.5 text-center`}>
+          <div className={`text-lg sm:text-xl font-black ${elColors[branchEl]}`}>{BRANCHES_HANJA[pillar.branch]}</div>
+          <div className="text-[7px] sm:text-[8px] text-gray-500 truncate">{BRANCHES[pillar.branch]}·{ELEMENTS[branchEl]}</div>
         </div>
       </div>
     </div>
@@ -47,28 +46,29 @@ function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pil
 
 function EmptyPillarBox() {
   return (
-    <div className="flex flex-col items-center">
-      <span className="text-[10px] text-gray-400 mb-0.5">시주(時)</span>
-      <span className="text-[9px] px-1.5 py-0.5 rounded mb-1 bg-gray-100 text-gray-400">-</span>
-      <div className="border-2 border-dashed border-gray-200 rounded-xl w-[60px] overflow-hidden">
-        <div className="bg-gray-50 p-1.5 text-center">
-          <div className="text-xl text-gray-300">?</div>
-          <div className="text-[8px] text-gray-300">미입력</div>
+    <div className="flex flex-col items-center flex-1 min-w-0">
+      <span className="text-[9px] sm:text-[10px] text-gray-400 mb-0.5">시주(時)</span>
+      <span className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0.5 rounded mb-1 bg-gray-100 text-gray-400">-</span>
+      <div className="border-2 border-dashed border-gray-200 rounded-xl w-full max-w-[60px] overflow-hidden">
+        <div className="bg-gray-50 p-1 sm:p-1.5 text-center">
+          <div className="text-lg sm:text-xl text-gray-300">?</div>
+          <div className="text-[7px] sm:text-[8px] text-gray-300">미입력</div>
         </div>
         <div className="border-t border-gray-100" />
-        <div className="bg-gray-50 p-1.5 text-center">
-          <div className="text-xl text-gray-300">?</div>
-          <div className="text-[8px] text-gray-300">-</div>
+        <div className="bg-gray-50 p-1 sm:p-1.5 text-center">
+          <div className="text-lg sm:text-xl text-gray-300">?</div>
+          <div className="text-[7px] sm:text-[8px] text-gray-300">-</div>
         </div>
       </div>
     </div>
   )
 }
 
-/* ── 오행 밸런스 바 ── */
+/* ── 오행 밸런스 바 (모바일: 짧은 라벨) ── */
 function ElementBar({ counts, total }: { counts: number[]; total: number }) {
   const colors = ['bg-green-500','bg-red-500','bg-yellow-500','bg-gray-400','bg-blue-500']
-  const names = ['목(木)','화(火)','토(土)','금(金)','수(水)']
+  const names = ['목','화','토','금','수']
+  const fullNames = ['목(木)','화(火)','토(土)','금(金)','수(水)']
   return (
     <div>
       <div className="flex rounded-full overflow-hidden h-3 mb-1.5">
@@ -76,10 +76,12 @@ function ElementBar({ counts, total }: { counts: number[]; total: number }) {
           c > 0 && <div key={i} className={`${colors[i]} transition-all`} style={{ width: `${(c/total)*100}%` }} />
         ))}
       </div>
-      <div className="flex justify-between text-[10px]">
+      <div className="flex justify-between text-[9px] sm:text-[10px]">
         {counts.map((c, i) => (
           <span key={i} className={`${c === 0 ? 'text-red-400 font-bold' : 'text-gray-500'}`}>
-            {names[i]} {c > 0 ? c : '없음'}
+            <span className="hidden sm:inline">{fullNames[i]}</span>
+            <span className="sm:hidden">{names[i]}</span>
+            {' '}{c > 0 ? c.toFixed(1) : '없음'}
           </span>
         ))}
       </div>
@@ -87,27 +89,27 @@ function ElementBar({ counts, total }: { counts: number[]; total: number }) {
   )
 }
 
-/* ── 운세 카드 (실행방안 포함) ── */
+/* ── 운세 카드 (실행방안 포함, 모바일 패딩 최적화) ── */
 function FortuneCard({ icon, title, text, actions, tipLabel, tip, bgClass, actionBg }: {
   icon: string; title: string; text: string; actions: string[];
   tipLabel?: string; tip?: string;
   bgClass?: string; actionBg?: string;
 }) {
   return (
-    <div className={`rounded-xl p-4 border ${bgClass || 'bg-white border-gray-100'}`}>
-      <h4 className="text-sm font-bold text-gray-800 mb-2">{icon} {title}</h4>
-      <p className="text-[13px] text-gray-700 leading-[1.7] mb-3">{text}</p>
+    <div className={`rounded-xl p-3 sm:p-4 border ${bgClass || 'bg-white border-gray-100'}`}>
+      <h4 className="text-[13px] sm:text-sm font-bold text-gray-800 mb-2">{icon} {title}</h4>
+      <p className="text-[12px] sm:text-[13px] text-gray-700 leading-[1.7] mb-3">{text}</p>
       {tip && (
-        <p className={`text-[12px] font-medium rounded-lg px-3 py-1.5 mb-3 ${actionBg || 'bg-gray-100 text-gray-700'}`}>
+        <p className={`text-[11px] sm:text-[12px] font-medium rounded-lg px-2.5 sm:px-3 py-1.5 mb-3 ${actionBg || 'bg-gray-100 text-gray-700'}`}>
           💡 {tipLabel || '팁'}: {tip}
         </p>
       )}
-      <div className={`rounded-lg p-3 ${actionBg || 'bg-gray-50'}`}>
-        <p className="text-[11px] font-bold text-gray-700 mb-1.5">📋 이렇게 하세요</p>
+      <div className={`rounded-lg p-2.5 sm:p-3 ${actionBg || 'bg-gray-50'}`}>
+        <p className="text-[10px] sm:text-[11px] font-bold text-gray-700 mb-1.5">📋 이렇게 하세요</p>
         <ul className="space-y-1">
           {actions.map((a, i) => (
-            <li key={i} className="text-[12px] text-gray-600 leading-relaxed flex items-start gap-1.5">
-              <span className="text-[10px] mt-0.5 flex-shrink-0">✅</span>
+            <li key={i} className="text-[11px] sm:text-[12px] text-gray-600 leading-relaxed flex items-start gap-1.5">
+              <span className="text-[9px] sm:text-[10px] mt-0.5 flex-shrink-0">✅</span>
               <span>{a}</span>
             </li>
           ))}
@@ -120,7 +122,7 @@ function FortuneCard({ icon, title, text, actions, tipLabel, tip, bgClass, actio
 /* ── 섹션 헤더 ── */
 function SectionHeader({ color, children }: { color: string; children: React.ReactNode }) {
   return (
-    <h3 className="text-sm font-bold text-gray-800 mb-2.5 flex items-center gap-1.5">
+    <h3 className="text-[13px] sm:text-sm font-bold text-gray-800 mb-2 sm:mb-2.5 flex items-center gap-1.5">
       <span className={`w-1 h-4 ${color} rounded-full inline-block`} />
       {children}
     </h3>
@@ -173,31 +175,31 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
         }
       `}</style>
 
-      {/* ═══ HEADER ═══ */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 px-5 py-5 text-white rounded-t-2xl print:rounded-none">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-indigo-200 text-[10px] tracking-[0.2em] uppercase">四柱命理 분석 리포트</p>
-            <h2 className="text-lg font-black mt-1 leading-tight">{profile.emoji} {profile.title}</h2>
-            <p className="text-indigo-200 text-xs mt-0.5">{viralSummary}</p>
+      {/* ═══ HEADER (모바일 반응형) ═══ */}
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700 px-3 sm:px-5 py-4 sm:py-5 text-white rounded-t-2xl print:rounded-none">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-indigo-200 text-[9px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] uppercase">四柱命理 분석 리포트</p>
+            <h2 className="text-base sm:text-lg font-black mt-1 leading-tight truncate">{profile.emoji} {profile.title}</h2>
+            <p className="text-indigo-200 text-[11px] sm:text-xs mt-0.5 line-clamp-1">{viralSummary}</p>
           </div>
-          <div className="text-right flex-shrink-0 ml-3">
-            <p className="font-bold text-base">{result.birthYear}.{String(result.birthMonth).padStart(2,'0')}.{String(result.birthDay).padStart(2,'0')}</p>
-            <p className="text-indigo-200 text-xs">{result.animal}띠 · {result.gender === 'male' ? '남' : '여'}성</p>
+          <div className="text-right flex-shrink-0">
+            <p className="font-bold text-sm sm:text-base">{result.birthYear}.{String(result.birthMonth).padStart(2,'0')}.{String(result.birthDay).padStart(2,'0')}</p>
+            <p className="text-indigo-200 text-[11px] sm:text-xs">{result.animal}띠 · {result.gender === 'male' ? '남' : '여'}성</p>
             <div className="mt-1 inline-flex items-center gap-1 bg-white/20 rounded-full px-2 py-0.5">
-              <span className="text-[10px]">{strength.emoji}</span>
-              <span className="text-[10px] font-medium">{strength.label}</span>
+              <span className="text-[9px] sm:text-[10px]">{strength.emoji}</span>
+              <span className="text-[9px] sm:text-[10px] font-medium">{strength.label}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="px-5 py-4 space-y-5 print:space-y-3">
+      <div className="px-3 sm:px-5 py-3 sm:py-4 space-y-4 sm:space-y-5 print:space-y-3">
 
         {/* ═══ 1. 나의 타고난 성격 + 사주 기둥 ═══ */}
         <div>
           <SectionHeader color="bg-indigo-500">나의 타고난 성격</SectionHeader>
-          <div className="flex gap-2 justify-center pt-2 pb-3">
+          <div className="flex gap-1.5 sm:gap-2 justify-center pt-2 pb-3 px-1">
             {pillars.map((p, i) => (
               result.hourPillar || i > 0 ? (
                 <PillarBox key={i} label={p.label} pillar={p.pillar} tenGod={p.tenGod} isMe={p.isMe} />
@@ -206,41 +208,41 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               )
             ))}
           </div>
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">{profile.emoji}</span>
-              <div>
-                <p className="text-sm font-bold text-indigo-800">
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-3 sm:p-4 border border-indigo-100">
+            <div className="flex items-start gap-2 mb-2">
+              <span className="text-xl sm:text-2xl flex-shrink-0">{profile.emoji}</span>
+              <div className="min-w-0">
+                <p className="text-[12px] sm:text-sm font-bold text-indigo-800 leading-tight">
                   {STEMS_HANJA[result.dayMaster]}{STEMS[result.dayMaster]} · {profile.element} · {profile.nature}
                 </p>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {profile.personality.map(k => (
-                    <span key={k} className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-medium">#{k}</span>
+                    <span key={k} className="text-[9px] sm:text-[10px] bg-indigo-100 text-indigo-600 px-1.5 sm:px-2 py-0.5 rounded-full font-medium">#{k}</span>
                   ))}
                 </div>
               </div>
             </div>
-            <p className="text-[13px] text-gray-700 leading-[1.7]">{profile.description}</p>
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <p className="text-[12px] sm:text-[13px] text-gray-700 leading-[1.7]">{profile.description}</p>
+            <div className="mt-2.5 sm:mt-3 flex flex-wrap gap-1 sm:gap-1.5">
               {profile.strengths.map(s => (
-                <span key={s} className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-100">✓ {s}</span>
+                <span key={s} className="text-[9px] sm:text-[10px] bg-green-50 text-green-700 px-1.5 sm:px-2 py-0.5 rounded-full border border-green-100">✓ {s}</span>
               ))}
             </div>
-            <div className="mt-3 bg-white rounded-lg p-3 border border-indigo-50">
-              <p className="text-xs font-bold text-indigo-700 mb-1">{strength.emoji} {strength.label} — {strength.description}</p>
-              <p className="text-[12px] text-gray-600 leading-relaxed">{strength.advice}</p>
+            <div className="mt-2.5 sm:mt-3 bg-white rounded-lg p-2.5 sm:p-3 border border-indigo-50">
+              <p className="text-[11px] sm:text-xs font-bold text-indigo-700 mb-1">{strength.emoji} {strength.label} — {strength.description}</p>
+              <p className="text-[11px] sm:text-[12px] text-gray-600 leading-relaxed">{strength.advice}</p>
             </div>
           </div>
         </div>
 
         {/* ═══ 격국 (Chart Structure) ═══ */}
-        <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 border border-slate-200">
-          <div className="flex items-start gap-2.5">
-            <span className="text-2xl flex-shrink-0">🏛️</span>
-            <div>
-              <p className="text-sm font-bold text-slate-800 mb-1">{result.gyeokguk.name}</p>
+        <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-3 sm:p-4 border border-slate-200">
+          <div className="flex items-start gap-2 sm:gap-2.5">
+            <span className="text-xl sm:text-2xl flex-shrink-0">🏛️</span>
+            <div className="min-w-0">
+              <p className="text-[13px] sm:text-sm font-bold text-slate-800 mb-1">{result.gyeokguk.name}</p>
               <div className="flex items-center gap-1.5 mb-2">
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                <span className={`text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-medium ${
                   result.gyeokguk.quality === 'good' ? 'bg-green-100 text-green-700' :
                   result.gyeokguk.quality === 'challenging' ? 'bg-amber-100 text-amber-700' :
                   'bg-gray-100 text-gray-600'
@@ -248,7 +250,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
                   {result.gyeokguk.quality === 'good' ? '길격(吉格)' : result.gyeokguk.quality === 'challenging' ? '흉격(凶格) — 제화 필요' : '보통격'}
                 </span>
               </div>
-              <p className="text-[13px] text-gray-700 leading-[1.7]">{result.gyeokguk.description}</p>
+              <p className="text-[12px] sm:text-[13px] text-gray-700 leading-[1.7]">{result.gyeokguk.description}</p>
             </div>
           </div>
         </div>
@@ -256,22 +258,22 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
         {/* ═══ 2. 오행 밸런스 ═══ */}
         <div>
           <SectionHeader color="bg-emerald-500">☯️ 나의 오행 밸런스</SectionHeader>
-          <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100">
             <ElementBar counts={result.elementCounts} total={totalElements} />
             {result.missingElements.length > 0 && (
-              <div className="mt-3 bg-amber-50 rounded-lg p-3 border border-amber-100">
-                <p className="text-xs font-bold text-amber-800 mb-1">
+              <div className="mt-2.5 sm:mt-3 bg-amber-50 rounded-lg p-2.5 sm:p-3 border border-amber-100">
+                <p className="text-[11px] sm:text-xs font-bold text-amber-800 mb-1">
                   ⚡ 부족한 오행: {result.missingElements.map(e => `${ELEMENTS[e]}(${ELEMENTS_HANJA[e]})`).join(', ')}
                 </p>
-                <p className="text-[12px] text-amber-700 leading-relaxed">
+                <p className="text-[11px] sm:text-[12px] text-amber-700 leading-relaxed">
                   {missingAdvice[result.missingElements[0]]}
                 </p>
               </div>
             )}
             {result.missingElements.length === 0 && (
-              <div className="mt-3 bg-green-50 rounded-lg p-3 border border-green-100">
-                <p className="text-xs font-bold text-green-800">✨ 오행이 모두 갖춰진 균형 잡힌 사주입니다!</p>
-                <p className="text-[12px] text-green-700">큰 결함 없이 안정적인 기운을 타고났습니다.</p>
+              <div className="mt-2.5 sm:mt-3 bg-green-50 rounded-lg p-2.5 sm:p-3 border border-green-100">
+                <p className="text-[11px] sm:text-xs font-bold text-green-800">✨ 오행이 모두 갖춰진 균형 잡힌 사주입니다!</p>
+                <p className="text-[11px] sm:text-[12px] text-green-700">큰 결함 없이 안정적인 기운을 타고났습니다.</p>
               </div>
             )}
           </div>
@@ -317,9 +319,9 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
         />
 
         {/* ═══ 7. 올해 주의사항 ═══ */}
-        <div className="bg-red-50 rounded-xl p-4 border-2 border-red-200">
-          <h4 className="text-sm font-bold text-red-700 mb-2">⚠️ {year}년 주의사항</h4>
-          <p className="text-[13px] text-red-600 leading-[1.7] font-medium">{fortune.warning}</p>
+        <div className="bg-red-50 rounded-xl p-3 sm:p-4 border-2 border-red-200">
+          <h4 className="text-[13px] sm:text-sm font-bold text-red-700 mb-2">⚠️ {year}년 주의사항</h4>
+          <p className="text-[12px] sm:text-[13px] text-red-600 leading-[1.7] font-medium">{fortune.warning}</p>
         </div>
 
         {/* ═══ 8. 올해 사주와의 상호작용 (세운 분석) ═══ */}
@@ -328,39 +330,39 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <SectionHeader color="bg-purple-500">🔄 {year}년과 내 사주의 상호작용</SectionHeader>
             <div className="space-y-2">
               {result.yearAnalysis.hasCheonganHap && (
-                <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                <div className="bg-purple-50 rounded-xl p-3 sm:p-4 border border-purple-200">
                   <div className="flex items-start gap-2">
-                    <span className="text-xl flex-shrink-0">🤝</span>
+                    <span className="text-lg sm:text-xl flex-shrink-0">🤝</span>
                     <div>
-                      <p className="text-sm font-bold text-purple-800 mb-1">천간합(天干合) — {result.yearAnalysis.hapTarget}과 합</p>
-                      <p className="text-[13px] text-gray-700 leading-[1.7]">
-                        올해의 기운이 당신의 {result.yearAnalysis.hapTarget}와 합을 이룹니다. 새로운 인연이나 협력 관계가 생길 수 있어요. 특히 이성 관계에서 강한 끌림이 있을 수 있으며, 사업적 파트너십도 유리합니다. 다만 합이 지나치면 본래 하던 일에 집중이 흐려질 수 있으니 주의하세요.
+                      <p className="text-[12px] sm:text-sm font-bold text-purple-800 mb-1">천간합(天干合) — {result.yearAnalysis.hapTarget}과 합</p>
+                      <p className="text-[11px] sm:text-[13px] text-gray-700 leading-[1.7]">
+                        올해의 기운이 당신의 {result.yearAnalysis.hapTarget}와 합을 이룹니다. 새로운 인연이나 협력 관계가 생길 수 있어요. 특히 이성 관계에서 강한 끌림이 있을 수 있으며, 사업적 파트너십도 유리합니다.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
               {result.yearAnalysis.hasJijiChung && (
-                <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+                <div className="bg-red-50 rounded-xl p-3 sm:p-4 border border-red-200">
                   <div className="flex items-start gap-2">
-                    <span className="text-xl flex-shrink-0">⚡</span>
+                    <span className="text-lg sm:text-xl flex-shrink-0">⚡</span>
                     <div>
-                      <p className="text-sm font-bold text-red-800 mb-1">지지충(地支衝) — {result.yearAnalysis.chungTarget}과 충돌</p>
-                      <p className="text-[13px] text-gray-700 leading-[1.7]">
-                        올해의 지지가 당신의 {result.yearAnalysis.chungTarget}와 충돌합니다. {result.yearAnalysis.chungTarget === '일주' ? '배우자나 가까운 사람과의 갈등, 건강 이상에 특히 주의하세요.' : result.yearAnalysis.chungTarget === '월주' ? '직장이나 사회 활동에서 변동이 올 수 있습니다. 이직·이사를 진지하게 고려해볼 시기입니다.' : result.yearAnalysis.chungTarget === '년주' ? '부모님이나 어른과의 관계에서 마찰이 생길 수 있어요. 인내심이 필요합니다.' : '자녀나 아랫사람과의 관계에서 갈등이 있을 수 있습니다.'} 교통사고, 낙상 등 사고에도 각별히 주의하세요.
+                      <p className="text-[12px] sm:text-sm font-bold text-red-800 mb-1">지지충(地支衝) — {result.yearAnalysis.chungTarget}과 충돌</p>
+                      <p className="text-[11px] sm:text-[13px] text-gray-700 leading-[1.7]">
+                        올해의 지지가 당신의 {result.yearAnalysis.chungTarget}와 충돌합니다. {result.yearAnalysis.chungTarget === '일주' ? '배우자나 가까운 사람과의 갈등, 건강 이상에 특히 주의하세요.' : result.yearAnalysis.chungTarget === '월주' ? '직장이나 사회 활동에서 변동이 올 수 있습니다.' : result.yearAnalysis.chungTarget === '년주' ? '부모님이나 어른과의 관계에서 마찰이 생길 수 있어요.' : '자녀나 아랫사람과의 관계에서 갈등이 있을 수 있습니다.'} 교통사고, 낙상에도 주의하세요.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
               {result.yearAnalysis.hasJijiHap && (
-                <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                <div className="bg-green-50 rounded-xl p-3 sm:p-4 border border-green-200">
                   <div className="flex items-start gap-2">
-                    <span className="text-xl flex-shrink-0">💚</span>
+                    <span className="text-lg sm:text-xl flex-shrink-0">💚</span>
                     <div>
-                      <p className="text-sm font-bold text-green-800 mb-1">지지합(地支合) — {result.yearAnalysis.hapBranchTarget}과 합</p>
-                      <p className="text-[13px] text-gray-700 leading-[1.7]">
-                        올해의 지지가 당신의 {result.yearAnalysis.hapBranchTarget}와 합을 이룹니다. 안정적인 인연이 들어오거나 기존 관계가 더 단단해지는 해예요. {result.yearAnalysis.hapBranchTarget === '일주' ? '배우자나 연인과의 관계가 특히 좋아지며, 결혼이나 동거를 시작하기에 좋은 시기입니다.' : '사회적 관계에서 좋은 협력자를 만날 수 있습니다.'}
+                      <p className="text-[12px] sm:text-sm font-bold text-green-800 mb-1">지지합(地支合) — {result.yearAnalysis.hapBranchTarget}과 합</p>
+                      <p className="text-[11px] sm:text-[13px] text-gray-700 leading-[1.7]">
+                        올해의 지지가 당신의 {result.yearAnalysis.hapBranchTarget}와 합을 이룹니다. 안정적인 인연이 들어오거나 기존 관계가 더 단단해지는 해예요. {result.yearAnalysis.hapBranchTarget === '일주' ? '배우자나 연인과의 관계가 특히 좋아집니다.' : '사회적 관계에서 좋은 협력자를 만날 수 있습니다.'}
                       </p>
                     </div>
                   </div>
@@ -372,13 +374,13 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
         {/* ═══ 건강 위험 분석 (오행 기반) ═══ */}
         {result.yearAnalysis.healthRisk.length > 0 && (
-          <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
-            <h4 className="text-sm font-bold text-orange-800 mb-2">🏥 오행 기반 건강 체크포인트</h4>
+          <div className="bg-orange-50 rounded-xl p-3 sm:p-4 border border-orange-200">
+            <h4 className="text-[13px] sm:text-sm font-bold text-orange-800 mb-2">🏥 오행 기반 건강 체크포인트</h4>
             <div className="space-y-2">
               {result.yearAnalysis.healthRisk.map((risk, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <span className="text-[10px] bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full font-bold flex-shrink-0 mt-0.5">{risk.organ}</span>
-                  <p className="text-[13px] text-gray-700 leading-[1.6]">{risk.warning}</p>
+                  <span className="text-[9px] sm:text-[10px] bg-orange-200 text-orange-800 px-1.5 sm:px-2 py-0.5 rounded-full font-bold flex-shrink-0 mt-0.5 whitespace-nowrap">{risk.organ}</span>
+                  <p className="text-[11px] sm:text-[13px] text-gray-700 leading-[1.6]">{risk.warning}</p>
                 </div>
               ))}
             </div>
@@ -389,74 +391,60 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
         <div>
           <SectionHeader color="bg-indigo-500">🗺️ {year}년 인생 로드맵</SectionHeader>
           <div className="space-y-2">
-            <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">1~3월</span>
-                <span className="text-xs font-bold text-emerald-800">1분기 — 기반 다지기</span>
+            {[
+              { months: '1~3월', label: '1분기 — 기반 다지기', text: fortune.roadmap.q1, from: 'from-emerald-50', to: 'to-green-50', border: 'border-emerald-200', badge: 'bg-emerald-500', title: 'text-emerald-800' },
+              { months: '4~6월', label: '2분기 — 본격 실행', text: fortune.roadmap.q2, from: 'from-blue-50', to: 'to-sky-50', border: 'border-blue-200', badge: 'bg-blue-500', title: 'text-blue-800' },
+              { months: '7~9월', label: '3분기 — 점검과 조정', text: fortune.roadmap.q3, from: 'from-amber-50', to: 'to-orange-50', border: 'border-amber-200', badge: 'bg-amber-500', title: 'text-amber-800' },
+              { months: '10~12월', label: '4분기 — 수확과 준비', text: fortune.roadmap.q4, from: 'from-purple-50', to: 'to-violet-50', border: 'border-purple-200', badge: 'bg-purple-500', title: 'text-purple-800' },
+            ].map(q => (
+              <div key={q.months} className={`bg-gradient-to-r ${q.from} ${q.to} rounded-xl p-3 sm:p-4 border ${q.border}`}>
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5">
+                  <span className={`text-[10px] sm:text-xs ${q.badge} text-white px-1.5 sm:px-2 py-0.5 rounded-full font-bold whitespace-nowrap`}>{q.months}</span>
+                  <span className={`text-[11px] sm:text-xs font-bold ${q.title}`}>{q.label}</span>
+                </div>
+                <p className="text-[11px] sm:text-[13px] text-gray-700 leading-[1.7]">{q.text}</p>
               </div>
-              <p className="text-[13px] text-gray-700 leading-[1.7]">{fortune.roadmap.q1}</p>
-            </div>
-            <div className="bg-gradient-to-r from-blue-50 to-sky-50 rounded-xl p-4 border border-blue-200">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">4~6월</span>
-                <span className="text-xs font-bold text-blue-800">2분기 — 본격 실행</span>
-              </div>
-              <p className="text-[13px] text-gray-700 leading-[1.7]">{fortune.roadmap.q2}</p>
-            </div>
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full font-bold">7~9월</span>
-                <span className="text-xs font-bold text-amber-800">3분기 — 점검과 조정</span>
-              </div>
-              <p className="text-[13px] text-gray-700 leading-[1.7]">{fortune.roadmap.q3}</p>
-            </div>
-            <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-4 border border-purple-200">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">10~12월</span>
-                <span className="text-xs font-bold text-purple-800">4분기 — 수확과 준비</span>
-              </div>
-              <p className="text-[13px] text-gray-700 leading-[1.7]">{fortune.roadmap.q4}</p>
-            </div>
+            ))}
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="bg-green-50 rounded-lg p-3 border border-green-100 text-center">
-              <p className="text-[10px] text-green-600 font-medium mb-0.5">행운의 달</p>
-              <p className="text-sm font-bold text-green-800">{fortune.bestMonths}</p>
+          <div className="mt-2.5 sm:mt-3 grid grid-cols-2 gap-2">
+            <div className="bg-green-50 rounded-lg p-2.5 sm:p-3 border border-green-100 text-center">
+              <p className="text-[9px] sm:text-[10px] text-green-600 font-medium mb-0.5">행운의 달</p>
+              <p className="text-[12px] sm:text-sm font-bold text-green-800">{fortune.bestMonths}</p>
             </div>
-            <div className="bg-red-50 rounded-lg p-3 border border-red-100 text-center">
-              <p className="text-[10px] text-red-600 font-medium mb-0.5">주의할 달</p>
-              <p className="text-sm font-bold text-red-800">{fortune.worstMonths}</p>
+            <div className="bg-red-50 rounded-lg p-2.5 sm:p-3 border border-red-100 text-center">
+              <p className="text-[9px] sm:text-[10px] text-red-600 font-medium mb-0.5">주의할 달</p>
+              <p className="text-[12px] sm:text-sm font-bold text-red-800">{fortune.worstMonths}</p>
             </div>
           </div>
         </div>
 
-        {/* ═══ 9. 이달의 운세 ═══ */}
-        <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl p-4 text-white">
-          <h3 className="text-sm font-bold mb-3 flex items-center gap-1">📅 {currentMonth}월 — 이달의 운세</h3>
-          <div className="space-y-2.5">
-            <div className="bg-white/15 rounded-lg p-3">
-              <div className="text-[11px] font-bold text-yellow-300 mb-1">💰 이달의 재물</div>
-              <p className="text-[12px] text-white/95 leading-relaxed">{monthDetail.money}</p>
+        {/* ═══ 이달의 운세 ═══ */}
+        <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl p-3 sm:p-4 text-white">
+          <h3 className="text-[13px] sm:text-sm font-bold mb-2.5 sm:mb-3 flex items-center gap-1">📅 {currentMonth}월 — 이달의 운세</h3>
+          <div className="space-y-2 sm:space-y-2.5">
+            <div className="bg-white/15 rounded-lg p-2.5 sm:p-3">
+              <div className="text-[10px] sm:text-[11px] font-bold text-yellow-300 mb-1">💰 이달의 재물</div>
+              <p className="text-[11px] sm:text-[12px] text-white/95 leading-relaxed">{monthDetail.money}</p>
             </div>
-            <div className="bg-white/15 rounded-lg p-3">
-              <div className="text-[11px] font-bold text-pink-300 mb-1">❤️ 이달의 연애</div>
-              <p className="text-[12px] text-white/95 leading-relaxed">{monthDetail.love}</p>
+            <div className="bg-white/15 rounded-lg p-2.5 sm:p-3">
+              <div className="text-[10px] sm:text-[11px] font-bold text-pink-300 mb-1">❤️ 이달의 연애</div>
+              <p className="text-[11px] sm:text-[12px] text-white/95 leading-relaxed">{monthDetail.love}</p>
             </div>
-            <div className="bg-white/15 rounded-lg p-3">
-              <div className="text-[11px] font-bold text-red-300 mb-1">⚠️ 이달의 주의</div>
-              <p className="text-[12px] text-white/95 leading-relaxed">{monthDetail.warning}</p>
+            <div className="bg-white/15 rounded-lg p-2.5 sm:p-3">
+              <div className="text-[10px] sm:text-[11px] font-bold text-red-300 mb-1">⚠️ 이달의 주의</div>
+              <p className="text-[11px] sm:text-[12px] text-white/95 leading-relaxed">{monthDetail.warning}</p>
             </div>
           </div>
         </div>
 
         {/* ═══ 10. 나의 에너지 상태 (십이운성) ═══ */}
-        <div className="bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl p-4 border border-violet-200">
+        <div className="bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl p-3 sm:p-4 border border-violet-200">
           <SectionHeader color="bg-violet-500">나의 에너지 상태</SectionHeader>
-          <div className="flex items-start gap-3">
-            <span className="text-3xl flex-shrink-0">{energyStage.emoji}</span>
+          <div className="flex items-start gap-2 sm:gap-3">
+            <span className="text-2xl sm:text-3xl flex-shrink-0">{energyStage.emoji}</span>
             <div>
-              <p className="text-sm font-bold text-violet-700 mb-1">{energyStage.title}</p>
-              <p className="text-[13px] text-gray-700 leading-[1.7]">{energyStage.description}</p>
+              <p className="text-[12px] sm:text-sm font-bold text-violet-700 mb-1">{energyStage.title}</p>
+              <p className="text-[12px] sm:text-[13px] text-gray-700 leading-[1.7]">{energyStage.description}</p>
             </div>
           </div>
         </div>
@@ -465,14 +453,14 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
         {sinsalReadings.length > 0 && (
           <div>
             <SectionHeader color="bg-amber-500">🔮 나의 숨은 기운</SectionHeader>
-            <div className="space-y-2.5">
+            <div className="space-y-2 sm:space-y-2.5">
               {sinsalReadings.map((reading, i) => (
-                <div key={i} className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                  <div className="flex items-start gap-2.5">
-                    <span className="text-2xl flex-shrink-0">{reading.icon}</span>
+                <div key={i} className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-3 sm:p-4 border border-amber-200">
+                  <div className="flex items-start gap-2 sm:gap-2.5">
+                    <span className="text-xl sm:text-2xl flex-shrink-0">{reading.icon}</span>
                     <div>
-                      <p className="text-sm font-bold text-amber-800 mb-1">{reading.title}</p>
-                      <p className="text-[13px] text-gray-700 leading-[1.7]">{reading.description}</p>
+                      <p className="text-[12px] sm:text-sm font-bold text-amber-800 mb-1">{reading.title}</p>
+                      <p className="text-[12px] sm:text-[13px] text-gray-700 leading-[1.7]">{reading.description}</p>
                     </div>
                   </div>
                 </div>
@@ -483,47 +471,47 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
         {/* ═══ 12. 공망 분석 ═══ */}
         {gongmangReading && (
-          <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
-            <div className="flex items-start gap-2.5">
-              <span className="text-2xl flex-shrink-0">{gongmangReading.icon}</span>
+          <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-3 sm:p-4 border border-gray-200">
+            <div className="flex items-start gap-2 sm:gap-2.5">
+              <span className="text-xl sm:text-2xl flex-shrink-0">{gongmangReading.icon}</span>
               <div>
-                <p className="text-sm font-bold text-gray-800 mb-1">{gongmangReading.title}</p>
-                <p className="text-[13px] text-gray-700 leading-[1.7]">{gongmangReading.description}</p>
+                <p className="text-[12px] sm:text-sm font-bold text-gray-800 mb-1">{gongmangReading.title}</p>
+                <p className="text-[12px] sm:text-[13px] text-gray-700 leading-[1.7]">{gongmangReading.description}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* ═══ 13. 대운 흐름 ═══ */}
+        {/* ═══ 13. 대운 흐름 (모바일: 2행 4열) ═══ */}
         <div>
           <SectionHeader color="bg-teal-500">🌊 나의 대운(大運) 흐름</SectionHeader>
-          <p className="text-[12px] text-gray-500 mb-3">10년마다 바뀌는 인생의 큰 물결입니다. {currentDaeun ? `현재 ${currentDaeun.tenGod}운이 흐르고 있습니다.` : ''}</p>
-          <div className="grid grid-cols-4 gap-1.5">
+          <p className="text-[11px] sm:text-[12px] text-gray-500 mb-2 sm:mb-3">10년마다 바뀌는 인생의 큰 물결입니다. {currentDaeun ? `현재 ${currentDaeun.tenGod}운이 흐르고 있습니다.` : ''}</p>
+          <div className="grid grid-cols-4 gap-1 sm:gap-1.5">
             {result.daeun.map((d, i) => {
               const elColors = ['text-green-700','text-red-600','text-yellow-700','text-gray-600','text-blue-700']
               const elBgs = ['bg-green-50','bg-red-50','bg-yellow-50','bg-gray-50','bg-blue-50']
               return (
-                <div key={i} className={`rounded-lg p-2 text-center border ${d.isCurrent ? 'border-teal-400 bg-teal-50 ring-1 ring-teal-300' : 'border-gray-100 bg-white'}`}>
-                  <p className="text-[9px] text-gray-400">{d.startAge}~{d.startAge + 9}세</p>
-                  <div className={`text-base font-black ${elColors[d.element]}`}>
+                <div key={i} className={`rounded-lg p-1.5 sm:p-2 text-center border ${d.isCurrent ? 'border-teal-400 bg-teal-50 ring-1 ring-teal-300' : 'border-gray-100 bg-white'}`}>
+                  <p className="text-[8px] sm:text-[9px] text-gray-400">{d.startAge}~{d.startAge + 9}세</p>
+                  <div className={`text-sm sm:text-base font-black ${elColors[d.element]}`}>
                     {STEMS_HANJA[d.stem]}{BRANCHES_HANJA[d.branch]}
                   </div>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${elBgs[d.element]} ${elColors[d.element]}`}>
+                  <span className={`text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0.5 rounded-full font-medium inline-block ${elBgs[d.element]} ${elColors[d.element]}`}>
                     {d.tenGod}
                   </span>
-                  {d.isCurrent && <p className="text-[8px] text-teal-600 font-bold mt-0.5">← 현재</p>}
+                  {d.isCurrent && <p className="text-[7px] sm:text-[8px] text-teal-600 font-bold mt-0.5">← 현재</p>}
                 </div>
               )
             })}
           </div>
           {currentDaeun && (
-            <div className="mt-3 bg-teal-50 rounded-lg p-3 border border-teal-200">
-              <p className="text-xs font-bold text-teal-800 mb-1">🔮 현재 대운: {STEMS[currentDaeun.stem]}{BRANCHES[currentDaeun.branch]} ({currentDaeun.tenGod}운)</p>
-              <p className="text-[12px] text-gray-700 leading-relaxed">
+            <div className="mt-2.5 sm:mt-3 bg-teal-50 rounded-lg p-2.5 sm:p-3 border border-teal-200">
+              <p className="text-[11px] sm:text-xs font-bold text-teal-800 mb-1">🔮 현재 대운: {STEMS[currentDaeun.stem]}{BRANCHES[currentDaeun.branch]} ({currentDaeun.tenGod}운)</p>
+              <p className="text-[11px] sm:text-[12px] text-gray-700 leading-relaxed">
                 {currentDaeun.tenGod === '비견' || currentDaeun.tenGod === '겁재' ? '자기 실력을 키우고 독립적으로 성장하는 시기입니다. 동업보다는 혼자 힘으로 개척하세요.' :
                  currentDaeun.tenGod === '식신' || currentDaeun.tenGod === '상관' ? '창의력과 표현력이 빛나는 시기입니다. 새로운 사업, 콘텐츠, 예술 활동에서 성과를 낼 수 있어요.' :
                  currentDaeun.tenGod === '편재' || currentDaeun.tenGod === '정재' ? '재물운이 활발한 시기입니다. 투자와 사업에서 좋은 성과를 기대할 수 있으며, 경제적 여유가 생깁니다.' :
-                 currentDaeun.tenGod === '편관' || currentDaeun.tenGod === '정관' ? '사회적 지위와 명예가 올라가는 시기입니다. 승진, 합격, 사회적 인정을 받을 수 있어요. 다만 압박과 스트레스에도 주의하세요.' :
+                 currentDaeun.tenGod === '편관' || currentDaeun.tenGod === '정관' ? '사회적 지위와 명예가 올라가는 시기입니다. 승진, 합격, 사회적 인정을 받을 수 있어요.' :
                  '학습과 자기계발에 최적인 시기입니다. 자격증 취득, 학위 취득, 전문성 강화에 투자하면 큰 성과를 거둡니다.'}
               </p>
             </div>
@@ -531,8 +519,8 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
         </div>
 
         {/* ═══ Footer ═══ */}
-        <div className="text-center pt-3 border-t border-gray-100">
-          <p className="text-[9px] text-gray-400">노후연구소 四柱命理 분석 · nohu-lab.vercel.app · 전통 사주명리학 기반 재미 콘텐츠</p>
+        <div className="text-center pt-2 sm:pt-3 border-t border-gray-100">
+          <p className="text-[8px] sm:text-[9px] text-gray-400">노후연구소 四柱命理 분석 · nohu-lab.vercel.app · 전통 사주명리학 기반 재미 콘텐츠</p>
         </div>
       </div>
     </div>
