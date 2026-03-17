@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { SajuResult, STEMS, ELEMENTS, STEM_ELEMENT } from './sajuEngine'
+import { SajuResult } from './sajuEngine'
 import { DAY_MASTER_PROFILES, getViralSummary } from './sajuData'
 
 interface Props {
@@ -140,7 +140,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
             }
             const blobUrl = URL.createObjectURL(blob)
             const link = document.createElement('a')
-            link.download = `사주풀이_결과.png`
+            link.download = 'saju-result.png'
             link.href = blobUrl
             document.body.appendChild(link)
             link.click()

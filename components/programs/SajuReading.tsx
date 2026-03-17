@@ -55,9 +55,12 @@ function SajuReadingInner() {
     const h = searchParams.get('h')
     const g = searchParams.get('g')
     if (y && m && d) {
+      const yy = parseInt(y, 10), mm = parseInt(m, 10), dd = parseInt(d, 10)
+      if (isNaN(yy) || isNaN(mm) || isNaN(dd)) return
       const hour = h && h !== '' ? parseInt(h, 10) : null
+      if (hour !== null && isNaN(hour)) return
       const gen = g === 'f' ? 'female' : 'male'
-      const saju = calculateSaju(parseInt(y, 10), parseInt(m, 10), parseInt(d, 10), hour, gen)
+      const saju = calculateSaju(yy, mm, dd, hour, gen)
       setResult(saju)
       setBirthYear(y)
       setBirthMonth(m)
@@ -178,7 +181,11 @@ function SajuReadingInner() {
   // ── 입력 화면 ──
   if (phase === 'input') {
     const yearNum = parseInt(birthYear, 10) || 0
-    const animalIdx = yearNum >= 1920 ? ((yearNum - 4) % 12 + 12) % 12 : -1
+    const monthNum = parseInt(birthMonth, 10) || 0
+    const dayNum = parseInt(birthDay, 10) || 0
+    // 입춘(2/4) 기준 보정: 1/1~2/3 출생은 전년도 띠
+    const effectiveYear = (monthNum >= 1 && monthNum <= 2 && (monthNum < 2 || dayNum < 4) && yearNum > 1920) ? yearNum - 1 : yearNum
+    const animalIdx = effectiveYear >= 1920 ? ((effectiveYear - 4) % 12 + 12) % 12 : -1
     const animalHint = animalIdx >= 0 ? `${BRANCHES_ANIMAL[animalIdx]}띠` : ''
 
     return (
