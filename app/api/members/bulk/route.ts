@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     .map((nickname: string) => ({
       nickname: nickname.slice(0, 100),
       phone: '',
-      tier: Math.min(Math.max(tier, 1), 4),
+      tier: Math.min(Math.max(Number(tier) || 1, 1), 4),
     }))
 
   if (newMembers.length === 0) {
