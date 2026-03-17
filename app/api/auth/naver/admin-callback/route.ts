@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
     // API 에러가 있고 회원도 없으면 실패
     if (allMembers.length === 0 && apiError) {
       return NextResponse.redirect(
-        new URL(`/admin?sync=failed&reason=${encodeURIComponent(apiError)}`, process.env.NEXT_PUBLIC_BASE_URL!)
+        new URL('/admin?sync=failed&reason=api_error', process.env.NEXT_PUBLIC_BASE_URL!)
       )
     }
 
