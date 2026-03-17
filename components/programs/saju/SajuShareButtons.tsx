@@ -58,10 +58,10 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         backgroundColor: '#ffffff',
         useCORS: true,
         logging: false,
-        windowWidth: 720,
         scrollY: -window.scrollY,
         scrollX: 0,
-      })
+        width: 720,
+      } as Parameters<typeof html2canvas>[1])
       const dataUrl = canvas.toDataURL('image/png')
 
       // 모바일: Web Share API
