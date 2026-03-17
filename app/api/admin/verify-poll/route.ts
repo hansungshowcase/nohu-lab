@@ -17,12 +17,13 @@ export async function POST(request: NextRequest) {
 
     const supabase = getServiceSupabase()
 
-    // 오래된 레코드 정리 (10분 이상 된 pending/completed → 삭제)
+    // 오래된 레코드 정리 (10분 이상 된 pending/completed만 삭제, found는 보존)
     const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
     await supabase
       .from('verify_requests')
       .delete()
       .lt('created_at', tenMinAgo)
+      .in('status', ['pending', 'completed', 'not_found', 'error'])
 
     // Get pending requests (created within last 5 minutes)
     const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()

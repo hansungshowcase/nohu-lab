@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     // DB에 없으면 → 최근 verify_requests 확인
     // 1) found 상태가 있으면 바로 회원 등록 (확장프로그램이 이미 처리 완료)
-    const { data: foundReq } = await supabase
+    const { data: foundReqs } = await supabase
       .from('verify_requests')
       .select('id, grade_name')
       .eq('nickname', trimmed)
@@ -64,9 +64,9 @@ export async function POST(request: NextRequest) {
       .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
 
-    if (foundReq) {
+    if (foundReqs && foundReqs.length > 0) {
+      const foundReq = foundReqs[0]
       // 이미 found인 요청이 있으면 바로 회원 등록 + 로그인
       return NextResponse.json({
         status: 'verifying',

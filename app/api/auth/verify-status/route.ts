@@ -31,11 +31,44 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ status: req.status })
     }
 
-    // status === 'found' → register member and login
+    // status === 'completed' → 이미 처리 완료 (DB에서 회원 조회 후 로그인)
+    if (req.status === 'completed') {
+      const nickname = req.nickname.trim()
+      const { data: existingMember } = await supabase
+        .from('members')
+        .select('id, nickname, tier')
+        .eq('nickname', nickname)
+        .limit(1)
+        .single()
+      if (existingMember) {
+        const token = await createToken({
+          memberId: existingMember.id,
+          nickname: existingMember.nickname,
+          tier: ([1, 2, 3, 4].includes(existingMember.tier) ? existingMember.tier : 1) as 1 | 2 | 3 | 4,
+        })
+        const response = NextResponse.json({ status: 'found', member: { nickname: existingMember.nickname, tier: existingMember.tier } })
+        response.cookies.set(COOKIE_NAME, token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7, path: '/' })
+        return response
+      }
+      return NextResponse.json({ status: 'error' })
+    }
+
+    // status === 'found' → 원자적 상태 전이: found→completed (중복 처리 방지)
+    const { data: updated, error: updateErr } = await supabase
+      .from('verify_requests')
+      .update({ status: 'completed' })
+      .eq('id', id)
+      .eq('status', 'found')
+      .select('id')
+
+    if (updateErr || !updated || updated.length === 0) {
+      // 다른 요청이 먼저 처리함 → completed 상태로 재시도
+      return NextResponse.json({ status: 'pending' })
+    }
+
     const tier = mapGradeToTier(req.grade_name || '')
     const nickname = req.nickname.trim()
 
-    // Upsert member (tier + last_login 한번에)
     const { data: member, error: upsertError } = await supabase
       .from('members')
       .upsert(
@@ -54,12 +87,6 @@ export async function GET(request: NextRequest) {
       nickname: member.nickname,
       tier: ([1, 2, 3, 4].includes(member.tier) ? member.tier : 1) as 1 | 2 | 3 | 4,
     })
-
-    // verify_requests를 완료 처리 (중복 처리 방지)
-    await supabase
-      .from('verify_requests')
-      .update({ status: 'completed' })
-      .eq('id', id)
 
     const response = NextResponse.json({
       status: 'found',

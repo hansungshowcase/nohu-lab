@@ -30,7 +30,9 @@ export default function LoginPage() {
     setVerifySeconds(0)
     setLastVerifyId(verifyId)
     let attempts = 0
+    let errorStreak = 0
     const maxAttempts = 40
+    const maxErrorStreak = 5
     const interval = 1500
 
     return new Promise<void>((resolve) => {
@@ -39,7 +41,18 @@ export default function LoginPage() {
         setVerifySeconds(Math.round(attempts * interval / 1000))
         try {
           const res = await fetch(`/api/auth/verify-status?id=${verifyId}`)
-          if (!res.ok) return
+          if (!res.ok) {
+            errorStreak++
+            if (errorStreak >= maxErrorStreak) {
+              stopPolling()
+              setVerifying(false)
+              setError('서버 응답 오류가 반복되고 있습니다.\n잠시 후 다시 시도해주세요.')
+              setLoading(false)
+              resolve()
+            }
+            return
+          }
+          errorStreak = 0
           const data = await res.json()
 
           if (data.status === 'pending') {
