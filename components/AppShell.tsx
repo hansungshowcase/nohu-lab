@@ -67,7 +67,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <span>비회원은 프로그램 <strong>2회</strong> 제한 · 회원가입하면 무제한!</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="px-4 py-1.5 bg-white text-orange-600 text-sm font-bold rounded-lg shadow-sm whitespace-nowrap">
+              <span className="px-4 py-1.5 bg-white text-orange-600 text-sm font-bold rounded-lg shadow-sm whitespace-nowrap animate-subtle-pulse hover:scale-105 transition-transform">
                 회원가입 →
               </span>
               <button
