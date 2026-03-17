@@ -69,6 +69,16 @@ export const programRegistry: Program[] = [
     category: '유틸리티',
     isActive: true,
   },
+  {
+    id: 'pension-timing',
+    name: '연금 수령 황금 타이밍',
+    description: '조기·정상·연기수령 비교로 나에게 최적인 연금 개시 시점을 찾아드립니다',
+    minTier: 0,
+    icon: '⏰',
+    category: '재무',
+    isActive: true,
+    badge: 'NEW',
+  },
 ]
 
 export function getProgramsByTier(tier: number): Program[] {
