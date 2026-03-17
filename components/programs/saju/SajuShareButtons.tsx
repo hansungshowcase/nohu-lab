@@ -54,20 +54,40 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     try {
       const { toPng } = await import('html-to-image')
       const node = cardRef.current
-      const dataUrl = await toPng(node, {
-        quality: 0.95,
+
+      // html-to-image 알려진 버그: 첫 호출은 폰트/스타일 로딩 전 렌더링됨
+      // 해결: 2~3번 호출하여 안정적인 결과 확보
+      const options = {
+        quality: 1.0,
         pixelRatio: 2,
         backgroundColor: '#ffffff',
-        style: {
-          transform: 'scale(1)',
-          transformOrigin: 'top left',
+        cacheBust: true,
+        skipAutoScale: true,
+        filter: (el: HTMLElement) => {
+          // no-print 클래스 요소 제외
+          if (el.classList?.contains('no-print')) return false
+          return true
         },
-      })
+      }
+
+      // 워밍업 호출 (폰트/이미지 로딩 대기)
+      await toPng(node, options).catch(() => {})
+      // 실제 렌더링 (2번째 호출은 안정적)
+      await new Promise(r => setTimeout(r, 300))
+      const dataUrl = await toPng(node, options)
+
+      // dataUrl 유효성 확인
+      if (!dataUrl || !dataUrl.startsWith('data:image/png')) {
+        throw new Error('Invalid PNG data')
+      }
+
+      // data URL → Blob 변환 (더 안정적인 다운로드)
+      const res = await fetch(dataUrl)
+      const blob = await res.blob()
 
       // 모바일: Web Share API
       if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
         try {
-          const blob = await (await fetch(dataUrl)).blob()
           const file = new File([blob], 'saju-result.png', { type: 'image/png' })
           await navigator.share({ files: [file], title: '사주풀이 결과' })
           setSaving(false)
@@ -77,13 +97,16 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         } catch { /* fallback to download */ }
       }
 
-      // 데스크톱: 다운로드
+      // Blob URL로 다운로드 (data URL보다 안정적)
+      const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.download = `사주풀이_결과.png`
-      link.href = dataUrl
+      link.download = `사주풀이_${STEMS[result.dayMaster]}${ELEMENTS[STEM_ELEMENT[result.dayMaster]]}_결과.png`
+      link.href = blobUrl
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      // 메모리 해제
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2000)
     } catch (e) {
@@ -100,15 +123,22 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           scrollX: 0,
           windowWidth: 720,
         } as Parameters<typeof html2canvas>[1])
-        const dataUrl2 = canvas.toDataURL('image/png')
-        const link = document.createElement('a')
-        link.download = `사주풀이_결과.png`
-        link.href = dataUrl2
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        setSaveSuccess(true)
-        setTimeout(() => setSaveSuccess(false), 2000)
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
+            return
+          }
+          const blobUrl = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.download = `사주풀이_결과.png`
+          link.href = blobUrl
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+          setSaveSuccess(true)
+          setTimeout(() => setSaveSuccess(false), 2000)
+        }, 'image/png', 1.0)
       } catch {
         alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
       }
