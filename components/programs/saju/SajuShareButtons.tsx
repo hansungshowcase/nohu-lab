@@ -189,7 +189,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
         <button
           onClick={handleCopyLink}
-          className="py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 active:scale-95 text-gray-700 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
+          className="py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 active:scale-95 text-gray-700 rounded-xl text-xs sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
         >
           <span className="text-base sm:text-lg">{copyDone ? '✅' : '🔗'}</span>
           <span>{copyDone ? '복사됨!' : '링크 복사'}</span>
@@ -197,14 +197,14 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         <button
           onClick={handleSaveImage}
           disabled={saving}
-          className="py-3 bg-orange-50 hover:bg-orange-100 active:bg-orange-200 active:scale-95 text-orange-700 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1 disabled:opacity-50"
+          className="py-3 bg-orange-50 hover:bg-orange-100 active:bg-orange-200 active:scale-95 text-orange-700 rounded-xl text-xs sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1 disabled:opacity-50"
         >
           <span className="text-base sm:text-lg">{saving ? '⏳' : saveSuccess ? '✅' : '📷'}</span>
           <span>{saving ? '저장 중...' : saveSuccess ? '완료!' : '이미지 저장'}</span>
         </button>
         <button
           onClick={handleKakao}
-          className="py-3 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#EDCF00] active:scale-95 text-[#3C1E1E] rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
+          className="py-3 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#EDCF00] active:scale-95 text-[#3C1E1E] rounded-xl text-xs sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
         >
           <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
           <span>카카오톡</span>
