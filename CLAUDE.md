@@ -15,6 +15,7 @@
 - Vercel 계정: hansung1 (qhdl10100-6263, qhdl10100@gmail.com)
 - **nohu-lab.vercel.app = nohu-lab 프로젝트가 서빙 중**
 - Vercel 프로젝트 ID: prj_6cnk29cR0jHrn0ZvnZWrlbiJvtob
+- **배포 전 반드시**: `git pull origin main --no-rebase`로 다른 터미널의 최신 변경사항 반영 후 배포
 - 배포 명령: `vercel --prod --yes`
 - 배포 후 반드시: `vercel alias set <배포URL> nohu-lab.vercel.app` 으로 도메인 연결 확인
 - 배포 전 반드시 `vercel projects ls`로 현재 프로젝트 확인 후 올바른 프로젝트에 배포
