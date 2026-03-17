@@ -52,17 +52,17 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     if (!cardRef.current || saving) return
     setSaving(true)
     try {
-      const html2canvas = (await import('html2canvas')).default
-      const canvas = await html2canvas(cardRef.current, {
-        scale: 2,
+      const { toPng } = await import('html-to-image')
+      const node = cardRef.current
+      const dataUrl = await toPng(node, {
+        quality: 0.95,
+        pixelRatio: 2,
         backgroundColor: '#ffffff',
-        useCORS: true,
-        logging: false,
-        scrollY: -window.scrollY,
-        scrollX: 0,
-        width: 720,
-      } as Parameters<typeof html2canvas>[1])
-      const dataUrl = canvas.toDataURL('image/png')
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left',
+        },
+      })
 
       // 모바일: Web Share API
       if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
@@ -77,9 +77,9 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         } catch { /* fallback to download */ }
       }
 
-      // 다운로드
+      // 데스크톱: 다운로드
       const link = document.createElement('a')
-      link.download = `사주풀이_${STEMS[result.dayMaster]}${ELEMENTS[STEM_ELEMENT[result.dayMaster]]}.png`
+      link.download = `사주풀이_결과.png`
       link.href = dataUrl
       document.body.appendChild(link)
       link.click()
@@ -87,8 +87,31 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2000)
     } catch (e) {
-      console.error('이미지 저장 실패:', e)
-      alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
+      console.error('html-to-image 실패, html2canvas fallback:', e)
+      // Fallback: html2canvas
+      try {
+        const html2canvas = (await import('html2canvas')).default
+        const canvas = await html2canvas(cardRef.current!, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          logging: false,
+          scrollY: -window.scrollY,
+          scrollX: 0,
+          windowWidth: 720,
+        } as Parameters<typeof html2canvas>[1])
+        const dataUrl2 = canvas.toDataURL('image/png')
+        const link = document.createElement('a')
+        link.download = `사주풀이_결과.png`
+        link.href = dataUrl2
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        setSaveSuccess(true)
+        setTimeout(() => setSaveSuccess(false), 2000)
+      } catch {
+        alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
+      }
     }
     setSaving(false)
   }
