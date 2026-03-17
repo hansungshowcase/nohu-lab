@@ -9,6 +9,7 @@ import {
 import {
   DAY_MASTER_PROFILES, STRENGTH_INTERPRETATIONS,
   getYearFortune, getViralSummary, getMonthlyDetail,
+  getUsefulGodAdvice,
 } from './sajuData'
 
 interface Props {
@@ -93,13 +94,14 @@ function ElementBar({ counts, total }: { counts: number[]; total: number }) {
 /* ═══════════════════════════════════════════════ */
 const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
-  const fortune = getYearFortune(result.dayMasterElement, new Date().getFullYear())
+  const fortune = getYearFortune(result.dayMasterElement, new Date().getFullYear(), result.isDayMasterStrong)
   const viralSummary = getViralSummary(result.dayMaster, result.isDayMasterStrong)
   const currentMonth = new Date().getMonth() + 1
-  const monthDetail = getMonthlyDetail(currentMonth, result.dayMasterElement, fortune.stars)
+  const monthDetail = getMonthlyDetail(currentMonth, result.dayMasterElement)
   const strength = STRENGTH_INTERPRETATIONS[result.isDayMasterStrong ? 'strong' : 'weak']
   const totalElements = result.elementCounts.reduce((a, b) => a + b, 0) || 1
   const year = new Date().getFullYear()
+  const usefulGodAdvice = getUsefulGodAdvice(result.usefulGod)
 
   const pillars: { label: string; pillar: Pillar; tenGod?: string; isMe?: boolean }[] = [
     { label: '시주(時)', pillar: result.hourPillar || { stem: 0, branch: 0 }, tenGod: result.tenGods[3] || '' },
@@ -261,6 +263,29 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           <div className="bg-red-50 rounded-xl p-3 sm:p-4 border border-red-200 text-center">
             <p className="text-[10px] sm:text-[11px] text-red-600 font-medium mb-1">주의할 달</p>
             <p className="text-sm sm:text-base font-black text-red-800">{fortune.worstMonths}</p>
+          </div>
+        </div>
+
+        {/* ═══ 6. 개운법 (용신 기반) ═══ */}
+        <div className="bg-orange-50 rounded-2xl p-4 sm:p-5 border border-orange-200">
+          <h3 className="text-sm sm:text-base font-black text-orange-800 mb-2">🍀 당신만의 개운법</h3>
+          <p className="text-[12px] sm:text-[13px] text-orange-700 leading-relaxed mb-2">
+            당신에게 필요한 기운은 <strong>{ELEMENTS[result.usefulGod]}({ELEMENTS_HANJA[result.usefulGod]})</strong>입니다.
+          </p>
+          <p className="text-[13px] sm:text-sm text-gray-800 leading-[1.8]">{usefulGodAdvice}</p>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div className="bg-white rounded-lg p-2 border border-orange-100">
+              <p className="text-[9px] sm:text-[10px] text-gray-500">행운 색</p>
+              <p className="text-[12px] sm:text-sm font-bold text-gray-800">{profile.luckyColor}</p>
+            </div>
+            <div className="bg-white rounded-lg p-2 border border-orange-100">
+              <p className="text-[9px] sm:text-[10px] text-gray-500">행운 방향</p>
+              <p className="text-[12px] sm:text-sm font-bold text-gray-800">{profile.luckyDirection}</p>
+            </div>
+            <div className="bg-white rounded-lg p-2 border border-orange-100">
+              <p className="text-[9px] sm:text-[10px] text-gray-500">행운 숫자</p>
+              <p className="text-[12px] sm:text-sm font-bold text-gray-800">{profile.luckyNumber}</p>
+            </div>
           </div>
         </div>
 
