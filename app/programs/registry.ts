@@ -1,7 +1,7 @@
 import { Program } from '@/lib/types'
 
 export const programRegistry: Program[] = [
-  // minTier 0 - 비회원
+  // ── minTier 0 - 비회원 ──
   {
     id: 'retirement-test',
     name: '노후 준비 점수 테스트',
@@ -22,7 +22,17 @@ export const programRegistry: Program[] = [
     isActive: true,
     badge: 'NEW',
   },
-  // minTier 1 - 코어회원
+  {
+    id: 'pension-timing',
+    name: '연금 수령 황금 타이밍',
+    description: '조기·정상·연기수령 비교로 나에게 최적인 연금 개시 시점을 찾아드립니다',
+    minTier: 0,
+    icon: '⏰',
+    category: '재무',
+    isActive: true,
+    badge: 'NEW',
+  },
+  // ── minTier 1 - 코어회원 ──
   {
     id: 'text-counter',
     name: '글자수 카운터',
@@ -50,7 +60,7 @@ export const programRegistry: Program[] = [
     category: '유틸리티',
     isActive: true,
   },
-  // minTier 2 - 우수회원
+  // ── minTier 2 - 우수회원 ──
   {
     id: 'hashtag-recommender',
     name: '해시태그 추천기',
@@ -68,16 +78,6 @@ export const programRegistry: Program[] = [
     icon: '🔄',
     category: '유틸리티',
     isActive: true,
-  },
-  {
-    id: 'pension-timing',
-    name: '연금 수령 황금 타이밍',
-    description: '조기·정상·연기수령 비교로 나에게 최적인 연금 개시 시점을 찾아드립니다',
-    minTier: 0,
-    icon: '⏰',
-    category: '재무',
-    isActive: true,
-    badge: 'NEW',
   },
 ]
 
