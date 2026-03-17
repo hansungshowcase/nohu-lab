@@ -56,17 +56,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar user={user} />
       <main className="flex-1 lg:ml-0 min-h-screen">
         {showGuestBanner && (
-          <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-3 flex items-center justify-between gap-3 animate-slide-up">
-            <div className="flex items-center gap-2 text-sm font-medium flex-1 min-w-0">
-              <span className="text-lg shrink-0">🔒</span>
-              <span>비회원은 모든 프로그램이 <strong>2회</strong>까지 제한됩니다. 지금 바로 회원가입하고 무제한으로 이용하세요!</span>
+          <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-2 flex items-center justify-between gap-2 animate-slide-up">
+            <div className="flex items-center gap-1.5 text-xs font-medium flex-1 min-w-0">
+              <span className="text-sm shrink-0">🔒</span>
+              <span>비회원은 프로그램 <strong>2회</strong> 제한 · 회원가입하면 무제한!</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <a
                 href={CAFE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-1.5 bg-white text-orange-600 text-sm font-bold rounded-lg hover:bg-orange-50 transition whitespace-nowrap"
+                className="px-3 py-1 bg-white text-orange-600 text-xs font-bold rounded-md hover:bg-orange-50 transition whitespace-nowrap"
               >
                 회원가입
               </a>
