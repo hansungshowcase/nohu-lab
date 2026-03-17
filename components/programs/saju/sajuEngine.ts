@@ -97,6 +97,26 @@ export interface Pillar {
   branch: number
 }
 
+export interface MonthlyFortune {
+  month: number        // 1-12
+  rating: number       // 1-5 stars
+  keyword: string      // 한줄 키워드
+  advice: string       // 조언
+  isBest: boolean
+  isWorst: boolean
+}
+
+export interface MajorLuck {
+  startAge: number
+  endAge: number
+  stem: number
+  branch: number
+  element: number
+  rating: number       // 1-5
+  keyword: string
+  isCurrent: boolean
+}
+
 export interface SajuResult {
   yearPillar: Pillar
   monthPillar: Pillar
@@ -119,6 +139,9 @@ export interface SajuResult {
   birthHour: number | null
   animal: string
   elementBalance: number     // 오행 균형도 (0~100)
+  monthlyFortunes: MonthlyFortune[]
+  majorLucks: MajorLuck[]
+  currentMonthFortune: MonthlyFortune | null
 }
 
 // ═══════════════════════════════════════════════
@@ -258,6 +281,144 @@ function analyzeElements(pillars: Pillar[], dayMasterElement: number, monthBranc
 }
 
 // ═══════════════════════════════════════════════
+// 월운(月運) 계산
+// ═══════════════════════════════════════════════
+function getMonthlyFortunes(dayMasterElement: number, dayMasterYY: number, currentYear: number): MonthlyFortune[] {
+  const fortunes: MonthlyFortune[] = []
+  const yearStem = ((currentYear - 4) % 10 + 10) % 10
+
+  const keywords: Record<number, { good: string; bad: string }> = {
+    0: { good: '성장과 도약', bad: '무리한 확장 주의' },
+    1: { good: '열정과 표현', bad: '감정 조절 필요' },
+    2: { good: '안정과 수확', bad: '변화에 둔감 주의' },
+    3: { good: '결단과 정리', bad: '대인관계 마찰 주의' },
+    4: { good: '지혜와 기회', bad: '우유부단함 주의' },
+  }
+
+  const advices: string[][] = [
+    ['새로운 시작에 좋은 달, 계획을 실행하세요', '과욕은 금물, 현실적 목표를 세우세요'],
+    ['자기 표현에 좋은 달, 적극적으로 나서세요', '화를 다스리고 차분하게 대처하세요'],
+    ['재물운이 좋은 달, 저축/투자 기회', '지출을 줄이고 허리띠를 졸라매세요'],
+    ['직장/사회운이 좋은 달, 승진/인정', '건강에 주의하고 무리하지 마세요'],
+    ['학습/자기계발에 좋은 달, 공부하세요', '결정을 미루지 말고 행동하세요'],
+  ]
+
+  for (let m = 1; m <= 12; m++) {
+    // Calculate month pillar for this month
+    const startStems = [2, 4, 6, 8, 0]
+    const monthStemStart = startStems[yearStem % 5]
+
+    // Get month index based on solar month
+    let mi = 0
+    const MONTH_BOUNDS_SIMPLE = [2,3,4,5,6,7,8,9,10,11,12,1]
+    for (let i = 11; i >= 0; i--) {
+      if (m >= MONTH_BOUNDS_SIMPLE[i]) { mi = i; break }
+    }
+
+    const monthStem = (monthStemStart + mi) % 10
+    const monthElement = STEM_ELEMENT[monthStem]
+    const monthYY = STEM_YINYANG[monthStem]
+
+    // Calculate relationship
+    const rel = ((monthElement - dayMasterElement) % 5 + 5) % 5
+
+    // Base rating from relationship
+    let rating: number
+    const sameYY = dayMasterYY === monthYY
+
+    if (rel === 0) rating = 3          // 비겁 - 경쟁/협력
+    else if (rel === 1) rating = 4     // 식상 - 표현/창작
+    else if (rel === 2) rating = sameYY ? 5 : 4  // 재성 - 재물
+    else if (rel === 3) rating = sameYY ? 2 : 3  // 관성 - 변화/압박
+    else rating = sameYY ? 3 : 4       // 인성 - 학습/귀인
+
+    const isGood = rating >= 4
+    const kw = keywords[monthElement]
+
+    fortunes.push({
+      month: m,
+      rating,
+      keyword: isGood ? kw.good : kw.bad,
+      advice: isGood ? advices[monthElement][0] : advices[monthElement][1],
+      isBest: false,
+      isWorst: false,
+    })
+  }
+
+  // Mark best and worst months
+  const maxRating = Math.max(...fortunes.map(f => f.rating))
+  const minRating = Math.min(...fortunes.map(f => f.rating))
+  fortunes.forEach(f => {
+    if (f.rating === maxRating) f.isBest = true
+    if (f.rating === minRating) f.isWorst = true
+  })
+
+  return fortunes
+}
+
+// ═══════════════════════════════════════════════
+// 대운(大運) 계산
+// ═══════════════════════════════════════════════
+function getMajorLuckCycles(
+  monthPillar: Pillar,
+  yearStemYY: number,
+  gender: 'male' | 'female',
+  birthYear: number,
+  dayMasterElement: number,
+  currentYear: number
+): MajorLuck[] {
+  // 대운 방향: 양남음녀 = 순행(+1), 음남양녀 = 역행(-1)
+  const isForward = (yearStemYY === 1 && gender === 'male') || (yearStemYY === 0 && gender === 'female')
+  const direction = isForward ? 1 : -1
+
+  const lucks: MajorLuck[] = []
+  const currentAge = currentYear - birthYear
+
+  // 대운 시작 나이 (간략화: 성별/음양에 따라 2~8세 사이)
+  const startAge = gender === 'male' ? (isForward ? 3 : 4) : (isForward ? 4 : 3)
+
+  const majorKeywords: Record<number, string[]> = {
+    0: ['성장기', '발전운'],
+    1: ['활동기', '표현운'],
+    2: ['안정기', '수확운'],
+    3: ['결실기', '정리운'],
+    4: ['준비기', '축적운'],
+  }
+
+  for (let i = 0; i < 8; i++) {
+    const age = startAge + i * 10
+    const stemIdx = ((monthPillar.stem + direction * (i + 1)) % 10 + 10) % 10
+    const branchIdx = ((monthPillar.branch + direction * (i + 1)) % 12 + 12) % 12
+    const element = STEM_ELEMENT[stemIdx]
+
+    // Rating based on element relationship with day master
+    const rel = ((element - dayMasterElement) % 5 + 5) % 5
+    let rating: number
+    if (rel === 0) rating = 3
+    else if (rel === 1) rating = 4
+    else if (rel === 2) rating = 5
+    else if (rel === 3) rating = 2
+    else rating = 4
+
+    const kws = majorKeywords[element]
+    const isCurrent = currentAge >= age && currentAge < age + 10
+
+    lucks.push({
+      startAge: age,
+      endAge: age + 9,
+      stem: stemIdx,
+      branch: branchIdx,
+      element,
+      rating,
+      keyword: kws[rating >= 4 ? 0 : 1],
+      isCurrent,
+    })
+  }
+
+  return lucks
+}
+
+// ═══════════════════════════════════════════════
 // 메인 사주 계산 함수
 // ═══════════════════════════════════════════════
 export function calculateSaju(
@@ -292,6 +453,14 @@ export function calculateSaju(
   const animalYear = ((year - 4) % 12 + 12) % 12
   const animal = BRANCHES_ANIMAL[animalYear]
 
+  const currentYear = new Date().getFullYear()
+  const monthlyFortunes = getMonthlyFortunes(dayMasterElement, dayMasterYinYang, currentYear)
+  const majorLucks = getMajorLuckCycles(
+    monthPillar, STEM_YINYANG[yearPillar.stem], gender, year, dayMasterElement, currentYear
+  )
+  const currentMonth = new Date().getMonth() + 1
+  const currentMonthFortune = monthlyFortunes.find(f => f.month === currentMonth) || null
+
   return {
     yearPillar,
     monthPillar,
@@ -314,6 +483,9 @@ export function calculateSaju(
     birthHour: hour,
     animal,
     elementBalance: analysis.elementBalance,
+    monthlyFortunes,
+    majorLucks,
+    currentMonthFortune,
   }
 }
 

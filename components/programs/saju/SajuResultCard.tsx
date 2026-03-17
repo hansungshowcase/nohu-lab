@@ -5,6 +5,7 @@ import {
   SajuResult, STEMS, STEMS_HANJA, BRANCHES, BRANCHES_HANJA,
   ELEMENTS, getElementEmoji, Pillar,
   STEM_ELEMENT, BRANCH_ELEMENT, STEM_YINYANG, ELEMENTS_HANJA,
+  MonthlyFortune, MajorLuck,
 } from './sajuEngine'
 import {
   DAY_MASTER_PROFILES, STRENGTH_INTERPRETATIONS,
@@ -110,6 +111,51 @@ function StarRating({ stars }: { stars: number }) {
   return <span className="text-yellow-400 text-sm">{'★'.repeat(stars)}{'☆'.repeat(5 - stars)}</span>
 }
 
+function MonthlyFortuneGrid({ fortunes }: { fortunes: MonthlyFortune[] }) {
+  const currentMonth = new Date().getMonth() + 1
+  return (
+    <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+      {fortunes.map(f => (
+        <div key={f.month} className={`rounded-lg p-1.5 text-center border ${
+          f.month === currentMonth ? 'border-purple-400 bg-purple-50 ring-1 ring-purple-300' :
+          f.isBest ? 'border-green-300 bg-green-50' :
+          f.isWorst ? 'border-red-300 bg-red-50' :
+          'border-gray-100 bg-gray-50'
+        }`}>
+          <div className="text-[10px] text-gray-500">{f.month}월</div>
+          <div className="text-yellow-400 text-[10px] leading-tight">{'★'.repeat(f.rating)}{'☆'.repeat(5-f.rating)}</div>
+          <div className={`text-[8px] mt-0.5 font-medium ${
+            f.isBest ? 'text-green-600' : f.isWorst ? 'text-red-500' : 'text-gray-500'
+          }`}>{f.month === currentMonth ? '📍지금' : f.isBest ? '🍀최고' : f.isWorst ? '⚡주의' : ''}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MajorLuckTimeline({ lucks }: { lucks: MajorLuck[] }) {
+  const elColors = ['text-green-600','text-red-500','text-yellow-600','text-gray-500','text-blue-600']
+  const elBgs = ['bg-green-100','bg-red-100','bg-yellow-100','bg-gray-100','bg-blue-100']
+  return (
+    <div className="flex gap-1 overflow-x-auto pb-1">
+      {lucks.map((l, i) => (
+        <div key={i} className={`flex-shrink-0 rounded-lg p-1.5 text-center min-w-[60px] border ${
+          l.isCurrent ? 'border-purple-400 bg-purple-50 ring-1 ring-purple-300' : 'border-gray-100 ' + elBgs[l.element]
+        }`}>
+          <div className="text-[9px] text-gray-400">{l.startAge}~{l.endAge}세</div>
+          <div className={`text-xs font-black ${l.isCurrent ? 'text-purple-700' : elColors[l.element]}`}>
+            {STEMS_HANJA[l.stem]}{BRANCHES_HANJA[l.branch]}
+          </div>
+          <div className="text-yellow-400 text-[8px]">{'★'.repeat(l.rating)}{'☆'.repeat(5-l.rating)}</div>
+          <div className={`text-[8px] font-medium ${l.isCurrent ? 'text-purple-600' : 'text-gray-500'}`}>
+            {l.isCurrent ? '📍현재' : l.keyword}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
   const strength = result.isDayMasterStrong ? STRENGTH_INTERPRETATIONS.strong : STRENGTH_INTERPRETATIONS.weak
@@ -178,6 +224,65 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <ScoreGauge score={result.dayMasterScore} label="일간 에너지" color="#6366f1" />
             <ScoreGauge score={result.elementBalance} label="오행 균형도" color="#10b981" />
             <ScoreGauge score={fortune.stars * 20} label={`${new Date().getFullYear()}년 운세`} color="#f59e0b" />
+          </div>
+
+          {/* ═══ 이달의 운세 ═══ */}
+          {result.currentMonthFortune && (
+            <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl p-3 text-white print:p-2">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-xs font-bold">📅 {new Date().getMonth() + 1}월 운세 — 이달의 운</h3>
+                <span className="text-yellow-300 text-sm">{'★'.repeat(result.currentMonthFortune.rating)}{'☆'.repeat(5-result.currentMonthFortune.rating)}</span>
+              </div>
+              <p className="text-sm font-bold text-white/90">{result.currentMonthFortune.keyword}</p>
+              <p className="text-[11px] text-white/80 mt-0.5">{result.currentMonthFortune.advice}</p>
+            </div>
+          )}
+
+          {/* ═══ 올해 운세 ═══ */}
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-3 border border-purple-100 print:p-2">
+            <div className="flex items-center justify-between mb-1.5">
+              <h3 className="text-xs font-bold text-gray-800">🗓️ {new Date().getFullYear()}년 운세</h3>
+              <StarRating stars={fortune.stars} />
+            </div>
+            <p className="text-xs font-medium text-purple-700 mb-1">{fortune.title}</p>
+            <p className="text-[11px] text-gray-600 mb-1.5">{fortune.description}</p>
+            <p className="text-[10px] text-purple-600 font-medium">💡 {fortune.advice}</p>
+          </div>
+
+          {/* ═══ 월별 운세 ═══ */}
+          <div>
+            <h3 className="text-xs font-bold text-gray-800 mb-2 border-b border-gray-200 pb-1 flex items-center gap-1.5">
+              <span className="w-1 h-4 bg-purple-500 rounded-full inline-block" />
+              {new Date().getFullYear()}년 월별 운세
+            </h3>
+            <MonthlyFortuneGrid fortunes={result.monthlyFortunes} />
+            <p className="text-[9px] text-gray-400 mt-1.5 text-center">🍀최고 = 행운의 달 · ⚡주의 = 조심할 달 · 📍지금 = 이번 달</p>
+          </div>
+
+          {/* ═══ 재물 · 연애 · 궁합 (3열) ═══ */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-white rounded-xl p-2.5 border border-gray-200">
+              <h4 className="text-[10px] font-bold text-gray-800 mb-1">💰 재물운</h4>
+              <p className="text-[10px] text-gray-600 leading-relaxed">{strength.money}</p>
+            </div>
+            <div className="bg-white rounded-xl p-2.5 border border-gray-200">
+              <h4 className="text-[10px] font-bold text-gray-800 mb-1">❤️ 연애/관계</h4>
+              <p className="text-[10px] text-gray-600 leading-relaxed">{profile.loveStyle}</p>
+            </div>
+            <div className="bg-white rounded-xl p-2.5 border border-gray-200">
+              <h4 className="text-[10px] font-bold text-gray-800 mb-1">💕 궁합 힌트</h4>
+              <p className="text-[10px] text-gray-600 leading-relaxed">{getCompatibilityHint(result.dayMaster)}</p>
+            </div>
+          </div>
+
+          {/* ═══ 대운 (10년 주기) ═══ */}
+          <div>
+            <h3 className="text-xs font-bold text-gray-800 mb-2 border-b border-gray-200 pb-1 flex items-center gap-1.5">
+              <span className="w-1 h-4 bg-amber-500 rounded-full inline-block" />
+              대운(大運) — 인생의 큰 흐름
+            </h3>
+            <MajorLuckTimeline lucks={result.majorLucks} />
+            <p className="text-[9px] text-gray-400 mt-1 text-center">10년 단위 운의 흐름 · 📍현재 대운 표시</p>
           </div>
 
           {/* ═══ 일간 분석 + 신강/신약 ═══ */}
@@ -256,22 +361,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             </div>
           </div>
 
-          {/* ═══ 재물 · 연애 · 궁합 (3열) ═══ */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-white rounded-xl p-2.5 border border-gray-200">
-              <h4 className="text-[10px] font-bold text-gray-800 mb-1">💰 재물운</h4>
-              <p className="text-[10px] text-gray-600 leading-relaxed">{strength.money}</p>
-            </div>
-            <div className="bg-white rounded-xl p-2.5 border border-gray-200">
-              <h4 className="text-[10px] font-bold text-gray-800 mb-1">❤️ 연애/관계</h4>
-              <p className="text-[10px] text-gray-600 leading-relaxed">{profile.loveStyle}</p>
-            </div>
-            <div className="bg-white rounded-xl p-2.5 border border-gray-200">
-              <h4 className="text-[10px] font-bold text-gray-800 mb-1">💕 궁합 힌트</h4>
-              <p className="text-[10px] text-gray-600 leading-relaxed">{getCompatibilityHint(result.dayMaster)}</p>
-            </div>
-          </div>
-
           {/* ═══ 건강 · 직업 ═══ */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white rounded-xl p-2.5 border border-gray-200">
@@ -284,17 +373,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
                 {profile.careerFit.slice(0, 4).map(c => <li key={c}>• {c}</li>)}
               </ul>
             </div>
-          </div>
-
-          {/* ═══ 올해 운세 ═══ */}
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-3 border border-purple-100 print:p-2">
-            <div className="flex items-center justify-between mb-1.5">
-              <h3 className="text-xs font-bold text-gray-800">🗓️ {new Date().getFullYear()}년 운세</h3>
-              <StarRating stars={fortune.stars} />
-            </div>
-            <p className="text-xs font-medium text-purple-700 mb-1">{fortune.title}</p>
-            <p className="text-[11px] text-gray-600 mb-1.5">{fortune.description}</p>
-            <p className="text-[10px] text-purple-600 font-medium">💡 {fortune.advice}</p>
           </div>
 
           {/* ═══ 용신 개운법 + 행운 키워드 ═══ */}
