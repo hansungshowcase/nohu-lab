@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getServiceSupabase()
-    const trimmed = nickname.trim().slice(0, 100)
+    const trimmed = nickname.trim().slice(0, 50)
 
     // DB에서 닉네임 검색
     const { data: member, error: memberError } = await supabase

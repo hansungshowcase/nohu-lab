@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   ])
 
   if (messagesResult.error) {
-    return NextResponse.json({ error: messagesResult.error.message }, { status: 500 })
+    return NextResponse.json({ error: '메시지 조회에 실패했습니다.' }, { status: 500 })
   }
 
   if (readResult.error) {

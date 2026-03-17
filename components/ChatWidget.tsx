@@ -31,7 +31,13 @@ export default function ChatWidget({ user }: { user: User | null }) {
   const shouldHide = !user || user.tier === 0 || user.tier === 4
 
   useEffect(() => {
-    if (shouldHide) return
+    if (shouldHide) {
+      setMessages([])
+      setUnread(0)
+      setLoaded(false)
+      setOpen(false)
+      return
+    }
     fetchUnread()
     const interval = setInterval(fetchUnread, 10000)
     return () => clearInterval(interval)

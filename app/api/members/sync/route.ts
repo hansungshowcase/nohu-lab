@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       .map((m: { nickname: string; tier?: number; levelName?: string }) => ({
         nickname: m.nickname.trim(),
         phone: '',
-        tier: m.tier ? Math.min(Math.max(Number(m.tier), 1), 4) : mapCafeLevelToTier(m.levelName || '일반회원'),
+        tier: (Number(m.tier) >= 1 && Number(m.tier) <= 4) ? Math.round(Number(m.tier)) : mapCafeLevelToTier(m.levelName || '일반회원'),
       }))
 
     for (let i = 0; i < batch.length; i += 500) {

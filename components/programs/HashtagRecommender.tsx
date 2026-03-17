@@ -29,7 +29,9 @@ export default function HashtagRecommender() {
     })
 
     // 텍스트에서 직접 키워드를 추출하여 해시태그 생성
-    const words = text.split(/\s+/).filter((w) => w.length >= 2)
+    const words = text.split(/\s+/)
+      .map((w) => w.replace(/[^가-힣a-zA-Z0-9#]/g, ''))
+      .filter((w) => w.length >= 2)
     words.slice(0, 5).forEach((w) => {
       const clean = w.startsWith('#') ? w : `#${w}`
       matched.add(clean)
