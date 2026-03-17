@@ -355,7 +355,7 @@ function AdminContent() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="닉네임 검색..."
-              className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
+              className="flex-1 min-w-0 px-4 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
             />
             <button
               onClick={() => setShowAddForm(!showAddForm)}
@@ -393,7 +393,7 @@ function AdminContent() {
 
               {addMode === 'single' ? (
                 <div className="flex flex-wrap gap-3 items-end">
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="flex-1 min-w-0">
                     <label className="block text-sm text-gray-700 mb-1">카페 닉네임</label>
                     <input
                       type="text"
@@ -764,7 +764,7 @@ function AdminContent() {
                       onChange={(e) => setChatInput(e.target.value)}
                       placeholder="메시지를 입력하세요..."
                       maxLength={1000}
-                      className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-[14px] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-base focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     />
                     <button
                       type="submit"

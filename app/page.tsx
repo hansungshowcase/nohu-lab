@@ -192,7 +192,7 @@ export default function LoginPage() {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder="닉네임을 입력하세요"
-                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-[14px] placeholder:text-gray-300 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all duration-200"
+                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-base placeholder:text-gray-300 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 outline-none transition-all duration-200"
                 required
                 disabled={loading}
               />
@@ -227,7 +227,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 disabled:from-orange-300 disabled:to-amber-300 text-white font-semibold text-[14px] rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30"
+              className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 disabled:from-orange-300 disabled:to-amber-300 text-white font-semibold text-base rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30"
             >
               {loading ? (
                 <>
@@ -269,7 +269,7 @@ export default function LoginPage() {
               }
             }}
             disabled={loading}
-            className="w-full py-3.5 bg-white hover:bg-gray-50 disabled:bg-gray-50 text-gray-600 font-medium text-[14px] rounded-xl transition-all duration-200 border border-gray-200 hover:border-gray-300"
+            className="w-full py-3.5 bg-white hover:bg-gray-50 disabled:bg-gray-50 text-gray-600 font-medium text-base rounded-xl transition-all duration-200 border border-gray-200 hover:border-gray-300"
           >
             비회원으로 둘러보기
           </button>

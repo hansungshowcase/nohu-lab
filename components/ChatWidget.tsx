@@ -193,7 +193,7 @@ export default function ChatWidget({ user }: { user: User | null }) {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="메시지 입력..."
                 maxLength={1000}
-                className="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-[13px] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-base focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
               <button
                 type="submit"
