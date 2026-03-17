@@ -28,6 +28,9 @@
 - **cafe-settlement** → cafe-settlement.vercel.app (정산 시스템) ✅ 사용 중
 - cafe-webapp → 중복 프로젝트로 삭제됨 (2026-03-16)
 
+## 코드 수정 원칙
+- **코드를 수정할 때는 항상 전보다 더 나은 상태를 만들어야 한다.** 수정 후 품질이 떨어지거나 기능이 퇴보하는 변경은 절대 금지.
+
 ## 절대 금지 사항
 - **Vercel 프로젝트를 새로 만들거나 삭제하지 않기** (사용자가 명시적으로 요청할 때만)
 - **GitHub 저장소를 새로 만들거나 삭제하지 않기** (사용자가 명시적으로 요청할 때만)
@@ -112,6 +115,12 @@ vercel alias set <배포URL> nohu-lab.vercel.app
 - 배포는 main 브랜치에서만 할 것 (worktree에서 직접 배포하지 않기)
 - **다른 워커가 수정 중인 파일을 동시에 수정하지 않기**
 
+## 전수조사 규칙
+- **전수조사 전 반드시**: `git fetch origin && git merge origin/main --no-edit`로 main의 최신 코드를 반영한 후 조사할 것
+- 다른 터미널이 main에 push한 변경사항이 있을 수 있으므로, merge 후의 코드를 기준으로 조사해야 함
+- 전수조사 후 발견된 버그 수정 시, 수정 대상 파일이 다른 터미널에서 작업 중인지 `git status`로 확인
+- **배포 후 반드시 주요 기능 실제 테스트**: curl로 API 호출하여 정상 응답 확인 (로그인, 회원 조회 등)
+
 ## 보고 규칙
 - 사용자에게 작업 완료를 보고하기 전에, 모든 수정사항과 기능이 완벽하게 작동하는지 **최소 5번 테스트**한 후 최종 보고할 것
 - 빌드 테스트, 엔진/로직 테스트, 실제 페이지 접근 테스트 등을 포함
@@ -120,3 +129,5 @@ vercel alias set <배포URL> nohu-lab.vercel.app
 - cafe-webapp 프로젝트를 안 쓰는 거라 판단하고 삭제 → 환경변수 전부 날아감 → 프로젝트는 사용자 요청 없이 절대 삭제하지 말 것
 - ai-worker2가 cafe-webapp(잘못된 프로젝트)에 연결되어 배포가 nohu-lab.vercel.app에 반영 안 됨 → 배포 전 .vercel/project.json 확인 필수
 - vercel --prod 후 nohu-lab.vercel.app alias가 자동 갱신 안 되는 경우 있음 → 배포 후 반드시 `vercel alias set` 실행
+- **전수조사가 frontend 브랜치만 검사하고 main의 다른 터미널 변경사항을 놓침** → admin-login이 timingSafeEqual로 변경되어 서버 오류 발생. 전수조사 전 반드시 main merge 후 조사할 것
+- **Vercel 무료 플랜 일일 배포 한도 100회** → 3개 터미널에서 빈번한 배포 시 한도 초과 주의. 배포는 꼭 필요할 때만
