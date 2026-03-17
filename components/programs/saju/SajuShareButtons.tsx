@@ -81,11 +81,13 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         throw new Error('Invalid PNG data')
       }
 
-      // 모바일: Web Share API (Blob 필요)
+      // data URL → Blob 변환
+      const fetchRes = await fetch(dataUrl)
+      const blob = await fetchRes.blob()
+
+      // 모바일: Web Share API
       if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
         try {
-          const res = await fetch(dataUrl)
-          const blob = await res.blob()
           const file = new File([blob], 'saju-result.png', { type: 'image/png' })
           await navigator.share({ files: [file], title: '사주풀이 결과' })
           setSaving(false)
@@ -93,29 +95,50 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           setTimeout(() => setSaveSuccess(false), 2000)
           return
         } catch (err) {
-          // 사용자가 공유 취소한 경우 새 탭 열지 않음
           if (err instanceof Error && err.name === 'AbortError') {
             setSaving(false)
             return
           }
-          // 그 외 오류만 새 탭 fallback으로 진행
         }
       }
 
-      // 새 탭에서 이미지 표시 (우클릭/길게 눌러 저장)
-      const imgPage = `<!DOCTYPE html><html><head><title>사주풀이 결과</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:sans-serif;flex-direction:column;gap:16px}img{max-width:95vw;max-height:85vh;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.12)}p{color:#888;font-size:14px}</style></head><body><img src="${dataUrl}" alt="사주풀이 결과"/><p>이미지를 길게 누르거나 우클릭하여 저장하세요</p></body></html>`
-      const newTab = window.open('', '_blank')
-      if (newTab) {
-        newTab.document.write(imgPage)
-        newTab.document.close()
-      } else {
-        // 팝업 차단 시 현재 페이지에 이미지 표시
-        alert('팝업이 차단되었습니다. 이미지를 현재 페이지에 표시합니다.')
-        const img = document.createElement('img')
-        img.src = dataUrl
-        img.style.cssText = 'max-width:100%;border-radius:12px;margin-top:16px'
-        cardRef.current?.parentElement?.appendChild(img)
+      // 1순위: File System Access API (네이티브 저장 다이얼로그, Chrome/Edge)
+      const w = window as typeof window & { showSaveFilePicker?: (opts: Record<string, unknown>) => Promise<FileSystemFileHandle> }
+      if (w.showSaveFilePicker) {
+        try {
+          const handle = await w.showSaveFilePicker({
+            suggestedName: 'saju-result.png',
+            types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }],
+          })
+          const writable = await handle.createWritable()
+          await writable.write(blob)
+          await writable.close()
+          setSaveSuccess(true)
+          setTimeout(() => setSaveSuccess(false), 2000)
+          setSaving(false)
+          return
+        } catch (err) {
+          // 사용자가 취소한 경우
+          if (err instanceof Error && err.name === 'AbortError') {
+            setSaving(false)
+            return
+          }
+        }
       }
+
+      // 2순위: <a download> (Firefox, Safari 등)
+      const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'image/png' }))
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = 'saju-result.png'
+      link.type = 'image/png'
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      setTimeout(() => {
+        document.body.removeChild(link)
+        URL.revokeObjectURL(blobUrl)
+      }, 5000)
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2000)
     } catch (e) {
@@ -132,19 +155,20 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           scrollX: 0,
           windowWidth: 720,
         } as Parameters<typeof html2canvas>[1])
-        const fallbackDataUrl = canvas.toDataURL('image/png', 1.0)
-        const fbPage = `<!DOCTYPE html><html><head><title>사주풀이 결과</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:sans-serif;flex-direction:column;gap:16px}img{max-width:95vw;max-height:85vh;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.12)}p{color:#888;font-size:14px}</style></head><body><img src="${fallbackDataUrl}" alt="사주풀이 결과"/><p>이미지를 길게 누르거나 우클릭하여 저장하세요</p></body></html>`
-        const fbTab = window.open('', '_blank')
-        if (fbTab) {
-          fbTab.document.write(fbPage)
-          fbTab.document.close()
-        } else {
-          alert('팝업이 차단되었습니다. 이미지를 현재 페이지에 표시합니다.')
-          const img = document.createElement('img')
-          img.src = fallbackDataUrl
-          img.style.cssText = 'max-width:100%;border-radius:12px;margin-top:16px'
-          cardRef.current?.parentElement?.appendChild(img)
-        }
+        const fbRes = await fetch(canvas.toDataURL('image/png', 1.0))
+        const fbBlob = await fbRes.blob()
+        const fbBlobUrl = URL.createObjectURL(new Blob([fbBlob], { type: 'image/png' }))
+        const fbLink = document.createElement('a')
+        fbLink.href = fbBlobUrl
+        fbLink.download = 'saju-result.png'
+        fbLink.type = 'image/png'
+        fbLink.style.display = 'none'
+        document.body.appendChild(fbLink)
+        fbLink.click()
+        setTimeout(() => {
+          document.body.removeChild(fbLink)
+          URL.revokeObjectURL(fbBlobUrl)
+        }, 5000)
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 2000)
       } catch {
