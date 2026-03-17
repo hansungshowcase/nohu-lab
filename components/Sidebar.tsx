@@ -16,6 +16,7 @@ export default function Sidebar({ user }: { user: User | null }) {
   const router = useRouter()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const fullUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : pathname
   const categories = getAllCategories()
 
   if (!user) return null
@@ -84,7 +85,7 @@ export default function Sidebar({ user }: { user: User | null }) {
           </span>
         </div>
         {navItems.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = fullUrl === item.href || (item.href === '/dashboard' && pathname === '/dashboard' && !fullUrl.includes('category='))
           return (
             <Link
               key={item.href}
