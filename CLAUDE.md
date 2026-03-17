@@ -97,6 +97,15 @@ vercel alias set <배포URL> nohu-lab.vercel.app
 2. `app/programs/registry.ts` 에 등록
 3. `app/programs/[programId]/page.tsx` 의 `programComponents`에 lazy import 추가
 
+## 병렬 작업 충돌 방지 규칙
+- **ai-worker1 (frontend 브랜치)**: 디자인, 레이아웃, 버그 수정 담당
+- **ai-worker2 (backend 브랜치)**: 새 기능 추가, 기존 기능 수정 담당
+- **각 워커는 자기 담당 파일만 수정할 것** (다른 워커의 파일을 수정하면 merge 시 충돌 발생)
+- **공유 파일 수정 시 주의**: `CLAUDE.md`, `registry.ts`, `page.tsx ([programId])`, `globals.css`, `layout.tsx` 등은 양쪽에서 수정할 수 있어 충돌 위험
+- 배포는 main 브랜치에서만 할 것 (worktree에서 직접 배포하지 않기)
+- 배포 순서: 양쪽 커밋 → main에서 merge → 빌드 확인 → vercel --prod
+- **다른 워커가 수정 중인 파일을 동시에 수정하지 않기**
+
 ## 보고 규칙
 - 사용자에게 작업 완료를 보고하기 전에, 모든 수정사항과 기능이 완벽하게 작동하는지 **최소 5번 테스트**한 후 최종 보고할 것
 - 빌드 테스트, 엔진/로직 테스트, 실제 페이지 접근 테스트 등을 포함

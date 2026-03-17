@@ -16,21 +16,20 @@ export const ELEMENTS = ['목','화','토','금','수'] as const
 export const ELEMENTS_HANJA = ['木','火','土','金','水'] as const
 
 // 천간→오행 매핑
-export const STEM_ELEMENT: number[] = [0,0,1,1,2,2,3,3,4,4] // 갑을=목, 병정=화, 무기=토, 경신=금, 임계=수
+export const STEM_ELEMENT: number[] = [0,0,1,1,2,2,3,3,4,4]
 
 // 지지→오행 매핑
-export const BRANCH_ELEMENT: number[] = [4,2,0,0,2,1,1,2,3,3,2,4] // 자=수, 축=토, 인=목...
+export const BRANCH_ELEMENT: number[] = [4,2,0,0,2,1,1,2,3,3,2,4]
 
 // 음양 (0=음, 1=양)
 export const STEM_YINYANG: number[] = [1,0,1,0,1,0,1,0,1,0]
 export const BRANCH_YINYANG: number[] = [1,0,1,0,1,0,1,0,1,0,1,0]
 
-// 오행 상생 (Production cycle): 목→화→토→금→수→목
-// 오행 상극 (Control cycle): 목→토→수→화→금→목
+// 오행 상생 / 상극
 export function produces(a: number, b: number): boolean { return (a + 1) % 5 === b }
 export function controls(a: number, b: number): boolean { return (a + 2) % 5 === b }
 
-// 지장간 (Hidden Stems in Branches)
+// 지장간 (Hidden Stems in Branches) - 여기(餘氣), 중기(中氣), 정기(正氣) 순
 export const HIDDEN_STEMS: number[][] = [
   [9],       // 자: 계
   [9,7,5],   // 축: 계신기
@@ -44,6 +43,22 @@ export const HIDDEN_STEMS: number[][] = [
   [6,7],     // 유: 경신
   [7,3,4],   // 술: 신정무
   [4,0,8],   // 해: 무갑임
+]
+
+// 지장간 가중치 (여기:중기:정기)
+const HIDDEN_WEIGHTS: number[][] = [
+  [1.0],           // 자
+  [0.3, 0.3, 0.4], // 축
+  [0.3, 0.3, 0.4], // 인
+  [0.3, 0.7],      // 묘
+  [0.3, 0.3, 0.4], // 진
+  [0.3, 0.3, 0.4], // 사
+  [0.3, 0.3, 0.4], // 오
+  [0.3, 0.3, 0.4], // 미
+  [0.3, 0.3, 0.4], // 신
+  [0.3, 0.7],      // 유
+  [0.3, 0.3, 0.4], // 술
+  [0.3, 0.3, 0.4], // 해
 ]
 
 // ═══════════════════════════════════════════════
@@ -65,12 +80,21 @@ const MONTH_BOUNDS: MonthBound[] = [
   { solarMonth: 1,  solarDay: 5,  branchIdx: 1  }, // 축월 (소한)
 ]
 
+// 월령(月令) - 월지의 오행이 일간에 미치는 영향 가중치
+function getMonthSeasonWeight(monthBranch: number, element: number): number {
+  const monthEl = BRANCH_ELEMENT[monthBranch]
+  if (monthEl === element) return 1.5      // 월령을 얻음 (득령)
+  if (produces(monthEl, element)) return 1.2 // 월령이 생해줌
+  if (controls(monthEl, element)) return 0.7 // 월령이 극함
+  return 1.0
+}
+
 // ═══════════════════════════════════════════════
 // 사주 기둥(Pillar) 타입
 // ═══════════════════════════════════════════════
 export interface Pillar {
-  stem: number    // 천간 인덱스 (0~9)
-  branch: number  // 지지 인덱스 (0~11)
+  stem: number
+  branch: number
 }
 
 export interface SajuResult {
@@ -78,21 +102,23 @@ export interface SajuResult {
   monthPillar: Pillar
   dayPillar: Pillar
   hourPillar: Pillar | null
-  dayMaster: number           // 일간 인덱스
-  dayMasterElement: number    // 일간 오행
-  dayMasterYinYang: number    // 일간 음양
-  elementCounts: number[]     // 오행별 개수 [목,화,토,금,수]
-  missingElements: number[]   // 부족한 오행
-  strongElement: number       // 가장 강한 오행
-  isDayMasterStrong: boolean  // 신강 여부
-  tenGods: string[]           // 각 기둥의 십신
-  usefulGod: number           // 용신 오행
+  dayMaster: number
+  dayMasterElement: number
+  dayMasterYinYang: number
+  elementCounts: number[]
+  missingElements: number[]
+  strongElement: number
+  isDayMasterStrong: boolean
+  dayMasterScore: number     // 신강/신약 점수 (0~100)
+  tenGods: string[]
+  usefulGod: number
   gender: 'male' | 'female'
   birthYear: number
   birthMonth: number
   birthDay: number
   birthHour: number | null
-  animal: string              // 띠
+  animal: string
+  elementBalance: number     // 오행 균형도 (0~100)
 }
 
 // ═══════════════════════════════════════════════
@@ -110,25 +136,21 @@ function getYearPillar(year: number, month: number, day: number): Pillar {
 // 월주 계산 (절기 기준)
 // ═══════════════════════════════════════════════
 function getMonthIndex(month: number, day: number): number {
-  // 12개 절기 경계에서 현재 날짜가 어디에 해당하는지
   for (let i = 11; i >= 0; i--) {
     const b = MONTH_BOUNDS[i]
     if (month > b.solarMonth || (month === b.solarMonth && day >= b.solarDay)) {
       return i
     }
   }
-  return 11 // 1월 소한 이전 → 축월(전년도 12월)
+  return 11
 }
 
 function getMonthPillar(yearStem: number, month: number, day: number): Pillar {
   const mi = getMonthIndex(month, day)
   const branch = MONTH_BOUNDS[mi].branchIdx
-
-  // 오호둔법: 년간에 따라 인월(1월)의 천간 결정
-  const startStems = [2, 4, 6, 8, 0] // 갑기→병, 을경→무, 병신→경, 정임→임, 무계→갑
+  const startStems = [2, 4, 6, 8, 0]
   const monthStemStart = startStems[yearStem % 5]
   const stem = (monthStemStart + mi) % 10
-
   return { stem, branch }
 }
 
@@ -136,7 +158,6 @@ function getMonthPillar(yearStem: number, month: number, day: number): Pillar {
 // 일주 계산 (기준일 역산법)
 // ═══════════════════════════════════════════════
 function getDayPillar(year: number, month: number, day: number): Pillar {
-  // 기준일: 2024년 1월 1일 = 을축일 (stem=1, branch=1)
   const ref = new Date(2024, 0, 1)
   const target = new Date(year, month - 1, day)
   const diffDays = Math.round((target.getTime() - ref.getTime()) / 86400000)
@@ -149,14 +170,13 @@ function getDayPillar(year: number, month: number, day: number): Pillar {
 // 시주 계산
 // ═══════════════════════════════════════════════
 function getHourBranch(hour: number): number {
-  if (hour === 23 || hour === 0) return 0  // 자시
+  if (hour === 23 || hour === 0) return 0
   return Math.floor((hour + 1) / 2)
 }
 
 function getHourPillar(dayStem: number, hour: number): Pillar {
   const branch = getHourBranch(hour)
-  // 오자둔법: 일간에 따라 자시의 천간 결정
-  const startStems = [0, 2, 4, 6, 8] // 갑기→갑, 을경→병, 병신→무, 정임→경, 무계→임
+  const startStems = [0, 2, 4, 6, 8]
   const hourStemStart = startStems[dayStem % 5]
   const stem = (hourStemStart + branch) % 10
   return { stem, branch }
@@ -166,11 +186,11 @@ function getHourPillar(dayStem: number, hour: number): Pillar {
 // 십신 (Ten Gods) 계산
 // ═══════════════════════════════════════════════
 const TEN_GOD_NAMES = [
-  '비견', '겁재',  // 같은 오행
-  '식신', '상관',  // 내가 생하는
-  '편재', '정재',  // 내가 극하는
-  '편관', '정관',  // 나를 극하는
-  '편인', '정인',  // 나를 생하는
+  '비견', '겁재',
+  '식신', '상관',
+  '편재', '정재',
+  '편관', '정관',
+  '편인', '정인',
 ] as const
 
 function getTenGod(dayMasterElement: number, dayMasterYY: number, targetStem: number): string {
@@ -187,44 +207,54 @@ function getTenGod(dayMasterElement: number, dayMasterYY: number, targetStem: nu
 }
 
 // ═══════════════════════════════════════════════
-// 오행 분석 & 용신 판단
+// 오행 분석 & 용신 판단 (정확도 향상)
 // ═══════════════════════════════════════════════
-function analyzeElements(pillars: Pillar[], dayMasterElement: number) {
-  const counts = [0, 0, 0, 0, 0] // 목화토금수
+function analyzeElements(pillars: Pillar[], dayMasterElement: number, monthBranch: number) {
+  const counts = [0, 0, 0, 0, 0]
 
   for (const p of pillars) {
-    counts[STEM_ELEMENT[p.stem]]++
-    counts[BRANCH_ELEMENT[p.branch]]++
-    // 지장간 본기 추가 (가중치 0.5)
-    const main = HIDDEN_STEMS[p.branch]
-    if (main.length > 0) {
-      counts[STEM_ELEMENT[main[main.length - 1]]] += 0.5
+    // 천간: 1.0점
+    counts[STEM_ELEMENT[p.stem]] += 1.0
+    // 지지: 1.2점 (지지가 실질적 힘이 더 강함)
+    counts[BRANCH_ELEMENT[p.branch]] += 1.2
+    // 지장간: 가중치 적용
+    const hidden = HIDDEN_STEMS[p.branch]
+    const weights = HIDDEN_WEIGHTS[p.branch]
+    for (let i = 0; i < hidden.length; i++) {
+      counts[STEM_ELEMENT[hidden[i]]] += weights[i]
     }
   }
 
-  const missing = counts.map((c, i) => c === 0 ? i : -1).filter(i => i >= 0)
+  // 월령 가중치 적용
+  const seasonWeight = getMonthSeasonWeight(monthBranch, dayMasterElement)
+
+  const missing = counts.map((c, i) => c < 0.5 ? i : -1).filter(i => i >= 0)
   const strongIdx = counts.indexOf(Math.max(...counts))
 
-  // 신강/신약 판단: 일간과 같은 오행 + 인성(나를 생하는) 오행의 합
-  const produceMe = (dayMasterElement + 4) % 5 // 나를 생하는 오행
-  const myStrength = counts[dayMasterElement] + counts[produceMe]
+  // 신강/신약 판단 (월령 반영)
+  const produceMe = (dayMasterElement + 4) % 5
+  const myStrength = (counts[dayMasterElement] + counts[produceMe]) * seasonWeight
   const totalStrength = counts.reduce((a, b) => a + b, 0)
-  const isDayMasterStrong = myStrength > totalStrength / 2
+  const isDayMasterStrong = myStrength > totalStrength * 0.45
+  const dayMasterScore = Math.round(Math.min(100, Math.max(0, (myStrength / totalStrength) * 100)))
+
+  // 오행 균형도 계산
+  const avg = totalStrength / 5
+  const variance = counts.reduce((sum, c) => sum + Math.pow(c - avg, 2), 0) / 5
+  const elementBalance = Math.round(Math.max(0, 100 - variance * 8))
 
   // 용신 판단
   let usefulGod: number
   if (isDayMasterStrong) {
-    // 신강 → 설기(식상), 극기(재성/관성) 필요
-    const drain = (dayMasterElement + 1) % 5  // 식상 (내가 생하는)
-    const control = (dayMasterElement + 2) % 5 // 재성 (내가 극하는)
+    const drain = (dayMasterElement + 1) % 5
+    const control = (dayMasterElement + 2) % 5
     usefulGod = counts[drain] <= counts[control] ? drain : control
   } else {
-    // 신약 → 생기(인성), 비겁 필요
-    const support = (dayMasterElement + 4) % 5 // 인성 (나를 생하는)
+    const support = (dayMasterElement + 4) % 5
     usefulGod = counts[support] <= counts[dayMasterElement] ? support : dayMasterElement
   }
 
-  return { counts, missing, strongElement: strongIdx, isDayMasterStrong, usefulGod }
+  return { counts, missing, strongElement: strongIdx, isDayMasterStrong, usefulGod, dayMasterScore, elementBalance }
 }
 
 // ═══════════════════════════════════════════════
@@ -249,18 +279,16 @@ export function calculateSaju(
   const pillars = [yearPillar, monthPillar, dayPillar]
   if (hourPillar) pillars.push(hourPillar)
 
-  const analysis = analyzeElements(pillars, dayMasterElement)
+  const analysis = analyzeElements(pillars, dayMasterElement, monthPillar.branch)
 
-  // 각 기둥 천간의 십신 계산
   const tenGods: string[] = []
   tenGods.push(getTenGod(dayMasterElement, dayMasterYinYang, yearPillar.stem))
   tenGods.push(getTenGod(dayMasterElement, dayMasterYinYang, monthPillar.stem))
-  tenGods.push('일주') // 일간 자신
+  tenGods.push('일주')
   if (hourPillar) {
     tenGods.push(getTenGod(dayMasterElement, dayMasterYinYang, hourPillar.stem))
   }
 
-  // 띠 계산
   const animalYear = ((year - 4) % 12 + 12) % 12
   const animal = BRANCHES_ANIMAL[animalYear]
 
@@ -276,6 +304,7 @@ export function calculateSaju(
     missingElements: analysis.missing,
     strongElement: analysis.strongElement,
     isDayMasterStrong: analysis.isDayMasterStrong,
+    dayMasterScore: analysis.dayMasterScore,
     tenGods,
     usefulGod: analysis.usefulGod,
     gender,
@@ -284,6 +313,7 @@ export function calculateSaju(
     birthDay: day,
     birthHour: hour,
     animal,
+    elementBalance: analysis.elementBalance,
   }
 }
 
