@@ -97,16 +97,25 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         } catch { /* fallback to download */ }
       }
 
-      // Blob URL로 다운로드 (data URL보다 안정적)
+      // Blob URL로 다운로드
       const blobUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.download = `사주풀이_${STEMS[result.dayMaster]}${ELEMENTS[STEM_ELEMENT[result.dayMaster]]}_결과.png`
-      link.href = blobUrl
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      // 메모리 해제
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+      const fileName = `사주풀이_${STEMS[result.dayMaster]}${ELEMENTS[STEM_ELEMENT[result.dayMaster]]}_결과.png`
+      try {
+        const link = document.createElement('a')
+        link.download = fileName
+        link.href = blobUrl
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        // 짧은 딜레이 후 제거 (브라우저 호환)
+        setTimeout(() => {
+          document.body.removeChild(link)
+          URL.revokeObjectURL(blobUrl)
+        }, 3000)
+      } catch {
+        // fallback: 새 탭에서 이미지 열기
+        window.open(dataUrl, '_blank')
+      }
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2000)
     } catch (e) {
@@ -195,9 +204,9 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         </button>
         <button
           onClick={handleKakao}
-          className="py-3 bg-yellow-300 hover:bg-yellow-400 active:bg-yellow-500 active:scale-95 text-yellow-900 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
+          className="py-3 bg-[#FEE500] hover:bg-[#F5DC00] active:bg-[#EDCF00] active:scale-95 text-[#3C1E1E] rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
         >
-          <span className="text-base sm:text-lg">💬</span>
+          <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
           <span>카카오톡</span>
         </button>
       </div>

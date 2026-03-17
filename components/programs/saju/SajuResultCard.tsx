@@ -94,7 +94,7 @@ function ElementBar({ counts, total }: { counts: number[]; total: number }) {
 /* ═══════════════════════════════════════════════ */
 const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
-  const fortune = getYearFortune(result.dayMasterElement, new Date().getFullYear(), result.isDayMasterStrong)
+  const fortune = getYearFortune(result.dayMasterElement, new Date().getFullYear(), result.isDayMasterStrong, result.dayMaster)
   const viralSummary = getViralSummary(result.dayMaster, result.isDayMasterStrong)
   const currentMonth = new Date().getMonth() + 1
   const monthDetail = getMonthlyDetail(currentMonth, result.dayMasterElement)
@@ -206,13 +206,19 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           </div>
         </div>
 
-        {/* ═══ 3. 올해 운세 3대장 ═══ */}
+        {/* ═══ 3. 올해 운세 ═══ */}
         <div>
           <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
             <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
             {year}년 운세
           </h3>
           <div className="space-y-3">
+            {/* 총운 */}
+            <div className="bg-orange-50 rounded-xl p-4 sm:p-5 border border-orange-200">
+              <h4 className="text-sm sm:text-base font-black text-orange-800 mb-2">🔮 총운</h4>
+              <p className="text-[13px] sm:text-sm text-gray-800 leading-[1.85]">{fortune.overview}</p>
+            </div>
+
             {/* 재물운 */}
             <div className="bg-amber-50 rounded-xl p-4 sm:p-5 border border-amber-200">
               <h4 className="text-sm sm:text-base font-black text-amber-800 mb-2">💰 재물운</h4>
@@ -231,6 +237,12 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <div className="bg-blue-50 rounded-xl p-4 sm:p-5 border border-blue-200">
               <h4 className="text-sm sm:text-base font-black text-blue-800 mb-2">💼 직업운</h4>
               <p className="text-[13px] sm:text-sm text-gray-800 leading-[1.85]">{fortune.career}</p>
+            </div>
+
+            {/* 건강운 */}
+            <div className="bg-green-50 rounded-xl p-4 sm:p-5 border border-green-200">
+              <h4 className="text-sm sm:text-base font-black text-green-800 mb-2">🏥 건강운</h4>
+              <p className="text-[13px] sm:text-sm text-gray-800 leading-[1.85]">{fortune.health}</p>
             </div>
           </div>
         </div>
