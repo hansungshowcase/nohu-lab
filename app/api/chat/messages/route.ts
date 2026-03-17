@@ -45,45 +45,45 @@ export async function GET(request: NextRequest) {
 // POST: 메시지 전송
 export async function POST(request: NextRequest) {
   try {
-  const user = await getCurrentUser()
-  if (!user || user.tier === 0) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
+    const user = await getCurrentUser()
+    if (!user || user.tier === 0) return NextResponse.json({ error: '인증 필요' }, { status: 401 })
 
-  const body = await request.json()
-  const { message, roomId: targetRoomId } = body
+    const body = await request.json()
+    const { message, roomId: targetRoomId } = body
 
-  if (!message || typeof message !== 'string' || message.trim().length === 0) {
-    return NextResponse.json({ error: '메시지를 입력하세요' }, { status: 400 })
-  }
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return NextResponse.json({ error: '메시지를 입력하세요' }, { status: 400 })
+    }
 
-  if (message.trim().length > 1000) {
-    return NextResponse.json({ error: '메시지는 1000자 이내로 입력하세요' }, { status: 400 })
-  }
+    if (message.trim().length > 1000) {
+      return NextResponse.json({ error: '메시지는 1000자 이내로 입력하세요' }, { status: 400 })
+    }
 
-  const supabase = getServiceSupabase()
-  const isAdmin = user.tier === 4
-  const roomId = isAdmin ? targetRoomId : user.memberId
+    const supabase = getServiceSupabase()
+    const isAdmin = user.tier === 4
+    const roomId = isAdmin ? targetRoomId : user.memberId
 
-  if (!roomId) {
-    return NextResponse.json({ error: 'roomId 필요' }, { status: 400 })
-  }
+    if (!roomId) {
+      return NextResponse.json({ error: 'roomId 필요' }, { status: 400 })
+    }
 
-  const { data, error } = await supabase
-    .from('chat_messages')
-    .insert({
-      room_id: roomId,
-      sender_id: user.memberId,
-      sender_nickname: user.nickname,
-      sender_role: isAdmin ? 'admin' : 'member',
-      message: message.trim(),
-    })
-    .select()
-    .single()
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .insert({
+        room_id: roomId,
+        sender_id: user.memberId,
+        sender_nickname: user.nickname,
+        sender_role: isAdmin ? 'admin' : 'member',
+        message: message.trim(),
+      })
+      .select()
+      .single()
 
-  if (error) {
-    return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
-  }
+    if (error) {
+      return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
+    }
 
-  return NextResponse.json(data)
+    return NextResponse.json(data)
   } catch {
     return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 })
   }
