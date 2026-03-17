@@ -9,7 +9,9 @@ import {
 import {
   DAY_MASTER_PROFILES, STRENGTH_INTERPRETATIONS,
   getYearFortune, getViralSummary, getMonthlyDetail,
-  getUsefulGodAdvice,
+  getUsefulGodAdvice, TEN_GOD_INTERPRETATIONS,
+  SINSAL_INTERPRETATIONS, TWELVE_STAGE_INTERPRETATIONS,
+  getDaeunInterpretation,
 } from './sajuData'
 
 interface Props {
@@ -102,6 +104,26 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const totalElements = result.elementCounts.reduce((a, b) => a + b, 0) || 1
   const year = new Date().getFullYear()
   const usefulGodAdvice = getUsefulGodAdvice(result.usefulGod)
+
+  // 십신 분석: 가장 많은 십신 (일주 제외)
+  const dominantTenGod = result.yearAnalysis.dominantTenGod
+  const dominantTGInfo = TEN_GOD_INTERPRETATIONS[dominantTenGod]
+
+  // 신살 모으기
+  const activeSinsal: { key: string; info: typeof SINSAL_INTERPRETATIONS[string] }[] = []
+  if (result.sinsal.hasCheoneul) activeSinsal.push({ key: 'cheoneul', info: SINSAL_INTERPRETATIONS.cheoneul })
+  if (result.sinsal.hasMunchang) activeSinsal.push({ key: 'munchang', info: SINSAL_INTERPRETATIONS.munchang })
+  if (result.sinsal.hasYeokma) activeSinsal.push({ key: 'yeokma', info: SINSAL_INTERPRETATIONS.yeokma })
+  if (result.sinsal.hasDohwa) activeSinsal.push({ key: 'dohwa', info: SINSAL_INTERPRETATIONS.dohwa })
+  if (result.sinsal.hasHwagae) activeSinsal.push({ key: 'hwagae', info: SINSAL_INTERPRETATIONS.hwagae })
+  if (result.sinsal.hasYangin) activeSinsal.push({ key: 'yangin', info: SINSAL_INTERPRETATIONS.yangin })
+  if (result.sinsal.hasGeobsal) activeSinsal.push({ key: 'geobsal', info: SINSAL_INTERPRETATIONS.geobsal })
+
+  // 십이운성
+  const stageInfo = TWELVE_STAGE_INTERPRETATIONS[result.sinsal.dayEnergyName]
+
+  // 현재 대운
+  const currentDaeun = result.daeun.find(d => d.isCurrent)
 
   const pillars: { label: string; pillar: Pillar; tenGod?: string; isMe?: boolean }[] = [
     { label: '시주(時)', pillar: result.hourPillar || { stem: 0, branch: 0 }, tenGod: result.tenGods[3] || '' },
@@ -206,6 +228,119 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           </div>
         </div>
 
+        {/* ═══ 격국·십신·운성 ═══ */}
+        <div>
+          <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
+            사주 심층 분석
+          </h3>
+          <div className="space-y-2.5">
+            {/* 격국 */}
+            <div className="bg-purple-50 rounded-xl p-3.5 sm:p-4 border border-purple-200">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🏛️</span>
+                <h4 className="text-[13px] sm:text-sm font-black text-purple-800">{result.gyeokguk.name}</h4>
+                <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                  result.gyeokguk.quality === 'good' ? 'bg-green-100 text-green-700' :
+                  result.gyeokguk.quality === 'challenging' ? 'bg-red-100 text-red-700' :
+                  'bg-gray-100 text-gray-600'
+                }`}>{result.gyeokguk.quality === 'good' ? '길격' : result.gyeokguk.quality === 'challenging' ? '흉격' : '중격'}</span>
+              </div>
+              <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed">{result.gyeokguk.description}</p>
+            </div>
+
+            {/* 십이운성 */}
+            {stageInfo && (
+              <div className="bg-indigo-50 rounded-xl p-3.5 sm:p-4 border border-indigo-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">🔄</span>
+                  <h4 className="text-[13px] sm:text-sm font-black text-indigo-800">
+                    십이운성: {result.sinsal.dayEnergyName}({stageInfo.keyword})
+                  </h4>
+                </div>
+                <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed">{stageInfo.desc}</p>
+              </div>
+            )}
+
+            {/* 주도 십신 */}
+            {dominantTGInfo && (
+              <div className="bg-cyan-50 rounded-xl p-3.5 sm:p-4 border border-cyan-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">{dominantTGInfo.emoji}</span>
+                  <h4 className="text-[13px] sm:text-sm font-black text-cyan-800">
+                    주도 십신: {dominantTGInfo.name}
+                  </h4>
+                  <span className="text-[9px] sm:text-[10px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full font-medium">{dominantTGInfo.keyword}</span>
+                </div>
+                <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed mb-2">{dominantTGInfo.personality}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="bg-white/70 rounded-lg p-2.5 border border-cyan-100">
+                    <p className="text-[10px] sm:text-[11px] font-bold text-cyan-600 mb-1">💰 재물</p>
+                    <p className="text-[11px] sm:text-[12px] text-gray-700 leading-relaxed">{dominantTGInfo.fortune}</p>
+                  </div>
+                  <div className="bg-white/70 rounded-lg p-2.5 border border-cyan-100">
+                    <p className="text-[10px] sm:text-[11px] font-bold text-cyan-600 mb-1">❤️ 연애</p>
+                    <p className="text-[11px] sm:text-[12px] text-gray-700 leading-relaxed">{dominantTGInfo.love}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ═══ 신살 (있는 경우에만) ═══ */}
+        {activeSinsal.length > 0 && (
+          <div>
+            <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
+              타고난 신살(神殺)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {activeSinsal.map(({ key, info }) => (
+                <div key={key} className="bg-gray-50 rounded-xl p-3 sm:p-3.5 border border-gray-200">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="text-base">{info.emoji}</span>
+                    <span className="text-[12px] sm:text-[13px] font-black text-gray-800">{info.name}</span>
+                  </div>
+                  <p className="text-[11px] sm:text-[12px] text-gray-600 leading-relaxed mb-1.5">{info.detail}</p>
+                  <p className="text-[10px] sm:text-[11px] text-orange-600 font-medium bg-orange-50 rounded-lg px-2 py-1.5">💡 {info.advice}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ 대운 흐름 ═══ */}
+        <div>
+          <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
+            대운(大運) 흐름
+          </h3>
+          <div className="space-y-2">
+            <div className="flex gap-1 overflow-x-auto pb-2">
+              {result.daeun.map((d, i) => (
+                <div key={i} className={`flex-shrink-0 text-center rounded-xl p-2 sm:p-2.5 min-w-[60px] sm:min-w-[70px] border-2 ${
+                  d.isCurrent ? 'bg-orange-50 border-orange-400 shadow-sm' : 'bg-gray-50 border-gray-200'
+                }`}>
+                  {d.isCurrent && <p className="text-[7px] sm:text-[8px] text-orange-500 font-bold mb-0.5">▶ 현재</p>}
+                  <p className="text-[9px] sm:text-[10px] text-gray-500">{d.startAge}~{d.startAge + 9}세</p>
+                  <p className="text-[12px] sm:text-sm font-bold text-gray-800">{d.tenGod}</p>
+                </div>
+              ))}
+            </div>
+            {currentDaeun && (
+              <div className="bg-orange-50 rounded-xl p-3.5 sm:p-4 border border-orange-200">
+                <h4 className="text-[12px] sm:text-[13px] font-black text-orange-800 mb-1.5">
+                  현재 대운: {currentDaeun.tenGod}운 ({currentDaeun.startAge}~{currentDaeun.startAge + 9}세)
+                </h4>
+                <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed">
+                  {getDaeunInterpretation(currentDaeun.tenGod, currentDaeun.element)}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* ═══ 3. 올해 운세 ═══ */}
         <div>
           <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -244,6 +379,36 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               <h4 className="text-sm sm:text-base font-black text-green-800 mb-2">🏥 건강운</h4>
               <p className="text-[13px] sm:text-sm text-gray-800 leading-[1.85]">{fortune.health}</p>
             </div>
+
+            {/* 행동지침 */}
+            {fortune.action && fortune.action.length > 0 && (
+              <div className="bg-emerald-50 rounded-xl p-4 sm:p-5 border border-emerald-200">
+                <h4 className="text-sm sm:text-base font-black text-emerald-800 mb-3">✅ 올해 이렇게 하세요</h4>
+                <ul className="space-y-2">
+                  {fortune.action.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[13px] sm:text-sm text-gray-800 leading-relaxed">
+                      <span className="text-emerald-500 font-bold mt-0.5 flex-shrink-0">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* 주의사항 */}
+            {fortune.caution && fortune.caution.length > 0 && (
+              <div className="bg-red-50 rounded-xl p-4 sm:p-5 border border-red-200">
+                <h4 className="text-sm sm:text-base font-black text-red-800 mb-3">⚠️ 이것만은 조심하세요</h4>
+                <ul className="space-y-2">
+                  {fortune.caution.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[13px] sm:text-sm text-gray-800 leading-relaxed">
+                      <span className="text-red-500 font-bold mt-0.5 flex-shrink-0">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 
