@@ -290,13 +290,17 @@ function getYearPillar(year: number, month: number, day: number): Pillar {
 // 월주 계산 (절기 기준)
 // ═══════════════════════════════════════════════
 function getMonthIndex(month: number, day: number): number {
-  for (let i = 11; i >= 0; i--) {
-    const b = MONTH_BOUNDS[i]
+  // 절기 순서대로 순회하며 마지막으로 지난 절기를 찾음
+  // 축월(1/5) → 인월(2/4) → ... → 자월(12/7) 순
+  const chronOrder = [11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  let result = 10 // 기본값: 자월 (1/1~1/4는 대설 이후 소한 이전)
+  for (const idx of chronOrder) {
+    const b = MONTH_BOUNDS[idx]
     if (month > b.solarMonth || (month === b.solarMonth && day >= b.solarDay)) {
-      return i
+      result = idx
     }
   }
-  return 11
+  return result
 }
 
 function getMonthPillar(yearStem: number, month: number, day: number): Pillar {
@@ -315,8 +319,8 @@ function getDayPillar(year: number, month: number, day: number): Pillar {
   const ref = new Date(2024, 0, 1)
   const target = new Date(year, month - 1, day)
   const diffDays = Math.round((target.getTime() - ref.getTime()) / 86400000)
-  const stem = ((1 + diffDays) % 10 + 10) % 10
-  const branch = ((1 + diffDays) % 12 + 12) % 12
+  const stem = ((diffDays % 10) + 10) % 10
+  const branch = ((diffDays % 12) + 12) % 12
   return { stem, branch }
 }
 
