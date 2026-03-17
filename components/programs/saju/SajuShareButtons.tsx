@@ -92,16 +92,29 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           setSaveSuccess(true)
           setTimeout(() => setSaveSuccess(false), 2000)
           return
-        } catch { /* fallback to download */ }
+        } catch (err) {
+          // 사용자가 공유 취소한 경우 새 탭 열지 않음
+          if (err instanceof Error && err.name === 'AbortError') {
+            setSaving(false)
+            return
+          }
+          // 그 외 오류만 새 탭 fallback으로 진행
+        }
       }
 
       // 새 탭에서 이미지 표시 (우클릭/길게 눌러 저장)
+      const imgPage = `<!DOCTYPE html><html><head><title>사주풀이 결과</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:sans-serif;flex-direction:column;gap:16px}img{max-width:95vw;max-height:85vh;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.12)}p{color:#888;font-size:14px}</style></head><body><img src="${dataUrl}" alt="사주풀이 결과"/><p>이미지를 길게 누르거나 우클릭하여 저장하세요</p></body></html>`
       const newTab = window.open('', '_blank')
       if (newTab) {
-        newTab.document.write(`<!DOCTYPE html><html><head><title>사주풀이 결과</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:sans-serif;flex-direction:column;gap:16px}img{max-width:95vw;max-height:85vh;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.12)}p{color:#888;font-size:14px}</style></head><body><img src="${dataUrl}" alt="사주풀이 결과"/><p>이미지를 길게 누르거나 우클릭하여 저장하세요</p></body></html>`)
+        newTab.document.write(imgPage)
         newTab.document.close()
       } else {
-        window.location.href = dataUrl
+        // 팝업 차단 시 현재 페이지에 이미지 표시
+        alert('팝업이 차단되었습니다. 이미지를 현재 페이지에 표시합니다.')
+        const img = document.createElement('img')
+        img.src = dataUrl
+        img.style.cssText = 'max-width:100%;border-radius:12px;margin-top:16px'
+        cardRef.current?.parentElement?.appendChild(img)
       }
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2000)
@@ -120,10 +133,17 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           windowWidth: 720,
         } as Parameters<typeof html2canvas>[1])
         const fallbackDataUrl = canvas.toDataURL('image/png', 1.0)
-        const newTab = window.open('', '_blank')
-        if (newTab) {
-          newTab.document.write(`<!DOCTYPE html><html><head><title>사주풀이 결과</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:sans-serif;flex-direction:column;gap:16px}img{max-width:95vw;max-height:85vh;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.12)}p{color:#888;font-size:14px}</style></head><body><img src="${fallbackDataUrl}" alt="사주풀이 결과"/><p>이미지를 길게 누르거나 우클릭하여 저장하세요</p></body></html>`)
-          newTab.document.close()
+        const fbPage = `<!DOCTYPE html><html><head><title>사주풀이 결과</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:sans-serif;flex-direction:column;gap:16px}img{max-width:95vw;max-height:85vh;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.12)}p{color:#888;font-size:14px}</style></head><body><img src="${fallbackDataUrl}" alt="사주풀이 결과"/><p>이미지를 길게 누르거나 우클릭하여 저장하세요</p></body></html>`
+        const fbTab = window.open('', '_blank')
+        if (fbTab) {
+          fbTab.document.write(fbPage)
+          fbTab.document.close()
+        } else {
+          alert('팝업이 차단되었습니다. 이미지를 현재 페이지에 표시합니다.')
+          const img = document.createElement('img')
+          img.src = fallbackDataUrl
+          img.style.cssText = 'max-width:100%;border-radius:12px;margin-top:16px'
+          cardRef.current?.parentElement?.appendChild(img)
         }
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 2000)
