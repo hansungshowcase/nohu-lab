@@ -19,6 +19,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '잘못된 요청' }, { status: 400 })
     }
 
+    if (status === 'found' && !gradeName) {
+      return NextResponse.json({ error: 'found 상태에는 gradeName이 필요합니다.' }, { status: 400 })
+    }
+
     const supabase = getServiceSupabase()
 
     const { error: updateError } = await supabase

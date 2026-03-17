@@ -49,19 +49,23 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await getCurrentUser()
-  if (!user || user.tier !== 4) {
-    return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
+  try {
+    const user = await getCurrentUser()
+    if (!user || user.tier !== 4) {
+      return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
+    }
+
+    const { id } = await params
+    const supabase = getServiceSupabase()
+
+    const { error } = await supabase.from('members').delete().eq('id', id)
+
+    if (error) {
+      return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 })
   }
-
-  const { id } = await params
-  const supabase = getServiceSupabase()
-
-  const { error } = await supabase.from('members').delete().eq('id', id)
-
-  if (error) {
-    return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
-  }
-
-  return NextResponse.json({ success: true })
 }
