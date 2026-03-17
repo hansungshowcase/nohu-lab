@@ -43,10 +43,16 @@ export default function DashboardPage() {
     )
   }
 
-  const filtered =
+  const filtered = (
     category === '전체'
       ? programRegistry.filter((p) => p.isActive)
       : programRegistry.filter((p) => p.isActive && p.category === category)
+  ).sort((a, b) => {
+    // 비회원 이용 가능 프로그램(minTier 0)을 항상 상단에
+    if (a.minTier === 0 && b.minTier !== 0) return -1
+    if (a.minTier !== 0 && b.minTier === 0) return 1
+    return 0
+  })
 
   const tierInfo = TIER_MAP[user.tier]
 

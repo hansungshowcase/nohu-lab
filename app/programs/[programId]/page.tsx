@@ -6,7 +6,7 @@ import { getProgramById } from '@/app/programs/registry'
 import { TIER_MAP } from '@/lib/types'
 import TierBadge from '@/components/TierBadge'
 
-const programComponents: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
+const programComponents: Record<string, React.LazyExoticComponent<React.ComponentType<{ userTier?: number }>>> = {
   'text-counter': lazy(() => import('@/components/programs/TextCounter')),
   'image-resizer': lazy(() => import('@/components/programs/ImageResizer')),
   'nickname-generator': lazy(() => import('@/components/programs/NicknameGenerator')),
@@ -116,7 +116,7 @@ export default function ProgramPage() {
             </div>
           }
         >
-          <ProgramComponent />
+          <ProgramComponent userTier={user.tier} />
         </Suspense>
       ) : (
         <div className="text-center py-12 text-gray-400">
