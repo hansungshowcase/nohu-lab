@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth'
 
 // POST: 닉네임 일괄 등록
 export async function POST(request: NextRequest) {
+  try {
   const user = await getCurrentUser()
   if (!user || user.tier !== 4) {
     return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 })
@@ -60,4 +61,7 @@ export async function POST(request: NextRequest) {
     added: newMembers.length,
     skipped: nicknames.length - newMembers.length,
   })
+  } catch {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 })
+  }
 }
