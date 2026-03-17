@@ -48,6 +48,22 @@ export const TIER_MAP: Record<number, { name: string; color: string; description
   4: { name: '헤리티지회원', color: 'purple', description: '전체 프로그램 이용 가능', cafeName: '헤리티지회원' },
 }
 
+// 카페 등급 → 시스템 tier 매핑 (단일 소스)
+export function mapGradeToTier(gradeName: string, memberLevel?: number): 1 | 2 | 3 | 4 {
+  const name = (gradeName || '').trim()
+  if (name.includes('매니저') || name.includes('스탭') || name.includes('운영') || name === '헤리티지회원') return 4
+  if (name === '시그니처회원' || name === '프리미엄회원') return 3
+  if (name === '우수회원') return 2
+  if (name) return 1
+  // 문자열 없으면 숫자 기반 매핑
+  if (memberLevel !== undefined) {
+    if (memberLevel >= 6) return 4
+    if (memberLevel >= 4) return 3
+    if (memberLevel >= 3) return 2
+  }
+  return 1
+}
+
 export const TIER_COLORS: Record<number, string> = {
   0: 'bg-gray-50 text-gray-500 ring-1 ring-gray-200',
   1: 'bg-orange-50 text-orange-700 ring-1 ring-orange-200',

@@ -1,32 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
 import { createToken, COOKIE_NAME } from '@/lib/auth'
+import { mapGradeToTier } from '@/lib/types'
 
 const CAFE_ID = '20898041'
-
-// 노후연구소 카페 등급 → 시스템 Tier 매핑
-// 일반회원 → Tier 1
-// 코어회원 → Tier 1
-// 우수회원 → Tier 2
-// 프리미엄회원 → Tier 3
-// 시그니처회원 → Tier 3
-// 헤리티지회원 → Tier 4
-// 스탭/매니저 → Tier 4
-// 카페 등급 → DB tier (1~4)
-// 일반/코어 → 1, 우수 → 2, 프리미엄/시그니처 → 3, 헤리티지/스탭 → 4
-function mapCafeLevelToTier(memberLevel: number, memberLevelName?: string): 1 | 2 | 3 | 4 {
-  if (memberLevelName) {
-    const name = memberLevelName.trim()
-    if (name.includes('매니저') || name.includes('스탭') || name.includes('운영') || name === '헤리티지회원') return 4
-    if (name === '시그니처회원' || name === '프리미엄회원') return 3
-    if (name === '우수회원') return 2
-    return 1  // 일반회원, 코어회원
-  }
-  if (memberLevel >= 6) return 4
-  if (memberLevel >= 4) return 3
-  if (memberLevel >= 3) return 2
-  return 1
-}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -110,7 +87,7 @@ export async function GET(request: NextRequest) {
         if (cafeData.message?.status === '200' && cafeData.message?.result) {
           const memberLevel = cafeData.message.result.memberLevel || 1
           const memberLevelName = cafeData.message.result.memberLevelName || ''
-          cafeTier = mapCafeLevelToTier(memberLevel, memberLevelName)
+          cafeTier = mapGradeToTier(memberLevelName, memberLevel)
           cafeJoined = true
           break
         }

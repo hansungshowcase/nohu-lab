@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
 import { createToken, COOKIE_NAME } from '@/lib/auth'
-
-function mapGradeToTier(gradeName: string): number {
-  const name = (gradeName || '').trim()
-  if (name.includes('매니저') || name.includes('스탭') || name.includes('운영') || name === '헤리티지회원') return 4
-  if (name === '시그니처회원' || name === '프리미엄회원') return 3
-  if (name === '우수회원') return 2
-  return 1
-}
+import { mapGradeToTier } from '@/lib/types'
 
 // Frontend polls this to check verification result
 export async function GET(request: NextRequest) {

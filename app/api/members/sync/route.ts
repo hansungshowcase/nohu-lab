@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
-
-// 카페 등급 → DB tier (1~4)
-function mapCafeLevelToTier(levelName: string): 1 | 2 | 3 | 4 {
-  const name = levelName.trim()
-  if (name.includes('매니저') || name.includes('스탭') || name.includes('운영') || name === '헤리티지회원') return 4
-  if (name === '시그니처회원' || name === '프리미엄회원') return 3
-  if (name === '우수회원') return 2
-  return 1
-}
+import { mapGradeToTier } from '@/lib/types'
 
 // POST: 카페 회원 목록 동기화 (북마클릿/관리자에서 호출)
 export async function POST(request: NextRequest) {
@@ -37,7 +29,7 @@ export async function POST(request: NextRequest) {
       .map((m: { nickname: string; tier?: number; levelName?: string }) => ({
         nickname: m.nickname.trim(),
         phone: '',
-        tier: (Number(m.tier) >= 1 && Number(m.tier) <= 4) ? Math.round(Number(m.tier)) : mapCafeLevelToTier(m.levelName || '일반회원'),
+        tier: (Number(m.tier) >= 1 && Number(m.tier) <= 4) ? Math.round(Number(m.tier)) : mapGradeToTier(m.levelName || '일반회원'),
       }))
 
     for (let i = 0; i < batch.length; i += 500) {
