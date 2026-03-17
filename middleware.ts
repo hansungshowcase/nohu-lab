@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
 const COOKIE_NAME = 'cafe-auth-token'
-const jwtSecret = process.env.JWT_SECRET
-if (!jwtSecret) console.error('[middleware] JWT_SECRET 환경변수가 설정되지 않았습니다.')
-const JWT_SECRET = new TextEncoder().encode(jwtSecret || '')
+const jwtSecret = process.env.JWT_SECRET || 'MISSING_JWT_SECRET_DO_NOT_USE_IN_PRODUCTION'
+const JWT_SECRET = new TextEncoder().encode(jwtSecret)
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
