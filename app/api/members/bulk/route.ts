@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     .map((n: string) => (typeof n === 'string' ? n.trim() : ''))
     .filter((n: string) => n && !existingSet.has(n))
     .map((nickname: string) => ({
-      nickname: nickname.slice(0, 100),
+      nickname: nickname.slice(0, 50),
       phone: '',
       tier: Math.min(Math.max(Number(tier) || 1, 1), 4),
     }))

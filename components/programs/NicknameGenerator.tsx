@@ -26,11 +26,13 @@ export default function NicknameGenerator() {
   const [count, setCount] = useState(5)
 
   function generate() {
-    const results: string[] = []
-    for (let i = 0; i < count; i++) {
-      results.push(generateOne())
+    const results = new Set<string>()
+    let attempts = 0
+    while (results.size < count && attempts < count * 3) {
+      results.add(generateOne())
+      attempts++
     }
-    setNicknames(results)
+    setNicknames([...results])
   }
 
   function copyToClipboard(text: string) {

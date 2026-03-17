@@ -87,6 +87,10 @@ function SajuReadingInner() {
       setError('존재하지 않는 날짜입니다')
       return false
     }
+    if (testDate > new Date()) {
+      setError('미래 날짜는 입력할 수 없습니다')
+      return false
+    }
     setError('')
     return true
   }
