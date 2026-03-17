@@ -97,6 +97,16 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* 바로 이용하기 버튼 애니메이션 */
+@keyframes subtlePulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(234, 88, 12, 0.2); }
+  50% { box-shadow: 0 4px 16px rgba(234, 88, 12, 0.4); }
+}
+
+.animate-subtle-pulse {
+  animation: subtlePulse 2s ease-in-out infinite;
+}
+
 /* 사주풀이 애니메이션 */
 .animate-fadeIn {
   animation: fadeIn 0.6s ease-out both;
