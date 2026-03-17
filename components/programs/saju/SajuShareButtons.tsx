@@ -188,7 +188,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         <button
           onClick={handleSaveImage}
           disabled={saving}
-          className="py-2.5 sm:py-3 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 active:scale-95 text-indigo-700 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1 disabled:opacity-50"
+          className="py-2.5 sm:py-3 bg-orange-50 hover:bg-orange-100 active:bg-orange-200 active:scale-95 text-orange-700 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1 disabled:opacity-50"
         >
           <span className="text-base sm:text-lg">{saving ? '⏳' : saveSuccess ? '✅' : '📷'}</span>
           <span>{saving ? '저장 중...' : saveSuccess ? '완료!' : '이미지 저장'}</span>

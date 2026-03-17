@@ -80,17 +80,17 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
         </div>
         {/* 회전하는 링 */}
         <div className="absolute inset-0 -m-4">
-          <div className="w-24 h-24 mx-auto border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
+          <div className="w-24 h-24 mx-auto border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin" />
         </div>
         <div className="absolute inset-0 -m-8">
-          <div className="w-32 h-32 mx-auto border border-indigo-200 border-b-indigo-500 rounded-full animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }} />
+          <div className="w-32 h-32 mx-auto border border-amber-200 border-b-amber-500 rounded-full animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }} />
         </div>
       </div>
 
       <h2 className="text-xl font-black text-gray-900 mb-1">
         사주를 분석하고 있습니다
       </h2>
-      <p className="text-purple-500 text-sm mb-6 animate-pulse font-medium">
+      <p className="text-orange-500 text-sm mb-6 animate-pulse font-medium">
         {MYSTICAL_TEXTS[mysticalIdx]}
       </p>
 
@@ -98,7 +98,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
       <div className="w-full max-w-sm mb-2">
         <div className="bg-gray-200 rounded-full h-3 overflow-hidden">
           <div
-            className="h-full rounded-full transition-all duration-200 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 relative"
+            className="h-full rounded-full transition-all duration-200 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 relative"
             style={{ width: `${Math.min(progress, 100)}%` }}
           >
             <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -116,7 +116,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
               i < currentStep
                 ? 'text-green-600 bg-green-50'
                 : i === currentStep
-                ? 'text-gray-900 font-medium bg-purple-50 border border-purple-200'
+                ? 'text-gray-900 font-medium bg-orange-50 border border-orange-200'
                 : 'text-gray-300'
             }`}
           >
@@ -124,11 +124,11 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
             <div className="flex-1">
               <span>{step.text}</span>
               {i === currentStep && (
-                <span className="block text-[10px] text-purple-400 mt-0.5">{step.detail}</span>
+                <span className="block text-[10px] text-orange-400 mt-0.5">{step.detail}</span>
               )}
             </div>
             {i === currentStep && (
-              <span className="animate-spin h-4 w-4 border-2 border-purple-500 border-t-transparent rounded-full" />
+              <span className="animate-spin h-4 w-4 border-2 border-orange-500 border-t-transparent rounded-full" />
             )}
           </div>
         ))}
