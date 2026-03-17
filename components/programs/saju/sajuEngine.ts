@@ -138,11 +138,26 @@ export interface Pillar {
   branch: number
 }
 
+// ═══════════════════════════════════════════════
+// 신살 (Spirit Stars) 관련 인터페이스
+// ═══════════════════════════════════════════════
+export interface SinsalInfo {
+  hasYeokma: boolean    // 역마살
+  hasDohwa: boolean     // 도화살
+  hasHwagae: boolean    // 화개살
+  hasCheoneul: boolean  // 천을귀인
+  dayEnergyStage: number // 십이운성 index (0-11)
+  dayEnergyName: string  // 십이운성 이름
+}
+
+// ═══════════════════════════════════════════════
+// 기존 호환용 인터페이스 (사용하지 않지만 유지)
+// ═══════════════════════════════════════════════
 export interface MonthlyFortune {
-  month: number        // 1-12
-  rating: number       // 1-5 stars
-  keyword: string      // 한줄 키워드
-  advice: string       // 조언
+  month: number
+  rating: number
+  keyword: string
+  advice: string
   isBest: boolean
   isWorst: boolean
 }
@@ -153,9 +168,15 @@ export interface MajorLuck {
   stem: number
   branch: number
   element: number
-  rating: number       // 1-5
+  rating: number
   keyword: string
   isCurrent: boolean
+}
+
+export interface PillarInteraction {
+  type: 'clash' | 'combine' | 'penalty'
+  description: string
+  effect: string
 }
 
 export interface SajuResult {
@@ -170,7 +191,7 @@ export interface SajuResult {
   missingElements: number[]
   strongElement: number
   isDayMasterStrong: boolean
-  dayMasterScore: number     // 신강/신약 점수 (0~100)
+  dayMasterScore: number
   tenGods: string[]
   usefulGod: number
   gender: 'male' | 'female'
@@ -179,11 +200,8 @@ export interface SajuResult {
   birthDay: number
   birthHour: number | null
   animal: string
-  elementBalance: number     // 오행 균형도 (0~100)
-  monthlyFortunes: MonthlyFortune[]
-  majorLucks: MajorLuck[]
-  pillarInteractions: PillarInteraction[]
-  currentMonthFortune: MonthlyFortune | null
+  elementBalance: number
+  sinsal: SinsalInfo
 }
 
 // ═══════════════════════════════════════════════
@@ -272,90 +290,125 @@ function getTenGod(dayMasterElement: number, dayMasterYY: number, targetStem: nu
 }
 
 // ═══════════════════════════════════════════════
-// 사주 내 충/합/형 분석
+// 신살 (Spirit Stars) 계산
 // ═══════════════════════════════════════════════
-export interface PillarInteraction {
-  type: 'clash' | 'combine' | 'penalty'
-  description: string
-  effect: string
+
+// 역마살: 일지 삼합 기준
+function getYeokmaTarget(dayBranch: number): number {
+  // 인오술(2,6,10) → 신(8)
+  if (dayBranch === 2 || dayBranch === 6 || dayBranch === 10) return 8
+  // 사유축(5,9,1) → 해(11)
+  if (dayBranch === 5 || dayBranch === 9 || dayBranch === 1) return 11
+  // 신자진(8,0,4) → 인(2)
+  if (dayBranch === 8 || dayBranch === 0 || dayBranch === 4) return 2
+  // 해묘미(11,3,7) → 사(5)
+  return 5
 }
 
-function analyzePillarInteractions(pillars: Pillar[]): PillarInteraction[] {
-  const interactions: PillarInteraction[] = []
-  const branchList = pillars.map(p => p.branch)
-  const stemList = pillars.map(p => p.stem)
-  const pillarNames = ['년주', '월주', '일주', '시주']
+// 도화살
+function getDohwaTarget(dayBranch: number): number {
+  if (dayBranch === 2 || dayBranch === 6 || dayBranch === 10) return 3  // 묘
+  if (dayBranch === 5 || dayBranch === 9 || dayBranch === 1) return 6   // 오
+  if (dayBranch === 8 || dayBranch === 0 || dayBranch === 4) return 9   // 유
+  return 0 // 자
+}
 
-  // 지지충 체크
-  for (let i = 0; i < branchList.length; i++) {
-    for (let j = i + 1; j < branchList.length; j++) {
-      for (const [a, b] of BRANCH_CLASHES) {
-        if ((branchList[i] === a && branchList[j] === b) || (branchList[i] === b && branchList[j] === a)) {
-          const clashEffects: Record<string, string> = {
-            '년주-월주': '부모와의 갈등이나 초년기 어려움이 있을 수 있습니다',
-            '년주-일주': '가문이나 배경과 다른 삶을 살 수 있습니다',
-            '년주-시주': '조상 덕이 약하지만 자수성가 운이 있습니다',
-            '월주-일주': '직장/사회생활에서 변동이 잦을 수 있습니다',
-            '월주-시주': '중년기 이후 큰 변화가 올 수 있습니다',
-            '일주-시주': '배우자나 자녀 관계에서 신경 쓸 일이 있습니다',
-          }
-          const key = `${pillarNames[i]}-${pillarNames[j]}`
-          interactions.push({
-            type: 'clash',
-            description: `${pillarNames[i]}↔${pillarNames[j]} 충(衝)`,
-            effect: clashEffects[key] || '변화와 도전의 에너지가 있습니다',
-          })
-        }
-      }
-    }
+// 화개살
+function getHwagaeTarget(dayBranch: number): number {
+  if (dayBranch === 2 || dayBranch === 6 || dayBranch === 10) return 10 // 술
+  if (dayBranch === 5 || dayBranch === 9 || dayBranch === 1) return 1   // 축
+  if (dayBranch === 8 || dayBranch === 0 || dayBranch === 4) return 4   // 진
+  return 7 // 미
+}
+
+// 천을귀인: 일간 기준
+function getCheoneulTargets(dayStem: number): number[] {
+  // 갑(0)→축미, 을(1)→자신, 병(2)→해유, 정(3)→해유,
+  // 무(4)→축미, 기(5)→자신, 경(6)→인오, 신(7)→인오,
+  // 임(8)→사묘, 계(9)→사묘
+  const map: Record<number, number[]> = {
+    0: [1, 7],   // 갑 → 축, 미
+    1: [0, 8],   // 을 → 자, 신
+    2: [11, 9],  // 병 → 해, 유
+    3: [11, 9],  // 정 → 해, 유
+    4: [1, 7],   // 무 → 축, 미
+    5: [0, 8],   // 기 → 자, 신
+    6: [2, 6],   // 경 → 인, 오
+    7: [2, 6],   // 신 → 인, 오
+    8: [5, 3],   // 임 → 사, 묘
+    9: [5, 3],   // 계 → 사, 묘
+  }
+  return map[dayStem] || []
+}
+
+// ═══════════════════════════════════════════════
+// 십이운성 계산
+// ═══════════════════════════════════════════════
+const TWELVE_STAGES = ['장생','목욕','관대','건록','제왕','쇠','병','사','묘','절','태','양'] as const
+
+// 각 천간의 장생 시작 지지
+const STAGE_START: Record<number, number> = {
+  0: 11,  // 갑 → 해(11)
+  1: 6,   // 을 → 오(6)
+  2: 2,   // 병 → 인(2)
+  3: 9,   // 정 → 유(9)
+  4: 2,   // 무 → 인(2)
+  5: 9,   // 기 → 유(9)
+  6: 5,   // 경 → 사(5)
+  7: 0,   // 신 → 자(0)
+  8: 8,   // 임 → 신(8)
+  9: 3,   // 계 → 묘(3)
+}
+
+function getTwelveStage(dayStem: number, branch: number): { index: number; name: string } {
+  const start = STAGE_START[dayStem]
+  const isYang = STEM_YINYANG[dayStem] === 1
+
+  let offset: number
+  if (isYang) {
+    // 양간: 순행
+    offset = ((branch - start) % 12 + 12) % 12
+  } else {
+    // 음간: 역행
+    offset = ((start - branch) % 12 + 12) % 12
   }
 
-  // 지지합 체크
-  for (let i = 0; i < branchList.length; i++) {
-    for (let j = i + 1; j < branchList.length; j++) {
-      for (const [a, b] of BRANCH_COMBINATIONS) {
-        if ((branchList[i] === a && branchList[j] === b) || (branchList[i] === b && branchList[j] === a)) {
-          interactions.push({
-            type: 'combine',
-            description: `${pillarNames[i]}↔${pillarNames[j]} 합(合)`,
-            effect: '조화로운 에너지가 흘러 좋은 인연과 기회가 따릅니다',
-          })
-        }
-      }
-    }
-  }
+  return { index: offset, name: TWELVE_STAGES[offset] }
+}
 
-  // 천간합 체크
-  for (let i = 0; i < stemList.length; i++) {
-    for (let j = i + 1; j < stemList.length; j++) {
-      for (const [a, b] of STEM_COMBINATIONS) {
-        if ((stemList[i] === a && stemList[j] === b) || (stemList[i] === b && stemList[j] === a)) {
-          interactions.push({
-            type: 'combine',
-            description: `${pillarNames[i]}↔${pillarNames[j]} 천간합`,
-            effect: '천간의 조화로 귀인의 도움이나 좋은 기회를 만납니다',
-          })
-        }
-      }
-    }
-  }
+// ═══════════════════════════════════════════════
+// 신살 종합 계산
+// ═══════════════════════════════════════════════
+function calculateSinsal(pillars: Pillar[], dayStem: number, dayBranch: number): SinsalInfo {
+  const allBranches = pillars.map(p => p.branch)
 
-  // 지지형 체크
-  for (let i = 0; i < branchList.length; i++) {
-    for (let j = i + 1; j < branchList.length; j++) {
-      for (const [a, b] of BRANCH_PENALTIES) {
-        if ((branchList[i] === a && branchList[j] === b) || (branchList[i] === b && branchList[j] === a)) {
-          interactions.push({
-            type: 'penalty',
-            description: `${pillarNames[i]}↔${pillarNames[j]} 형(刑)`,
-            effect: '갈등이나 시련이 있지만, 이를 통해 성장할 수 있습니다',
-          })
-        }
-      }
-    }
-  }
+  // 역마살: 사주 내 어떤 지지가 역마 대상과 일치하면
+  const yeokmaTarget = getYeokmaTarget(dayBranch)
+  const hasYeokma = allBranches.some(b => b === yeokmaTarget)
 
-  return interactions
+  // 도화살
+  const dohwaTarget = getDohwaTarget(dayBranch)
+  const hasDohwa = allBranches.some(b => b === dohwaTarget)
+
+  // 화개살
+  const hwagaeTarget = getHwagaeTarget(dayBranch)
+  const hasHwagae = allBranches.some(b => b === hwagaeTarget)
+
+  // 천을귀인
+  const cheoneulTargets = getCheoneulTargets(dayStem)
+  const hasCheoneul = allBranches.some(b => cheoneulTargets.includes(b))
+
+  // 십이운성 (일간 vs 일지)
+  const stage = getTwelveStage(dayStem, dayBranch)
+
+  return {
+    hasYeokma,
+    hasDohwa,
+    hasHwagae,
+    hasCheoneul,
+    dayEnergyStage: stage.index,
+    dayEnergyName: stage.name,
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -382,7 +435,6 @@ function analyzeElements(pillars: Pillar[], dayMasterElement: number, monthBranc
     for (let j = i + 1; j < pillars.length; j++) {
       for (const [a, b] of BRANCH_CLASHES) {
         if ((pillars[i].branch === a && pillars[j].branch === b) || (pillars[i].branch === b && pillars[j].branch === a)) {
-          // 충이면 양쪽 지지 오행 0.3 감소
           counts[BRANCH_ELEMENT[pillars[i].branch]] = Math.max(0, counts[BRANCH_ELEMENT[pillars[i].branch]] - 0.3)
           counts[BRANCH_ELEMENT[pillars[j].branch]] = Math.max(0, counts[BRANCH_ELEMENT[pillars[j].branch]] - 0.3)
         }
@@ -423,144 +475,6 @@ function analyzeElements(pillars: Pillar[], dayMasterElement: number, monthBranc
 }
 
 // ═══════════════════════════════════════════════
-// 월운(月運) 계산
-// ═══════════════════════════════════════════════
-function getMonthlyFortunes(dayMasterElement: number, dayMasterYY: number, currentYear: number): MonthlyFortune[] {
-  const fortunes: MonthlyFortune[] = []
-  const yearStem = ((currentYear - 4) % 10 + 10) % 10
-
-  const keywords: Record<number, { good: string; bad: string }> = {
-    0: { good: '성장과 도약', bad: '무리한 확장 주의' },
-    1: { good: '열정과 표현', bad: '감정 조절 필요' },
-    2: { good: '안정과 수확', bad: '변화에 둔감 주의' },
-    3: { good: '결단과 정리', bad: '대인관계 마찰 주의' },
-    4: { good: '지혜와 기회', bad: '우유부단함 주의' },
-  }
-
-  const advices: string[][] = [
-    ['새로운 시작에 좋은 달, 계획을 실행하세요', '과욕은 금물, 현실적 목표를 세우세요'],
-    ['자기 표현에 좋은 달, 적극적으로 나서세요', '화를 다스리고 차분하게 대처하세요'],
-    ['재물운이 좋은 달, 저축/투자 기회', '지출을 줄이고 허리띠를 졸라매세요'],
-    ['직장/사회운이 좋은 달, 승진/인정', '건강에 주의하고 무리하지 마세요'],
-    ['학습/자기계발에 좋은 달, 공부하세요', '결정을 미루지 말고 행동하세요'],
-  ]
-
-  for (let m = 1; m <= 12; m++) {
-    // Calculate month pillar for this month
-    const startStems = [2, 4, 6, 8, 0]
-    const monthStemStart = startStems[yearStem % 5]
-
-    // Get month index based on solar month
-    let mi = 0
-    const MONTH_BOUNDS_SIMPLE = [2,3,4,5,6,7,8,9,10,11,12,1]
-    for (let i = 11; i >= 0; i--) {
-      if (m >= MONTH_BOUNDS_SIMPLE[i]) { mi = i; break }
-    }
-
-    const monthStem = (monthStemStart + mi) % 10
-    const monthElement = STEM_ELEMENT[monthStem]
-    const monthYY = STEM_YINYANG[monthStem]
-
-    // Calculate relationship
-    const rel = ((monthElement - dayMasterElement) % 5 + 5) % 5
-
-    // Base rating from relationship
-    let rating: number
-    const sameYY = dayMasterYY === monthYY
-
-    if (rel === 0) rating = 3          // 비겁 - 경쟁/협력
-    else if (rel === 1) rating = 4     // 식상 - 표현/창작
-    else if (rel === 2) rating = sameYY ? 5 : 4  // 재성 - 재물
-    else if (rel === 3) rating = sameYY ? 2 : 3  // 관성 - 변화/압박
-    else rating = sameYY ? 3 : 4       // 인성 - 학습/귀인
-
-    const isGood = rating >= 4
-    const kw = keywords[monthElement]
-
-    fortunes.push({
-      month: m,
-      rating,
-      keyword: isGood ? kw.good : kw.bad,
-      advice: isGood ? advices[monthElement][0] : advices[monthElement][1],
-      isBest: false,
-      isWorst: false,
-    })
-  }
-
-  // Mark best and worst months
-  const maxRating = Math.max(...fortunes.map(f => f.rating))
-  const minRating = Math.min(...fortunes.map(f => f.rating))
-  fortunes.forEach(f => {
-    if (f.rating === maxRating) f.isBest = true
-    if (f.rating === minRating) f.isWorst = true
-  })
-
-  return fortunes
-}
-
-// ═══════════════════════════════════════════════
-// 대운(大運) 계산
-// ═══════════════════════════════════════════════
-function getMajorLuckCycles(
-  monthPillar: Pillar,
-  yearStemYY: number,
-  gender: 'male' | 'female',
-  birthYear: number,
-  dayMasterElement: number,
-  currentYear: number
-): MajorLuck[] {
-  // 대운 방향: 양남음녀 = 순행(+1), 음남양녀 = 역행(-1)
-  const isForward = (yearStemYY === 1 && gender === 'male') || (yearStemYY === 0 && gender === 'female')
-  const direction = isForward ? 1 : -1
-
-  const lucks: MajorLuck[] = []
-  const currentAge = currentYear - birthYear
-
-  // 대운 시작 나이 (간략화: 성별/음양에 따라 2~8세 사이)
-  const startAge = gender === 'male' ? (isForward ? 3 : 4) : (isForward ? 4 : 3)
-
-  const majorKeywords: Record<number, string[]> = {
-    0: ['성장기', '발전운'],
-    1: ['활동기', '표현운'],
-    2: ['안정기', '수확운'],
-    3: ['결실기', '정리운'],
-    4: ['준비기', '축적운'],
-  }
-
-  for (let i = 0; i < 8; i++) {
-    const age = startAge + i * 10
-    const stemIdx = ((monthPillar.stem + direction * (i + 1)) % 10 + 10) % 10
-    const branchIdx = ((monthPillar.branch + direction * (i + 1)) % 12 + 12) % 12
-    const element = STEM_ELEMENT[stemIdx]
-
-    // Rating based on element relationship with day master
-    const rel = ((element - dayMasterElement) % 5 + 5) % 5
-    let rating: number
-    if (rel === 0) rating = 3
-    else if (rel === 1) rating = 4
-    else if (rel === 2) rating = 5
-    else if (rel === 3) rating = 2
-    else rating = 4
-
-    const kws = majorKeywords[element]
-    const isCurrent = currentAge >= age && currentAge < age + 10
-
-    lucks.push({
-      startAge: age,
-      endAge: age + 9,
-      stem: stemIdx,
-      branch: branchIdx,
-      element,
-      rating,
-      keyword: kws[rating >= 4 ? 0 : 1],
-      isCurrent,
-    })
-  }
-
-  return lucks
-}
-
-// ═══════════════════════════════════════════════
 // 메인 사주 계산 함수
 // ═══════════════════════════════════════════════
 export function calculateSaju(
@@ -595,15 +509,8 @@ export function calculateSaju(
   const animalYear = ((year - 4) % 12 + 12) % 12
   const animal = BRANCHES_ANIMAL[animalYear]
 
-  const currentYear = new Date().getFullYear()
-  const monthlyFortunes = getMonthlyFortunes(dayMasterElement, dayMasterYinYang, currentYear)
-  const majorLucks = getMajorLuckCycles(
-    monthPillar, STEM_YINYANG[yearPillar.stem], gender, year, dayMasterElement, currentYear
-  )
-  const currentMonth = new Date().getMonth() + 1
-  const currentMonthFortune = monthlyFortunes.find(f => f.month === currentMonth) || null
-
-  const pillarInteractions = analyzePillarInteractions(pillars)
+  // 신살 계산
+  const sinsal = calculateSinsal(pillars, dayMaster, dayPillar.branch)
 
   return {
     yearPillar,
@@ -627,10 +534,7 @@ export function calculateSaju(
     birthHour: hour,
     animal,
     elementBalance: analysis.elementBalance,
-    monthlyFortunes,
-    majorLucks,
-    pillarInteractions,
-    currentMonthFortune,
+    sinsal,
   }
 }
 

@@ -2,7 +2,7 @@
 // 사주풀이 해석 데이터
 // ═══════════════════════════════════════════════
 
-import { ELEMENTS } from './sajuEngine'
+import { ELEMENTS, SinsalInfo } from './sajuEngine'
 
 // ── 일간별 성격 유형 ──
 export interface DayMasterProfile {
@@ -41,8 +41,8 @@ export const DAY_MASTER_PROFILES: DayMasterProfile[] = [
     luckyColor: '초록색',
     luckyNumber: 3,
     luckyDirection: '동쪽',
-    bestMatch: [3, 9],  // 정화, 계수
-    worstMatch: [6, 7], // 경금, 신금
+    bestMatch: [3, 9],
+    worstMatch: [6, 7],
   },
   // 1: 을목 (乙木) - 꽃과 덩굴
   {
@@ -60,8 +60,8 @@ export const DAY_MASTER_PROFILES: DayMasterProfile[] = [
     luckyColor: '연두색',
     luckyNumber: 8,
     luckyDirection: '동쪽',
-    bestMatch: [2, 6],  // 병화, 경금
-    worstMatch: [7],     // 신금
+    bestMatch: [2, 6],
+    worstMatch: [7],
   },
   // 2: 병화 (丙火) - 태양
   {
@@ -79,8 +79,8 @@ export const DAY_MASTER_PROFILES: DayMasterProfile[] = [
     luckyColor: '빨간색',
     luckyNumber: 7,
     luckyDirection: '남쪽',
-    bestMatch: [1, 7],  // 을목, 신금
-    worstMatch: [8, 9], // 임수, 계수
+    bestMatch: [1, 7],
+    worstMatch: [8, 9],
   },
   // 3: 정화 (丁火) - 촛불
   {
@@ -98,8 +98,8 @@ export const DAY_MASTER_PROFILES: DayMasterProfile[] = [
     luckyColor: '보라색',
     luckyNumber: 2,
     luckyDirection: '남쪽',
-    bestMatch: [0, 8],  // 갑목, 임수
-    worstMatch: [9],     // 계수
+    bestMatch: [0, 8],
+    worstMatch: [9],
   },
   // 4: 무토 (戊土) - 산
   {
@@ -117,8 +117,8 @@ export const DAY_MASTER_PROFILES: DayMasterProfile[] = [
     luckyColor: '노란색',
     luckyNumber: 5,
     luckyDirection: '중앙',
-    bestMatch: [2, 9],  // 병화, 계수
-    worstMatch: [0],     // 갑목
+    bestMatch: [2, 9],
+    worstMatch: [0],
   },
   // 5: 기토 (己土) - 정원/논밭
   {
@@ -136,8 +136,8 @@ export const DAY_MASTER_PROFILES: DayMasterProfile[] = [
     luckyColor: '갈색',
     luckyNumber: 0,
     luckyDirection: '중앙',
-    bestMatch: [3, 6],  // 정화, 경금
-    worstMatch: [1],     // 을목
+    bestMatch: [3, 6],
+    worstMatch: [1],
   },
   // 6: 경금 (庚金) - 쇠/바위
   {
@@ -155,8 +155,8 @@ export const DAY_MASTER_PROFILES: DayMasterProfile[] = [
     luckyColor: '흰색',
     luckyNumber: 4,
     luckyDirection: '서쪽',
-    bestMatch: [1, 5],  // 을목, 기토
-    worstMatch: [2],     // 병화
+    bestMatch: [1, 5],
+    worstMatch: [2],
   },
   // 7: 신금 (辛金) - 보석
   {
@@ -174,8 +174,8 @@ export const DAY_MASTER_PROFILES: DayMasterProfile[] = [
     luckyColor: '은색',
     luckyNumber: 1,
     luckyDirection: '서쪽',
-    bestMatch: [2, 8],  // 병화, 임수
-    worstMatch: [0],     // 갑목
+    bestMatch: [2, 8],
+    worstMatch: [0],
   },
   // 8: 임수 (壬水) - 바다/큰 강
   {
@@ -193,8 +193,8 @@ export const DAY_MASTER_PROFILES: DayMasterProfile[] = [
     luckyColor: '파란색',
     luckyNumber: 6,
     luckyDirection: '북쪽',
-    bestMatch: [3, 7],  // 정화, 신금
-    worstMatch: [4],     // 무토
+    bestMatch: [3, 7],
+    worstMatch: [4],
   },
   // 9: 계수 (癸水) - 빗물/이슬
   {
@@ -212,8 +212,8 @@ export const DAY_MASTER_PROFILES: DayMasterProfile[] = [
     luckyColor: '검정색',
     luckyNumber: 9,
     luckyDirection: '북쪽',
-    bestMatch: [0, 4],  // 갑목, 무토
-    worstMatch: [2],     // 병화
+    bestMatch: [0, 4],
+    worstMatch: [2],
   },
 ]
 
@@ -312,8 +312,7 @@ export function getYearFortune(dayMasterElement: number, currentYear: number): {
 export function getMonthlyDetail(month: number, dayMasterElement: number, yearFortuneStars: number): {
   money: string; love: string; warning: string;
 } {
-  // 월별 구체적 운세 - 일간 오행과 계절 관계에 따라
-  const seasonEffect = [4,4,0,0,0,1,1,1,2,3,3,3][month - 1] // 월→계절 오행
+  const seasonEffect = [4,4,0,0,0,1,1,1,2,3,3,3][month - 1]
   const rel = ((seasonEffect - dayMasterElement) % 5 + 5) % 5
 
   const moneyByRel = [
@@ -379,4 +378,119 @@ export function getCompatibilityHint(dayMaster: number): string {
     '갑목(甲), 무토(戊) 일간과 생명의 궁합! 함께 있으면 에너지가 충전돼요.',
   ]
   return hints[dayMaster]
+}
+
+// ═══════════════════════════════════════════════
+// 신살 해석 (소비자 친화적)
+// ═══════════════════════════════════════════════
+export function getSinsalReading(sinsal: SinsalInfo): { title: string; description: string; icon: string }[] {
+  const readings: { title: string; description: string; icon: string }[] = []
+
+  if (sinsal.hasYeokma) {
+    readings.push({
+      icon: '✈️',
+      title: '역마살 — 이동·변화의 기운',
+      description: '해외여행, 이사, 이직 등 이동과 관련된 일이 잦을 수 있습니다. 한 곳에 머무르기보다 활발하게 움직일 때 운이 트입니다. 올해 이사나 여행 계획이 있다면 좋은 결과를 기대할 수 있어요.',
+    })
+  }
+
+  if (sinsal.hasDohwa) {
+    readings.push({
+      icon: '🌸',
+      title: '도화살 — 매력·이성의 기운',
+      description: '타고난 매력이 강해 이성의 관심을 받기 쉽습니다. 연애운이 활발하지만, 이미 연인이 있다면 외부 유혹에 주의하세요. 예술, 뷰티, 엔터테인먼트 분야에서 성공할 가능성이 높습니다.',
+    })
+  }
+
+  if (sinsal.hasHwagae) {
+    readings.push({
+      icon: '🎨',
+      title: '화개살 — 학문·예술의 기운',
+      description: '학문, 종교, 예술에 탁월한 재능이 있습니다. 깊이 있는 사고와 영감이 뛰어나 전문가 기질이 강해요. 자격증 취득, 논문, 창작 활동에서 좋은 성과를 낼 수 있습니다.',
+    })
+  }
+
+  if (sinsal.hasCheoneul) {
+    readings.push({
+      icon: '🌟',
+      title: '천을귀인 — 귀인의 도움',
+      description: '어려운 상황에서 뜻밖의 도움을 받는 운입니다. 위기가 와도 누군가가 손을 내밀어 줍니다. 인맥을 소중히 하고, 주변 사람들에게 감사하는 마음을 표현하세요.',
+    })
+  }
+
+  return readings
+}
+
+// ═══════════════════════════════════════════════
+// 십이운성 해석 (소비자 친화적)
+// ═══════════════════════════════════════════════
+export function getEnergyStageReading(stageName: string): { emoji: string; title: string; description: string } {
+  const readings: Record<string, { emoji: string; title: string; description: string }> = {
+    '장생': {
+      emoji: '🌱',
+      title: '장생(長生) — 새로운 시작의 에너지',
+      description: '태어나는 힘이 있어 어떤 일이든 새롭게 시작할 수 있는 기운입니다. 도전 정신이 강하고, 새로운 환경에서 빛을 발합니다. 지금 시작하는 일이 크게 성장할 가능성이 높아요.',
+    },
+    '목욕': {
+      emoji: '🛁',
+      title: '목욕(沐浴) — 감성과 변화의 에너지',
+      description: '감수성이 풍부하고 매력적인 기운입니다. 이성에게 인기가 많지만, 감정 기복이 있을 수 있어요. 예술적 재능이 뛰어나며, 자기 관리에 신경 쓰면 더욱 빛납니다.',
+    },
+    '관대': {
+      emoji: '👑',
+      title: '관대(冠帶) — 성장과 준비의 에너지',
+      description: '사회적으로 인정받기 시작하는 기운입니다. 자존감이 높고 야망이 있어요. 지금은 실력을 갈고 닦는 시기로, 준비한 만큼 큰 보상이 따라옵니다.',
+    },
+    '건록': {
+      emoji: '💪',
+      title: '건록(建祿) — 안정과 실력의 에너지',
+      description: '가장 안정적이고 강한 기운 중 하나입니다. 직장운과 재물운이 좋고, 자립심이 강합니다. 자기 힘으로 성공하는 자수성가 타입이에요.',
+    },
+    '제왕': {
+      emoji: '🏆',
+      title: '제왕(帝旺) — 최고 전성기의 에너지',
+      description: '에너지가 가장 강한 시기입니다. 무엇이든 이뤄낼 수 있는 힘이 있지만, 지나친 강함은 독이 될 수 있어요. 겸손하게 행동하면 최고의 결과를 얻습니다.',
+    },
+    '쇠': {
+      emoji: '🍂',
+      title: '쇠(衰) — 성숙과 지혜의 에너지',
+      description: '전성기를 지나 경험에서 우러나오는 지혜가 빛나는 시기입니다. 무리하지 않고 여유롭게 움직이는 것이 좋습니다. 멘토나 조언자 역할에서 능력을 발휘해요.',
+    },
+    '병': {
+      emoji: '🏥',
+      title: '병(病) — 내면 성찰의 에너지',
+      description: '몸과 마음의 재충전이 필요한 기운입니다. 건강 관리에 특히 신경 써야 하며, 무리한 일정은 피하세요. 이 시기에 쉬어가면 다음 단계에서 더 크게 도약합니다.',
+    },
+    '사': {
+      emoji: '🌅',
+      title: '사(死) — 변환과 전환의 에너지',
+      description: '끝이 아니라 새로운 시작을 위한 전환점입니다. 과거의 집착을 내려놓고 새로운 방향을 모색하세요. 직관력이 뛰어나 영적·학문적 분야에서 재능을 발휘합니다.',
+    },
+    '묘': {
+      emoji: '💎',
+      title: '묘(墓) — 축적과 저장의 에너지',
+      description: '재물을 모으고 저축하는 데 유리한 기운입니다. 겉으로는 조용해 보이지만 내면에 큰 잠재력을 품고 있어요. 장기적인 계획을 세우고 꾸준히 준비하면 큰 성공을 거둡니다.',
+    },
+    '절': {
+      emoji: '🌑',
+      title: '절(絶) — 초월과 직관의 에너지',
+      description: '가장 낮은 곳에서 새로운 가능성이 싹틉니다. 기존의 틀을 깨고 완전히 새로운 도전을 할 수 있는 기운이에요. 종교, 철학, 예술 분야에서 특별한 재능을 보입니다.',
+    },
+    '태': {
+      emoji: '🤰',
+      title: '태(胎) — 잉태와 기획의 에너지',
+      description: '새로운 것을 잉태하는 기운으로, 기획력과 창의력이 뛰어납니다. 아이디어를 현실로 만드는 능력이 있어요. 새로운 프로젝트나 사업을 구상하기에 좋은 기운입니다.',
+    },
+    '양': {
+      emoji: '🌤️',
+      title: '양(養) — 양육과 성장의 에너지',
+      description: '조용히 힘을 기르는 기운입니다. 서두르지 않고 천천히 준비하면 때가 왔을 때 크게 빛납니다. 교육, 양육, 상담 분야에서 특별한 재능을 발휘해요.',
+    },
+  }
+
+  return readings[stageName] || {
+    emoji: '🔮',
+    title: `${stageName} — 특별한 에너지`,
+    description: '당신만의 독특한 기운이 흐르고 있습니다.',
+  }
 }
