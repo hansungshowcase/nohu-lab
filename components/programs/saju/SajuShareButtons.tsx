@@ -180,7 +180,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
         <button
           onClick={handleCopyLink}
-          className="py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 active:scale-95 text-gray-700 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
+          className="py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 active:scale-95 text-gray-700 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
         >
           <span className="text-base sm:text-lg">{copyDone ? '✅' : '🔗'}</span>
           <span>{copyDone ? '복사됨!' : '링크 복사'}</span>
@@ -188,14 +188,14 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         <button
           onClick={handleSaveImage}
           disabled={saving}
-          className="py-2.5 sm:py-3 bg-orange-50 hover:bg-orange-100 active:bg-orange-200 active:scale-95 text-orange-700 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1 disabled:opacity-50"
+          className="py-3 bg-orange-50 hover:bg-orange-100 active:bg-orange-200 active:scale-95 text-orange-700 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1 disabled:opacity-50"
         >
           <span className="text-base sm:text-lg">{saving ? '⏳' : saveSuccess ? '✅' : '📷'}</span>
           <span>{saving ? '저장 중...' : saveSuccess ? '완료!' : '이미지 저장'}</span>
         </button>
         <button
           onClick={handleKakao}
-          className="py-2.5 sm:py-3 bg-yellow-300 hover:bg-yellow-400 active:bg-yellow-500 active:scale-95 text-yellow-900 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
+          className="py-3 bg-yellow-300 hover:bg-yellow-400 active:bg-yellow-500 active:scale-95 text-yellow-900 rounded-xl text-[11px] sm:text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 sm:gap-1"
         >
           <span className="text-base sm:text-lg">💬</span>
           <span>카카오톡</span>

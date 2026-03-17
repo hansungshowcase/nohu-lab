@@ -23,6 +23,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* dvh 미지원 브라우저 폴백 */
+@supports not (height: 100dvh) {
+  .min-h-dvh { min-height: 100vh; }
+}
+
 /* Premium scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

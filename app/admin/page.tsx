@@ -645,7 +645,7 @@ function AdminContent() {
 
       {/* 채팅 탭 */}
       {tab === 'chat' && (
-        <div className="flex gap-4" style={{ height: 'calc(100vh - 250px)' }}>
+        <div className="flex gap-2 sm:gap-4" style={{ height: 'calc(100dvh - 250px)' }}>
           {/* 채팅방 목록 */}
           <div className={`${selectedRoom ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-80 border border-gray-200 rounded-xl bg-white overflow-hidden shrink-0`}>
             <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
