@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceSupabase } from '@/lib/supabase'
 import { getCurrentUser } from '@/lib/auth'
+import { mapGradeToTier } from '@/lib/types'
 
 const CAFE_ID = '20898041'
-
-// 카페 등급 → DB tier (1~4)
-function mapCafeLevelToTier(levelName: string): 1 | 2 | 3 | 4 {
-  const name = levelName.trim()
-  if (name.includes('매니저') || name.includes('스탭') || name.includes('운영') || name === '헤리티지회원') return 4
-  if (name === '시그니처회원' || name === '프리미엄회원') return 3
-  if (name === '우수회원') return 2
-  return 1
-}
 
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser()
@@ -132,7 +124,7 @@ export async function GET(request: NextRequest) {
       const batch = allMembers.slice(i, i + 500).map(m => ({
         nickname: m.nickname,
         phone: '',
-        tier: mapCafeLevelToTier(m.levelName),
+        tier: mapGradeToTier(m.levelName),
       }))
       const { error } = await supabase
         .from('members')
