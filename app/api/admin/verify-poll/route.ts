@@ -17,15 +17,22 @@ export async function POST(request: NextRequest) {
 
     const supabase = getServiceSupabase()
 
-    // Get pending requests (created within last 2 minutes)
-    const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString()
+    // 오래된 레코드 정리 (10분 이상 된 pending/completed → 삭제)
+    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+    await supabase
+      .from('verify_requests')
+      .delete()
+      .lt('created_at', tenMinAgo)
+
+    // Get pending requests (created within last 5 minutes)
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
     const { data: requests, error: queryError } = await supabase
       .from('verify_requests')
       .select('id, nickname')
       .eq('status', 'pending')
-      .gte('created_at', twoMinAgo)
+      .gte('created_at', fiveMinAgo)
       .order('created_at', { ascending: true })
-      .limit(5)
+      .limit(10)
 
     if (queryError) {
       return NextResponse.json({ error: '조회 실패' }, { status: 500 })

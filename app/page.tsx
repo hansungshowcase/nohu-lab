@@ -80,10 +80,33 @@ export default function LoginPage() {
   }
 
   async function handleRetry() {
+    setError('')
+    setLoading(true)
+    // 먼저 닉네임으로 재로그인 시도 (확장프로그램이 이미 등록했을 수 있음)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: nickname.trim() }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          router.push('/dashboard')
+          return
+        }
+        if (data.status === 'verifying' && data.verifyId) {
+          await pollVerifyStatus(data.verifyId)
+          return
+        }
+      }
+    } catch { /* fallback to polling */ }
+    // 그래도 안 되면 기존 verifyId로 재폴링
     if (lastVerifyId) {
-      setError('')
-      setLoading(true)
       await pollVerifyStatus(lastVerifyId)
+    } else {
+      setLoading(false)
+      setError('다시 닉네임을 입력하고 로그인해주세요.')
     }
   }
 

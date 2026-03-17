@@ -54,13 +54,34 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    // DB에 없으면 → 기존 pending 요청 확인 후 생성
+    // DB에 없으면 → 최근 verify_requests 확인
+    // 1) found 상태가 있으면 바로 회원 등록 (확장프로그램이 이미 처리 완료)
+    const { data: foundReq } = await supabase
+      .from('verify_requests')
+      .select('id, grade_name')
+      .eq('nickname', trimmed)
+      .eq('status', 'found')
+      .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (foundReq) {
+      // 이미 found인 요청이 있으면 바로 회원 등록 + 로그인
+      return NextResponse.json({
+        status: 'verifying',
+        verifyId: foundReq.id,
+      })
+    }
+
+    // 2) pending 상태가 있으면 재사용 (5분 이내)
     const { data: existingReq, error: existingError } = await supabase
       .from('verify_requests')
       .select('id')
       .eq('nickname', trimmed)
       .eq('status', 'pending')
-      .gte('created_at', new Date(Date.now() - 2 * 60 * 1000).toISOString())
+      .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
       .limit(1)
       .single()
 

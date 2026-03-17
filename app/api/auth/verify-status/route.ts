@@ -55,6 +55,12 @@ export async function GET(request: NextRequest) {
       tier: ([1, 2, 3, 4].includes(member.tier) ? member.tier : 1) as 1 | 2 | 3 | 4,
     })
 
+    // verify_requests를 완료 처리 (중복 처리 방지)
+    await supabase
+      .from('verify_requests')
+      .update({ status: 'completed' })
+      .eq('id', id)
+
     const response = NextResponse.json({
       status: 'found',
       member: { nickname: member.nickname, tier: member.tier },
