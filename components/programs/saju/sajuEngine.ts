@@ -150,6 +150,23 @@ export interface SinsalInfo {
   dayEnergyName: string  // 십이운성 이름
 }
 
+// 세운(올해) 분석 결과
+export interface YearAnalysis {
+  yearStem: number        // 올해 천간
+  yearBranch: number      // 올해 지지
+  yearTenGod: string      // 올해 천간의 십신
+  hasCheonganHap: boolean // 천간합 여부 (사주 기둥과)
+  hapTarget: string       // 합 대상 기둥 (년/월/일/시)
+  hasJijiChung: boolean   // 지지충 여부
+  chungTarget: string     // 충 대상 기둥
+  hasJijiHap: boolean     // 지지합(육합) 여부
+  hapBranchTarget: string // 합 대상 기둥
+  tenGodCounts: Record<string, number> // 사주 내 십신 분포
+  dominantTenGod: string  // 가장 많은 십신
+  usefulGodElement: number // 용신 오행
+  healthRisk: { organ: string; warning: string }[] // 건강 위험
+}
+
 // ═══════════════════════════════════════════════
 // 기존 호환용 인터페이스 (사용하지 않지만 유지)
 // ═══════════════════════════════════════════════
@@ -202,6 +219,7 @@ export interface SajuResult {
   animal: string
   elementBalance: number
   sinsal: SinsalInfo
+  yearAnalysis: YearAnalysis
 }
 
 // ═══════════════════════════════════════════════
@@ -475,6 +493,122 @@ function analyzeElements(pillars: Pillar[], dayMasterElement: number, monthBranc
 }
 
 // ═══════════════════════════════════════════════
+// 세운(올해) 분석 함수
+// ═══════════════════════════════════════════════
+function analyzeYear(
+  pillars: Pillar[], dayMaster: number, dayMasterElement: number,
+  dayMasterYinYang: number, tenGods: string[], usefulGod: number
+): YearAnalysis {
+  const currentYear = new Date().getFullYear()
+  const yearStem = ((currentYear - 4) % 10 + 10) % 10
+  const yearBranch = ((currentYear - 4) % 12 + 12) % 12
+
+  // 올해 천간의 십신
+  const yearTenGod = getTenGod(dayMasterElement, dayMasterYinYang, yearStem)
+
+  // 천간합 분석: 올해 천간 vs 사주 기둥 천간
+  let hasCheonganHap = false
+  let hapTarget = ''
+  const pillarNames = ['년주', '월주', '일주', '시주']
+  for (let i = 0; i < pillars.length; i++) {
+    for (const [a, b] of STEM_COMBINATIONS) {
+      if ((yearStem === a && pillars[i].stem === b) || (yearStem === b && pillars[i].stem === a)) {
+        hasCheonganHap = true
+        hapTarget = pillarNames[i]
+        break
+      }
+    }
+    if (hasCheonganHap) break
+  }
+
+  // 지지충 분석: 올해 지지 vs 사주 기둥 지지
+  let hasJijiChung = false
+  let chungTarget = ''
+  for (let i = 0; i < pillars.length; i++) {
+    for (const [a, b] of BRANCH_CLASHES) {
+      if ((yearBranch === a && pillars[i].branch === b) || (yearBranch === b && pillars[i].branch === a)) {
+        hasJijiChung = true
+        chungTarget = pillarNames[i]
+        break
+      }
+    }
+    if (hasJijiChung) break
+  }
+
+  // 지지합(육합) 분석
+  let hasJijiHap = false
+  let hapBranchTarget = ''
+  for (let i = 0; i < pillars.length; i++) {
+    for (const [a, b] of BRANCH_COMBINATIONS) {
+      if ((yearBranch === a && pillars[i].branch === b) || (yearBranch === b && pillars[i].branch === a)) {
+        hasJijiHap = true
+        hapBranchTarget = pillarNames[i]
+        break
+      }
+    }
+    if (hasJijiHap) break
+  }
+
+  // 십신 분포 계산 (지장간 포함)
+  const tenGodCounts: Record<string, number> = {}
+  // 천간 십신
+  for (const tg of tenGods) {
+    if (tg === '일주') continue
+    tenGodCounts[tg] = (tenGodCounts[tg] || 0) + 1
+  }
+  // 지장간 십신 (각 지지의 정기만)
+  for (const p of pillars) {
+    const hidden = HIDDEN_STEMS[p.branch]
+    const mainHidden = hidden[hidden.length - 1] // 정기
+    const hiddenTG = getTenGod(dayMasterElement, dayMasterYinYang, mainHidden)
+    tenGodCounts[hiddenTG] = (tenGodCounts[hiddenTG] || 0) + 0.5
+  }
+
+  // 가장 많은 십신
+  let dominantTenGod = '비견'
+  let maxCount = 0
+  for (const [k, v] of Object.entries(tenGodCounts)) {
+    if (v > maxCount) { maxCount = v; dominantTenGod = k }
+  }
+
+  // 건강 위험 분석 (오행 과다/부족 기반)
+  const healthRisk: { organ: string; warning: string }[] = []
+  const organMap: Record<number, { name: string; excess: string; lack: string }> = {
+    0: { name: '간/담', excess: '두통, 신경과민, 눈 충혈이 자주 올 수 있어요', lack: '시력 저하, 근육 약화, 손톱이 잘 부러질 수 있어요' },
+    1: { name: '심장/소장', excess: '가슴 두근거림, 불면증, 혈압 상승에 주의하세요', lack: '수족 냉증, 저혈압, 우울감이 생길 수 있어요' },
+    2: { name: '위장/비장', excess: '소화불량, 체중 증가, 당뇨 위험에 주의하세요', lack: '식욕 부진, 피부 트러블, 면역력 저하가 올 수 있어요' },
+    3: { name: '폐/대장', excess: '피부 알레르기, 호흡기 과민 반응에 주의하세요', lack: '감기를 자주 걸리고, 비염·기관지 질환에 취약해요' },
+    4: { name: '신장/방광', excess: '부종, 요통, 과도한 수분 저류에 주의하세요', lack: '허리 통증, 탈모, 생식기 관련 불편이 올 수 있어요' },
+  }
+
+  // 가장 과다한 오행과 가장 부족한 오행 건강 경고 추가
+  // (analyzeElements의 counts를 여기서 직접 접근할 수 없으므로 pillars로 간이 계산)
+  const simpleCounts = [0, 0, 0, 0, 0]
+  for (const p of pillars) {
+    simpleCounts[STEM_ELEMENT[p.stem]]++
+    simpleCounts[BRANCH_ELEMENT[p.branch]]++
+  }
+  const maxEl = simpleCounts.indexOf(Math.max(...simpleCounts))
+  const minEl = simpleCounts.indexOf(Math.min(...simpleCounts))
+  if (simpleCounts[maxEl] >= 4 && organMap[maxEl]) {
+    healthRisk.push({ organ: organMap[maxEl].name + ' (과다)', warning: organMap[maxEl].excess })
+  }
+  if (simpleCounts[minEl] === 0 && organMap[minEl]) {
+    healthRisk.push({ organ: organMap[minEl].name + ' (부족)', warning: organMap[minEl].lack })
+  }
+
+  return {
+    yearStem, yearBranch, yearTenGod,
+    hasCheonganHap, hapTarget,
+    hasJijiChung, chungTarget,
+    hasJijiHap, hapBranchTarget,
+    tenGodCounts, dominantTenGod,
+    usefulGodElement: usefulGod,
+    healthRisk,
+  }
+}
+
+// ═══════════════════════════════════════════════
 // 메인 사주 계산 함수
 // ═══════════════════════════════════════════════
 export function calculateSaju(
@@ -512,6 +646,9 @@ export function calculateSaju(
   // 신살 계산
   const sinsal = calculateSinsal(pillars, dayMaster, dayPillar.branch)
 
+  // 세운 분석
+  const yearAnalysis = analyzeYear(pillars, dayMaster, dayMasterElement, dayMasterYinYang, tenGods, analysis.usefulGod)
+
   return {
     yearPillar,
     monthPillar,
@@ -535,6 +672,7 @@ export function calculateSaju(
     animal,
     elementBalance: analysis.elementBalance,
     sinsal,
+    yearAnalysis,
   }
 }
 

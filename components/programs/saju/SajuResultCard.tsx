@@ -5,6 +5,7 @@ import {
   SajuResult, STEMS, STEMS_HANJA, BRANCHES, BRANCHES_HANJA,
   ELEMENTS, ELEMENTS_HANJA, Pillar,
   STEM_ELEMENT, BRANCH_ELEMENT, STEM_YINYANG,
+  STEMS as ENGINE_STEMS, BRANCHES as ENGINE_BRANCHES,
 } from './sajuEngine'
 import {
   DAY_MASTER_PROFILES, STRENGTH_INTERPRETATIONS,
@@ -299,7 +300,70 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           <p className="text-[13px] text-red-600 leading-[1.7] font-medium">{fortune.warning}</p>
         </div>
 
-        {/* ═══ 8. 올해 인생 로드맵 ═══ */}
+        {/* ═══ 8. 올해 사주와의 상호작용 (세운 분석) ═══ */}
+        {(result.yearAnalysis.hasCheonganHap || result.yearAnalysis.hasJijiChung || result.yearAnalysis.hasJijiHap) && (
+          <div>
+            <SectionHeader color="bg-purple-500">🔄 {year}년과 내 사주의 상호작용</SectionHeader>
+            <div className="space-y-2">
+              {result.yearAnalysis.hasCheonganHap && (
+                <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl flex-shrink-0">🤝</span>
+                    <div>
+                      <p className="text-sm font-bold text-purple-800 mb-1">천간합(天干合) — {result.yearAnalysis.hapTarget}과 합</p>
+                      <p className="text-[13px] text-gray-700 leading-[1.7]">
+                        올해의 기운이 당신의 {result.yearAnalysis.hapTarget}와 합을 이룹니다. 새로운 인연이나 협력 관계가 생길 수 있어요. 특히 이성 관계에서 강한 끌림이 있을 수 있으며, 사업적 파트너십도 유리합니다. 다만 합이 지나치면 본래 하던 일에 집중이 흐려질 수 있으니 주의하세요.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {result.yearAnalysis.hasJijiChung && (
+                <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl flex-shrink-0">⚡</span>
+                    <div>
+                      <p className="text-sm font-bold text-red-800 mb-1">지지충(地支衝) — {result.yearAnalysis.chungTarget}과 충돌</p>
+                      <p className="text-[13px] text-gray-700 leading-[1.7]">
+                        올해의 지지가 당신의 {result.yearAnalysis.chungTarget}와 충돌합니다. {result.yearAnalysis.chungTarget === '일주' ? '배우자나 가까운 사람과의 갈등, 건강 이상에 특히 주의하세요.' : result.yearAnalysis.chungTarget === '월주' ? '직장이나 사회 활동에서 변동이 올 수 있습니다. 이직·이사를 진지하게 고려해볼 시기입니다.' : result.yearAnalysis.chungTarget === '년주' ? '부모님이나 어른과의 관계에서 마찰이 생길 수 있어요. 인내심이 필요합니다.' : '자녀나 아랫사람과의 관계에서 갈등이 있을 수 있습니다.'} 교통사고, 낙상 등 사고에도 각별히 주의하세요.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {result.yearAnalysis.hasJijiHap && (
+                <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl flex-shrink-0">💚</span>
+                    <div>
+                      <p className="text-sm font-bold text-green-800 mb-1">지지합(地支合) — {result.yearAnalysis.hapBranchTarget}과 합</p>
+                      <p className="text-[13px] text-gray-700 leading-[1.7]">
+                        올해의 지지가 당신의 {result.yearAnalysis.hapBranchTarget}와 합을 이룹니다. 안정적인 인연이 들어오거나 기존 관계가 더 단단해지는 해예요. {result.yearAnalysis.hapBranchTarget === '일주' ? '배우자나 연인과의 관계가 특히 좋아지며, 결혼이나 동거를 시작하기에 좋은 시기입니다.' : '사회적 관계에서 좋은 협력자를 만날 수 있습니다.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ 건강 위험 분석 (오행 기반) ═══ */}
+        {result.yearAnalysis.healthRisk.length > 0 && (
+          <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+            <h4 className="text-sm font-bold text-orange-800 mb-2">🏥 오행 기반 건강 체크포인트</h4>
+            <div className="space-y-2">
+              {result.yearAnalysis.healthRisk.map((risk, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-[10px] bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full font-bold flex-shrink-0 mt-0.5">{risk.organ}</span>
+                  <p className="text-[13px] text-gray-700 leading-[1.6]">{risk.warning}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ 9. 올해 인생 로드맵 ═══ */}
         <div>
           <SectionHeader color="bg-indigo-500">🗺️ {year}년 인생 로드맵</SectionHeader>
           <div className="space-y-2">
