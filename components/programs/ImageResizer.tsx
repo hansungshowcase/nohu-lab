@@ -24,6 +24,9 @@ export default function ImageResizer() {
         setHeight(img.height)
         setImage(ev.target?.result as string)
       }
+      img.onerror = () => {
+        alert('이미지를 불러올 수 없습니다. 다른 파일을 선택해주세요.')
+      }
       img.src = ev.target?.result as string
     }
     reader.readAsDataURL(file)
