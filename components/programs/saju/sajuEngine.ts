@@ -717,15 +717,49 @@ function analyzeYear(
 function calculateDaeun(
   yearStem: number, monthPillar: Pillar, gender: 'male' | 'female',
   dayMasterElement: number, dayMasterYinYang: number,
-  birthYear: number
+  birthYear: number, birthMonth: number, birthDay: number
 ): DaeunInfo[] {
   // 양남음녀 = 순행, 음남양녀 = 역행
   const yearYinYang = STEM_YINYANG[yearStem]
   const isForward = (gender === 'male' && yearYinYang === 1) || (gender === 'female' && yearYinYang === 0)
 
-  // 대운 시작 나이 (간이 계산: 보통 1~9세 사이, 여기서는 3세로 근사)
-  // 정확한 계산은 생일~절기 날짜 차이가 필요하지만, 근사값 사용
-  const startAge = 3
+  // 대운 시작 나이 = 생일~다음(또는 이전) 절기까지 일수 ÷ 3 (반올림)
+  // 순행이면 다음 절기, 역행이면 이전 절기까지의 거리
+  const birthDate = new Date(birthYear, birthMonth - 1, birthDay)
+  let startAge = 3 // fallback
+
+  // MONTH_BOUNDS를 양력 순서로 정렬하여 가장 가까운 절기 찾기
+  const sortedBounds = [...MONTH_BOUNDS].sort((a, b) => a.solarMonth - b.solarMonth || a.solarDay - b.solarDay)
+
+  if (isForward) {
+    // 순행: 생일 이후 가장 가까운 다음 절기까지 일수
+    let nextBoundDate: Date | null = null
+    for (const b of sortedBounds) {
+      const d = new Date(birthYear, b.solarMonth - 1, b.solarDay)
+      if (d > birthDate) { nextBoundDate = d; break }
+    }
+    if (!nextBoundDate) {
+      // 올해 남은 절기 없으면 다음해 첫 절기
+      nextBoundDate = new Date(birthYear + 1, sortedBounds[0].solarMonth - 1, sortedBounds[0].solarDay)
+    }
+    const diffDays = Math.round((nextBoundDate.getTime() - birthDate.getTime()) / 86400000)
+    startAge = Math.max(1, Math.round(diffDays / 3))
+  } else {
+    // 역행: 생일 이전 가장 가까운 절기까지 일수
+    let prevBoundDate: Date | null = null
+    for (let i = sortedBounds.length - 1; i >= 0; i--) {
+      const b = sortedBounds[i]
+      const d = new Date(birthYear, b.solarMonth - 1, b.solarDay)
+      if (d < birthDate) { prevBoundDate = d; break }
+    }
+    if (!prevBoundDate) {
+      // 올해 이전 절기 없으면 작년 마지막 절기
+      const last = sortedBounds[sortedBounds.length - 1]
+      prevBoundDate = new Date(birthYear - 1, last.solarMonth - 1, last.solarDay)
+    }
+    const diffDays = Math.round((birthDate.getTime() - prevBoundDate.getTime()) / 86400000)
+    startAge = Math.max(1, Math.round(diffDays / 3))
+  }
 
   const result: DaeunInfo[] = []
   const currentAge = new Date().getFullYear() - birthYear
@@ -842,8 +876,7 @@ export function calculateSaju(
     tenGods.push(getTenGod(dayMasterElement, dayMasterYinYang, hourPillar.stem))
   }
 
-  const animalYear = ((year - 4) % 12 + 12) % 12
-  const animal = BRANCHES_ANIMAL[animalYear]
+  const animal = BRANCHES_ANIMAL[yearPillar.branch]
 
   // 신살 계산
   const sinsal = calculateSinsal(pillars, dayMaster, dayPillar.branch)
@@ -852,7 +885,7 @@ export function calculateSaju(
   const yearAnalysis = analyzeYear(pillars, dayMaster, dayMasterElement, dayMasterYinYang, tenGods, analysis.usefulGod)
 
   // 대운 계산
-  const daeun = calculateDaeun(yearPillar.stem, monthPillar, gender, dayMasterElement, dayMasterYinYang, year)
+  const daeun = calculateDaeun(yearPillar.stem, monthPillar, gender, dayMasterElement, dayMasterYinYang, year, month, day)
 
   // 공망 분석
   const gongmang = calculateGongmang(dayPillar, pillars)

@@ -55,14 +55,14 @@ function SajuReadingInner() {
     const h = searchParams.get('h')
     const g = searchParams.get('g')
     if (y && m && d) {
-      const hour = h ? parseInt(h, 10) : null
+      const hour = h && h !== '' ? parseInt(h, 10) : null
       const gen = g === 'f' ? 'female' : 'male'
       const saju = calculateSaju(parseInt(y, 10), parseInt(m, 10), parseInt(d, 10), hour, gen)
       setResult(saju)
       setBirthYear(y)
       setBirthMonth(m)
       setBirthDay(d)
-      if (h) setBirthHour(parseInt(h, 10))
+      if (h && h !== '') setBirthHour(parseInt(h, 10))
       setGender(gen)
       setPhase('result')
     }

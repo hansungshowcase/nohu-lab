@@ -22,9 +22,9 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       y: String(result.birthYear),
       m: String(result.birthMonth),
       d: String(result.birthDay),
-      h: result.birthHour !== null ? String(result.birthHour) : '',
       g: result.gender === 'male' ? 'm' : 'f',
     })
+    if (result.birthHour !== null) params.set('h', String(result.birthHour))
     return `${window.location.origin}/programs/saju-reading?${params.toString()}`
   }, [result])
 
@@ -132,22 +132,26 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           scrollX: 0,
           windowWidth: 720,
         } as Parameters<typeof html2canvas>[1])
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
-            return
-          }
-          const blobUrl = URL.createObjectURL(blob)
-          const link = document.createElement('a')
-          link.download = `사주풀이_결과.png`
-          link.href = blobUrl
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
-          setSaveSuccess(true)
-          setTimeout(() => setSaveSuccess(false), 2000)
-        }, 'image/png', 1.0)
+        await new Promise<void>((resolve) => {
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
+              resolve()
+              return
+            }
+            const blobUrl = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.download = `사주풀이_결과.png`
+            link.href = blobUrl
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+            setSaveSuccess(true)
+            setTimeout(() => setSaveSuccess(false), 2000)
+            resolve()
+          }, 'image/png', 1.0)
+        })
       } catch {
         alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
       }
