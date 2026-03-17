@@ -45,6 +45,8 @@ function SajuReadingInner() {
   const [birthHour, setBirthHour] = useState(-1)
   const [gender, setGender] = useState<'male' | 'female'>('male')
   const [error, setError] = useState('')
+  const monthRef = useRef<HTMLInputElement>(null)
+  const dayRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const y = searchParams.get('y')
@@ -193,13 +195,17 @@ function SajuReadingInner() {
               출생 연도 {animalHint && <span className="text-orange-500 text-xs">({animalHint})</span>}
             </label>
             <input
-              type="number"
-              placeholder="예: 1990"
+              type="tel"
+              inputMode="numeric"
+              placeholder="예: 1990 (4자리)"
               value={birthYear}
-              onChange={e => setBirthYear(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
-              min={1920}
-              max={new Date().getFullYear()}
+              onChange={e => {
+                const v = e.target.value.replace(/\D/g, '').slice(0, 4)
+                setBirthYear(v)
+                if (v.length === 4) monthRef.current?.focus()
+              }}
+              maxLength={4}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 text-center tracking-widest"
             />
           </div>
 
@@ -207,23 +213,35 @@ function SajuReadingInner() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">월</label>
               <input
-                type="number"
+                ref={monthRef}
+                type="tel"
+                inputMode="numeric"
                 placeholder="1~12"
                 value={birthMonth}
-                onChange={e => setBirthMonth(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
-                min={1} max={12}
+                onChange={e => {
+                  const v = e.target.value.replace(/\D/g, '').slice(0, 2)
+                  setBirthMonth(v)
+                  const n = parseInt(v, 10)
+                  if (v.length === 2 || (v.length === 1 && n >= 2)) dayRef.current?.focus()
+                }}
+                maxLength={2}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 text-center tracking-widest"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">일</label>
               <input
-                type="number"
+                ref={dayRef}
+                type="tel"
+                inputMode="numeric"
                 placeholder="1~31"
                 value={birthDay}
-                onChange={e => setBirthDay(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400"
-                min={1} max={31}
+                onChange={e => {
+                  const v = e.target.value.replace(/\D/g, '').slice(0, 2)
+                  setBirthDay(v)
+                }}
+                maxLength={2}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 text-center tracking-widest"
               />
             </div>
           </div>
