@@ -16,6 +16,19 @@ type Phase = 'intro' | 'quiz' | 'functional' | 'result'
 
 const DISCLAIMER = '본 검사는 의학적 진단이 아닌 자가 참고용입니다. 정확한 진단은 정신건강의학과 전문의 상담을 권장합니다.'
 const KAKAO_KEY = '3913fde247b12ce25084eb42a9b17ed9'
+const FREE_LIMIT = 2
+const STORAGE_KEY = 'mental-health-count'
+const CAFE_URL = 'https://cafe.naver.com/eovhskfktmak'
+
+function getTestCount(): number {
+  if (typeof window === 'undefined') return 0
+  return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10)
+}
+
+function incrementTestCount(): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(STORAGE_KEY, String(getTestCount() + 1))
+}
 
 interface KakaoWindow extends Window {
   Kakao?: {
@@ -32,7 +45,19 @@ export default function MentalHealth() {
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [functionalImpairment, setFunctionalImpairment] = useState<number | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isMember, setIsMember] = useState(false)
+  const [showLimitModal, setShowLimitModal] = useState(false)
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // 회원 여부 확인
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/auth/me', { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((user) => { if (user && user.tier >= 1) setIsMember(true) })
+      .catch((err) => { if (err.name !== 'AbortError') setIsMember(false) })
+    return () => controller.abort()
+  }, [])
 
   // 전체 검사 (모든 스케일)
   const activeScales = SCALES
@@ -61,6 +86,10 @@ export default function MentalHealth() {
   }, [])
 
   function startQuiz() {
+    if (!isMember && getTestCount() >= FREE_LIMIT) {
+      setShowLimitModal(true)
+      return
+    }
     setPhase('quiz')
     setCurrentScaleIdx(0)
     setCurrentQIdx(0)
@@ -192,12 +221,46 @@ export default function MentalHealth() {
           </p>
         </div>
 
+        {!isMember && (
+          <p className="text-center text-[12px] text-gray-400">
+            비회원 무료 체험 {Math.max(0, FREE_LIMIT - getTestCount())}회 남음 (총 {FREE_LIMIT}회)
+          </p>
+        )}
+
         <button
           onClick={startQuiz}
           className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 transition-all duration-200 active:scale-[0.98] text-[15px]"
         >
           검사 시작하기
         </button>
+
+        {/* 제한 모달 */}
+        {showLimitModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6" onClick={() => setShowLimitModal(false)}>
+            <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+              <div className="text-5xl">🔒</div>
+              <h3 className="text-lg font-bold text-gray-900">무료 체험이 끝났습니다</h3>
+              <p className="text-[14px] text-gray-500 leading-relaxed">
+                비회원은 <strong>{FREE_LIMIT}회</strong>까지 무료로 이용할 수 있습니다.<br />
+                카페 가입 후 무제한으로 이용하세요!
+              </p>
+              <a
+                href={CAFE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold text-[15px] rounded-xl shadow-md transition-all"
+              >
+                카페 가입하러 가기
+              </a>
+              <button
+                onClick={() => setShowLimitModal(false)}
+                className="text-[13px] text-gray-400 hover:text-gray-600 transition"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -306,6 +369,7 @@ export default function MentalHealth() {
                     key={opt.value}
                     onClick={() => {
                       setFunctionalImpairment(opt.value)
+                      if (!isMember) incrementTestCount()
                       setTimeout(() => setPhase('result'), 300)
                     }}
                     className={`w-full text-left px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${
