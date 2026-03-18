@@ -603,18 +603,34 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
             </div>
           </div>
 
-          {/* 수명 분기점 한줄 요약 */}
-          {brk && (
-            <div className="bg-gradient-to-r from-blue-50 via-white to-purple-50 rounded-2xl border border-orange-100 p-5 overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 animate-pulse" />
-              <div className="relative flex items-center gap-3">
-                <div className="shrink-0 w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-[14px] shadow-md animate-bounce" style={{ animationDuration: '2s' }}>{Math.round(brk)}</div>
-                <p className="text-[14px] text-gray-800 leading-relaxed">
-                  <strong className="text-orange-600">{Math.round(brk)}세</strong> 이상 살 것 같으면 <strong className="text-purple-600">늦게</strong>, 그 전에 사망할 것 같으면 <strong className="text-blue-600">빨리</strong> 받는 게 이득
-                </p>
+          {/* 수명 분기점 */}
+          {brk && (() => {
+            const brkAge = Math.round(brk)
+            const avgLife = 83 // 한국 평균수명 (남녀 평균)
+            const aboveAvg = brkAge <= avgLife
+            return (
+              <div className={`rounded-2xl border p-5 ${aboveAvg ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200'}`}>
+                <div className="text-center">
+                  <p className={`text-[28px] sm:text-[32px] font-black ${aboveAvg ? 'text-purple-600' : 'text-blue-600'}`}>{brkAge}세</p>
+                  <p className="text-[15px] font-bold text-gray-800 mt-1">
+                    {aboveAvg
+                      ? '평균수명(83세)보다 낮아서, 대부분 늦게 받는 게 유리'
+                      : '평균수명(83세)보다 높아서, 빨리 받는 게 안전'}
+                  </p>
+                  <div className="flex items-center justify-center gap-4 mt-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                      <span className="text-[12px] text-gray-600">{brkAge}세 전 사망 → 빨리</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 bg-purple-500 rounded-full" />
+                      <span className="text-[12px] text-gray-600">{brkAge}세 후 생존 → 늦게</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           {/* 해지 vs 연금 */}
           {lump > 0 && sc[1] && (() => {
