@@ -45,19 +45,11 @@ export default function ShareButtons({
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
   const [kakaoReady, setKakaoReady] = useState(false)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-
-  // Blob URL 메모리 누수 방지
-  useEffect(() => {
-    return () => {
-      if (imagePreview) URL.revokeObjectURL(imagePreview)
-    }
-  }, [imagePreview])
 
   useEffect(() => {
     function initKakao() {
       if (window.Kakao && !window.Kakao.isInitialized()) {
-        window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_KEY || '')
+        window.Kakao.init('3913fde247b12ce25084eb42a9b17ed9')
       }
       if (window.Kakao?.isInitialized()) {
         setKakaoReady(true)
@@ -111,32 +103,13 @@ export default function ShareButtons({
       const res = await fetch(url)
       if (!res.ok) throw new Error('이미지 생성 실패')
       const blob = await res.blob()
-      const file = new File([blob], `노후준비_리포트_${total}점_${grade}.png`, { type: 'image/png' })
+      const fileName = `노후준비_리포트_${total}점_${grade}.png`
 
-      // 1순위: Web Share API (모바일 공유 시트)
-      if (navigator.share) {
-        try {
-          if (navigator.canShare?.({ files: [file] })) {
-            await navigator.share({ files: [file], title: '노후 준비 진단 리포트' })
-            return
-          }
-        } catch (e) {
-          if ((e as Error).name === 'AbortError') return
-        }
-      }
-
-      // 2순위: 이미지를 화면에 표시 (모바일 - 꾹 눌러 저장)
+      // 모바일+PC 공통: 바로 다운로드
       const blobUrl = URL.createObjectURL(blob)
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-      if (isMobile) {
-        setImagePreview(blobUrl)
-        return
-      }
-
-      // 3순위: 직접 다운로드 (데스크탑)
       const link = document.createElement('a')
       link.href = blobUrl
-      link.download = file.name
+      link.download = fileName
       link.style.display = 'none'
       document.body.appendChild(link)
       link.click()
@@ -144,19 +117,13 @@ export default function ShareButtons({
         document.body.removeChild(link)
         URL.revokeObjectURL(blobUrl)
       }, 3000)
-    } catch (err) {
+    } catch {
       alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
     } finally {
       setSaving(false)
     }
   }
 
-  function closePreview() {
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview)
-      setImagePreview(null)
-    }
-  }
 
   async function shareKakao() {
     if (kakaoReady && window.Kakao) {
@@ -242,66 +209,6 @@ export default function ShareButtons({
         </button>
       </div>
 
-      {/* 이미지 미리보기 오버레이 (모바일) */}
-      {imagePreview && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'flex-start',
-            padding: '16px', overflowY: 'auto',
-          }}
-          onClick={closePreview}
-        >
-          <div
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '12px',
-              textAlign: 'center',
-              width: '100%',
-              maxWidth: '400px',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <p style={{ fontSize: '15px', fontWeight: 700, color: '#111', margin: '0 0 4px' }}>
-              아래 이미지를 꾹 눌러서 저장하세요
-            </p>
-            <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>
-              이미지를 길게 누르면 &quot;사진에 저장&quot; 옵션이 나타납니다
-            </p>
-          </div>
-          <img
-            src={imagePreview}
-            alt="노후 준비 진단 리포트"
-            style={{
-              width: '100%',
-              maxWidth: '400px',
-              borderRadius: '8px',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
-            }}
-            onClick={e => e.stopPropagation()}
-          />
-          <button
-            onClick={closePreview}
-            style={{
-              marginTop: '16px',
-              padding: '12px 32px',
-              backgroundColor: '#fff',
-              color: '#111',
-              borderRadius: '12px',
-              border: 'none',
-              fontSize: '15px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            닫기
-          </button>
-        </div>
-      )}
     </>
   )
 }
