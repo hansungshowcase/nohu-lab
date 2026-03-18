@@ -603,34 +603,18 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
             </div>
           </div>
 
-          {/* 수명 분기점 */}
-          {brk && (() => {
-            const brkAge = Math.round(brk)
-            const avgLife = 83 // 한국 평균수명 (남녀 평균)
-            const aboveAvg = brkAge <= avgLife
-            return (
-              <div className={`rounded-2xl border p-5 ${aboveAvg ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200'}`}>
-                <div className="text-center">
-                  <p className={`text-[24px] sm:text-[28px] font-black ${aboveAvg ? 'text-purple-600' : 'text-blue-600'}`}>{brkAge}세</p>
-                  <p className="text-[15px] font-bold text-gray-800 mt-1">
-                    {aboveAvg
-                      ? '평균수명(83세)보다 낮아서, 대부분 늦게 받는 게 유리'
-                      : '평균수명(83세)보다 높아서, 빨리 받는 게 안전'}
-                  </p>
-                  <div className="flex items-center justify-center gap-4 mt-3">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                      <span className="text-[12px] text-gray-600">{brkAge}세 전 사망 → 빨리</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 bg-purple-500 rounded-full" />
-                      <span className="text-[12px] text-gray-600">{brkAge}세 후 생존 → 늦게</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
+          {/* 한줄 결론 */}
+          {brk && best && (
+            <div className="bg-orange-50 rounded-2xl border border-orange-200 p-5 text-center">
+              <p className="text-[15px] font-bold text-gray-900">
+                한국인 평균수명은 <strong className="text-orange-600">83세</strong>
+              </p>
+              <p className="text-[14px] text-gray-700 mt-2 leading-relaxed">
+                83세까지만 살아도<br />
+                <strong className="text-orange-600">{best.age}세</strong>에 받기 시작하는 게 <strong className="text-orange-600">{fM(best.cumul)}</strong>으로 가장 이득
+              </p>
+            </div>
+          )}
 
           {/* 해지 vs 연금 */}
           {lump > 0 && sc[1] && (() => {
