@@ -174,9 +174,25 @@ vercel alias set <배포URL> retireplan.kr
   4. 배포된 URL에서 curl로 실제 테스트
   5. 외부 서비스 연동 시 실제 동작 테스트
 
+## React 컴포넌트 작성 규칙
+- **TDZ(Temporal Dead Zone) 방지 필수**: 컴포넌트 내에서 `const`로 선언한 계산 변수를 `useEffect` 의존성 배열에서 사용할 경우, **반드시 계산 변수 선언을 useEffect보다 위에 배치**할 것. 아래처럼 하면 런타임 크래시 발생:
+  ```tsx
+  // ❌ 금지 — TDZ 에러 발생 (빌드에서 안 잡히고 런타임에서만 터짐)
+  useEffect(() => { ... }, [base])  // base를 여기서 참조
+  const base = someCalc()           // base가 아래에서 선언됨
+
+  // ✅ 올바른 순서
+  const base = someCalc()           // 먼저 선언
+  useEffect(() => { ... }, [base])  // 그 다음 사용
+  ```
+- ESLint `no-use-before-define` 규칙이 설정되어 있으므로 린트 실행으로 사전 검출 가능
+- **useEffect 의존성 배열에 매 렌더링 새로 생성되는 배열/객체 넣지 말 것** → `useMemo`로 메모이제이션 필수
+- **localStorage 접근은 반드시 try-catch로 감쌀 것** — 카카오톡 인앱 브라우저/시크릿 모드에서 SecurityError 발생
+
 ## 과거 실수 (반복 금지)
 - cafe-webapp 프로젝트를 안 쓰는 거라 판단하고 삭제 → 환경변수 전부 날아감 → 프로젝트는 사용자 요청 없이 절대 삭제하지 말 것
 - ai-worker2가 cafe-webapp(잘못된 프로젝트)에 연결되어 배포가 nohu-lab.vercel.app에 반영 안 됨 → 배포 전 .vercel/project.json 확인 필수
 - vercel --prod 후 nohu-lab.vercel.app alias가 자동 갱신 안 되는 경우 있음 → 배포 후 반드시 `vercel alias set` 실행
 - **전수조사가 frontend 브랜치만 검사하고 main의 다른 터미널 변경사항을 놓침** → admin-login이 timingSafeEqual로 변경되어 서버 오류 발생. 전수조사 전 반드시 main merge 후 조사할 것
 - **Vercel 무료 플랜 일일 배포 한도 100회** → 3개 터미널에서 빈번한 배포 시 한도 초과 주의. 배포는 꼭 필요할 때만
+- **PensionTiming TDZ 크래시** → `const base`를 `useEffect` 의존성 배열에서 선언 전에 참조하여 `Cannot access 'ei' before initialization` 런타임 에러 발생. 빌드에서 안 잡히고 Turbopack 번들링 후에만 터짐. 계산 변수는 반드시 useEffect 위에 선언할 것
