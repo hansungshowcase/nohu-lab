@@ -93,11 +93,10 @@ export default function Sidebar({ user }: { user: User | null }) {
         {navItems.map((item) => {
           const isActive = fullUrl === item.href || (item.href === '/dashboard' && pathname === '/dashboard' && !fullUrl.includes('category='))
           return (
-            <Link
+            <button
               key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm transition-all duration-200 active:scale-[0.97] ${
+              onClick={() => { setOpen(false); router.push(item.href) }}
+              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm transition-all duration-200 active:scale-[0.97] text-left ${
                 isActive
                   ? 'bg-white/80 text-amber-900 font-semibold shadow-sm shadow-amber-200/30 border border-amber-200/40'
                   : 'text-amber-800/60 hover:bg-white/50 hover:text-amber-900'
@@ -108,7 +107,7 @@ export default function Sidebar({ user }: { user: User | null }) {
               {isActive && (
                 <div className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-600" />
               )}
-            </Link>
+            </button>
           )
         })}
       </nav>
