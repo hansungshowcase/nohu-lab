@@ -152,6 +152,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   const [saving, setSaving] = useState(false)
   const [saveOk, setSaveOk] = useState(false)
   const [started, setStarted] = useState(false)
+  const [kakaoMsg, setKakaoMsg] = useState('')
 
   // URL 파라미터 읽기 (결과 공유용)
   const [urlParams] = useState(() => {
@@ -382,7 +383,6 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
     try { await navigator.clipboard.writeText(u) } catch { const a = document.createElement('textarea'); a.value = u; a.style.position = 'fixed'; a.style.left = '-9999px'; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a) }
     setCopy(true); setTimeout(() => setCopy(false), 2000)
   }
-  const [kakaoMsg, setKakaoMsg] = useState('')
   const handleKakao = async () => {
     const u = getShareUrl()
     if (navigator.share) {
