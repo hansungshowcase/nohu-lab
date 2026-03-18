@@ -102,6 +102,26 @@ export const BRANCH_PENALTIES: [number, number][] = [
   [0, 3],   // 자묘형
 ]
 
+// 지지파 (Earthly Branch Destructions)
+export const BRANCH_DESTRUCTIONS: [number, number][] = [
+  [0, 9],   // 자유파
+  [1, 4],   // 축진파
+  [2, 11],  // 인해파
+  [3, 6],   // 묘오파
+  [5, 8],   // 사신파
+  [10, 7],  // 술미파
+]
+
+// 지지해 (Earthly Branch Harms)
+export const BRANCH_HARMS: [number, number][] = [
+  [0, 7],   // 자미해
+  [1, 6],   // 축오해
+  [2, 5],   // 인사해
+  [3, 4],   // 묘진해
+  [8, 11],  // 신해해
+  [9, 10],  // 유술해
+]
+
 // 지지삼합 (Three Harmony) - 세 지지가 모이면 오행이 생성됨
 export const BRANCH_THREE_HARMONY: [number, number, number, number][] = [
   [8, 0, 4, 4],   // 신자진 → 수(水)
@@ -200,6 +220,85 @@ export interface GyeokgukInfo {
   quality: 'good' | 'neutral' | 'challenging'  // 품격
 }
 
+// 합충형파해 상세
+export interface HapChungDetail {
+  type: 'cheongan-hap' | 'jiji-yukap' | 'samhap' | 'chung' | 'hyung' | 'pa' | 'hae'
+  pillar1: string
+  pillar2: string
+  description: string
+  effect: 'positive' | 'negative' | 'neutral'
+}
+
+// 합충형파해 종합 분석
+export interface HapChungAnalysis {
+  details: HapChungDetail[]
+  hasClash: boolean
+  hasHarmony: boolean
+  overallTendency: 'harmonious' | 'conflicting' | 'mixed' | 'neutral'
+}
+
+// 종격 정보
+export interface JonggukInfo {
+  type: string
+  name: string
+  description: string
+  isSpecial: boolean
+  followElement: number  // 따르는 오행
+}
+
+// 투간/통근 분석
+export interface TuganTonggeunInfo {
+  tugan: { stemIdx: number; stemName: string; fromBranch: string; pillarName: string }[]
+  tonggeun: { stemIdx: number; stemName: string; inBranch: string; pillarName: string }[]
+  dayMasterRooted: boolean
+  rootStrength: 'strong' | 'medium' | 'weak' | 'none'
+}
+
+// 조후용신
+export interface JohuYongsinInfo {
+  season: string
+  temperature: string
+  neededElement: number
+  explanation: string
+}
+
+// 월운 (Monthly fortune)
+export interface WolunInfo {
+  month: number
+  stem: number
+  branch: number
+  tenGod: string
+  rating: number  // 1-5 stars
+  keyword: string
+}
+
+// 확장 신살 (기존 + 추가)
+export interface EnhancedSinsalInfo extends SinsalInfo {
+  hasBaekho: boolean      // 백호대살
+  hasHongyeom: boolean    // 홍염살
+  hasCheonui: boolean     // 천의성
+  hasHakdang: boolean     // 학당귀인
+  hasCheonduk: boolean    // 천덕귀인
+  hasWolduk: boolean      // 월덕귀인
+  hasGwimungwan: boolean  // 귀문관살
+  hasGyeokgak: boolean    // 격각살
+  hasCheonla: boolean     // 천라
+  hasJimang: boolean      // 지망
+  hasWonjin: boolean      // 원진살
+  hasBokseong: boolean    // 복성귀인
+  hasGeumyeo: boolean     // 금여록
+  hasTaeguk: boolean      // 태극귀인
+  twelveAnimalSinsal: string  // 12신살 이름
+}
+
+// 심층 공망
+export interface EnhancedGongmangInfo extends GongmangInfo {
+  severity: 'high' | 'medium' | 'low' | 'none'
+  yearVoid: boolean
+  monthVoid: boolean
+  hourVoid: boolean
+}
+
 // 세운(올해) 분석 결과
 export interface YearAnalysis {
   yearStem: number        // 올해 천간
@@ -273,6 +372,13 @@ export interface SajuResult {
   daeun: DaeunInfo[]
   gongmang: GongmangInfo
   gyeokguk: GyeokgukInfo
+  hapChung: HapChungAnalysis
+  jongguk: JonggukInfo | null
+  tuganTonggeun: TuganTonggeunInfo
+  johu: JohuYongsinInfo
+  wolun: WolunInfo[]
+  enhancedSinsal: EnhancedSinsalInfo
+  enhancedGongmang: EnhancedGongmangInfo
 }
 
 // ═══════════════════════════════════════════════
@@ -845,6 +951,636 @@ function determineGyeokguk(
 }
 
 // ═══════════════════════════════════════════════
+// 합충형파해 종합 분석
+// ═══════════════════════════════════════════════
+function analyzeHapChung(pillars: Pillar[]): HapChungAnalysis {
+  const details: HapChungDetail[] = []
+  const pillarNames = ['년주', '월주', '일주', '시주']
+
+  // 모든 기둥 쌍 비교
+  for (let i = 0; i < pillars.length; i++) {
+    for (let j = i + 1; j < pillars.length; j++) {
+      const pi = pillars[i]
+      const pj = pillars[j]
+
+      // 천간합 체크
+      for (const [a, b, resultEl] of STEM_COMBINATIONS) {
+        if ((pi.stem === a && pj.stem === b) || (pi.stem === b && pj.stem === a)) {
+          details.push({
+            type: 'cheongan-hap',
+            pillar1: pillarNames[i],
+            pillar2: pillarNames[j],
+            description: `${STEMS[pi.stem]}${STEMS[pj.stem]} 천간합 → ${ELEMENTS[resultEl]}`,
+            effect: 'positive',
+          })
+        }
+      }
+
+      // 지지육합 체크
+      for (const [a, b, resultEl] of BRANCH_COMBINATIONS) {
+        if ((pi.branch === a && pj.branch === b) || (pi.branch === b && pj.branch === a)) {
+          details.push({
+            type: 'jiji-yukap',
+            pillar1: pillarNames[i],
+            pillar2: pillarNames[j],
+            description: `${BRANCHES[pi.branch]}${BRANCHES[pj.branch]} 육합 → ${ELEMENTS[resultEl]}`,
+            effect: 'positive',
+          })
+        }
+      }
+
+      // 지지충 체크
+      for (const [a, b] of BRANCH_CLASHES) {
+        if ((pi.branch === a && pj.branch === b) || (pi.branch === b && pj.branch === a)) {
+          details.push({
+            type: 'chung',
+            pillar1: pillarNames[i],
+            pillar2: pillarNames[j],
+            description: `${BRANCHES[pi.branch]}${BRANCHES[pj.branch]} 충 - 강한 충돌과 변동`,
+            effect: 'negative',
+          })
+        }
+      }
+
+      // 지지형 체크
+      for (const [a, b] of BRANCH_PENALTIES) {
+        if ((pi.branch === a && pj.branch === b) || (pi.branch === b && pj.branch === a)) {
+          details.push({
+            type: 'hyung',
+            pillar1: pillarNames[i],
+            pillar2: pillarNames[j],
+            description: `${BRANCHES[pi.branch]}${BRANCHES[pj.branch]} 형 - 갈등과 시련`,
+            effect: 'negative',
+          })
+        }
+      }
+
+      // 지지파 체크
+      for (const [a, b] of BRANCH_DESTRUCTIONS) {
+        if ((pi.branch === a && pj.branch === b) || (pi.branch === b && pj.branch === a)) {
+          details.push({
+            type: 'pa',
+            pillar1: pillarNames[i],
+            pillar2: pillarNames[j],
+            description: `${BRANCHES[pi.branch]}${BRANCHES[pj.branch]} 파 - 깨짐과 손실`,
+            effect: 'negative',
+          })
+        }
+      }
+
+      // 지지해 체크
+      for (const [a, b] of BRANCH_HARMS) {
+        if ((pi.branch === a && pj.branch === b) || (pi.branch === b && pj.branch === a)) {
+          details.push({
+            type: 'hae',
+            pillar1: pillarNames[i],
+            pillar2: pillarNames[j],
+            description: `${BRANCHES[pi.branch]}${BRANCHES[pj.branch]} 해 - 방해와 손해`,
+            effect: 'negative',
+          })
+        }
+      }
+    }
+  }
+
+  // 지지삼합 체크 (3개 기둥의 지지가 삼합을 이루는지)
+  const allBranches = pillars.map(p => p.branch)
+  for (const [b1, b2, b3, resultEl] of BRANCH_THREE_HARMONY) {
+    const has1 = allBranches.includes(b1)
+    const has2 = allBranches.includes(b2)
+    const has3 = allBranches.includes(b3)
+    if (has1 && has2 && has3) {
+      details.push({
+        type: 'samhap',
+        pillar1: `${BRANCHES[b1]}${BRANCHES[b2]}`,
+        pillar2: BRANCHES[b3],
+        description: `${BRANCHES[b1]}${BRANCHES[b2]}${BRANCHES[b3]} 삼합 → ${ELEMENTS[resultEl]} 국`,
+        effect: 'positive',
+      })
+    }
+  }
+
+  const hasClash = details.some(d => d.type === 'chung' || d.type === 'hyung' || d.type === 'pa' || d.type === 'hae')
+  const hasHarmony = details.some(d => d.type === 'cheongan-hap' || d.type === 'jiji-yukap' || d.type === 'samhap')
+
+  let overallTendency: 'harmonious' | 'conflicting' | 'mixed' | 'neutral' = 'neutral'
+  if (hasHarmony && hasClash) overallTendency = 'mixed'
+  else if (hasHarmony) overallTendency = 'harmonious'
+  else if (hasClash) overallTendency = 'conflicting'
+
+  return { details, hasClash, hasHarmony, overallTendency }
+}
+
+// ═══════════════════════════════════════════════
+// 종격 판별
+// ═══════════════════════════════════════════════
+function detectJongguk(
+  dayMasterElement: number, dayMasterScore: number,
+  elementCounts: number[], isDayMasterStrong: boolean,
+  pillars: Pillar[]
+): JonggukInfo | null {
+  const totalStrength = elementCounts.reduce((a, b) => a + b, 0)
+
+  // 종강격: 일간이 극도로 강함 (비겁+인성이 압도적)
+  if (dayMasterScore > 85) {
+    const produceMe = (dayMasterElement + 4) % 5  // 인성 오행
+    const myGroupStr = elementCounts[dayMasterElement] + elementCounts[produceMe]
+    if (myGroupStr / totalStrength > 0.8) {
+      return {
+        type: 'jongganggyeok',
+        name: '종강격(從強格)',
+        description: '일간이 극도로 강하여 비겁과 인성을 따르는 특수 격국입니다. 자기 주관이 뚜렷하고 리더십이 강합니다.',
+        isSpecial: true,
+        followElement: dayMasterElement,
+      }
+    }
+  }
+
+  // 종격 조건: 일간이 극도로 약함
+  if (dayMasterScore < 15) {
+    const drain = (dayMasterElement + 1) % 5      // 식상 (내가 생하는)
+    const wealth = (dayMasterElement + 2) % 5      // 재성 (내가 극하는)
+    const officer = (dayMasterElement + 3) % 5     // 관성 (나를 극하는)
+
+    // 종재격: 재성이 압도적
+    if (elementCounts[wealth] / totalStrength > 0.35) {
+      return {
+        type: 'jongjae',
+        name: '종재격(從財格)',
+        description: '재성의 기운이 압도적이어서 재물을 따르는 격국입니다. 사업과 투자에 탁월한 감각을 보입니다.',
+        isSpecial: true,
+        followElement: wealth,
+      }
+    }
+
+    // 종관격: 관성이 압도적
+    if (elementCounts[officer] / totalStrength > 0.35) {
+      return {
+        type: 'jonggwan',
+        name: '종관격(從官格)',
+        description: '관성의 기운이 압도적이어서 권력과 명예를 따르는 격국입니다. 공직이나 대기업에서 크게 성공합니다.',
+        isSpecial: true,
+        followElement: officer,
+      }
+    }
+
+    // 종아격: 식상이 압도적
+    if (elementCounts[drain] / totalStrength > 0.35) {
+      return {
+        type: 'jonga',
+        name: '종아격(從兒格)',
+        description: '식상의 기운이 압도적이어서 표현과 창작을 따르는 격국입니다. 예술, 교육, 기술 분야에서 빛납니다.',
+        isSpecial: true,
+        followElement: drain,
+      }
+    }
+  }
+
+  return null
+}
+
+// ═══════════════════════════════════════════════
+// 투간/통근 분석
+// ═══════════════════════════════════════════════
+function analyzeTuganTonggeun(pillars: Pillar[]): TuganTonggeunInfo {
+  const pillarNames = ['년주', '월주', '일주', '시주']
+  const tugan: TuganTonggeunInfo['tugan'] = []
+  const tonggeun: TuganTonggeunInfo['tonggeun'] = []
+
+  // 모든 기둥의 천간 목록
+  const allStems = pillars.map(p => p.stem)
+
+  // 투간: 지장간에 있는 천간이 사주의 천간에 나타나는 경우
+  for (let i = 0; i < pillars.length; i++) {
+    const hidden = HIDDEN_STEMS[pillars[i].branch]
+    for (const hs of hidden) {
+      // 다른 기둥의 천간 중 이 지장간과 같은 것이 있으면 투간
+      for (let j = 0; j < pillars.length; j++) {
+        if (pillars[j].stem === hs) {
+          tugan.push({
+            stemIdx: hs,
+            stemName: STEMS[hs],
+            fromBranch: `${pillarNames[i]} ${BRANCHES[pillars[i].branch]}`,
+            pillarName: pillarNames[j],
+          })
+        }
+      }
+    }
+  }
+
+  // 통근: 천간이 어떤 지지의 지장간에 뿌리를 두고 있는 경우
+  for (let i = 0; i < pillars.length; i++) {
+    const stem = pillars[i].stem
+    for (let j = 0; j < pillars.length; j++) {
+      const hidden = HIDDEN_STEMS[pillars[j].branch]
+      if (hidden.includes(stem)) {
+        tonggeun.push({
+          stemIdx: stem,
+          stemName: STEMS[stem],
+          inBranch: `${pillarNames[j]} ${BRANCHES[pillars[j].branch]}`,
+          pillarName: pillarNames[i],
+        })
+      }
+    }
+  }
+
+  // 일간 통근 여부 (일간이 어떤 지지의 지장간에 있는지)
+  const dayStem = pillars[2].stem  // 일주 = index 2
+  let rootCount = 0
+  for (const p of pillars) {
+    const hidden = HIDDEN_STEMS[p.branch]
+    if (hidden.includes(dayStem)) rootCount++
+  }
+
+  const dayMasterRooted = rootCount > 0
+  let rootStrength: 'strong' | 'medium' | 'weak' | 'none' = 'none'
+  if (rootCount >= 3) rootStrength = 'strong'
+  else if (rootCount === 2) rootStrength = 'medium'
+  else if (rootCount === 1) rootStrength = 'weak'
+
+  return { tugan, tonggeun, dayMasterRooted, rootStrength }
+}
+
+// ═══════════════════════════════════════════════
+// 조후용신 계산
+// ═══════════════════════════════════════════════
+function calculateJohu(dayMasterElement: number, monthBranch: number): JohuYongsinInfo {
+  // 계절 판별
+  let season: string
+  let temperature: string
+
+  if (monthBranch === 2 || monthBranch === 3) {
+    season = '봄(春)'
+    temperature = '따뜻함'
+  } else if (monthBranch === 5 || monthBranch === 6) {
+    season = '여름(夏)'
+    temperature = '더움'
+  } else if (monthBranch === 8 || monthBranch === 9) {
+    season = '가을(秋)'
+    temperature = '서늘함'
+  } else if (monthBranch === 11 || monthBranch === 0) {
+    season = '겨울(冬)'
+    temperature = '추움'
+  } else {
+    // 진술축미 (환절기/토왕용사)
+    if (monthBranch === 4) { season = '늦봄(季春)'; temperature = '따뜻함' }
+    else if (monthBranch === 7) { season = '늦여름(季夏)'; temperature = '더움' }
+    else if (monthBranch === 10) { season = '늦가을(季秋)'; temperature = '서늘함' }
+    else { season = '늦겨울(季冬)'; temperature = '추움' }  // monthBranch === 1
+  }
+
+  // 조후 판단: 계절에 따라 필요한 오행 결정
+  let neededElement: number
+  let explanation: string
+
+  if (monthBranch === 5 || monthBranch === 6 || monthBranch === 7) {
+    // 여름 (사오미) → 수(水)로 식히거나 금(金)으로 서늘하게
+    neededElement = 4  // 수
+    explanation = `여름에 태어나 열기가 강합니다. 수(水)의 기운으로 열을 식혀 균형을 잡아야 합니다.`
+    // 수가 일간이면 금으로 대체
+    if (dayMasterElement === 4) {
+      neededElement = 3  // 금
+      explanation = `여름에 태어난 수(水) 일간은 금(金)의 도움으로 힘을 보강하면 좋습니다.`
+    }
+  } else if (monthBranch === 11 || monthBranch === 0 || monthBranch === 1) {
+    // 겨울 (해자축) → 화(火)로 따뜻하게
+    neededElement = 1  // 화
+    explanation = `겨울에 태어나 차가운 기운이 강합니다. 화(火)의 기운으로 온기를 더해야 합니다.`
+    // 화가 일간이면 목으로 대체
+    if (dayMasterElement === 1) {
+      neededElement = 0  // 목
+      explanation = `겨울에 태어난 화(火) 일간은 목(木)의 도움으로 불을 살려야 합니다.`
+    }
+  } else if (monthBranch === 2 || monthBranch === 3 || monthBranch === 4) {
+    // 봄 (인묘진) → 화(火)로 목의 기운을 설기, 또는 금(金)으로 조절
+    neededElement = 1  // 화
+    explanation = `봄에 태어나 목(木)의 기운이 왕성합니다. 화(火)로 설기하여 균형을 잡으면 좋습니다.`
+    if (dayMasterElement === 1) {
+      neededElement = 4  // 수
+      explanation = `봄에 태어난 화(火) 일간은 수(水)의 조절로 과열을 방지하면 좋습니다.`
+    }
+  } else {
+    // 가을 (신유술) → 화(火)로 따뜻하게, 목(木)으로 생기
+    neededElement = 1  // 화
+    explanation = `가을에 태어나 금(金)의 서늘한 기운이 강합니다. 화(火)로 온기를 더하면 좋습니다.`
+    if (dayMasterElement === 1) {
+      neededElement = 0  // 목
+      explanation = `가을에 태어난 화(火) 일간은 목(木)의 도움으로 화기를 유지하면 좋습니다.`
+    }
+  }
+
+  return { season, temperature, neededElement, explanation }
+}
+
+// ═══════════════════════════════════════════════
+// 추가 신살 계산 함수들
+// ═══════════════════════════════════════════════
+
+// 백호대살: 일간 기준
+function getBaekhoTarget(dayStem: number): number {
+  const map: Record<number, number> = { 0: 4, 1: 5, 2: 6, 3: 7, 4: 8, 5: 9, 6: 10, 7: 11, 8: 0, 9: 1 }
+  return map[dayStem]
+}
+
+// 홍염살: 일간 기준
+function getHongyeomTarget(dayStem: number): number {
+  const map: Record<number, number> = { 0: 6, 1: 8, 2: 2, 3: 7, 4: 4, 5: 4, 6: 10, 7: 9, 8: 0, 9: 8 }
+  return map[dayStem]
+}
+
+// 천의성: 일간 기준 → 대상 지지 배열
+function getCheonuiTargets(dayStem: number): number[] {
+  const map: Record<number, number[]> = {
+    0: [1, 2],    // 갑 → 축, 인
+    1: [5, 6],    // 을 → 사, 오
+    2: [9, 11],   // 병 → 유, 해
+    3: [9, 11],   // 정 → 유, 해
+    4: [11],      // 무 → 해
+    5: [0],       // 기 → 자
+    6: [2, 3],    // 경 → 인, 묘
+    7: [2, 3],    // 신 → 인, 묘
+    8: [3],       // 임 → 묘
+    9: [5],       // 계 → 사
+  }
+  return map[dayStem]
+}
+
+// 학당귀인: 일간 기준
+function getHakdangTarget(dayStem: number): number {
+  const map: Record<number, number> = { 0: 11, 1: 6, 2: 2, 3: 9, 4: 2, 5: 9, 6: 5, 7: 0, 8: 8, 9: 3 }
+  return map[dayStem]
+}
+
+// 천덕귀인: 월지 기준 → 해당 천간 인덱스
+function getCheondukStem(monthBranch: number): number {
+  const map: Record<number, number> = {
+    2: 3, 3: 8, 4: 8, 5: 7, 6: 0, 7: 9, 8: 2, 9: 5, 10: 5, 11: 0, 0: 2, 1: 3,
+  }
+  return map[monthBranch]
+}
+
+// 월덕귀인: 월지 삼합 그룹 기준 → 해당 천간 인덱스
+function getWoldukStem(monthBranch: number): number {
+  if (monthBranch === 2 || monthBranch === 6 || monthBranch === 10) return 2   // 丙
+  if (monthBranch === 8 || monthBranch === 0 || monthBranch === 4) return 8    // 壬
+  if (monthBranch === 11 || monthBranch === 3 || monthBranch === 7) return 0   // 甲
+  return 6  // 庚 (사유축: 5, 9, 1)
+}
+
+// 귀문관살: 일지 기준
+function getGwimungwanTarget(dayBranch: number): number {
+  const map: Record<number, number> = {
+    0: 9, 1: 6, 2: 7, 3: 4, 4: 5, 5: 2, 6: 1, 7: 10, 8: 11, 9: 0, 10: 3, 11: 8,
+  }
+  return map[dayBranch]
+}
+
+// 원진살: 일지 기준
+function getWonjinTarget(dayBranch: number): number {
+  const map: Record<number, number> = {
+    0: 7, 1: 6, 2: 9, 3: 8, 4: 11, 5: 10, 6: 1, 7: 0, 8: 3, 9: 2, 10: 5, 11: 4,
+  }
+  return map[dayBranch]
+}
+
+// 복성귀인: 일간 기준 → 대상 지지 배열
+function getBokseongTargets(dayStem: number): number[] {
+  const map: Record<number, number[]> = {
+    0: [0, 1, 2],     // 갑 → 자축인
+    1: [4, 5],         // 을 → 진사
+    2: [11],           // 병 → 해
+    3: [9, 11],        // 정 → 유해
+    4: [0, 1, 2],      // 무 → 자축인
+    5: [4, 5],         // 기 → 진사
+    6: [6, 7],         // 경 → 오미
+    7: [4, 5, 6],      // 신 → 진사오
+    8: [4, 5],         // 임 → 진사
+    9: [1, 2],         // 계 → 축인
+  }
+  return map[dayStem]
+}
+
+// 금여록: 일간 기준
+function getGeumyeoTarget(dayStem: number): number {
+  const map: Record<number, number> = { 0: 4, 1: 5, 2: 7, 3: 8, 4: 9, 5: 10, 6: 0, 7: 1, 8: 2, 9: 3 }
+  return map[dayStem]
+}
+
+// 태극귀인: 일간 기준 → 대상 지지 배열
+function getTaegukTargets(dayStem: number): number[] {
+  const map: Record<number, number[]> = {
+    0: [0, 6],          // 갑 → 자오
+    1: [0, 6],          // 을 → 자오
+    2: [3, 9],          // 병 → 묘유
+    3: [3, 9],          // 정 → 묘유
+    4: [1, 4, 7, 10],   // 무 → 축진미술
+    5: [1, 4, 7, 10],   // 기 → 축진미술
+    6: [2, 6],          // 경 → 인오
+    7: [2, 6],          // 신 → 인오
+    8: [5, 9],          // 임 → 사유
+    9: [5, 9],          // 계 → 사유
+  }
+  return map[dayStem]
+}
+
+// 12신살: 년지 삼합 그룹 기준
+function getTwelveAnimalSinsal(yearBranch: number, dayBranch: number): string {
+  const sinsalNames = ['겁살', '재살', '천살', '지살', '연살', '월살', '망신살', '장성살', '반안살', '역마살', '육해살', '화개살']
+
+  // 삼합 그룹별 시작 지지 (겁살 위치)
+  // 신자진(8,0,4) → 겁살=사(5)
+  // 인오술(2,6,10) → 겁살=해(11)
+  // 사유축(5,9,1) → 겁살=인(2)
+  // 해묘미(11,3,7) → 겁살=신(8)
+  let geobsalStart: number
+  if (yearBranch === 8 || yearBranch === 0 || yearBranch === 4) geobsalStart = 5
+  else if (yearBranch === 2 || yearBranch === 6 || yearBranch === 10) geobsalStart = 11
+  else if (yearBranch === 5 || yearBranch === 9 || yearBranch === 1) geobsalStart = 2
+  else geobsalStart = 8  // 해묘미
+
+  // 일지가 겁살 시작으로부터 몇 번째인지 계산
+  const offset = ((dayBranch - geobsalStart) % 12 + 12) % 12
+  return sinsalNames[offset]
+}
+
+// 확장 신살 종합 계산
+function calculateEnhancedSinsal(
+  pillars: Pillar[], dayStem: number, dayBranch: number,
+  yearBranch: number, monthBranch: number, baseSinsal: SinsalInfo
+): EnhancedSinsalInfo {
+  const allBranches = pillars.map(p => p.branch)
+  const allStems = pillars.map(p => p.stem)
+
+  // 백호대살: 일간 기준, 사주 내 지지에 대상이 있으면
+  const baekhoTarget = getBaekhoTarget(dayStem)
+  const hasBaekho = allBranches.some(b => b === baekhoTarget)
+
+  // 홍염살
+  const hongyeomTarget = getHongyeomTarget(dayStem)
+  const hasHongyeom = allBranches.some(b => b === hongyeomTarget)
+
+  // 천의성
+  const cheonuiTargets = getCheonuiTargets(dayStem)
+  const hasCheonui = allBranches.some(b => cheonuiTargets.includes(b))
+
+  // 학당귀인
+  const hakdangTarget = getHakdangTarget(dayStem)
+  const hasHakdang = allBranches.some(b => b === hakdangTarget)
+
+  // 천덕귀인: 월지 기준 천간이 사주의 어떤 천간에 있으면
+  const cheondukStem = getCheondukStem(monthBranch)
+  const hasCheonduk = allStems.some(s => s === cheondukStem)
+
+  // 월덕귀인: 월지 그룹 기준 천간이 사주의 어떤 천간에 있으면
+  const woldukStem = getWoldukStem(monthBranch)
+  const hasWolduk = allStems.some(s => s === woldukStem)
+
+  // 귀문관살: 일지 기준
+  const gwimungwanTarget = getGwimungwanTarget(dayBranch)
+  const hasGwimungwan = allBranches.some(b => b === gwimungwanTarget)
+
+  // 격각살: 일지에서 3칸 떨어진 지지가 사주에 있으면
+  const gyeokgakTarget1 = (dayBranch + 3) % 12
+  const gyeokgakTarget2 = ((dayBranch - 3) % 12 + 12) % 12
+  const hasGyeokgak = allBranches.some(b => b === gyeokgakTarget1 || b === gyeokgakTarget2)
+
+  // 천라: 술(10)과 해(11)가 사주에 모두 있으면
+  const hasCheonla = allBranches.includes(10) && allBranches.includes(11)
+
+  // 지망: 진(4)과 사(5)가 사주에 모두 있으면
+  const hasJimang = allBranches.includes(4) && allBranches.includes(5)
+
+  // 원진살: 일지 기준
+  const wonjinTarget = getWonjinTarget(dayBranch)
+  const hasWonjin = allBranches.some(b => b === wonjinTarget)
+
+  // 복성귀인
+  const bokseongTargets = getBokseongTargets(dayStem)
+  const hasBokseong = allBranches.some(b => bokseongTargets.includes(b))
+
+  // 금여록
+  const geumyeoTarget = getGeumyeoTarget(dayStem)
+  const hasGeumyeo = allBranches.some(b => b === geumyeoTarget)
+
+  // 태극귀인
+  const taegukTargets = getTaegukTargets(dayStem)
+  const hasTaeguk = allBranches.some(b => taegukTargets.includes(b))
+
+  // 12신살
+  const twelveAnimalSinsal = getTwelveAnimalSinsal(yearBranch, dayBranch)
+
+  return {
+    // 기존 SinsalInfo 필드 복사
+    ...baseSinsal,
+    // 추가 신살
+    hasBaekho,
+    hasHongyeom,
+    hasCheonui,
+    hasHakdang,
+    hasCheonduk,
+    hasWolduk,
+    hasGwimungwan,
+    hasGyeokgak,
+    hasCheonla,
+    hasJimang,
+    hasWonjin,
+    hasBokseong,
+    hasGeumyeo,
+    hasTaeguk,
+    twelveAnimalSinsal,
+  }
+}
+
+// ═══════════════════════════════════════════════
+// 심층 공망 분석
+// ═══════════════════════════════════════════════
+function calculateEnhancedGongmang(dayPillar: Pillar, pillars: Pillar[], baseGongmang: GongmangInfo): EnhancedGongmangInfo {
+  const voidBranches = baseGongmang.voidBranches
+
+  const yearVoid = voidBranches.includes(pillars[0].branch)
+  const monthVoid = voidBranches.includes(pillars[1].branch)
+  // 일주는 공망 기준이므로 체크하지 않음
+  const hourVoid = pillars.length > 3 ? voidBranches.includes(pillars[3].branch) : false
+
+  const voidCount = [yearVoid, monthVoid, hourVoid].filter(Boolean).length
+
+  let severity: 'high' | 'medium' | 'low' | 'none' = 'none'
+  if (voidCount >= 2) severity = 'high'
+  else if (voidCount === 1) {
+    // 년주 공망은 영향이 크고, 시주는 상대적으로 작음
+    if (yearVoid) severity = 'medium'
+    else severity = 'low'
+  }
+
+  return {
+    ...baseGongmang,
+    severity,
+    yearVoid,
+    monthVoid,
+    hourVoid,
+  }
+}
+
+// ═══════════════════════════════════════════════
+// 월운 계산
+// ═══════════════════════════════════════════════
+function calculateWolun(
+  dayMasterElement: number, dayMasterYinYang: number,
+  yearStem: number, isDayMasterStrong: boolean, usefulGod: number
+): WolunInfo[] {
+  const currentYear = new Date().getFullYear()
+  const yearPillar = getYearPillar(currentYear, 6, 15) // 연중 근사값
+  const result: WolunInfo[] = []
+
+  for (let m = 1; m <= 12; m++) {
+    const mp = getMonthPillar(yearPillar.stem, m, 15)
+    const tg = getTenGod(dayMasterElement, dayMasterYinYang, mp.stem)
+
+    // 월의 오행
+    const monthElement = STEM_ELEMENT[mp.stem]
+
+    // 평점 산출: 용신 오행과의 관계
+    let rating = 3
+    if (monthElement === usefulGod) {
+      rating = 5
+    } else if (produces(monthElement, usefulGod)) {
+      rating = 4
+    } else if (produces(usefulGod, dayMasterElement) && monthElement === usefulGod) {
+      rating = 4
+    } else if (controls(monthElement, usefulGod)) {
+      rating = 2
+    } else if (controls(usefulGod, monthElement)) {
+      rating = 1
+    }
+
+    // 십신 기반 키워드
+    const keywords: Record<string, string> = {
+      '비견': '경쟁',
+      '겁재': '변동',
+      '식신': '표현',
+      '상관': '도전',
+      '편재': '투자',
+      '정재': '수입',
+      '편관': '압박',
+      '정관': '안정',
+      '편인': '학습',
+      '정인': '도움',
+    }
+
+    result.push({
+      month: m,
+      stem: mp.stem,
+      branch: mp.branch,
+      tenGod: tg,
+      rating,
+      keyword: keywords[tg] || '보통',
+    })
+  }
+
+  return result
+}
+
+// ═══════════════════════════════════════════════
 // 메인 사주 계산 함수
 // ═══════════════════════════════════════════════
 export function calculateSaju(
@@ -893,6 +1629,27 @@ export function calculateSaju(
   // 격국 판단
   const gyeokguk = determineGyeokguk(dayMaster, dayMasterElement, monthPillar, analysis.isDayMasterStrong, dayMasterYinYang)
 
+  // 합충형파해 종합 분석
+  const hapChung = analyzeHapChung(pillars)
+
+  // 종격 판별
+  const jongguk = detectJongguk(dayMasterElement, analysis.dayMasterScore, analysis.counts, analysis.isDayMasterStrong, pillars)
+
+  // 투간/통근 분석
+  const tuganTonggeun = analyzeTuganTonggeun(pillars)
+
+  // 조후용신 계산
+  const johu = calculateJohu(dayMasterElement, monthPillar.branch)
+
+  // 월운 계산
+  const wolun = calculateWolun(dayMasterElement, dayMasterYinYang, yearPillar.stem, analysis.isDayMasterStrong, analysis.usefulGod)
+
+  // 확장 신살 계산
+  const enhancedSinsal = calculateEnhancedSinsal(pillars, dayMaster, dayPillar.branch, yearPillar.branch, monthPillar.branch, sinsal)
+
+  // 심층 공망 분석
+  const enhancedGongmang = calculateEnhancedGongmang(dayPillar, pillars, gongmang)
+
   return {
     yearPillar,
     monthPillar,
@@ -920,6 +1677,13 @@ export function calculateSaju(
     daeun,
     gongmang,
     gyeokguk,
+    hapChung,
+    jongguk,
+    tuganTonggeun,
+    johu,
+    wolun,
+    enhancedSinsal,
+    enhancedGongmang,
   }
 }
 

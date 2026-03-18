@@ -2,7 +2,7 @@
 
 import { forwardRef } from 'react'
 import {
-  SajuResult, STEMS, STEMS_HANJA, BRANCHES_HANJA,
+  SajuResult, STEMS, STEMS_HANJA, BRANCHES, BRANCHES_HANJA,
   ELEMENTS, ELEMENTS_HANJA, Pillar,
   STEM_ELEMENT, BRANCH_ELEMENT, STEM_YINYANG,
 } from './sajuEngine'
@@ -12,6 +12,10 @@ import {
   getUsefulGodAdvice, TEN_GOD_INTERPRETATIONS,
   SINSAL_INTERPRETATIONS, TWELVE_STAGE_INTERPRETATIONS,
   getDaeunInterpretation,
+  HAPCHUNG_INTERPRETATIONS, EXTRA_SINSAL_INTERPRETATIONS,
+  TWELVE_SINSAL_INTERPRETATIONS, JONGGUK_INTERPRETATIONS,
+  JOHU_INTERPRETATIONS, WOLUN_RATING_LABELS,
+  ROOT_STRENGTH_LABELS, GONGMANG_SEVERITY_LABELS,
 } from './sajuData'
 
 interface Props {
@@ -308,6 +312,254 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           </div>
         )}
 
+        {/* ═══ 합충형파해 분석 ═══ */}
+        {result.hapChung.details.length > 0 && (
+          <div>
+            <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
+              합충형파해(合沖刑破害) 분석
+            </h3>
+            <div className="space-y-2">
+              {result.hapChung.details.map((d, i) => {
+                const typeInfo: Record<string, { emoji: string; color: string; bg: string; border: string }> = {
+                  'cheongan-hap': { emoji: '🤝', color: 'text-blue-800', bg: 'bg-blue-50', border: 'border-blue-200' },
+                  'jiji-yukap': { emoji: '💞', color: 'text-pink-800', bg: 'bg-pink-50', border: 'border-pink-200' },
+                  'samhap': { emoji: '🔺', color: 'text-emerald-800', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+                  'chung': { emoji: '⚡', color: 'text-red-800', bg: 'bg-red-50', border: 'border-red-200' },
+                  'hyung': { emoji: '🔥', color: 'text-orange-800', bg: 'bg-orange-50', border: 'border-orange-200' },
+                  'pa': { emoji: '💔', color: 'text-purple-800', bg: 'bg-purple-50', border: 'border-purple-200' },
+                  'hae': { emoji: '😣', color: 'text-amber-800', bg: 'bg-amber-50', border: 'border-amber-200' },
+                }
+                const info = typeInfo[d.type] || typeInfo['chung']
+                return (
+                  <div key={i} className={`${info.bg} rounded-xl p-3 sm:p-3.5 border ${info.border}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-base">{info.emoji}</span>
+                      <span className={`text-[12px] sm:text-[13px] font-black ${info.color}`}>
+                        {d.pillar1} ↔ {d.pillar2}
+                      </span>
+                      <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                        d.effect === 'positive' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>{d.effect === 'positive' ? '길' : '흉'}</span>
+                    </div>
+                    <p className="text-[11px] sm:text-[12px] text-gray-600 leading-relaxed">{d.description}</p>
+                    {HAPCHUNG_INTERPRETATIONS[d.type] && (
+                      <p className="text-[10px] sm:text-[11px] text-gray-500 mt-1 leading-relaxed">{HAPCHUNG_INTERPRETATIONS[d.type].detail}</p>
+                    )}
+                  </div>
+                )
+              })}
+              <div className={`rounded-xl p-3 border text-center text-[12px] sm:text-[13px] font-bold ${
+                result.hapChung.overallTendency === 'harmonious' ? 'bg-green-50 border-green-200 text-green-800' :
+                result.hapChung.overallTendency === 'conflicting' ? 'bg-red-50 border-red-200 text-red-800' :
+                result.hapChung.overallTendency === 'mixed' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' :
+                'bg-gray-50 border-gray-200 text-gray-600'
+              }`}>
+                {result.hapChung.overallTendency === 'harmonious' && '🌈 사주 내 합(合)의 기운이 우세하여 조화로운 구조입니다'}
+                {result.hapChung.overallTendency === 'conflicting' && '⚡ 사주 내 충극의 기운이 있어 변화와 도전이 많은 구조입니다'}
+                {result.hapChung.overallTendency === 'mixed' && '☯️ 합과 충이 공존하여 역동적인 사주 구조입니다'}
+                {result.hapChung.overallTendency === 'neutral' && '😌 특별한 합충 없이 안정적인 사주 구조입니다'}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ 종격 (특수 격국) ═══ */}
+        {result.jongguk && (() => {
+          const jongInfo = JONGGUK_INTERPRETATIONS[result.jongguk.type.replace('gyeok', '격').replace('jong', '종')]
+          return (
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
+                특수 격국 발견
+              </h3>
+              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-4 sm:p-5 border-2 border-amber-300">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">{jongInfo?.emoji || '🌟'}</span>
+                  <h4 className="text-[14px] sm:text-base font-black text-amber-900">{result.jongguk!.name}</h4>
+                  <span className="text-[9px] sm:text-[10px] bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-bold">특수격</span>
+                </div>
+                <p className="text-[13px] sm:text-sm text-gray-800 leading-[1.85]">
+                  {jongInfo?.description || result.jongguk!.description}
+                </p>
+                <p className="text-[11px] sm:text-[12px] text-amber-700 mt-2 font-medium">
+                  따르는 오행: {ELEMENTS[result.jongguk!.followElement]}({ELEMENTS_HANJA[result.jongguk!.followElement]})
+                </p>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* ═══ 투간/통근 분석 ═══ */}
+        <div>
+          <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
+            투간·통근(透干·通根) 분석
+          </h3>
+          <div className="bg-teal-50 rounded-xl p-3.5 sm:p-4 border border-teal-200">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">{
+                result.tuganTonggeun.rootStrength === 'strong' ? '🌲' :
+                result.tuganTonggeun.rootStrength === 'medium' ? '🌿' :
+                result.tuganTonggeun.rootStrength === 'weak' ? '🍀' : '🍂'
+              }</span>
+              <h4 className="text-[13px] sm:text-sm font-black text-teal-800">
+                일간 뿌리: {
+                  result.tuganTonggeun.rootStrength === 'strong' ? '깊은 뿌리 (강)' :
+                  result.tuganTonggeun.rootStrength === 'medium' ? '적당한 뿌리 (중)' :
+                  result.tuganTonggeun.rootStrength === 'weak' ? '약한 뿌리 (약)' : '뿌리 없음'
+                }
+              </h4>
+            </div>
+            <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed mb-2">
+              {ROOT_STRENGTH_LABELS[result.tuganTonggeun.rootStrength]?.detail || '일간의 통근 상태를 분석합니다.'}
+            </p>
+            {result.tuganTonggeun.tonggeun.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {Array.from(new Set(result.tuganTonggeun.tonggeun.map(t => `${t.stemName}→${t.inBranch}`))).map((label, i) => (
+                  <span key={i} className="text-[10px] sm:text-[11px] bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-medium">
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ═══ 조후용신 ═══ */}
+        <div>
+          <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
+            조후용신(調候用神) 분석
+          </h3>
+          {(() => {
+            const johuKey = result.johu.temperature === '더움' ? 'hot' :
+              result.johu.temperature === '따뜻함' ? 'warm' :
+              result.johu.temperature === '서늘함' ? 'cool' : 'cold'
+            const johuInfo = JOHU_INTERPRETATIONS[johuKey]
+            return (
+              <div className="bg-sky-50 rounded-xl p-3.5 sm:p-4 border border-sky-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">{johuInfo?.emoji || '🌡️'}</span>
+                  <h4 className="text-[13px] sm:text-sm font-black text-sky-800">
+                    태어난 계절: {result.johu.season} ({result.johu.temperature})
+                  </h4>
+                </div>
+                <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed mb-2">
+                  {johuInfo?.description || result.johu.explanation}
+                </p>
+                <div className="bg-white/70 rounded-lg px-3 py-2 border border-sky-100 space-y-1">
+                  <p className="text-[11px] sm:text-[12px] text-sky-700 font-bold">
+                    조후 필요 오행: {ELEMENTS[result.johu.neededElement]}({ELEMENTS_HANJA[result.johu.neededElement]})
+                  </p>
+                  {johuInfo?.advice && (
+                    <p className="text-[10px] sm:text-[11px] text-sky-600">{johuInfo.advice}</p>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+
+        {/* ═══ 추가 신살 ═══ */}
+        {(() => {
+          const es = result.enhancedSinsal
+          const extraKeys: { key: string; has: boolean }[] = [
+            { key: 'cheonduk', has: es.hasCheonduk },
+            { key: 'wolduk', has: es.hasWolduk },
+            { key: 'bokseong', has: es.hasBokseong },
+            { key: 'taeguk', has: es.hasTaeguk },
+            { key: 'hakdang', has: es.hasHakdang },
+            { key: 'cheonui', has: es.hasCheonui },
+            { key: 'geumyeo', has: es.hasGeumyeo },
+            { key: 'hongyeom', has: es.hasHongyeom },
+            { key: 'baekho', has: es.hasBaekho },
+            { key: 'gwimungwan', has: es.hasGwimungwan },
+            { key: 'wonjin', has: es.hasWonjin },
+            { key: 'cheonla', has: es.hasCheonla },
+            { key: 'jimang', has: es.hasJimang },
+            { key: 'gyeokgak', has: es.hasGyeokgak },
+          ]
+          const extraSinsal = extraKeys
+            .filter(({ has }) => has)
+            .map(({ key }) => {
+              const info = EXTRA_SINSAL_INTERPRETATIONS[key]
+              return info ? { key, name: info.name, emoji: info.emoji, isPositive: info.isPositive, detail: info.detail, advice: info.advice } : null
+            })
+            .filter(Boolean) as { key: string; name: string; emoji: string; isPositive: boolean; detail: string; advice: string }[]
+
+          if (extraSinsal.length === 0) return null
+          return (
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
+                추가 신살 분석
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {extraSinsal.map(({ key, name, emoji, isPositive, detail, advice }) => (
+                  <div key={key} className={`rounded-xl p-3 sm:p-3.5 border ${isPositive ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="text-base">{emoji}</span>
+                      <span className={`text-[12px] sm:text-[13px] font-black ${isPositive ? 'text-emerald-800' : 'text-rose-800'}`}>{name}</span>
+                      <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold ${isPositive ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                        {isPositive ? '길신' : '흉신'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] sm:text-[12px] text-gray-600 leading-relaxed mb-1.5">{detail}</p>
+                    {advice && <p className="text-[10px] sm:text-[11px] text-orange-600 font-medium bg-orange-50 rounded-lg px-2 py-1.5">💡 {advice}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* ═══ 12신살 ═══ */}
+        {(() => {
+          const twInfo = TWELVE_SINSAL_INTERPRETATIONS[result.enhancedSinsal.twelveAnimalSinsal]
+          return (
+            <div className="bg-violet-50 rounded-xl p-3.5 sm:p-4 border border-violet-200">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">{twInfo?.emoji || '🔮'}</span>
+                <h4 className="text-[13px] sm:text-sm font-black text-violet-800">
+                  12신살: {result.enhancedSinsal.twelveAnimalSinsal}
+                </h4>
+                <span className="text-[9px] sm:text-[10px] bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded-full font-medium">
+                  {twInfo?.keyword || ''}
+                </span>
+              </div>
+              <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed">
+                {twInfo?.detail || '12신살 분석 결과입니다.'}
+              </p>
+            </div>
+          )
+        })()}
+
+        {/* ═══ 심층 공망 분석 ═══ */}
+        {result.enhancedGongmang.severity !== 'none' && (
+          <div className="bg-gray-50 rounded-xl p-3.5 sm:p-4 border border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">{
+                result.enhancedGongmang.severity === 'high' ? '⚫' :
+                result.enhancedGongmang.severity === 'medium' ? '🔘' : '⚪'
+              }</span>
+              <h4 className="text-[13px] sm:text-sm font-black text-gray-800">
+                공망(空亡) 분석: {BRANCHES[result.enhancedGongmang.voidBranches[0]]}·{BRANCHES[result.enhancedGongmang.voidBranches[1]]} 공망
+              </h4>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {result.enhancedGongmang.yearVoid && <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">년주 공망</span>}
+              {result.enhancedGongmang.monthVoid && <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">월주 공망</span>}
+              {result.enhancedGongmang.hourVoid && <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">시주 공망</span>}
+            </div>
+            <p className="text-[12px] sm:text-[13px] text-gray-600 leading-relaxed">{
+              result.enhancedGongmang.severity === 'high' ? '주요 기둥이 공망에 빠져 해당 영역의 기운이 크게 약해집니다. 노력으로 보완하면 오히려 더 큰 성취를 이룹니다.' :
+              result.enhancedGongmang.severity === 'medium' ? '일부 기둥이 공망에 걸려 있지만 다른 기둥이 보완합니다. 해당 영역에서 노력이 더 필요해요.' :
+              '공망의 영향이 미미하여 큰 걱정은 필요 없습니다.'
+            }</p>
+          </div>
+        )}
+
         {/* ═══ 대운 흐름 ═══ */}
         <div>
           <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -429,6 +681,33 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
                 </ul>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* ═══ 월운 (Monthly Fortune) ═══ */}
+        <div>
+          <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
+            {year}년 월별 운세
+          </h3>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5 sm:gap-2">
+            {result.wolun.map((w) => {
+              const ratingColors: Record<number, string> = {
+                5: 'bg-yellow-50 border-yellow-300 text-yellow-800',
+                4: 'bg-green-50 border-green-300 text-green-800',
+                3: 'bg-gray-50 border-gray-200 text-gray-600',
+                2: 'bg-orange-50 border-orange-300 text-orange-800',
+                1: 'bg-red-50 border-red-300 text-red-800',
+              }
+              const ratingEmoji: Record<number, string> = { 5: '🌟', 4: '😊', 3: '😐', 2: '😟', 1: '⚠️' }
+              return (
+                <div key={w.month} className={`rounded-lg p-1.5 sm:p-2 border text-center ${ratingColors[w.rating] || ratingColors[3]}`}>
+                  <p className="text-[9px] sm:text-[10px] font-bold">{w.month}월</p>
+                  <p className="text-sm sm:text-base">{ratingEmoji[w.rating] || '😐'}</p>
+                  <p className="text-[8px] sm:text-[9px] font-medium mt-0.5">{w.keyword}</p>
+                </div>
+              )
+            })}
           </div>
         </div>
 
