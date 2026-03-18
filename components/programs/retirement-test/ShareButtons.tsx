@@ -104,23 +104,36 @@ export default function ShareButtons({
       if (!res.ok) throw new Error('이미지 생성 실패')
       const blob = await res.blob()
       const fileName = `노후준비_리포트_${total}점_${grade}.png`
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
 
-      // 1순위: Web Share API로 파일 공유 (모바일 → 갤러리 저장 가능)
+      // 모바일: Web Share API (갤럭시/아이폰 공유시트 → 갤러리 저장)
       if (isMobile && navigator.share) {
         try {
           const file = new File([blob], fileName, { type: 'image/png' })
-          if (navigator.canShare?.({ files: [file] })) {
-            await navigator.share({ files: [file], title: '노후 준비 진단 리포트' })
-            return
-          }
+          await navigator.share({ files: [file], title: '노후 준비 진단 리포트' })
+          return
         } catch (e) {
           if ((e as Error).name === 'AbortError') return
-          // share 실패 시 아래 fallback
+          // share 실패 → 아래 fallback
         }
       }
 
-      // 2순위: <a download> (PC + 일부 모바일)
+      // 모바일 fallback: 이미지를 data URL로 새 탭에 열기 (꾹 눌러 저장)
+      if (isMobile) {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const dataUrl = reader.result as string
+          const w = window.open('')
+          if (w) {
+            w.document.write(`<html><head><title>리포트 저장</title><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#000;padding:16px"><p style="color:#fff;font-size:14px;margin-bottom:12px;text-align:center">이미지를 꾹 눌러서 저장하세요</p><img src="${dataUrl}" style="max-width:100%;border-radius:8px" alt="노후 준비 리포트"/></body></html>`)
+            w.document.close()
+          }
+        }
+        reader.readAsDataURL(blob)
+        return
+      }
+
+      // PC: 직접 다운로드
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
@@ -132,13 +145,6 @@ export default function ShareButtons({
         document.body.removeChild(link)
         URL.revokeObjectURL(blobUrl)
       }, 3000)
-
-      // 모바일에서 download가 안 먹히면 새 탭으로 열기 (꾹 눌러 저장)
-      if (isMobile) {
-        setTimeout(() => {
-          window.open(blobUrl, '_blank')
-        }, 500)
-      }
     } catch {
       alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
     } finally {

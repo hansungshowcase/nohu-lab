@@ -4,11 +4,10 @@ import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import {
   SCALES, calculateScore, getLevel, getMaxScore, hasSuicideRisk,
   getOverallRisk,
-  FUNCTIONAL_IMPAIRMENT_QUESTION, FUNCTIONAL_IMPAIRMENT_OPTIONS,
 } from './mental-health/questions'
 import { TIPS, getCrossInterpretation } from './mental-health/tips'
 
-type Phase = 'intro' | 'quiz' | 'functional' | 'analyzing' | 'result'
+type Phase = 'intro' | 'quiz' | 'analyzing' | 'result'
 
 const DISCLAIMER = '본 검사는 선별 목적의 자가 참고용으로, 의학적 진단을 대체하지 않습니다. 정확한 진단 및 치료를 위해 정신건강의학과 전문의 상담을 권장합니다.'
 const KAKAO_KEY = '3913fde247b12ce25084eb42a9b17ed9'
@@ -80,7 +79,6 @@ export default function MentalHealth() {
   const [currentScaleIdx, setCurrentScaleIdx] = useState(0)
   const [currentQIdx, setCurrentQIdx] = useState(0)
   const [answers, setAnswers] = useState<Record<string, number>>({})
-  const [functionalImpairment, setFunctionalImpairment] = useState<number | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isMember, setIsMember] = useState(false)
   const [showLimitModal, setShowLimitModal] = useState(false)
@@ -124,7 +122,7 @@ export default function MentalHealth() {
 
   function startQuiz() {
     if (!isMember && getTestCount() >= FREE_LIMIT) { setShowLimitModal(true); return }
-    setPhase('quiz'); setCurrentScaleIdx(0); setCurrentQIdx(0); setAnswers({}); setFunctionalImpairment(null); setIsTransitioning(false); transitionLock.current = false
+    setPhase('quiz'); setCurrentScaleIdx(0); setCurrentQIdx(0); setAnswers({}); setIsTransitioning(false); transitionLock.current = false
   }
 
   const advanceToNext = useCallback(() => {
@@ -132,7 +130,7 @@ export default function MentalHealth() {
     if (!currentScale) return
     if (currentQIdx < currentScale.questions.length - 1) setCurrentQIdx((p) => p + 1)
     else if (currentScaleIdx < activeScales.length - 1) { setCurrentScaleIdx((p) => p + 1); setCurrentQIdx(0) }
-    else setPhase('functional')
+    else { if (!isMember) incrementTestCount(); setPhase('analyzing') }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [currentQIdx, currentScale, currentScaleIdx, activeScales])
 
@@ -156,7 +154,7 @@ export default function MentalHealth() {
   function restart() {
     if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current)
     transitionLock.current = false
-    setPhase('intro'); setAnswers({}); setCurrentScaleIdx(0); setCurrentQIdx(0); setFunctionalImpairment(null); setIsTransitioning(false)
+    setPhase('intro'); setAnswers({}); setCurrentScaleIdx(0); setCurrentQIdx(0); setIsTransitioning(false)
   }
 
   function getResultUrl(scores: { depression: number; anxiety: number; stress: number; selfesteem: number; insomnia: number }) {
@@ -388,36 +386,6 @@ export default function MentalHealth() {
     )
   }
 
-  // === FUNCTIONAL ===
-  if (phase === 'functional') return (
-    <div className="max-w-lg mx-auto px-4 space-y-4 animate-fade-in">
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-gray-500">
-          <span className="font-medium text-orange-600">기능 장해 평가</span><span>추가 문항</span>
-        </div>
-        <div className="w-full h-1.5 sm:h-2 bg-orange-400 rounded-full" />
-      </div>
-      <div className="bg-orange-50 border border-orange-100 rounded-xl p-2.5">
-        <p className="text-[12px] sm:text-[13px] text-orange-700">점수에 포함되지 않는 참고 문항입니다.</p>
-      </div>
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 flex flex-col">
-        <h3 className="text-[15px] sm:text-[17px] font-semibold text-gray-900 leading-relaxed mb-4 sm:mb-6">{FUNCTIONAL_IMPAIRMENT_QUESTION}</h3>
-        <div className="space-y-2">
-          {FUNCTIONAL_IMPAIRMENT_OPTIONS.map((opt) => (
-            <button key={opt.value} disabled={transitionLock.current}
-              onClick={() => { if (transitionLock.current) return; transitionLock.current = true; setFunctionalImpairment(opt.value); if (!isMember) incrementTestCount(); setTimeout(() => { transitionLock.current = false; setPhase('analyzing') }, 300) }}
-              className={`w-full text-left px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-150 ease-out ${functionalImpairment === opt.value ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.97]' : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 active:bg-orange-100 active:scale-[0.97] border border-transparent hover:border-orange-200'}`}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <div className="mt-4 pt-3 border-t border-gray-50">
-          <button onClick={() => { setPhase('quiz'); const l = activeScales.length - 1; setCurrentScaleIdx(l); setCurrentQIdx(activeScales[l].questions.length - 1) }} className="px-3 py-3 text-[13px] text-gray-500 hover:text-gray-700 transition">← 이전</button>
-        </div>
-      </div>
-    </div>
-  )
-
   // === ANALYZING ===
   if (phase === 'analyzing') {
     const steps = ['응답 데이터 수집 중...', '우울·불안 척도 분석 중...', '스트레스·자존감 평가 중...', '수면 상태 분석 중...', '교차 영역 종합 분석 중...', '결과 보고서 생성 중...']
@@ -436,7 +404,6 @@ export default function MentalHealth() {
   const suicideRisk = hasSuicideRisk(answers)
   const overallRisk = getOverallRisk(results.map((r) => ({ scaleId: r.scaleId, score: r.score })))
   const crossNotes = getCrossInterpretation(results.map((r) => ({ scaleId: r.scaleId, levelIdx: r.levelIdx })))
-  const functionalLabels = ['전혀 어렵지 않았다', '약간 어려웠다', '많이 어려웠다', '매우 많이 어려웠다']
   const today = new Date()
   const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`
   const resultsSummary = results.map((r) => `${r.scaleName} ${r.level.label}`).join(' · ')
@@ -501,9 +468,6 @@ export default function MentalHealth() {
             </tbody>
           </table>
         </div>
-        {functionalImpairment !== null && (
-          <p className="text-[13px] sm:text-[14px] text-gray-500 px-1">기능 장해: <span className="text-gray-700 font-medium">{functionalLabels[functionalImpairment]}</span></p>
-        )}
       </div>
 
       {/* ── 영역별 소견 ── */}
