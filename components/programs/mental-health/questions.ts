@@ -291,10 +291,10 @@ export function getOverallRisk(results: { scaleId: string; score: number }[]): {
   if (moderateCount >= 2 && maxSeverity < 3) maxSeverity = Math.min(maxSeverity + 1, 3)
 
   const levels = [
-    { level: 'low' as const, label: '양호', color: '#22c55e', description: '현재 심리 상태가 전반적으로 양호합니다. 현재의 생활 습관을 유지하시기 바랍니다.' },
-    { level: 'moderate' as const, label: '주의', color: '#eab308', description: '일부 영역에서 경미한 증상이 관찰됩니다. 생활 습관 개선과 자기 관리를 통해 호전될 수 있습니다.' },
-    { level: 'high' as const, label: '경고', color: '#f97316', description: '중등도 이상의 증상이 관찰됩니다. 전문 상담사 또는 정신건강의학과 상담을 권장합니다.' },
-    { level: 'critical' as const, label: '위험', color: '#ef4444', description: '심각한 수준의 증상이 관찰됩니다. 가능한 빨리 정신건강의학과 전문의 진료를 받으시기 바랍니다.' },
+    { level: 'low' as const, label: '양호', color: '#22c55e', description: '본 평가 결과, 측정된 5개 영역(우울, 불안, 스트레스, 자존감, 수면) 모두에서 임상적으로 유의한 증상이 관찰되지 않습니다. 현재의 정서 상태와 생활 기능이 전반적으로 안정적인 것으로 판단됩니다. 규칙적인 운동, 충분한 수면, 건강한 대인관계 등 현재의 생활 습관을 유지하시기 바랍니다.' },
+    { level: 'moderate' as const, label: '주의', color: '#d4a017', description: '일부 영역에서 경도 수준의 증상이 관찰됩니다. 현재 즉각적인 치료적 개입이 필요한 수준은 아니나, 증상이 지속되거나 악화될 가능성을 고려하여 적극적인 자기 관리가 권고됩니다. 구조화된 행동활성화, 규칙적 운동(주 3~5회, 30분 이상), 수면 위생 개선 등의 생활습관 교정을 통해 호전이 기대되며, 2~4주 후 재검사를 통한 경과 모니터링을 권장합니다.' },
+    { level: 'high' as const, label: '경고', color: '#c2751a', description: '하나 이상의 영역에서 중등도 이상의 증상이 확인되어, 전문적인 치료적 개입이 권고됩니다. 정신건강의학과 전문의 진료를 통한 정밀 평가와 치료 계획 수립을 권장하며, 근거기반 심리치료(인지행동치료 등)와 필요시 약물치료의 병행이 증상 개선에 가장 효과적인 것으로 입증되어 있습니다. 생활습관 개선(규칙적 운동, 수면 관리, 영양 관리)을 보조적으로 실천하시기 바랍니다.' },
+    { level: 'critical' as const, label: '위험', color: '#a8423f', description: '하나 이상의 영역에서 심각한 수준의 증상이 관찰되어, 즉각적인 전문가 개입이 필요합니다. 정신건강의학과 전문의의 긴급 진료와 종합적 정신건강 평가가 우선적으로 권고됩니다. 약물치료의 신속한 개시와 근거기반 심리치료의 단계적 병행이 급성기 증상 완화와 장기적 예후 개선에 기여합니다. 위기 상황 시 자살예방 상담전화(1393), 정신건강 위기상담(1577-0199)을 이용하시기 바랍니다.' },
   ]
 
   return levels[Math.min(maxSeverity, 3)]
