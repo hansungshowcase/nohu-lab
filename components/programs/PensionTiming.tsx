@@ -594,36 +594,39 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
             </div>
           </div>
 
-          {/* 2단계: 수명별 최적 전략 */}
+          {/* 예상수명별 연금수령 적합도 */}
           <div className="bg-white rounded-2xl border border-orange-100 p-5 sm:p-6">
-            <h3 className="text-[16px] font-bold text-gray-900 mb-4">수명에 따라 답이 달라집니다</h3>
-            <div className="space-y-2">
+            <h3 className="text-[16px] font-bold text-gray-900 mb-2">예상수명별 연금수령 적합도</h3>
+            <p className="text-[12px] text-gray-400 mb-4">내가 몇 세까지 살 것 같은지에 따라 최적 전략이 달라집니다</p>
+            <div className="space-y-2.5">
               {[
-                { le: 78, label: '78세' },
-                { le: 82, label: '82세' },
-                { le: 85, label: '85세' },
-                { le: 88, label: '88세' },
-                { le: 92, label: '92세' },
-              ].map(({ le: leAge, label }) => {
+                { le: 78, tag: '단명' },
+                { le: 82, tag: '평균 이하' },
+                { le: 85, tag: '평균' },
+                { le: 88, tag: '장수' },
+                { le: 92, tag: '초장수' },
+              ].map(({ le: leAge, tag }) => {
                 const e = Math.round(base * 0.7), d = Math.round(base * 1.36)
                 const earlyC = cum(e, na - 5, leAge), normalC = cum(base, na, leAge), deferC = cum(d, na + 5, leAge)
                 const mx = Math.max(earlyC, normalC, deferC)
-                const winner = mx === deferC ? '늦게' : mx === normalC ? '정상' : '빨리'
-                const winColor = mx === deferC ? 'text-purple-600' : mx === normalC ? 'text-green-600' : 'text-blue-600'
+                const rec = mx === earlyC ? '조기' : mx === normalC ? '정상' : '연기'
+                const recColor = mx === earlyC ? 'bg-blue-500' : mx === normalC ? 'bg-green-500' : 'bg-purple-500'
                 return (
-                  <div key={leAge} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
-                    <span className="text-[13px] text-gray-500 w-12">{label}</span>
-                    <span className={`text-[14px] font-bold ${winColor}`}>{winner} 받기</span>
-                    <span className="text-[13px] font-bold text-orange-600">{fM(mx)}</span>
+                  <div key={leAge} className="flex items-center gap-3">
+                    <span className="text-[13px] text-gray-500 w-10 shrink-0">{leAge}세</span>
+                    <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden relative">
+                      <div className={`h-full ${recColor} rounded-full transition-all duration-500`} style={{ width: `${Math.round(mx / Math.max(cum(Math.round(base * 1.36), na + 5, 92), 1) * 100)}%` }} />
+                      <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold text-gray-700">{rec}수령 · {fM(mx)}</span>
+                    </div>
                   </div>
                 )
               })}
             </div>
-            {brk && (
-              <div className="mt-3 bg-orange-50 rounded-xl p-3 text-center">
-                <p className="text-[13px] text-orange-700 font-medium">{brk}세 넘게 살면 늦게 받는 게 이득</p>
-              </div>
-            )}
+            <div className="flex items-center gap-4 mt-4 justify-center text-[11px]">
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-blue-500 rounded-full" />조기</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-green-500 rounded-full" />정상</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-purple-500 rounded-full" />연기</span>
+            </div>
           </div>
 
           {/* 해지 vs 연금 */}
