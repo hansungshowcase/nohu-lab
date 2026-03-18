@@ -178,7 +178,18 @@ export default function MentalHealth() {
     setSaving(true)
     try {
       const { toPng } = await import('html-to-image')
-      const dataUrl = await toPng(resultRef.current, { quality: 0.95, pixelRatio: 2, backgroundColor: '#f9fafb', cacheBust: true })
+      const node = resultRef.current
+      // 전체 높이 캡처 (스크롤 짤림 방지)
+      const dataUrl = await toPng(node, {
+        quality: 0.95,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        cacheBust: true,
+        width: node.scrollWidth,
+        height: node.scrollHeight,
+        style: { overflow: 'visible', maxHeight: 'none' },
+        filter: (el: HTMLElement) => !el.classList?.contains('no-print'),
+      })
       // 모바일: Web Share API
       if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
         try {
@@ -396,7 +407,7 @@ export default function MentalHealth() {
     <div className="max-w-lg mx-auto px-4 py-2 space-y-5 animate-fade-in" ref={resultRef}>
 
       {/* ── 헤더 ── */}
-      <div className="text-center border-b-2 border-gray-300 pb-4">
+      <div className="text-center border-b-2 border-gray-300 pb-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
         <p className="text-[11px] sm:text-[12px] text-gray-400 mb-1">노후연구소</p>
         <h2 className="text-[20px] sm:text-[24px] font-bold text-gray-900">정신건강 선별검사 결과</h2>
         <p className="text-[13px] sm:text-[14px] text-gray-400 mt-1">{dateStr}</p>
@@ -415,7 +426,7 @@ export default function MentalHealth() {
       )}
 
       {/* ── 종합 판정 ── */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4 animate-slide-up" style={{ animationDelay: '200ms' }}>
         <div className="text-center">
           <p className="text-[13px] text-gray-400 mb-2">종합 판정</p>
           <div className="inline-block px-5 py-2 rounded-full text-[18px] sm:text-[20px] font-bold text-white" style={{ backgroundColor: overallRisk.color }}>
@@ -426,7 +437,7 @@ export default function MentalHealth() {
       </div>
 
       {/* ── 검사 결과 요약 ── */}
-      <div className="space-y-3">
+      <div className="space-y-3 animate-slide-up" style={{ animationDelay: '350ms' }}>
         <h3 className="text-[15px] sm:text-[16px] font-bold text-gray-900">검사 결과</h3>
         <div className="border border-gray-200 rounded-xl overflow-hidden">
           <table className="w-full">
@@ -458,7 +469,7 @@ export default function MentalHealth() {
       </div>
 
       {/* ── 영역별 소견 ── */}
-      <div className="space-y-4">
+      <div className="space-y-4 animate-slide-up" style={{ animationDelay: '500ms' }}>
         <h3 className="text-[15px] sm:text-[16px] font-bold text-gray-900">영역별 소견</h3>
         {results.map((r) => {
           const tipData = TIPS[r.scaleId]?.[r.level.label]
@@ -508,7 +519,7 @@ export default function MentalHealth() {
 
       {/* ── 복합 소견 ── */}
       {crossNotes.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-3 animate-slide-up" style={{ animationDelay: '650ms' }}>
           <h3 className="text-[15px] sm:text-[16px] font-bold text-gray-900">복합 소견</h3>
           {crossNotes.map((note, i) => (
             <div key={i} className="bg-amber-50/40 border border-amber-200/50 rounded-xl p-4 sm:p-5 flex gap-3">
@@ -518,32 +529,6 @@ export default function MentalHealth() {
           ))}
         </div>
       )}
-
-      {/* ── 권고사항 ── */}
-      <div className="space-y-3">
-        <h3 className="text-[15px] sm:text-[16px] font-bold text-gray-900">권고사항</h3>
-        {results.map((r) => {
-          const tipData = TIPS[r.scaleId]?.[r.level.label]
-          if (!tipData || tipData.tips.length === 0) return null
-          const icons: Record<string, string> = { '우울': '😔', '불안': '😰', '스트레스': '🤯', '자존감': '💛', '수면': '🌙' }
-          return (
-            <div key={r.scaleId} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-                <span className="text-[16px]">{icons[r.scaleName] || '📋'}</span>
-                <span className="text-[13px] sm:text-[14px] font-bold text-gray-800">{r.scaleName}</span>
-              </div>
-              <div className="px-4 py-3 space-y-2.5">
-                {tipData.tips.map((tip, i) => (
-                  <div key={i} className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 shrink-0 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-[11px] font-bold mt-0.5">{i + 1}</span>
-                    <p className="text-[13px] sm:text-[14px] text-gray-600 leading-[1.75]">{tip}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
 
       {/* ── 면책 ── */}
       <div className="border-t border-gray-200 pt-4">
