@@ -28,18 +28,18 @@ function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pil
 
   return (
     <div className={`flex flex-col items-center flex-1 min-w-0 ${isMe ? 'relative' : ''}`}>
-      {isMe && <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[11px] bg-orange-500 text-white px-2 sm:px-2.5 py-0.5 rounded-full whitespace-nowrap font-bold">★ 나</div>}
-      <span className="text-[11px] sm:text-xs text-gray-400 mb-0.5 truncate">{label}</span>
-      <span className={`text-[11px] px-1.5 py-0.5 rounded mb-1 truncate ${isMe ? 'bg-orange-100 text-orange-600 font-bold' : 'bg-gray-100 text-gray-500'}`}>{tenGod || '-'}</span>
-      <div className={`border-2 rounded-xl w-full max-w-[66px] overflow-hidden ${isMe ? 'border-orange-400 shadow-sm shadow-orange-100' : 'border-gray-200'}`}>
+      {isMe && <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs bg-orange-500 text-white px-2 sm:px-2.5 py-0.5 rounded-full whitespace-nowrap font-bold">★ 나</div>}
+      <span className="text-xs text-gray-400 mb-0.5 truncate">{label}</span>
+      <span className={`text-xs px-1.5 py-0.5 rounded mb-1 truncate ${isMe ? 'bg-orange-100 text-orange-600 font-bold' : 'bg-gray-100 text-gray-500'}`}>{tenGod || '-'}</span>
+      <div className={`border-2 rounded-xl w-full max-w-[72px] overflow-hidden ${isMe ? 'border-orange-400 shadow-sm shadow-orange-100' : 'border-gray-200'}`}>
         <div className={`${elBgs[stemEl]} p-1.5 sm:p-2 text-center`}>
           <div className={`text-xl sm:text-2xl font-black ${elColors[stemEl]}`}>{STEMS_HANJA[pillar.stem]}</div>
-          <div className="text-[11px] text-gray-500 truncate">{STEMS[pillar.stem]}·{ELEMENTS[stemEl]}·{yinyang}</div>
+          <div className="text-xs text-gray-500 truncate">{STEMS[pillar.stem]}·{ELEMENTS[stemEl]}·{yinyang}</div>
         </div>
         <div className="border-t border-gray-100" />
         <div className={`${elBgs[branchEl]} p-1.5 sm:p-2 text-center`}>
           <div className={`text-xl sm:text-2xl font-black ${elColors[branchEl]}`}>{BRANCHES_HANJA[pillar.branch]}</div>
-          <div className="text-[11px] text-gray-500 truncate">{ELEMENTS[branchEl]}</div>
+          <div className="text-xs text-gray-500 truncate">{ELEMENTS[branchEl]}</div>
         </div>
       </div>
     </div>
@@ -49,17 +49,17 @@ function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pil
 function EmptyPillarBox() {
   return (
     <div className="flex flex-col items-center flex-1 min-w-0">
-      <span className="text-[11px] sm:text-xs text-gray-400 mb-0.5">시주(時)</span>
-      <span className="text-[11px] px-1.5 py-0.5 rounded mb-1 bg-gray-100 text-gray-400">-</span>
-      <div className="border-2 border-dashed border-gray-200 rounded-xl w-full max-w-[66px] overflow-hidden">
+      <span className="text-xs text-gray-400 mb-0.5">시주(時)</span>
+      <span className="text-xs px-1.5 py-0.5 rounded mb-1 bg-gray-100 text-gray-400">-</span>
+      <div className="border-2 border-dashed border-gray-200 rounded-xl w-full max-w-[72px] overflow-hidden">
         <div className="bg-gray-50 p-1.5 sm:p-2 text-center">
           <div className="text-xl sm:text-2xl text-gray-300">?</div>
-          <div className="text-[11px] text-gray-300">미입력</div>
+          <div className="text-xs text-gray-300">미입력</div>
         </div>
         <div className="border-t border-gray-100" />
         <div className="bg-gray-50 p-1.5 sm:p-2 text-center">
           <div className="text-xl sm:text-2xl text-gray-300">?</div>
-          <div className="text-[11px] text-gray-300">-</div>
+          <div className="text-xs text-gray-300">-</div>
         </div>
       </div>
     </div>
@@ -78,7 +78,7 @@ function ElementBar({ counts, total }: { counts: number[]; total: number }) {
           c > 0 && <div key={i} className={`${colors[i]} transition-all`} style={{ width: `${(c/total)*100}%` }} />
         ))}
       </div>
-      <div className="flex justify-between text-[11px] sm:text-xs">
+      <div className="flex justify-between text-xs">
         {counts.map((c, i) => (
           <span key={i} className={`${c === 0 ? 'text-red-500 font-bold' : 'text-gray-600'}`}>
             <span className="hidden sm:inline">{fullNames[i]}</span>
@@ -140,11 +140,11 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
       {/* ═══ HEADER ═══ */}
       <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 px-4 sm:px-6 py-5 sm:py-7 text-white rounded-t-2xl print:rounded-none">
-        <p className="text-orange-200 text-[11px] tracking-[0.15em] uppercase mb-1.5">四柱命理 분석 리포트</p>
+        <p className="text-orange-200 text-xs tracking-[0.15em] uppercase mb-1.5">四柱命理 분석 리포트</p>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-xl sm:text-2xl font-black leading-tight truncate">{profile.emoji} {profile.title}</h2>
-            <p className="text-orange-100 text-[13px] sm:text-base mt-1 line-clamp-1">{viralSummary}</p>
+            <p className="text-orange-100 text-sm sm:text-base mt-1 line-clamp-2 sm:line-clamp-1">{viralSummary}</p>
           </div>
           <div className="text-right flex-shrink-0">
             <p className="font-bold text-base sm:text-xl">{result.birthYear}.{String(result.birthMonth).padStart(2,'0')}.{String(result.birthDay).padStart(2,'0')}</p>
@@ -157,7 +157,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
         {/* ═══ 1. 당신의 사주팔자 ═══ */}
         <div>
-          <div className="flex gap-1.5 sm:gap-2 justify-center pt-2 pb-4 px-1">
+          <div className="flex gap-1.5 sm:gap-2 justify-center pt-2 pb-4 px-2 sm:px-1">
             {pillars.map((p, i) => (
               result.hourPillar || i > 0 ? (
                 <PillarBox key={i} label={p.label} pillar={p.pillar} tenGod={p.tenGod} isMe={p.isMe} />
@@ -177,7 +177,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
                 <p className="text-xs sm:text-sm text-orange-600 mt-0.5">{profile.nature} · {strength.label}</p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {profile.personality.map(k => (
-                    <span key={k} className="text-[11px] sm:text-xs bg-orange-100 text-orange-700 px-2.5 py-0.5 rounded-full font-medium">#{k}</span>
+                    <span key={k} className="text-xs bg-orange-100 text-orange-700 px-2.5 py-0.5 rounded-full font-medium">#{k}</span>
                   ))}
                 </div>
               </div>
@@ -196,17 +196,17 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <ElementBar counts={result.elementCounts} total={totalElements} />
             {result.missingElements.length > 0 && (
               <div className="mt-3 bg-orange-50 rounded-lg p-3 border border-orange-200">
-                <p className="text-[13px] sm:text-sm font-bold text-orange-800 mb-1">
+                <p className="text-sm font-bold text-orange-800 mb-1">
                   부족한 기운: {result.missingElements.map(e => `${ELEMENTS[e]}(${ELEMENTS_HANJA[e]})`).join(', ')}
                 </p>
-                <p className="text-[13px] sm:text-sm text-orange-700 leading-relaxed">
+                <p className="text-sm text-orange-700 leading-relaxed">
                   {missingAdvice[result.missingElements[0]]}
                 </p>
               </div>
             )}
             {result.missingElements.length === 0 && (
               <div className="mt-3 bg-green-50 rounded-lg p-3 border border-green-200">
-                <p className="text-[13px] sm:text-sm font-bold text-green-800">오행이 고루 갖춰진 균형 잡힌 사주입니다.</p>
+                <p className="text-sm font-bold text-green-800">오행이 고루 갖춰진 균형 잡힌 사주입니다.</p>
               </div>
             )}
           </div>
@@ -224,18 +224,18 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
                 <div key={i} className={`flex-shrink-0 text-center rounded-xl p-2 sm:p-2.5 min-w-[60px] sm:min-w-[70px] border-2 ${
                   d.isCurrent ? 'bg-orange-50 border-orange-400 shadow-sm' : 'bg-gray-50 border-gray-200'
                 }`}>
-                  {d.isCurrent && <p className="text-[10px] text-orange-500 font-bold mb-0.5">▶ 현재</p>}
-                  <p className="text-[11px] sm:text-xs text-gray-500">{d.startAge}~{d.startAge + 9}세</p>
-                  <p className="text-[13px] sm:text-base font-bold text-gray-800">{d.tenGod}</p>
+                  {d.isCurrent && <p className="text-xs text-orange-500 font-bold mb-0.5">▶ 현재</p>}
+                  <p className="text-xs text-gray-500">{d.startAge}~{d.startAge + 9}세</p>
+                  <p className="text-sm sm:text-base font-bold text-gray-800">{d.tenGod}</p>
                 </div>
               ))}
             </div>
             {currentDaeun && (
               <div className="bg-orange-50 rounded-xl p-3.5 sm:p-4 border border-orange-200">
-                <h4 className="text-[13px] sm:text-sm font-black text-orange-800 mb-1.5">
+                <h4 className="text-sm font-black text-orange-800 mb-1.5">
                   현재 대운: {currentDaeun.tenGod}운 ({currentDaeun.startAge}~{currentDaeun.startAge + 9}세)
                 </h4>
-                <p className="text-[13px] sm:text-sm text-gray-700 leading-relaxed">
+                <p className="text-sm text-gray-700 leading-relaxed">
                   {getDaeunInterpretation(currentDaeun.tenGod, currentDaeun.element)}
                 </p>
               </div>
@@ -260,14 +260,14 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <div className="bg-amber-50 rounded-xl p-4 sm:p-5 border border-amber-200">
               <h4 className="text-base sm:text-lg font-black text-amber-800 mb-2">💰 재물운</h4>
               <p className="text-sm sm:text-base text-gray-800 leading-[1.9]">{fortune.money}</p>
-              <p className="text-[13px] sm:text-sm font-medium text-amber-700 bg-amber-100 rounded-lg px-3 py-2 mt-3">💡 {strength.money}</p>
+              <p className="text-sm font-medium text-amber-700 bg-amber-100 rounded-lg px-3 py-2 mt-3">💡 {strength.money}</p>
             </div>
 
             {/* 연애운 */}
             <div className="bg-pink-50 rounded-xl p-4 sm:p-5 border border-pink-200">
               <h4 className="text-base sm:text-lg font-black text-pink-800 mb-2">❤️ 연애운</h4>
               <p className="text-sm sm:text-base text-gray-800 leading-[1.9]">{fortune.love}</p>
-              <p className="text-[13px] sm:text-sm font-medium text-pink-700 bg-pink-100 rounded-lg px-3 py-2 mt-3">💡 {strength.relationship}</p>
+              <p className="text-sm font-medium text-pink-700 bg-pink-100 rounded-lg px-3 py-2 mt-3">💡 {strength.relationship}</p>
             </div>
 
             {/* 직업운 */}
@@ -297,7 +297,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
                 <div className="space-y-2">
                   {fortune.keyEvents.map((event, i) => (
                     <div key={i} className="bg-white/15 rounded-lg px-3 py-2">
-                      <p className="text-[13px] sm:text-sm text-white/95 leading-relaxed">{event}</p>
+                      <p className="text-sm text-white/95 leading-relaxed">{event}</p>
                     </div>
                   ))}
                 </div>
@@ -342,7 +342,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
             {year}년 월별 운세
           </h3>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
             {result.wolun.map((w) => {
               const ratingColors: Record<number, string> = {
                 5: 'bg-yellow-50 border-yellow-300 text-yellow-800',
@@ -354,8 +354,8 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               const ratingEmoji: Record<number, string> = { 5: '🌟', 4: '😊', 3: '😐', 2: '😟', 1: '⚠️' }
               return (
                 <div key={w.month} className={`rounded-lg p-2 sm:p-2.5 border text-center ${ratingColors[w.rating] || ratingColors[3]}`}>
-                  <p className="text-[11px] sm:text-xs font-bold">{w.month}월 {ratingEmoji[w.rating] || '😐'}</p>
-                  <p className="text-[11px] sm:text-xs font-medium mt-0.5 leading-tight">{w.keyword}</p>
+                  <p className="text-xs font-bold">{w.month}월 {ratingEmoji[w.rating] || '😐'}</p>
+                  <p className="text-xs font-medium mt-0.5 leading-tight">{w.keyword}</p>
                 </div>
               )
             })}
@@ -365,11 +365,11 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
         {/* ═══ 4. 행운/주의 달 ═══ */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="bg-green-50 rounded-xl p-3 sm:p-4 border border-green-200 text-center">
-            <p className="text-[11px] sm:text-xs text-green-600 font-medium mb-1">행운의 달</p>
+            <p className="text-xs text-green-600 font-medium mb-1">행운의 달</p>
             <p className="text-base sm:text-lg font-black text-green-800">{fortune.bestMonths}</p>
           </div>
           <div className="bg-red-50 rounded-xl p-3 sm:p-4 border border-red-200 text-center">
-            <p className="text-[11px] sm:text-xs text-red-600 font-medium mb-1">주의할 달</p>
+            <p className="text-xs text-red-600 font-medium mb-1">주의할 달</p>
             <p className="text-base sm:text-lg font-black text-red-800">{fortune.worstMonths}</p>
           </div>
         </div>
@@ -377,29 +377,29 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
         {/* ═══ 6. 개운법 (용신 기반) ═══ */}
         <div className="bg-orange-50 rounded-2xl p-4 sm:p-5 border border-orange-200">
           <h3 className="text-base sm:text-lg font-black text-orange-800 mb-2">🍀 당신만의 개운법</h3>
-          <p className="text-[13px] sm:text-sm text-orange-700 leading-relaxed mb-2">
+          <p className="text-sm text-orange-700 leading-relaxed mb-2">
             당신에게 필요한 기운은 <strong>{ELEMENTS[result.usefulGod]}({ELEMENTS_HANJA[result.usefulGod]})</strong>입니다.
           </p>
           <p className="text-sm sm:text-base text-gray-800 leading-[1.9]">{usefulGodAdvice}</p>
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-            <div className="bg-white rounded-lg p-2 border border-orange-100">
-              <p className="text-[11px] sm:text-xs text-gray-500">행운 색</p>
-              <p className="text-[13px] sm:text-base font-bold text-gray-800">{profile.luckyColor}</p>
+            <div className="bg-white rounded-lg p-2.5 border border-orange-100">
+              <p className="text-xs text-gray-500">행운 색</p>
+              <p className="text-sm sm:text-base font-bold text-gray-800">{profile.luckyColor}</p>
             </div>
-            <div className="bg-white rounded-lg p-2 border border-orange-100">
-              <p className="text-[11px] sm:text-xs text-gray-500">행운 방향</p>
-              <p className="text-[13px] sm:text-base font-bold text-gray-800">{profile.luckyDirection}</p>
+            <div className="bg-white rounded-lg p-2.5 border border-orange-100">
+              <p className="text-xs text-gray-500">행운 방향</p>
+              <p className="text-sm sm:text-base font-bold text-gray-800">{profile.luckyDirection}</p>
             </div>
-            <div className="bg-white rounded-lg p-2 border border-orange-100">
-              <p className="text-[11px] sm:text-xs text-gray-500">행운 숫자</p>
-              <p className="text-[13px] sm:text-base font-bold text-gray-800">{profile.luckyNumber}</p>
+            <div className="bg-white rounded-lg p-2.5 border border-orange-100">
+              <p className="text-xs text-gray-500">행운 숫자</p>
+              <p className="text-sm sm:text-base font-bold text-gray-800">{profile.luckyNumber}</p>
             </div>
           </div>
         </div>
 
         {/* ═══ Footer ═══ */}
         <div className="text-center pt-3 border-t border-gray-100">
-          <p className="text-[11px] sm:text-xs text-gray-400">노후연구소 四柱命理 · retireplan.kr · 전통 사주명리학 기반 재미 콘텐츠</p>
+          <p className="text-xs text-gray-400">노후연구소 · retireplan.kr · 사주명리학 기반</p>
         </div>
       </div>
     </div>
