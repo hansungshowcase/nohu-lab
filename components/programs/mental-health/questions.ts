@@ -113,7 +113,7 @@ export function calculateScore(scaleId: string, answers: Record<string, number>)
 
 export function getLevel(scaleId: string, score: number) {
   const scale = SCALES.find((s) => s.id === scaleId)
-  if (!scale) return scale
+  if (!scale) return { label: '알 수 없음', color: 'gray', emoji: '❓', min: 0, max: 0 }
 
   return scale.levels.find((l) => score >= l.min && score <= l.max) ?? scale.levels[0]
 }

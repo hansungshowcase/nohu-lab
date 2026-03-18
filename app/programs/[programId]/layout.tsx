@@ -15,6 +15,7 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
   'nickname-generator': '랜덤 닉네임 생성기. 재미있는 한국어 닉네임을 한 번에 여러 개 생성하고 복사할 수 있습니다.',
   'hashtag-recommender': '해시태그 추천기. 게시글 내용을 입력하면 SNS에 적합한 해시태그를 자동으로 추천해드립니다.',
   'text-converter': '텍스트 변환기. 대소문자 변환, 한영 자판 변환, 텍스트 뒤집기 등 다양한 텍스트 변환 도구입니다.',
+  'mental-health': '나의 심리 상태는? 우울, 불안, 스트레스 수준을 간단한 자가진단으로 체크하고 맞춤 관리 팁을 받아보세요.',
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
