@@ -34,7 +34,7 @@ function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pil
       <div className={`border-2 rounded-xl w-full max-w-[72px] overflow-hidden ${isMe ? 'border-orange-400 shadow-sm shadow-orange-100' : 'border-gray-200'}`}>
         <div className={`${elBgs[stemEl]} p-1.5 sm:p-2 text-center`}>
           <div className={`text-xl sm:text-2xl font-black ${elColors[stemEl]}`}>{STEMS_HANJA[pillar.stem]}</div>
-          <div className="text-xs text-gray-500 truncate">{STEMS[pillar.stem]}·{ELEMENTS[stemEl]}·{yinyang}</div>
+          <div className="text-xs text-gray-500 leading-tight">{STEMS[pillar.stem]}·{ELEMENTS[stemEl]}·{yinyang}</div>
         </div>
         <div className="border-t border-gray-100" />
         <div className={`${elBgs[branchEl]} p-1.5 sm:p-2 text-center`}>
@@ -83,7 +83,7 @@ function ElementBar({ counts, total }: { counts: number[]; total: number }) {
           <span key={i} className={`${c === 0 ? 'text-red-500 font-bold' : 'text-gray-600'}`}>
             <span className="hidden sm:inline">{fullNames[i]}</span>
             <span className="sm:hidden">{names[i]}</span>
-            {' '}{c > 0 ? c.toFixed(1) : '없음'}
+            {' '}{c > 0 ? c.toFixed(1) : '-'}
           </span>
         ))}
       </div>
@@ -133,24 +133,16 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           .saju-result-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .no-print { display: none !important; }
         }
-        @media (max-width: 640px) {
-          .print-btn-wrap { display: none !important; }
-        }
       `}</style>
 
       {/* ═══ HEADER ═══ */}
       <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 px-4 sm:px-6 py-5 sm:py-7 text-white rounded-t-2xl print:rounded-none">
-        <p className="text-orange-200 text-xs tracking-[0.15em] uppercase mb-1.5">四柱命理 분석 리포트</p>
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-xl sm:text-2xl font-black leading-tight truncate">{profile.emoji} {profile.title}</h2>
-            <p className="text-orange-100 text-sm sm:text-base mt-1 line-clamp-2 sm:line-clamp-1">{viralSummary}</p>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <p className="font-bold text-base sm:text-xl">{result.birthYear}.{String(result.birthMonth).padStart(2,'0')}.{String(result.birthDay).padStart(2,'0')}</p>
-            <p className="text-orange-200 text-xs sm:text-sm">{result.animal}띠 · {result.gender === 'male' ? '남' : '여'}성</p>
-          </div>
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-orange-200 text-xs tracking-[0.15em] uppercase">四柱命理 분석 리포트</p>
+          <p className="text-orange-200 text-xs sm:text-sm">{result.animal}띠 · {result.gender === 'male' ? '남' : '여'}성 · {result.birthYear}.{String(result.birthMonth).padStart(2,'0')}.{String(result.birthDay).padStart(2,'0')}</p>
         </div>
+        <h2 className="text-xl sm:text-2xl font-black leading-snug">{profile.emoji} {profile.title}</h2>
+        <p className="text-orange-100 text-sm sm:text-base mt-1">{viralSummary}</p>
       </div>
 
       <div className="px-3 sm:px-5 py-4 sm:py-5 space-y-5 sm:space-y-6 print:space-y-4">
@@ -219,7 +211,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             대운(大運) 흐름
           </h3>
           <div className="space-y-2">
-            <div className="flex gap-1 overflow-x-auto pb-2">
+            <div className="flex gap-1 overflow-x-auto pb-2 pr-3">
               {result.daeun.map((d, i) => (
                 <div key={i} className={`flex-shrink-0 text-center rounded-xl p-2 sm:p-2.5 min-w-[60px] sm:min-w-[70px] border-2 ${
                   d.isCurrent ? 'bg-orange-50 border-orange-400 shadow-sm' : 'bg-gray-50 border-gray-200'

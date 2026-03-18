@@ -316,7 +316,7 @@ function SajuReadingInner() {
 
         <button
           onClick={() => setPhase('intro')}
-          className="w-full py-3 text-gray-400 text-sm hover:text-gray-600 transition"
+          className="w-full py-3.5 text-gray-400 text-sm hover:text-gray-600 transition"
         >
           ← 돌아가기
         </button>
@@ -341,7 +341,7 @@ function SajuReadingInner() {
           <div className="flex gap-2.5">
             <button
               onClick={handlePrint}
-              className="flex-1 py-3.5 bg-gradient-to-b from-emerald-50 to-emerald-100/50 border border-emerald-200 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] text-emerald-700 rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 bg-gradient-to-b from-emerald-50 to-emerald-100/50 border border-emerald-200 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] text-emerald-700 rounded-2xl text-sm font-semibold transition-all duration-200 hidden sm:flex items-center justify-center gap-2"
             >
               <span className="text-base">🖨️</span> A4 인쇄
             </button>

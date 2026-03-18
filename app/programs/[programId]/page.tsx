@@ -102,7 +102,7 @@ export default function ProgramPage() {
         <div className="flex items-center gap-3 mb-6 sm:mb-8 ml-12 lg:ml-0">
           <button
             onClick={() => router.push('/dashboard')}
-            className="p-3 -ml-1 hover:bg-orange-50 rounded-lg transition"
+            className="p-3 -ml-1 min-h-11 min-w-11 flex items-center justify-center hover:bg-orange-50 rounded-lg transition"
             aria-label="대시보드로 돌아가기"
           >
             ←

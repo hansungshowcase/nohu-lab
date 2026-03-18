@@ -429,18 +429,35 @@ export function getDeepAdvice(total: number, categories: CategoryScore[], answer
   return advices
 }
 
-// ── 필요 노후자금 산출 ──
-export function getRetirementFundCalc(total: number, answers: Record<number, number>): { monthly: number; years: number; totalNeeded: number; pensionEstimate: number; gap: number } {
+// ── 필요 노후자금 산출 (2026년 최신 통계 기반) ──
+// 출처: 국민연금연구원 2024년 국민노후보장패널조사
+// 개인 최소 월 139만원, 적정 월 198만원 / 부부 최소 월 217만원, 적정 월 298만원
+// 국민연금 평균 수령액 약 67만원, 20년+ 가입 시 약 133만원
+export function getRetirementFundCalc(total: number, answers: Record<number, number>): {
+  monthly: number; monthlyMin: number; years: number; totalNeeded: number; totalNeededMin: number;
+  pensionEstimate: number; gap: number; gapMin: number;
+  monthlySave20: number; monthlySave10: number; monthlySaveInvest: number
+} {
   const q8 = answers[8] || 1
-  const monthly = q8 >= 3 ? 280 : q8 >= 2 ? 240 : 200
-  const years = 25
+  // 2026 통계 기반: 적정/최소 생활비 (부부 기준, 만원)
+  const monthly = q8 >= 3 ? 336 : q8 >= 2 ? 298 : 217
+  const monthlyMin = q8 >= 3 ? 250 : q8 >= 2 ? 217 : 139
+  const years = 25 // 65세~90세
   const totalNeeded = monthly * 12 * years
+  const totalNeededMin = monthlyMin * 12 * years
   const q2 = answers[2] || 1
-  const pensionBase = 67
+  // 국민연금 + 개인연금 예상 (월, 만원)
+  const nps = q2 >= 3 ? 133 : q2 >= 2 ? 100 : 67
   const personalPension = q2 >= 3 ? 60 : q2 >= 2 ? 30 : 0
-  const pensionEstimate = (pensionBase + personalPension) * 12 * years
-  const gap = totalNeeded - pensionEstimate
-  return { monthly, years, totalNeeded, pensionEstimate, gap: Math.max(0, gap) }
+  const pensionTotal = nps + personalPension
+  const pensionEstimate = pensionTotal * 12 * years
+  const gap = Math.max(0, totalNeeded - pensionEstimate)
+  const gapMin = Math.max(0, totalNeededMin - pensionEstimate)
+  // 월 저축액 계산
+  const monthlySave20 = gap > 0 ? Math.round(gap / 20 / 12) : 0 // 20년 단순저축
+  const monthlySave10 = gap > 0 ? Math.round(gap / 10 / 12) : 0 // 10년
+  const monthlySaveInvest = gap > 0 ? Math.round(gap / (((Math.pow(1.05, 20) - 1) / 0.05) * 12 / 10000)) : 0 // 연 5% 투자
+  return { monthly, monthlyMin, years, totalNeeded, totalNeededMin, pensionEstimate, gap, gapMin, monthlySave20, monthlySave10, monthlySaveInvest }
 }
 
 // ── 월 생활비 내역 ──

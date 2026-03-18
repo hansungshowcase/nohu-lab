@@ -46,9 +46,6 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     setTimeout(() => setCopyDone(false), 2000)
   }
 
-  // 이미지 저장 모달 (모바일: 길게 눌러 저장 안내)
-  const [imageModal, setImageModal] = useState<string | null>(null)
-
   const handleSaveImage = async () => {
     if (!cardRef.current || saving) return
     setSaving(true)
@@ -73,17 +70,23 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         throw new Error('Invalid PNG data')
       }
 
-      // 모바일: Web Share API 시도 → 실패 시 이미지 모달로 안내
-      if (isMobile) {
-        try {
-          // data URL → blob 변환
-          const byteString = atob(dataUrl.split(',')[1])
-          const ab = new ArrayBuffer(byteString.length)
-          const ia = new Uint8Array(ab)
-          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
-          const blob = new Blob([ab], { type: 'image/png' })
+      // data URL → blob 변환 (공통)
+      const toBlob = (url: string) => {
+        const byteString = atob(url.split(',')[1])
+        const ab = new ArrayBuffer(byteString.length)
+        const ia = new Uint8Array(ab)
+        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
+        return new Blob([ab], { type: 'image/png' })
+      }
 
-          if (navigator.share && navigator.canShare) {
+      // 모바일 저장
+      if (isMobile) {
+        const blob = toBlob(dataUrl)
+        const isKakao = /KAKAOTALK/i.test(navigator.userAgent)
+
+        // 1순위: Web Share API (일반 모바일 브라우저)
+        if (!isKakao && navigator.share && navigator.canShare) {
+          try {
             const file = new File([blob], 'saju-result.png', { type: 'image/png' })
             if (navigator.canShare({ files: [file] })) {
               await navigator.share({ files: [file], title: '사주풀이 결과' })
@@ -92,17 +95,31 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
               setTimeout(() => setSaveSuccess(false), 2000)
               return
             }
+          } catch (err) {
+            if (err instanceof Error && err.name === 'AbortError') {
+              setSaving(false)
+              return
+            }
           }
-        } catch (err) {
-          if (err instanceof Error && err.name === 'AbortError') {
-            setSaving(false)
-            return
-          }
-          // share 실패 시 아래 모달 fallback으로
         }
 
-        // 모바일 fallback: 이미지를 모달로 표시 (길게 눌러 저장)
-        setImageModal(dataUrl)
+        // 2순위: <a download> (Android Chrome, 삼성 브라우저 등)
+        const blobUrl = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = blobUrl
+        a.download = 'saju-result.png'
+        a.style.display = 'none'
+        document.body.appendChild(a)
+        a.click()
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(blobUrl) }, 1000)
+
+        // 카카오톡 인앱: <a download>가 동작 안 할 수 있으므로 안내 표시
+        if (isKakao) {
+          setTimeout(() => {
+            alert('이미지가 다운로드되지 않으면,\n오른쪽 상단 ⋯ 메뉴에서\n"다른 브라우저로 열기"를 눌러주세요.')
+          }, 500)
+        }
+
         setSaving(false)
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 2000)
@@ -113,11 +130,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       const w = window as typeof window & { showSaveFilePicker?: (opts: Record<string, unknown>) => Promise<FileSystemFileHandle> }
       if (w.showSaveFilePicker) {
         try {
-          const byteString = atob(dataUrl.split(',')[1])
-          const ab = new ArrayBuffer(byteString.length)
-          const ia = new Uint8Array(ab)
-          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
-          const blob = new Blob([ab], { type: 'image/png' })
+          const blob = toBlob(dataUrl)
           const handle = await w.showSaveFilePicker({
             suggestedName: 'saju-result.png',
             types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }],
@@ -204,42 +217,6 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* 이미지 저장 모달 (모바일) */}
-      {imageModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label="이미지 저장"
-          onClick={() => setImageModal(null)}
-        >
-          <div
-            className="bg-white rounded-2xl p-4 max-w-sm w-full max-h-[90vh] overflow-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-center text-base font-bold text-gray-800 mb-2">
-              이미지를 길게 눌러 저장하세요
-            </p>
-            <p className="text-center text-sm text-gray-500 mb-3">
-              아래 이미지를 꾹 누르면 저장 메뉴가 나타납니다
-            </p>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageModal}
-              alt="사주풀이 결과"
-              className="w-full rounded-lg border border-gray-200"
-              style={{ WebkitTouchCallout: 'default' }}
-            />
-            <button
-              onClick={() => setImageModal(null)}
-              className="mt-3 w-full py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-semibold text-gray-700 transition"
-            >
-              닫기
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* 공유 헤더 */}
       <div className="text-center">
         <p className="text-base sm:text-lg font-bold text-gray-800">결과를 공유해보세요</p>
@@ -250,7 +227,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
         <button
           onClick={handleCopyLink}
-          className="group relative py-4 bg-gradient-to-b from-blue-50 to-blue-100/50 border border-blue-200 hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5"
+          className="group relative py-4 bg-gradient-to-b from-blue-50 to-blue-100/50 border border-blue-200 hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-blue-300"
         >
           <span className="w-11 h-11 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center text-xl transition-all duration-200 group-hover:scale-110">
             {copyDone ? '✅' : '🔗'}
@@ -260,7 +237,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         <button
           onClick={handleSaveImage}
           disabled={saving}
-          className="group relative py-4 bg-gradient-to-b from-purple-50 to-purple-100/50 border border-purple-200 hover:border-purple-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:hover:translate-y-0"
+          className="group relative py-4 bg-gradient-to-b from-purple-50 to-purple-100/50 border border-purple-200 hover:border-purple-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:hover:translate-y-0 focus:outline-none focus:ring-2 focus:ring-purple-300"
         >
           <span className="w-11 h-11 rounded-full bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center text-xl transition-all duration-200 group-hover:scale-110">
             {saving ? '⏳' : saveSuccess ? '✅' : '📷'}
@@ -269,7 +246,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         </button>
         <button
           onClick={handleKakao}
-          className="group relative py-4 bg-gradient-to-b from-[#FEE500]/40 to-[#FEE500]/60 border border-[#F5DC00] hover:border-[#EDCF00] hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5"
+          className="group relative py-4 bg-gradient-to-b from-[#FEE500]/40 to-[#FEE500]/60 border border-[#F5DC00] hover:border-[#EDCF00] hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-yellow-400"
         >
           <span className="w-11 h-11 rounded-full bg-[#FEE500]/50 group-hover:bg-[#FEE500]/80 flex items-center justify-center transition-all duration-200 group-hover:scale-110">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
