@@ -163,7 +163,7 @@ export default function MentalHealth() {
           content: {
             title: '🧠 심리 상태 자가진단 결과',
             description: `종합 판정: ${overallLabel}\n${resultsSummary}`,
-            imageUrl: 'https://nohu-lab.vercel.app/api/og',
+            imageUrl: `${window.location.origin}/api/og`,
             link: { mobileWebUrl: url, webUrl: url },
           },
           buttons: [{ title: '나도 검사해보기', link: { mobileWebUrl: url, webUrl: url } }],
