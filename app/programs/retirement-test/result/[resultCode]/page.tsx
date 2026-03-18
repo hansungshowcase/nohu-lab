@@ -26,17 +26,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    alternates: { canonical: `/programs/retirement-test/result/${result.code}` },
     openGraph: {
       title,
       description,
       type: 'website',
-      images: [`/og/retirement-test/${result.code}.png`],
+      images: [{ url: '/api/og', width: 800, height: 400, alt: `노후 준비 점수 - ${result.grade}` }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [`/og/retirement-test/${result.code}.png`],
+      images: ['/api/og'],
     },
   }
 }

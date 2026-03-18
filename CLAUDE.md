@@ -32,6 +32,18 @@
 ## 코드 수정 원칙
 - **코드를 수정할 때는 항상 전보다 더 나은 상태를 만들어야 한다.** 수정 후 품질이 떨어지거나 기능이 퇴보하는 변경은 절대 금지.
 
+## SEO/AEO/GEO 최적화 규칙
+- 모든 페이지에 **title, description, og:title, og:description, og:image, twitter:card** 메타 태그 필수
+- **시맨틱 HTML** 사용: header, main, nav, section, article, footer (div 남용 금지)
+- **heading 계층**: 각 페이지에 h1 하나만, h1→h2→h3 순서 준수
+- 이미지에 **alt 속성** 필수
+- **sitemap.xml, robots.txt** 유지 (새 페이지 추가 시 sitemap 업데이트)
+- **canonical URL** 설정
+- **구조화 데이터(JSON-LD)**: Schema.org 마크업 유지 (WebApplication 타입)
+- 콘텐츠 작성 시 **자연어 질문-답변 형태** 고려 (AEO: AI 엔진 최적화)
+- **지역 정보**: 한국어(ko_KR), 원화(KRW) 등 로케일 명시 (GEO: 지역 검색 최적화)
+- 새 프로그램 추가 시 해당 프로그램의 **고유 메타 태그 + sitemap 등록** 필수
+
 ## 절대 금지 사항
 - **Vercel 프로젝트를 새로 만들거나 삭제하지 않기** (사용자가 명시적으로 요청할 때만)
 - **GitHub 저장소를 새로 만들거나 삭제하지 않기** (사용자가 명시적으로 요청할 때만)
