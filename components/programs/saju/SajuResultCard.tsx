@@ -124,13 +124,13 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   return (
     <div
       ref={ref}
-      className="bg-white print:shadow-none print:rounded-none"
+      className="saju-result-card bg-white print:shadow-none print:rounded-none"
       style={{ maxWidth: '680px', width: '100%', margin: '0 auto' }}
     >
       <style>{`
         @media print {
           @page { size: A4 portrait; margin: 8mm; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .saju-result-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .no-print { display: none !important; }
         }
         @media (max-width: 640px) {
