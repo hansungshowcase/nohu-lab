@@ -7,8 +7,8 @@ export async function POST(request: NextRequest) {
   try {
     const { members, syncKey } = await request.json()
 
-    // 동기화 키 확인 (SYNC_SECRET과 동일 환경변수 사용)
-    const secret = process.env.SYNC_SECRET || process.env.SYNC_KEY
+    // 동기화 키 확인
+    const secret = process.env.SYNC_SECRET
     if (!secret || syncKey !== secret) {
       return NextResponse.json({ error: '인증 실패' }, { status: 403 })
     }

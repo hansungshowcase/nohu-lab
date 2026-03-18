@@ -65,10 +65,9 @@ export async function GET(request: NextRequest) {
     }
     const naverNickname = naverProfile.nickname || naverProfile.name || '회원'
 
-    // 3. 카페 가입 여부 및 등급 확인 (디버그 모드)
+    // 3. 카페 가입 여부 및 등급 확인
     let cafeTier: 1 | 2 | 3 | 4 = 1
     let cafeJoined = false
-    const debugResults: Record<string, unknown> = {}
 
     const cafeIds = ['eovhskfktmak', CAFE_ID]
     for (const cid of cafeIds) {
@@ -77,12 +76,8 @@ export async function GET(request: NextRequest) {
           `https://openapi.naver.com/v1/cafe/member/${cid}`,
           { headers: { Authorization: `Bearer ${accessToken}` } }
         )
-        if (!cafeRes.ok) {
-          debugResults[cid] = { status: cafeRes.status, error: 'HTTP error' }
-          continue
-        }
+        if (!cafeRes.ok) continue
         const cafeData = await cafeRes.json()
-        debugResults[cid] = { status: cafeRes.status, data: cafeData }
 
         if (cafeData.message?.status === '200' && cafeData.message?.result) {
           const memberLevel = cafeData.message.result.memberLevel || 1
@@ -91,8 +86,8 @@ export async function GET(request: NextRequest) {
           cafeJoined = true
           break
         }
-      } catch (e) {
-        debugResults[cid] = { error: String(e) }
+      } catch {
+        // 네트워크 오류 시 다음 카페 ID 시도
       }
     }
 
