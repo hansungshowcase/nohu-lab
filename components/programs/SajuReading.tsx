@@ -35,6 +35,7 @@ export default function SajuReading() {
 
 function SajuReadingInner() {
   const searchParams = useSearchParams()
+  const isSharedLink = searchParams.has('y') && searchParams.has('m') && searchParams.has('d')
   const [phase, setPhase] = useState<Phase>('intro')
   const [result, setResult] = useState<SajuResult | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -351,6 +352,19 @@ function SajuReadingInner() {
           <p className="text-center text-[11px] text-gray-300 pb-4">
             본 결과는 전통 사주명리학을 기반으로 한 재미 콘텐츠입니다
           </p>
+
+          {isSharedLink && (
+            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-5 border border-orange-200 text-center">
+              <p className="text-base font-bold text-orange-800 mb-1">내 사주도 궁금하다면?</p>
+              <p className="text-sm text-gray-600 mb-4">무료로 바로 확인해보세요</p>
+              <a
+                href="/programs/saju-reading"
+                className="inline-block px-8 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-2xl text-sm font-bold shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.97]"
+              >
+                나도 사주풀이 해보기
+              </a>
+            </div>
+          )}
         </div>
       </div>
     )
