@@ -133,9 +133,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           .saju-result-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .no-print { display: none !important; }
         }
-        @media (max-width: 640px) {
-          .print-btn-wrap { display: none !important; }
-        }
       `}</style>
 
       {/* ═══ HEADER ═══ */}

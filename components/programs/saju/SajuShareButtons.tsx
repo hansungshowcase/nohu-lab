@@ -46,9 +46,6 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     setTimeout(() => setCopyDone(false), 2000)
   }
 
-  // 이미지 저장 모달 (모바일: 길게 눌러 저장 안내)
-  const [imageModal, setImageModal] = useState<string | null>(null)
-
   const handleSaveImage = async () => {
     if (!cardRef.current || saving) return
     setSaving(true)
@@ -101,8 +98,28 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           // share 실패 시 아래 모달 fallback으로
         }
 
-        // 모바일 fallback: 이미지를 모달로 표시 (길게 눌러 저장)
-        setImageModal(dataUrl)
+        // 모바일 fallback: <a download> 로 직접 다운로드
+        try {
+          const byteStr = atob(dataUrl.split(',')[1])
+          const buf = new ArrayBuffer(byteStr.length)
+          const arr = new Uint8Array(buf)
+          for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i)
+          const blobUrl = URL.createObjectURL(new Blob([buf], { type: 'image/png' }))
+          const a = document.createElement('a')
+          a.href = blobUrl
+          a.download = 'saju-result.png'
+          a.style.display = 'none'
+          document.body.appendChild(a)
+          a.click()
+          setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(blobUrl) }, 1000)
+        } catch {
+          // <a download> 실패 시 (iOS Safari 등) 새 탭에서 이미지 열기
+          const w = window.open()
+          if (w) {
+            w.document.write(`<img src="${dataUrl}" style="max-width:100%"/>`)
+            w.document.title = '사주풀이 결과 - 길게 눌러 저장'
+          }
+        }
         setSaving(false)
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 2000)
@@ -204,42 +221,6 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* 이미지 저장 모달 (모바일) */}
-      {imageModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label="이미지 저장"
-          onClick={() => setImageModal(null)}
-        >
-          <div
-            className="bg-white rounded-2xl p-4 max-w-sm w-full max-h-[90vh] overflow-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-center text-base font-bold text-gray-800 mb-2">
-              이미지를 길게 눌러 저장하세요
-            </p>
-            <p className="text-center text-sm text-gray-500 mb-3">
-              아래 이미지를 꾹 누르면 저장 메뉴가 나타납니다
-            </p>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageModal}
-              alt="사주풀이 결과"
-              className="w-full rounded-lg border border-gray-200"
-              style={{ WebkitTouchCallout: 'default' }}
-            />
-            <button
-              onClick={() => setImageModal(null)}
-              className="mt-3 w-full py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-semibold text-gray-700 transition"
-            >
-              닫기
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* 공유 헤더 */}
       <div className="text-center">
         <p className="text-base sm:text-lg font-bold text-gray-800">결과를 공유해보세요</p>
