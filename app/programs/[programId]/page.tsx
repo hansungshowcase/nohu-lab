@@ -82,7 +82,7 @@ export default function ProgramPage() {
           등급이 부족합니다
         </h1>
         <p className="text-gray-500 mb-4">
-          이 프로그램은 <strong>{tierInfo.cafeName}</strong> 이상만 이용할 수 있습니다.
+          이 프로그램은 <strong>{tierInfo?.cafeName || `Tier ${program.minTier}`}</strong> 이상만 이용할 수 있습니다.
         </p>
         <button
           onClick={() => router.push('/dashboard')}

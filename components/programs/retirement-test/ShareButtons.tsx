@@ -47,6 +47,13 @@ export default function ShareButtons({
   const [kakaoReady, setKakaoReady] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
+  // Blob URL 메모리 누수 방지
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview)
+    }
+  }, [imagePreview])
+
   useEffect(() => {
     function initKakao() {
       if (window.Kakao && !window.Kakao.isInitialized()) {
@@ -84,7 +91,11 @@ export default function ShareButtons({
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(shareUrl)
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl)
+      } else {
+        fallbackCopy(shareUrl)
+      }
     } catch {
       fallbackCopy(shareUrl)
     }
@@ -144,7 +155,7 @@ export default function ShareButtons({
     }
   }
 
-  function shareKakao() {
+  async function shareKakao() {
     if (kakaoReady && window.Kakao) {
       window.Kakao.Share.sendDefault({
         objectType: 'feed',
@@ -179,7 +190,11 @@ export default function ShareButtons({
 
     const fullText = `${shareText}\n${shareUrl}`
     try {
-      navigator.clipboard.writeText(fullText)
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(fullText)
+      } else {
+        fallbackCopy(fullText)
+      }
     } catch {
       fallbackCopy(fullText)
     }

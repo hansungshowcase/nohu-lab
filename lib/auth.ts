@@ -20,6 +20,7 @@ export async function createToken(payload: TokenPayload): Promise<string> {
 }
 
 export async function verifyToken(token: string): Promise<TokenPayload | null> {
+  if (!process.env.JWT_SECRET) return null
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
     const tier = Number(payload.tier)

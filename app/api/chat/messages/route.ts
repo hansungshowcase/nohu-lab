@@ -35,9 +35,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '메시지 조회에 실패했습니다.' }, { status: 500 })
   }
 
-  if (readResult.error) {
-    return NextResponse.json({ error: '읽음 처리 실패' }, { status: 500 })
-  }
+  // 읽음 처리 실패는 무시 (메시지 조회 결과는 정상 반환)
 
   return NextResponse.json(messagesResult.data || [])
 }

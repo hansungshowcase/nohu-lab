@@ -15,13 +15,21 @@ const CAFE_URL = 'https://cafe.naver.com/eovhskfktmak'
 
 function getTestCount(): number {
   if (typeof window === 'undefined') return 0
-  return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10)
+  try {
+    return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10)
+  } catch {
+    return 0
+  }
 }
 
 function incrementTestCount(): void {
   if (typeof window === 'undefined') return
-  const current = getTestCount()
-  localStorage.setItem(STORAGE_KEY, String(current + 1))
+  try {
+    const current = getTestCount()
+    localStorage.setItem(STORAGE_KEY, String(current + 1))
+  } catch {
+    // 시크릿 모드/인앱 브라우저에서 localStorage 접근 불가 시 무시
+  }
 }
 
 export default function RetirementTest() {

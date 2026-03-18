@@ -22,9 +22,9 @@ export async function GET() {
   // 연락처 마스킹
   const masked = (data || []).map((m) => ({
     ...m,
-    phone_masked: m.phone.length === 11
+    phone_masked: m.phone && m.phone.length === 11
       ? `${m.phone.slice(0, 3)}-****-${m.phone.slice(7)}`
-      : m.phone,
+      : m.phone || '',
   }))
 
   return NextResponse.json(masked)

@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
 
     // status === 'completed' → 이미 처리 완료 (DB에서 회원 조회 후 로그인)
     if (req.status === 'completed') {
-      const nickname = req.nickname.trim()
+      const nickname = (req.nickname || '').trim()
+      if (!nickname) return NextResponse.json({ status: 'error' })
       const { data: existingMember } = await supabase
         .from('members')
         .select('id, nickname, tier')
@@ -67,12 +68,13 @@ export async function GET(request: NextRequest) {
     }
 
     const tier = mapGradeToTier(req.grade_name || '')
-    const nickname = req.nickname.trim()
+    const nickname = (req.nickname || '').trim()
+    if (!nickname) return NextResponse.json({ status: 'error' })
 
     const { data: member, error: upsertError } = await supabase
       .from('members')
       .upsert(
-        { nickname, tier, phone: '', last_login: new Date().toISOString() },
+        { nickname, tier, last_login: new Date().toISOString() },
         { onConflict: 'nickname' }
       )
       .select()
