@@ -32,6 +32,16 @@ export const programRegistry: Program[] = [
     isActive: true,
     badge: 'NEW',
   },
+  {
+    id: 'mental-health',
+    name: '심리 상태 자가진단',
+    description: '우울, 불안, 스트레스 수준을 간단하게 체크해보세요',
+    minTier: 0,
+    icon: '🧠',
+    category: '테스트',
+    isActive: true,
+    badge: 'NEW',
+  },
   // ── minTier 1 - 코어회원 ──
   {
     id: 'text-counter',

@@ -15,6 +15,7 @@ const programComponents: Record<string, React.LazyExoticComponent<React.Componen
   'retirement-test': lazy(() => import('@/components/programs/RetirementTest')),
   'saju-reading': lazy(() => import('@/components/programs/SajuReading')),
   'pension-timing': lazy(() => import('@/components/programs/PensionTiming')),
+  'mental-health': lazy(() => import('@/components/programs/MentalHealth')),
 }
 
 interface User {
