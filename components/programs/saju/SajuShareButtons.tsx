@@ -129,8 +129,35 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
   const [kakaoCopied, setKakaoCopied] = useState(false)
 
   const handleKakao = async () => {
-    // 클립보드에 공유 텍스트 복사 후 카카오톡에 붙여넣기 안내
     const shareUrl = getShareUrl()
+    const w = window as typeof window & { Kakao?: { isInitialized: () => boolean; init: (key: string) => void; Share: { sendDefault: (opts: Record<string, unknown>) => void } } }
+
+    // 카카오 SDK로 직접 공유
+    if (w.Kakao) {
+      try {
+        if (!w.Kakao.isInitialized()) {
+          w.Kakao.init('3913fde247b12ce25084eb42a9b17ed9')
+        }
+        w.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `${profile.emoji} ${profile.title}`,
+            description: viral,
+            imageUrl: `https://nohu-lab.vercel.app/api/og`,
+            link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+          },
+          buttons: [
+            { title: '결과 보기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } },
+            { title: '나도 해보기', link: { mobileWebUrl: 'https://nohu-lab.vercel.app/programs/saju-reading', webUrl: 'https://nohu-lab.vercel.app/programs/saju-reading' } },
+          ],
+        })
+        return
+      } catch {
+        // SDK 실패 시 아래 fallback
+      }
+    }
+
+    // Fallback: 클립보드 복사
     const text = `${profile.emoji} ${viral}\n\n내 사주풀이 결과 보기:\n${shareUrl}`
     try {
       await navigator.clipboard.writeText(text)

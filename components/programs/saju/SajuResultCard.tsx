@@ -9,10 +9,8 @@ import {
 import {
   DAY_MASTER_PROFILES, STRENGTH_INTERPRETATIONS,
   getYearFortune, getViralSummary,
-  getUsefulGodAdvice, TEN_GOD_INTERPRETATIONS,
-  SINSAL_INTERPRETATIONS, TWELVE_STAGE_INTERPRETATIONS,
+  getUsefulGodAdvice,
   getDaeunInterpretation,
-  HAPCHUNG_INTERPRETATIONS, JONGGUK_INTERPRETATIONS,
   WOLUN_RATING_LABELS,
 } from './sajuData'
 
@@ -30,18 +28,18 @@ function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pil
 
   return (
     <div className={`flex flex-col items-center flex-1 min-w-0 ${isMe ? 'relative' : ''}`}>
-      {isMe && <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[8px] sm:text-[9px] bg-orange-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full whitespace-nowrap font-bold">★ 나</div>}
-      <span className="text-[9px] sm:text-[10px] text-gray-400 mb-0.5 truncate">{label}</span>
-      <span className={`text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded mb-1 truncate ${isMe ? 'bg-orange-100 text-orange-600 font-bold' : 'bg-gray-100 text-gray-500'}`}>{tenGod || '-'}</span>
+      {isMe && <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] bg-orange-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full whitespace-nowrap font-bold">★ 나</div>}
+      <span className="text-[10px] sm:text-[11px] text-gray-400 mb-0.5 truncate">{label}</span>
+      <span className={`text-[10px] px-1.5 py-0.5 rounded mb-1 truncate ${isMe ? 'bg-orange-100 text-orange-600 font-bold' : 'bg-gray-100 text-gray-500'}`}>{tenGod || '-'}</span>
       <div className={`border-2 rounded-xl w-full max-w-[60px] overflow-hidden ${isMe ? 'border-orange-400 shadow-sm shadow-orange-100' : 'border-gray-200'}`}>
         <div className={`${elBgs[stemEl]} p-1 sm:p-1.5 text-center`}>
           <div className={`text-lg sm:text-xl font-black ${elColors[stemEl]}`}>{STEMS_HANJA[pillar.stem]}</div>
-          <div className="text-[7px] sm:text-[8px] text-gray-500 truncate">{STEMS[pillar.stem]}·{ELEMENTS[stemEl]}·{yinyang}</div>
+          <div className="text-[10px] text-gray-500 truncate">{STEMS[pillar.stem]}·{ELEMENTS[stemEl]}·{yinyang}</div>
         </div>
         <div className="border-t border-gray-100" />
         <div className={`${elBgs[branchEl]} p-1 sm:p-1.5 text-center`}>
           <div className={`text-lg sm:text-xl font-black ${elColors[branchEl]}`}>{BRANCHES_HANJA[pillar.branch]}</div>
-          <div className="text-[7px] sm:text-[8px] text-gray-500 truncate">{ELEMENTS[branchEl]}</div>
+          <div className="text-[10px] text-gray-500 truncate">{ELEMENTS[branchEl]}</div>
         </div>
       </div>
     </div>
@@ -51,17 +49,17 @@ function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pil
 function EmptyPillarBox() {
   return (
     <div className="flex flex-col items-center flex-1 min-w-0">
-      <span className="text-[9px] sm:text-[10px] text-gray-400 mb-0.5">시주(時)</span>
-      <span className="text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded mb-1 bg-gray-100 text-gray-400">-</span>
+      <span className="text-[10px] sm:text-[11px] text-gray-400 mb-0.5">시주(時)</span>
+      <span className="text-[10px] px-1.5 py-0.5 rounded mb-1 bg-gray-100 text-gray-400">-</span>
       <div className="border-2 border-dashed border-gray-200 rounded-xl w-full max-w-[60px] overflow-hidden">
         <div className="bg-gray-50 p-1 sm:p-1.5 text-center">
           <div className="text-lg sm:text-xl text-gray-300">?</div>
-          <div className="text-[7px] sm:text-[8px] text-gray-300">미입력</div>
+          <div className="text-[10px] text-gray-300">미입력</div>
         </div>
         <div className="border-t border-gray-100" />
         <div className="bg-gray-50 p-1 sm:p-1.5 text-center">
           <div className="text-lg sm:text-xl text-gray-300">?</div>
-          <div className="text-[7px] sm:text-[8px] text-gray-300">-</div>
+          <div className="text-[10px] text-gray-300">-</div>
         </div>
       </div>
     </div>
@@ -105,23 +103,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const year = new Date().getFullYear()
   const usefulGodAdvice = getUsefulGodAdvice(result.usefulGod)
 
-  // 십신 분석: 가장 많은 십신 (일주 제외)
-  const dominantTenGod = result.yearAnalysis.dominantTenGod
-  const dominantTGInfo = TEN_GOD_INTERPRETATIONS[dominantTenGod]
-
-  // 신살 모으기
-  const activeSinsal: { key: string; info: typeof SINSAL_INTERPRETATIONS[string] }[] = []
-  if (result.sinsal.hasCheoneul) activeSinsal.push({ key: 'cheoneul', info: SINSAL_INTERPRETATIONS.cheoneul })
-  if (result.sinsal.hasMunchang) activeSinsal.push({ key: 'munchang', info: SINSAL_INTERPRETATIONS.munchang })
-  if (result.sinsal.hasYeokma) activeSinsal.push({ key: 'yeokma', info: SINSAL_INTERPRETATIONS.yeokma })
-  if (result.sinsal.hasDohwa) activeSinsal.push({ key: 'dohwa', info: SINSAL_INTERPRETATIONS.dohwa })
-  if (result.sinsal.hasHwagae) activeSinsal.push({ key: 'hwagae', info: SINSAL_INTERPRETATIONS.hwagae })
-  if (result.sinsal.hasYangin) activeSinsal.push({ key: 'yangin', info: SINSAL_INTERPRETATIONS.yangin })
-  if (result.sinsal.hasGeobsal) activeSinsal.push({ key: 'geobsal', info: SINSAL_INTERPRETATIONS.geobsal })
-
-  // 십이운성
-  const stageInfo = TWELVE_STAGE_INTERPRETATIONS[result.sinsal.dayEnergyName]
-
   // 현재 대운
   const currentDaeun = result.daeun.find(d => d.isCurrent)
 
@@ -156,7 +137,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
       {/* ═══ HEADER ═══ */}
       <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 px-4 sm:px-5 py-5 sm:py-6 text-white rounded-t-2xl print:rounded-none">
-        <p className="text-orange-200 text-[9px] sm:text-[10px] tracking-[0.15em] uppercase mb-1">四柱命理 분석 리포트</p>
+        <p className="text-orange-200 text-[10px] tracking-[0.15em] uppercase mb-1">四柱命理 분석 리포트</p>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-lg sm:text-xl font-black leading-tight truncate">{profile.emoji} {profile.title}</h2>
@@ -228,166 +209,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           </div>
         </div>
 
-        {/* ═══ 격국·십신·운성 ═══ */}
-        <div>
-          <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-            <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
-            사주 심층 분석
-          </h3>
-          <div className="space-y-2.5">
-            {/* 격국 */}
-            <div className="bg-purple-50 rounded-xl p-3.5 sm:p-4 border border-purple-200">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">🏛️</span>
-                <h4 className="text-[13px] sm:text-sm font-black text-purple-800">{result.gyeokguk.name}</h4>
-                <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                  result.gyeokguk.quality === 'good' ? 'bg-green-100 text-green-700' :
-                  result.gyeokguk.quality === 'challenging' ? 'bg-red-100 text-red-700' :
-                  'bg-gray-100 text-gray-600'
-                }`}>{result.gyeokguk.quality === 'good' ? '길격' : result.gyeokguk.quality === 'challenging' ? '흉격' : '중격'}</span>
-              </div>
-              <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed">{result.gyeokguk.description}</p>
-            </div>
-
-            {/* 십이운성 */}
-            {stageInfo && (
-              <div className="bg-indigo-50 rounded-xl p-3.5 sm:p-4 border border-indigo-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">🔄</span>
-                  <h4 className="text-[13px] sm:text-sm font-black text-indigo-800">
-                    십이운성: {result.sinsal.dayEnergyName}({stageInfo.keyword})
-                  </h4>
-                </div>
-                <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed">{stageInfo.desc}</p>
-              </div>
-            )}
-
-            {/* 주도 십신 */}
-            {dominantTGInfo && (
-              <div className="bg-cyan-50 rounded-xl p-3.5 sm:p-4 border border-cyan-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">{dominantTGInfo.emoji}</span>
-                  <h4 className="text-[13px] sm:text-sm font-black text-cyan-800">
-                    주도 십신: {dominantTGInfo.name}
-                  </h4>
-                  <span className="text-[9px] sm:text-[10px] bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded-full font-medium">{dominantTGInfo.keyword}</span>
-                </div>
-                <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed mb-2">{dominantTGInfo.personality}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="bg-white/70 rounded-lg p-2.5 border border-cyan-100">
-                    <p className="text-[10px] sm:text-[11px] font-bold text-cyan-600 mb-1">💰 재물</p>
-                    <p className="text-[11px] sm:text-[12px] text-gray-700 leading-relaxed">{dominantTGInfo.fortune}</p>
-                  </div>
-                  <div className="bg-white/70 rounded-lg p-2.5 border border-cyan-100">
-                    <p className="text-[10px] sm:text-[11px] font-bold text-cyan-600 mb-1">❤️ 연애</p>
-                    <p className="text-[11px] sm:text-[12px] text-gray-700 leading-relaxed">{dominantTGInfo.love}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ═══ 신살 (있는 경우에만) ═══ */}
-        {activeSinsal.length > 0 && (
-          <div>
-            <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
-              타고난 신살(神殺)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {activeSinsal.map(({ key, info }) => (
-                <div key={key} className="bg-gray-50 rounded-xl p-3 sm:p-3.5 border border-gray-200">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <span className="text-base">{info.emoji}</span>
-                    <span className="text-[12px] sm:text-[13px] font-black text-gray-800">{info.name}</span>
-                  </div>
-                  <p className="text-[11px] sm:text-[12px] text-gray-600 leading-relaxed mb-1.5">{info.detail}</p>
-                  <p className="text-[10px] sm:text-[11px] text-orange-600 font-medium bg-orange-50 rounded-lg px-2 py-1.5">💡 {info.advice}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ═══ 합충형파해 분석 ═══ */}
-        {result.hapChung.details.length > 0 && (
-          <div>
-            <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
-              합충형파해(合沖刑破害) 분석
-            </h3>
-            <div className="space-y-2">
-              {result.hapChung.details.map((d, i) => {
-                const typeInfo: Record<string, { emoji: string; color: string; bg: string; border: string }> = {
-                  'cheongan-hap': { emoji: '🤝', color: 'text-blue-800', bg: 'bg-blue-50', border: 'border-blue-200' },
-                  'jiji-yukap': { emoji: '💞', color: 'text-pink-800', bg: 'bg-pink-50', border: 'border-pink-200' },
-                  'samhap': { emoji: '🔺', color: 'text-emerald-800', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-                  'chung': { emoji: '⚡', color: 'text-red-800', bg: 'bg-red-50', border: 'border-red-200' },
-                  'hyung': { emoji: '🔥', color: 'text-orange-800', bg: 'bg-orange-50', border: 'border-orange-200' },
-                  'pa': { emoji: '💔', color: 'text-purple-800', bg: 'bg-purple-50', border: 'border-purple-200' },
-                  'hae': { emoji: '😣', color: 'text-amber-800', bg: 'bg-amber-50', border: 'border-amber-200' },
-                }
-                const info = typeInfo[d.type] || typeInfo['chung']
-                return (
-                  <div key={i} className={`${info.bg} rounded-xl p-3 sm:p-3.5 border ${info.border}`}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-base">{info.emoji}</span>
-                      <span className={`text-[12px] sm:text-[13px] font-black ${info.color}`}>
-                        {d.pillar1} ↔ {d.pillar2}
-                      </span>
-                      <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                        d.effect === 'positive' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>{d.effect === 'positive' ? '길' : '흉'}</span>
-                    </div>
-                    <p className="text-[11px] sm:text-[12px] text-gray-600 leading-relaxed">{d.description}</p>
-                    {HAPCHUNG_INTERPRETATIONS[d.type] && (
-                      <p className="text-[10px] sm:text-[11px] text-gray-500 mt-1 leading-relaxed">{HAPCHUNG_INTERPRETATIONS[d.type].detail}</p>
-                    )}
-                  </div>
-                )
-              })}
-              <div className={`rounded-xl p-3 border text-center text-[12px] sm:text-[13px] font-bold ${
-                result.hapChung.overallTendency === 'harmonious' ? 'bg-green-50 border-green-200 text-green-800' :
-                result.hapChung.overallTendency === 'conflicting' ? 'bg-red-50 border-red-200 text-red-800' :
-                result.hapChung.overallTendency === 'mixed' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' :
-                'bg-gray-50 border-gray-200 text-gray-600'
-              }`}>
-                {result.hapChung.overallTendency === 'harmonious' && '🌈 사주 내 합(合)의 기운이 우세하여 조화로운 구조입니다'}
-                {result.hapChung.overallTendency === 'conflicting' && '⚡ 사주 내 충극의 기운이 있어 변화와 도전이 많은 구조입니다'}
-                {result.hapChung.overallTendency === 'mixed' && '☯️ 합과 충이 공존하여 역동적인 사주 구조입니다'}
-                {result.hapChung.overallTendency === 'neutral' && '😌 특별한 합충 없이 안정적인 사주 구조입니다'}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ═══ 종격 (특수 격국) ═══ */}
-        {result.jongguk && (() => {
-          const jongInfo = JONGGUK_INTERPRETATIONS[result.jongguk.type.replace('gyeok', '격').replace('jong', '종')]
-          return (
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
-                특수 격국 발견
-              </h3>
-              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-4 sm:p-5 border-2 border-amber-300">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">{jongInfo?.emoji || '🌟'}</span>
-                  <h4 className="text-[14px] sm:text-base font-black text-amber-900">{result.jongguk!.name}</h4>
-                  <span className="text-[9px] sm:text-[10px] bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-bold">특수격</span>
-                </div>
-                <p className="text-[13px] sm:text-sm text-gray-800 leading-[1.85]">
-                  {jongInfo?.description || result.jongguk!.description}
-                </p>
-                <p className="text-[11px] sm:text-[12px] text-amber-700 mt-2 font-medium">
-                  따르는 오행: {ELEMENTS[result.jongguk!.followElement]}({ELEMENTS_HANJA[result.jongguk!.followElement]})
-                </p>
-              </div>
-            </div>
-          )
-        })()}
-
         {/* ═══ 대운 흐름 ═══ */}
         <div>
           <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -400,8 +221,8 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
                 <div key={i} className={`flex-shrink-0 text-center rounded-xl p-2 sm:p-2.5 min-w-[60px] sm:min-w-[70px] border-2 ${
                   d.isCurrent ? 'bg-orange-50 border-orange-400 shadow-sm' : 'bg-gray-50 border-gray-200'
                 }`}>
-                  {d.isCurrent && <p className="text-[7px] sm:text-[8px] text-orange-500 font-bold mb-0.5">▶ 현재</p>}
-                  <p className="text-[9px] sm:text-[10px] text-gray-500">{d.startAge}~{d.startAge + 9}세</p>
+                  {d.isCurrent && <p className="text-[10px] text-orange-500 font-bold mb-0.5">▶ 현재</p>}
+                  <p className="text-[10px] sm:text-[11px] text-gray-500">{d.startAge}~{d.startAge + 9}세</p>
                   <p className="text-[12px] sm:text-sm font-bold text-gray-800">{d.tenGod}</p>
                 </div>
               ))}
@@ -559,15 +380,15 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           <p className="text-[13px] sm:text-sm text-gray-800 leading-[1.8]">{usefulGodAdvice}</p>
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
             <div className="bg-white rounded-lg p-2 border border-orange-100">
-              <p className="text-[9px] sm:text-[10px] text-gray-500">행운 색</p>
+              <p className="text-[10px] sm:text-[11px] text-gray-500">행운 색</p>
               <p className="text-[12px] sm:text-sm font-bold text-gray-800">{profile.luckyColor}</p>
             </div>
             <div className="bg-white rounded-lg p-2 border border-orange-100">
-              <p className="text-[9px] sm:text-[10px] text-gray-500">행운 방향</p>
+              <p className="text-[10px] sm:text-[11px] text-gray-500">행운 방향</p>
               <p className="text-[12px] sm:text-sm font-bold text-gray-800">{profile.luckyDirection}</p>
             </div>
             <div className="bg-white rounded-lg p-2 border border-orange-100">
-              <p className="text-[9px] sm:text-[10px] text-gray-500">행운 숫자</p>
+              <p className="text-[10px] sm:text-[11px] text-gray-500">행운 숫자</p>
               <p className="text-[12px] sm:text-sm font-bold text-gray-800">{profile.luckyNumber}</p>
             </div>
           </div>
@@ -575,7 +396,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
         {/* ═══ Footer ═══ */}
         <div className="text-center pt-3 border-t border-gray-100">
-          <p className="text-[9px] sm:text-[10px] text-gray-400">노후연구소 四柱命理 · nohu-lab.vercel.app · 전통 사주명리학 기반 재미 콘텐츠</p>
+          <p className="text-[10px] sm:text-[11px] text-gray-400">노후연구소 四柱命理 · nohu-lab.vercel.app · 전통 사주명리학 기반 재미 콘텐츠</p>
         </div>
       </div>
     </div>
