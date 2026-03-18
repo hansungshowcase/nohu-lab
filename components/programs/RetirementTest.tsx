@@ -8,11 +8,35 @@ import ShareButtons from './retirement-test/ShareButtons'
 import AnalyzingScreen from './retirement-test/AnalyzingScreen'
 import { getCrossInsights, getDeepAdvice, getRiskAssessment, getCrevasseAnalysis, getRetirementFundCalc, getScenarios } from './retirement-test/ResultCardA4'
 
-type Phase = 'intro' | 'quiz' | 'analyzing' | 'result'
+type Phase = 'intro' | 'quiz' | 'profile' | 'analyzing' | 'result'
 
 const FREE_LIMIT = 2
 const STORAGE_KEY = 'retirement-test-count'
 const CAFE_URL = 'https://cafe.naver.com/eovhskfktmak'
+
+// 연령대별 평균 순자산 (통계청 2025 가계금융복지조사, 만원)
+const AGE_ASSET_DATA: Record<string, { avg: number; median: number; label: string }> = {
+  '30': { avg: 21000, median: 12000, label: '30대' },
+  '40': { avg: 48000, median: 30000, label: '40대' },
+  '50': { avg: 55000, median: 35000, label: '50대' },
+  '60': { avg: 54000, median: 32000, label: '60대' },
+}
+
+function getAssetPercentile(age: number, asset: number): number {
+  // 순자산 분포 근사 (로그정규분포 기반, 통계청 데이터)
+  const group = age < 40 ? '30' : age < 50 ? '40' : age < 60 ? '50' : '60'
+  const data = AGE_ASSET_DATA[group]
+  if (!data) return 50
+  const ratio = asset / data.avg
+  if (ratio >= 3) return 95
+  if (ratio >= 2) return 90
+  if (ratio >= 1.5) return 80
+  if (ratio >= 1) return 60
+  if (ratio >= 0.7) return 45
+  if (ratio >= 0.5) return 30
+  if (ratio >= 0.3) return 15
+  return 5
+}
 
 function getTestCount(): number {
   if (typeof window === 'undefined') return 0
@@ -40,6 +64,9 @@ export default function RetirementTest() {
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [testCount, setTestCount] = useState(0)
   const [isMember, setIsMember] = useState(false)
+  const [userAge, setUserAge] = useState('')
+  const [userIncome, setUserIncome] = useState('')
+  const [userAsset, setUserAsset] = useState('')
 
 
   useEffect(() => {
@@ -77,7 +104,7 @@ export default function RetirementTest() {
     if (currentQ < questions.length - 1) {
       setCurrentQ((prev) => prev + 1)
     } else {
-      setPhase('analyzing')
+      setPhase('profile')
     }
   }, [currentQ])
 
@@ -262,6 +289,80 @@ export default function RetirementTest() {
     )
   }
 
+  // Profile input screen (퀴즈 완료 후 개인정보 입력)
+  if (phase === 'profile') {
+    const handleProfileSubmit = () => {
+      setPhase('analyzing')
+    }
+
+    return (
+      <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-6 text-center">
+            <div className="text-3xl mb-2">📊</div>
+            <h2 className="text-xl font-bold">맞춤 분석을 위한 정보</h2>
+            <p className="text-orange-100 mt-1 text-sm">입력하시면 동년배 대비 순위와 맞춤 재무 계획을 제공합니다</p>
+          </div>
+          <div className="p-6 space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">나이</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={userAge}
+                  onChange={(e) => setUserAge(e.target.value)}
+                  placeholder="예: 45"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  min={20} max={80}
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">세</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">월 소득 (세전)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={userIncome}
+                  onChange={(e) => setUserIncome(e.target.value)}
+                  placeholder="예: 400"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">만원</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">현재 순자산 (부동산+금융자산-부채)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={userAsset}
+                  onChange={(e) => setUserAsset(e.target.value)}
+                  placeholder="예: 30000"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">만원</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">3억이면 30000, 5천만원이면 5000 입력</p>
+            </div>
+            <button
+              onClick={handleProfileSubmit}
+              className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-lg font-bold rounded-xl transition"
+            >
+              결과 분석하기
+            </button>
+            <button
+              onClick={() => { setPhase('analyzing') }}
+              className="w-full py-2 text-sm text-gray-400 hover:text-gray-600 transition"
+            >
+              건너뛰기 (기본 분석만 보기)
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Analyzing screen
   if (phase === 'analyzing') {
     return <AnalyzingScreen onComplete={handleAnalysisComplete} />
@@ -289,6 +390,85 @@ export default function RetirementTest() {
         result={result}
         categories={categories}
       />
+
+      {/* 동년배 비교 분석 */}
+      {userAge && userAsset && (() => {
+        const age = parseInt(userAge) || 0
+        const asset = parseInt(userAsset) || 0
+        const income = parseInt(userIncome) || 0
+        if (age < 20 || age > 80) return null
+        const percentile = getAssetPercentile(age, asset)
+        const group = age < 40 ? '30' : age < 50 ? '40' : age < 60 ? '50' : '60'
+        const data = AGE_ASSET_DATA[group]
+        const retireAge = 65
+        const yearsLeft = Math.max(0, retireAge - age)
+        const monthlyNeed = 298 // 부부 적정 생활비
+        const retireYears = 25
+        const totalNeed = monthlyNeed * 12 * retireYears
+        const currentGap = Math.max(0, totalNeed - asset)
+        const monthlySaveSimple = yearsLeft > 0 ? Math.round(currentGap / yearsLeft / 12) : 0
+        const monthlySaveInvest = yearsLeft > 0 ? Math.round(currentGap / (((Math.pow(1.05, yearsLeft) - 1) / 0.05) * 12 / 10000)) : 0
+        const pensionExpected = income > 0 ? Math.round(income * 0.43 * 0.6) : 67 // 소득대체율 43% x 수급률
+
+        return (
+          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden animate-slide-up" style={{ animationDelay: '150ms' }}>
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 text-center">
+              <div className="text-sm opacity-80 mb-1">{data.label} 동년배 자산 순위</div>
+              <div className="text-5xl font-black">상위 {100 - percentile}%</div>
+              <div className="text-sm opacity-80 mt-2">
+                내 순자산 {asset >= 10000 ? `${(asset/10000).toFixed(1)}억` : `${asset.toLocaleString()}만`}원
+                &nbsp;|&nbsp; {data.label} 평균 {(data.avg/10000).toFixed(1)}억원
+              </div>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* 자산 위치 바 */}
+              <div>
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>하위</span>
+                  <span>내 위치</span>
+                  <span>상위</span>
+                </div>
+                <div className="h-4 bg-gray-100 rounded-full overflow-hidden relative">
+                  <div className="h-full bg-gradient-to-r from-red-400 via-yellow-400 to-green-500 rounded-full" style={{ width: '100%' }} />
+                  <div className="absolute top-0 h-full w-1 bg-blue-800 rounded" style={{ left: `${percentile}%` }} />
+                </div>
+              </div>
+
+              {/* 핵심 수치 */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-50 rounded-xl p-3 text-center">
+                  <div className="text-xs text-gray-500">은퇴까지</div>
+                  <div className="text-xl font-bold text-blue-700">{yearsLeft}년</div>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-3 text-center">
+                  <div className="text-xs text-gray-500">예상 국민연금 (월)</div>
+                  <div className="text-xl font-bold text-blue-700">{pensionExpected}만원</div>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-3 text-center">
+                  <div className="text-xs text-gray-500">추가 필요 자금</div>
+                  <div className="text-xl font-bold text-orange-700">{currentGap >= 10000 ? `${(currentGap/10000).toFixed(1)}억` : `${currentGap.toLocaleString()}만`}원</div>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-3 text-center">
+                  <div className="text-xs text-gray-500">매월 저축 필요</div>
+                  <div className="text-xl font-bold text-orange-700">{monthlySaveInvest > 0 ? `${monthlySaveInvest.toLocaleString()}만원` : '-'}</div>
+                  <div className="text-[10px] text-gray-400">연 5% 투자 시</div>
+                </div>
+              </div>
+
+              {/* 맞춤 코멘트 */}
+              <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 leading-relaxed">
+                {percentile >= 70 ? (
+                  <p><strong className="text-blue-700">동년배 상위권입니다.</strong> 자산 관리는 잘 되고 있으니, 연금 수령 시기 최적화와 절세 전략에 집중하세요. 연기연금(연 7.2% 증액)과 IRP 세액공제(연 148.5만원)를 적극 활용하세요.</p>
+                ) : percentile >= 40 ? (
+                  <p><strong className="text-orange-700">동년배 평균 수준입니다.</strong> 지금부터 월 {monthlySaveInvest}만원씩 투자하면 은퇴 시 목표 달성이 가능합니다. 연금저축(월 50만원, 연 99만원 절세) + 매월 자동이체가 핵심입니다.</p>
+                ) : (
+                  <p><strong className="text-red-600">동년배 대비 자산이 부족합니다.</strong> 즉시 행동이 필요합니다. ①불필요한 지출 20% 줄이기 ②연금저축 개설(월 50만원) ③퇴직연금 TDF 전환. 단순 저축 시 월 {monthlySaveSimple}만원, 투자 시 월 {monthlySaveInvest}만원이면 따라잡을 수 있습니다.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* 교차 분석 인사이트 */}
       {(() => {
