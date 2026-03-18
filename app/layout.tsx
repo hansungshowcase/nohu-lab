@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     default: '노후연구소 - 은퇴 준비의 모든 것',
     template: '%s | 노후연구소',
   },
-  description: 'retireplan.kr은 노후 준비 점수 테스트, 무료 사주풀이, 국민연금 수령 타이밍 분석, 심리 자가진단 등 은퇴 준비에 필요한 무료 온라인 도구를 제공합니다.',
+  description: '노후연구소는 노후 준비 점수 테스트, 무료 사주풀이, 국민연금 수령 타이밍 분석, 심리 자가진단 등 은퇴 준비에 필요한 무료 온라인 도구를 제공합니다.',
   keywords: ['노후 준비', '은퇴 준비', '사주풀이', '연금 수령 시기', '노후 자금', '은퇴 계획', '심리 자가진단', '국민연금 조기수령', '연금 연기수령', '노후연구소', 'retireplan'],
   metadataBase: new URL('https://retireplan.kr'),
   alternates: {
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: '노후연구소 - 은퇴 준비의 모든 것',
-    description: '노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 은퇴 준비를 위한 무료 도구 모음.',
+    description: '노후연구소 - 노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 은퇴 준비를 위한 무료 도구 모음.',
     url: 'https://retireplan.kr',
     siteName: '노후연구소',
     locale: 'ko_KR',
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: '노후연구소 - 은퇴 준비의 모든 것',
-    description: '노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 무료 도구 모음.',
+    description: '노후연구소 - 노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 무료 도구 모음.',
     images: ['/api/og'],
   },
 };
@@ -93,7 +93,7 @@ export default function RootLayout({
                 '@type': 'WebApplication',
                 name: '노후연구소',
                 url: 'https://retireplan.kr',
-                description: '노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 은퇴 준비를 위한 무료 도구 모음.',
+                description: '노후연구소는 노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 은퇴 준비를 위한 무료 도구 모음을 제공합니다.',
                 applicationCategory: 'FinanceApplication',
                 operatingSystem: 'Web',
                 offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
