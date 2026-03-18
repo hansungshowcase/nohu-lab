@@ -20,16 +20,22 @@ export default function DashboardPage() {
   const [category, setCategory] = useState('전체')
   const categories = ['전체', ...getAllCategories()]
 
-  // URL 파라미터에서 카테고리 읽기 (pathname 변경 시마다)
+  // URL 파라미터에서 카테고리 읽기 (초기 로드)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const cat = params.get('category')
-    if (cat && categories.includes(cat)) {
-      setCategory(cat)
-    } else if (!cat) {
-      setCategory('전체')
+    if (cat && categories.includes(cat)) setCategory(cat)
+  }, [])
+
+  // 사이드바에서 카테고리 변경 이벤트 수신
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const cat = (e as CustomEvent).detail || '전체'
+      setCategory(categories.includes(cat) ? cat : '전체')
     }
-  })
+    window.addEventListener('category-change', handler)
+    return () => window.removeEventListener('category-change', handler)
+  }, [categories])
 
   useEffect(() => {
     const controller = new AbortController()
