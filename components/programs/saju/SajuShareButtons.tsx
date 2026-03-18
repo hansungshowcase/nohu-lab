@@ -70,17 +70,23 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         throw new Error('Invalid PNG data')
       }
 
-      // 모바일: Web Share API 시도 → 실패 시 이미지 모달로 안내
-      if (isMobile) {
-        try {
-          // data URL → blob 변환
-          const byteString = atob(dataUrl.split(',')[1])
-          const ab = new ArrayBuffer(byteString.length)
-          const ia = new Uint8Array(ab)
-          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
-          const blob = new Blob([ab], { type: 'image/png' })
+      // data URL → blob 변환 (공통)
+      const toBlob = (url: string) => {
+        const byteString = atob(url.split(',')[1])
+        const ab = new ArrayBuffer(byteString.length)
+        const ia = new Uint8Array(ab)
+        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
+        return new Blob([ab], { type: 'image/png' })
+      }
 
-          if (navigator.share && navigator.canShare) {
+      // 모바일 저장
+      if (isMobile) {
+        const blob = toBlob(dataUrl)
+        const isKakao = /KAKAOTALK/i.test(navigator.userAgent)
+
+        // 1순위: Web Share API (일반 모바일 브라우저)
+        if (!isKakao && navigator.share && navigator.canShare) {
+          try {
             const file = new File([blob], 'saju-result.png', { type: 'image/png' })
             if (navigator.canShare({ files: [file] })) {
               await navigator.share({ files: [file], title: '사주풀이 결과' })
@@ -89,37 +95,31 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
               setTimeout(() => setSaveSuccess(false), 2000)
               return
             }
+          } catch (err) {
+            if (err instanceof Error && err.name === 'AbortError') {
+              setSaving(false)
+              return
+            }
           }
-        } catch (err) {
-          if (err instanceof Error && err.name === 'AbortError') {
-            setSaving(false)
-            return
-          }
-          // share 실패 시 아래 모달 fallback으로
         }
 
-        // 모바일 fallback: <a download> 로 직접 다운로드
-        try {
-          const byteStr = atob(dataUrl.split(',')[1])
-          const buf = new ArrayBuffer(byteStr.length)
-          const arr = new Uint8Array(buf)
-          for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i)
-          const blobUrl = URL.createObjectURL(new Blob([buf], { type: 'image/png' }))
-          const a = document.createElement('a')
-          a.href = blobUrl
-          a.download = 'saju-result.png'
-          a.style.display = 'none'
-          document.body.appendChild(a)
-          a.click()
-          setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(blobUrl) }, 1000)
-        } catch {
-          // <a download> 실패 시 (iOS Safari 등) 새 탭에서 이미지 열기
-          const w = window.open()
-          if (w) {
-            w.document.write(`<img src="${dataUrl}" style="max-width:100%"/>`)
-            w.document.title = '사주풀이 결과 - 길게 눌러 저장'
-          }
+        // 2순위: <a download> (Android Chrome, 삼성 브라우저 등)
+        const blobUrl = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = blobUrl
+        a.download = 'saju-result.png'
+        a.style.display = 'none'
+        document.body.appendChild(a)
+        a.click()
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(blobUrl) }, 1000)
+
+        // 카카오톡 인앱: <a download>가 동작 안 할 수 있으므로 안내 표시
+        if (isKakao) {
+          setTimeout(() => {
+            alert('이미지가 다운로드되지 않으면,\n오른쪽 상단 ⋯ 메뉴에서\n"다른 브라우저로 열기"를 눌러주세요.')
+          }, 500)
         }
+
         setSaving(false)
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 2000)
@@ -130,11 +130,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       const w = window as typeof window & { showSaveFilePicker?: (opts: Record<string, unknown>) => Promise<FileSystemFileHandle> }
       if (w.showSaveFilePicker) {
         try {
-          const byteString = atob(dataUrl.split(',')[1])
-          const ab = new ArrayBuffer(byteString.length)
-          const ia = new Uint8Array(ab)
-          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
-          const blob = new Blob([ab], { type: 'image/png' })
+          const blob = toBlob(dataUrl)
           const handle = await w.showSaveFilePicker({
             suggestedName: 'saju-result.png',
             types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }],
