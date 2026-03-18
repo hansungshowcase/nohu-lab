@@ -147,6 +147,20 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
 
   const [urlLoaded, setUrlLoaded] = useState(false)
 
+  // 계산 로직 (useEffect보다 먼저 선언해야 TDZ 방지)
+  const isGuest = userTier === 0
+  const age = parseInt(myAge) || 0
+  const inc = (parseInt(myIncome.replace(/,/g, '')) || 0) * 10000 // 만원 단위 입력 → 원 변환
+  const lifeExp = parseInt(le) || 85
+  const by = age > 0 ? NOW - age : 0
+  const na = by >= 1930 && by <= 2001 ? normalAge(by) : 0
+  const cy = age > 0 ? estContrib(age) : 0
+  const validIncome = inc >= 500_000 // 최소 50만원 이상 (만원 입력 기준 50 이상)
+  const base = na && validIncome && cy ? estPension(by, inc, cy) : 0
+  const lump = validIncome && cy ? estLumpSum(inc, cy) : 0
+  const tax = base > 0 ? estTax(base) : 0
+  const healthIns = base > 0 ? estHealthIns(base) : 0
+
   useEffect(() => {
     const u = getU()
     setUsage(u)
@@ -170,19 +184,6 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   }, [urlLoaded, base, done, started])
 
   useEffect(() => () => { if (ivRef.current) clearTimeout(ivRef.current as unknown as ReturnType<typeof setTimeout>) }, [])
-
-  const isGuest = userTier === 0
-  const age = parseInt(myAge) || 0
-  const inc = (parseInt(myIncome.replace(/,/g, '')) || 0) * 10000 // 만원 단위 입력 → 원 변환
-  const lifeExp = parseInt(le) || 85
-  const by = age > 0 ? NOW - age : 0
-  const na = by >= 1930 && by <= 2001 ? normalAge(by) : 0
-  const cy = age > 0 ? estContrib(age) : 0
-  const validIncome = inc >= 500_000 // 최소 50만원 이상 (만원 입력 기준 50 이상)
-  const base = na && validIncome && cy ? estPension(by, inc, cy) : 0
-  const lump = validIncome && cy ? estLumpSum(inc, cy) : 0
-  const tax = base > 0 ? estTax(base) : 0
-  const healthIns = base > 0 ? estHealthIns(base) : 0
 
   // 11가지 전체에서 진짜 최적 찾기
   const allSc = useMemo(() => (!na || base <= 0) ? [] : allScenarios(na, base, lifeExp), [na, base, lifeExp])
