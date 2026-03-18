@@ -352,10 +352,10 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
 
       const blob = await (await fetch(dataUrl)).blob()
 
-      // 모바일: Web Share API → 갤러리/카카오톡 등 선택 가능
-      if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      // 모바일: Web Share API → 갤러리 저장/공유
+      const file = new File([blob], `연금분석_${age}세.png`, { type: 'image/png' })
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
-          const file = new File([blob], `연금분석_${age}세.png`, { type: 'image/png' })
           await navigator.share({ files: [file], title: '연금 수령 황금 타이밍' })
           setSaving(false)
           setSaveOk(true); setTimeout(() => setSaveOk(false), 2000)
@@ -363,7 +363,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
         } catch { /* share 취소 시 fallback */ }
       }
 
-      // PC/모바일: 파일 다운로드
+      // PC/iOS fallback: 파일 다운로드
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.download = `연금황금타이밍_${age}세.png`
@@ -387,9 +387,18 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   }
   const handleKakao = async () => {
     const u = getShareUrl()
-    if (navigator.share) {
-      try { await navigator.share({ title: '연금 수령 황금 타이밍', text: best ? `${age}세 분석: ${best.age}세에 시작하면 가장 이득!` : '', url: u }); return } catch {}
+    const shareData = { title: '연금 수령 황금 타이밍', text: best ? `${age}세 분석: ${best.age}세에 시작하면 가장 이득!` : '', url: u }
+
+    // 1순위: Web Share API (모바일 공유 시트 → 카카오톡 선택)
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try { await navigator.share(shareData); return } catch {}
     }
+    // 2순위: navigator.share만 있는 경우
+    if (navigator.share) {
+      try { await navigator.share(shareData); return } catch {}
+    }
+
+    // 3순위: 클립보드 복사 + 안내
     try { await navigator.clipboard.writeText(u) } catch { const a = document.createElement('textarea'); a.value = u; a.style.position = 'fixed'; a.style.left = '-9999px'; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a) }
     setKakaoMsg('링크가 복사되었습니다!\n카카오톡에서 붙여넣기 하세요'); setTimeout(() => setKakaoMsg(''), 4000)
   }
@@ -431,7 +440,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
       <div className="bg-white rounded-2xl border border-orange-100 p-5 sm:p-7">
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl mb-4 shadow-lg shadow-orange-500/20 text-3xl">⏰</div>
-          <h2 className="text-xl font-bold text-gray-900">연금 수령 황금 타이밍</h2>
+          <h2 className="text-[18px] sm:text-xl font-bold text-gray-900">연금 수령 황금타이밍</h2>
           <p className="text-[14px] text-gray-500 mt-2">국민연금, 언제 받아야 가장 이득일까?</p>
         </div>
         <div className="space-y-3 mb-6">
@@ -594,40 +603,18 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
             </div>
           </div>
 
-          {/* 예상수명별 연금수령 적합도 */}
-          <div className="bg-white rounded-2xl border border-orange-100 p-5 sm:p-6">
-            <h3 className="text-[16px] font-bold text-gray-900 mb-2">예상수명별 연금수령 적합도</h3>
-            <p className="text-[12px] text-gray-400 mb-4">내가 몇 세까지 살 것 같은지에 따라 최적 전략이 달라집니다</p>
-            <div className="space-y-2.5">
-              {[
-                { le: 78, tag: '단명' },
-                { le: 82, tag: '평균 이하' },
-                { le: 85, tag: '평균' },
-                { le: 88, tag: '장수' },
-                { le: 92, tag: '초장수' },
-              ].map(({ le: leAge, tag }) => {
-                const e = Math.round(base * 0.7), d = Math.round(base * 1.36)
-                const earlyC = cum(e, na - 5, leAge), normalC = cum(base, na, leAge), deferC = cum(d, na + 5, leAge)
-                const mx = Math.max(earlyC, normalC, deferC)
-                const rec = mx === earlyC ? '조기' : mx === normalC ? '정상' : '연기'
-                const recColor = mx === earlyC ? 'bg-blue-500' : mx === normalC ? 'bg-green-500' : 'bg-purple-500'
-                return (
-                  <div key={leAge} className="flex items-center gap-3">
-                    <span className="text-[13px] text-gray-500 w-10 shrink-0">{leAge}세</span>
-                    <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden relative">
-                      <div className={`h-full ${recColor} rounded-full transition-all duration-500`} style={{ width: `${Math.round(mx / Math.max(cum(Math.round(base * 1.36), na + 5, 92), 1) * 100)}%` }} />
-                      <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold text-gray-700">{rec}수령 · {fM(mx)}</span>
-                    </div>
-                  </div>
-                )
-              })}
+          {/* 수명 분기점 한줄 요약 */}
+          {brk && (
+            <div className="bg-gradient-to-r from-blue-50 via-white to-purple-50 rounded-2xl border border-orange-100 p-5 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 animate-pulse" />
+              <div className="relative flex items-center gap-3">
+                <div className="shrink-0 w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-[14px] shadow-md animate-bounce" style={{ animationDuration: '2s' }}>{Math.round(brk)}</div>
+                <p className="text-[14px] text-gray-800 leading-relaxed">
+                  <strong className="text-orange-600">{Math.round(brk)}세</strong> 이상 살 것 같으면 <strong className="text-purple-600">늦게</strong>, 그 전에 사망할 것 같으면 <strong className="text-blue-600">빨리</strong> 받는 게 이득
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-4 mt-4 justify-center text-[11px]">
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-blue-500 rounded-full" />조기</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-green-500 rounded-full" />정상</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-purple-500 rounded-full" />연기</span>
-            </div>
-          </div>
+          )}
 
           {/* 해지 vs 연금 */}
           {lump > 0 && sc[1] && (() => {
