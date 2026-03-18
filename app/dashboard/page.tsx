@@ -171,7 +171,7 @@ function LiveUserCount() {
           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
         </span>
         <span className="text-sm text-gray-600 font-medium transition-all duration-500">
-          🔥 <strong className="text-gray-900">{count}</strong>명 이용 중
+          <strong className="text-gray-900">{count}</strong>명 이용 중
         </span>
       </div>
     </div>
