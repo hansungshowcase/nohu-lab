@@ -374,7 +374,7 @@ export default function RetirementTest() {
           <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden animate-slide-up" style={{ animationDelay: '150ms' }}>
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 text-center">
               <div className="text-sm opacity-80 mb-1">{data.label} 동년배 자산 순위</div>
-              <div className="text-5xl font-black">상위 {100 - percentile}%</div>
+              <div className="text-5xl font-black">{percentile >= 50 ? `상위 ${100 - percentile}%` : `하위 ${percentile}%`}</div>
               <div className="text-sm opacity-80 mt-2">
                 내 순자산 {asset >= 10000 ? `${(asset/10000).toFixed(1)}억` : `${asset.toLocaleString()}만`}원
                 &nbsp;|&nbsp; {data.label} 평균 {(data.avg/10000).toFixed(1)}억원
@@ -584,27 +584,44 @@ export default function RetirementTest() {
         )
       })()}
 
-      {/* 자산 인출 순서 전략 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 animate-slide-up" style={{ animationDelay: '600ms' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-3">세금 줄이는 자산 인출 순서</h3>
-        <p className="text-xs text-gray-500 mb-4">은퇴 후 자산을 빼는 순서에 따라 세금이 수백만원 차이납니다</p>
-        <div className="space-y-2">
-          {[
-            { order: 1, title: '비과세 자산 먼저', detail: 'ISA 만기자금, 비과세 저축 → 세금 0원', color: '#16a34a' },
-            { order: 2, title: '연금계좌 (연 1,500만원 이내)', detail: '연금소득세 3.3~5.5%만 과세. 1,500만원 초과 시 종합소득세 합산 → 세율 급등', color: '#2563eb' },
-            { order: 3, title: '퇴직연금 (연금 수령)', detail: '퇴직소득세의 60~70%만 과세. 일시금 수령 대비 30~40% 절세', color: '#7c3aed' },
-            { order: 4, title: '일반 금융자산 (마지막)', detail: '이자·배당소득 연 2,000만원 초과 시 금융소득종합과세 → 건보료 폭탄', color: '#dc2626' },
-          ].map(item => (
-            <div key={item.order} className="flex gap-3 items-start p-3 rounded-xl" style={{ backgroundColor: `${item.color}08` }}>
-              <div className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-bold shrink-0" style={{ backgroundColor: item.color }}>{item.order}</div>
-              <div>
-                <div className="font-bold text-sm text-gray-900">{item.title}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{item.detail}</div>
-              </div>
+      {/* 나의 노후 준비 로드맵 */}
+      {userAge && (() => {
+        const age = parseInt(userAge) || 40
+        const roadmap = [
+          { age: Math.max(age, 30), title: '지금 즉시', items: ['연금저축 계좌 개설 (월 50만원 자동이체)', 'IRP 추가 개설 (월 25만원)', '퇴직연금 TDF로 전환 신청'], color: '#dc2626' },
+          { age: Math.max(age + 5, 40), title: `${Math.max(age + 5, 40)}세`, items: ['비상자금 6개월치 확보', '보장성 보험 점검 (실손+암)', '부채 상환 계획 수립'], color: '#ea580c' },
+          { age: Math.max(age + 10, 50), title: `${Math.max(age + 10, 50)}세`, items: ['은퇴 후 주거 계획 확정', '퇴직 후 소득원 준비 (부업/자격증)', '건강검진 정밀화 (매년)'], color: '#ca8a04' },
+          { age: 55, title: '55세', items: ['개인연금 수령 개시', '퇴직연금 연금 전환 준비', '은퇴 3년치 생활비 별도 확보'], color: '#2563eb' },
+          { age: 65, title: '65세', items: ['국민연금 수령 (또는 연기 결정)', '건강보험 피부양자 자격 관리', '자산 인출 순서 최적화'], color: '#16a34a' },
+        ].filter(r => r.age >= age)
+
+        return (
+          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 animate-slide-up" style={{ animationDelay: '600ms' }}>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">나의 노후 준비 로드맵</h3>
+            <div className="space-y-0">
+              {roadmap.map((step, i) => (
+                <div key={i} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-3 h-3 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: step.color }} />
+                    {i < roadmap.length - 1 && <div className="w-0.5 flex-1 bg-gray-200 my-1" />}
+                  </div>
+                  <div className="pb-4 flex-1">
+                    <div className="font-bold text-sm" style={{ color: step.color }}>{step.title}</div>
+                    <div className="mt-1 space-y-1">
+                      {step.items.map((item, j) => (
+                        <div key={j} className="text-xs text-gray-600 flex gap-1.5">
+                          <span className="text-gray-300 shrink-0">-</span>
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        )
+      })()}
 
       {/* 이번 달 행동 플랜 */}
       <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-5 text-white animate-slide-up" style={{ animationDelay: '700ms' }}>

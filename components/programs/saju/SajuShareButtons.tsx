@@ -50,22 +50,31 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     if (!cardRef.current || saving) return
     setSaving(true)
     try {
-      const html2canvas = (await import('html2canvas')).default
       const node = cardRef.current
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+      const scale = isMobile ? 1.5 : 2
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const canvas = await html2canvas(node, {
-        scale: isMobile ? 1.5 : 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        logging: false,
-      } as any)
+      let blob: Blob
 
-      // canvas → blob
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png', 0.95)
-      })
+      // 1차: modern-screenshot (CSS 변수/그라데이션/레이어 완벽 지원)
+      try {
+        const { domToBlob } = await import('modern-screenshot')
+        blob = await domToBlob(node, {
+          scale,
+          backgroundColor: '#ffffff',
+          quality: 0.95,
+          type: 'image/png',
+          filter: (el: Node) => !(el instanceof HTMLElement && el.classList?.contains('no-print')),
+        })
+      } catch {
+        // 2차 fallback: html2canvas
+        const html2canvas = (await import('html2canvas')).default
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const canvas = await html2canvas(node, { scale, backgroundColor: '#ffffff', useCORS: true, logging: false } as any)
+        blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png', 0.95)
+        })
+      }
 
       // 모바일 저장
       if (isMobile) {
