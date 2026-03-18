@@ -132,7 +132,7 @@ export default function MentalHealth() {
     else if (currentScaleIdx < activeScales.length - 1) { setCurrentScaleIdx((p) => p + 1); setCurrentQIdx(0) }
     else { if (!isMember) incrementTestCount(); setPhase('analyzing') }
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [currentQIdx, currentScale, currentScaleIdx, activeScales])
+  }, [currentQIdx, currentScale, currentScaleIdx, activeScales, isMember])
 
   function handleAnswer(value: number) {
     if (transitionLock.current) return; transitionLock.current = true
