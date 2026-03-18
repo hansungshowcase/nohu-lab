@@ -114,9 +114,20 @@ function beAge(a: S, b: S): number | null {
 const fm = (n: number) => n.toLocaleString() + '원'
 const fM = (n: number) => { const v = n / 10000; return v >= 10000 ? (v / 10000).toFixed(1) + '억원' : v.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '만원' }
 
-const UK = 'pension-timing-usage', MF = 2
-function getU() { try { return parseInt(localStorage.getItem(UK) || '0', 10) || 0 } catch { return 0 } }
-function addU() { const c = getU() + 1; try { localStorage.setItem(UK, String(c)) } catch {} return c }
+const UK = 'pension-timing-usage', CK = 'pt_u', MF = 2
+function getCookie(name: string): string { try { const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)')); return m ? m[1] : '' } catch { return '' } }
+function setCookie(name: string, val: string) { try { document.cookie = `${name}=${val};path=/;max-age=${365*24*3600};SameSite=Lax` } catch {} }
+function getU() {
+  const ls = (() => { try { return parseInt(localStorage.getItem(UK) || '0', 10) || 0 } catch { return 0 } })()
+  const ck = parseInt(getCookie(CK) || '0', 10) || 0
+  return Math.max(ls, ck) // 둘 중 큰 값 (하나만 삭제해도 차단)
+}
+function addU() {
+  const c = getU() + 1
+  try { localStorage.setItem(UK, String(c)) } catch {}
+  setCookie(CK, String(c))
+  return c
+}
 
 const STEPS = [
   { t: '입력 정보 검증 중...', i: '🔍', ms: 800 },
