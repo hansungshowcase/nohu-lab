@@ -35,6 +35,18 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // 각 검색엔진에서 발급받은 인증 코드 입력
+    // google: 'GOOGLE_VERIFICATION_CODE',
+    // other: { 'naver-site-verification': 'NAVER_VERIFICATION_CODE' },
   },
   appleWebApp: {
     capable: true,
