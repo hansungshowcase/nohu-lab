@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   description: '노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 은퇴 준비를 위한 무료 도구 모음. 네이버 카페 회원 전용 서비스.',
   keywords: ['노후 준비', '은퇴 준비', '사주풀이', '연금', '노후 자금', '은퇴 계획', '노후연구소'],
-  metadataBase: new URL('https://nohu-lab.vercel.app'),
+  metadataBase: new URL('https://retireplan.kr'),
   alternates: {
     canonical: '/',
   },
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: '노후연구소 - 은퇴 준비의 모든 것',
     description: '노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 은퇴 준비를 위한 무료 도구 모음.',
-    url: 'https://nohu-lab.vercel.app',
+    url: 'https://retireplan.kr',
     siteName: '노후연구소',
     locale: 'ko_KR',
     type: 'website',
@@ -92,7 +92,7 @@ export default function RootLayout({
                 '@context': 'https://schema.org',
                 '@type': 'WebApplication',
                 name: '노후연구소',
-                url: 'https://nohu-lab.vercel.app',
+                url: 'https://retireplan.kr',
                 description: '노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 은퇴 준비를 위한 무료 도구 모음.',
                 applicationCategory: 'FinanceApplication',
                 operatingSystem: 'Web',

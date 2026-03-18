@@ -219,7 +219,7 @@ export async function GET(request: Request) {
           padding: '16px 48px',
           backgroundColor: '#f9fafb', borderTop: '1px solid #e5e7eb',
         }}>
-          <span style={{ fontSize: '13px', color: '#9ca3af' }}>nohu-lab.vercel.app/programs/retirement-test</span>
+          <span style={{ fontSize: '13px', color: '#9ca3af' }}>retireplan.kr/programs/retirement-test</span>
           <span style={{ fontSize: '15px', fontWeight: 700, color: '#9a3412' }}>노후연구소</span>
         </div>
       </div>

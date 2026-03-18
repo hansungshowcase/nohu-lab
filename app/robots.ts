@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/admin/', '/admin/login', '/dashboard', '/chat'],
       },
     ],
-    sitemap: 'https://nohu-lab.vercel.app/sitemap.xml',
+    sitemap: 'https://retireplan.kr/sitemap.xml',
   }
 }

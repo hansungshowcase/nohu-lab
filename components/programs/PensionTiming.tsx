@@ -25,17 +25,27 @@ function getCoeff(sy: number): number {
 }
 function normalAge(by: number) { return by <= 1952 ? 60 : by <= 1956 ? 61 : by <= 1960 ? 62 : by <= 1964 ? 63 : by <= 1968 ? 64 : 65 }
 
-// NPS 공식 기반 연금액 계산
+// NPS 실제 공식: 가입 연도별 다른 계수 적용 후 가중평균
+// [2.4(A+0.75B)×P1/P + 1.8(A+B)×P2/P + ... + 1.29(A+B)×P21/P] × (1+0.05n/12)
 function estPension(by: number, inc: number, yr: number) {
   const B = Math.max(MIN_SI, Math.min(MAX_SI, inc))
-  const months = Math.min(yr * 12, 480)
-  const na = normalAge(by)
-  const coeff = getCoeff(by + na)
-  const n = Math.max(0, months - 240) // 20년 초과 월수
-  // 기본연금액 = 계수 × (A + B) × (1 + 0.05 × n/12)
-  // 가입기간 비례: × (가입월수 / 240) (20년 미만일 경우 비례감소)
-  const basePension = coeff * (A_VAL + B) * (1 + 0.05 * n / 12)
-  const proportional = months >= 240 ? 1 : months / 240
+  const totalMonths = Math.min(yr * 12, 480)
+  if (totalMonths <= 0) return 0
+  const startAge = Math.max(18, Math.min(27, normalAge(by) - yr))
+  const startYear = by + startAge
+
+  // 각 가입 연도별 계수 × 해당 연도 가입월수 합산
+  let weightedSum = 0, mc = 0
+  for (let y = startYear; mc < totalMonths; y++) {
+    const mInYear = Math.min(12, totalMonths - mc)
+    weightedSum += getCoeff(y) * mInYear
+    mc += mInYear
+  }
+  const avgCoeff = weightedSum / mc
+
+  const n = Math.max(0, totalMonths - 240)
+  const basePension = avgCoeff * (A_VAL + B) * (1 + 0.05 * n / 12)
+  const proportional = totalMonths >= 240 ? 1 : totalMonths / 240
   return Math.round(basePension * proportional / 12)
 }
 // 실제 납부 기간 추정: 현재나이 - 취업추정나이(27세), 최대 40년
@@ -310,7 +320,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
 
           <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid #E5E7EB;">
             <div style="font-size:16px;font-weight:800;color:#EA580C;letter-spacing:-0.5px;">노후연구소</div>
-            <div style="font-size:10px;color:#9CA3AF;margin-top:4px;">nohu-lab.vercel.app | 2026 연금개혁 반영 | NPS 공식 기반</div>
+            <div style="font-size:10px;color:#9CA3AF;margin-top:4px;">retireplan.kr | 2026 연금개혁 반영 | NPS 공식 기반</div>
           </div>
         </div>`
       document.body.appendChild(wrap)
@@ -361,7 +371,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
     setSaving(false)
   }
 
-  const BASE_URL = 'https://nohu-lab.vercel.app/programs/pension-timing'
+  const BASE_URL = 'https://retireplan.kr/programs/pension-timing'
   const getShareUrl = useCallback(() => {
     if (!myAge || !myIncome) return BASE_URL
     return `${BASE_URL}?age=${myAge}&income=${myIncome.replace(/,/g, '')}&le=${le}`

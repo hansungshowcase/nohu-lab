@@ -143,12 +143,12 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           content: {
             title: `${profile.emoji} ${profile.title}`,
             description: viral,
-            imageUrl: `https://nohu-lab.vercel.app/api/og`,
+            imageUrl: `https://retireplan.kr/api/og`,
             link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
           },
           buttons: [
             { title: '결과 보기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } },
-            { title: '나도 해보기', link: { mobileWebUrl: 'https://nohu-lab.vercel.app/programs/saju-reading', webUrl: 'https://nohu-lab.vercel.app/programs/saju-reading' } },
+            { title: '나도 해보기', link: { mobileWebUrl: 'https://retireplan.kr/programs/saju-reading', webUrl: 'https://retireplan.kr/programs/saju-reading' } },
           ],
         })
         return

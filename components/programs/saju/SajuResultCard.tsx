@@ -396,7 +396,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
         {/* ═══ Footer ═══ */}
         <div className="text-center pt-3 border-t border-gray-100">
-          <p className="text-[10px] sm:text-[11px] text-gray-400">노후연구소 四柱命理 · nohu-lab.vercel.app · 전통 사주명리학 기반 재미 콘텐츠</p>
+          <p className="text-[10px] sm:text-[11px] text-gray-400">노후연구소 四柱命理 · retireplan.kr · 전통 사주명리학 기반 재미 콘텐츠</p>
         </div>
       </div>
     </div>

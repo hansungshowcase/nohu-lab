@@ -151,7 +151,7 @@ export default function ShareButtons({
         content: {
           title: '나의 노후 준비 점수 결과',
           description: shareText,
-          imageUrl: 'https://nohu-lab.vercel.app/api/og',
+          imageUrl: 'https://retireplan.kr/api/og',
           link: {
             mobileWebUrl: shareUrl,
             webUrl: shareUrl,
@@ -161,8 +161,8 @@ export default function ShareButtons({
           {
             title: '나도 테스트하기',
             link: {
-              mobileWebUrl: 'https://nohu-lab.vercel.app/programs/retirement-test',
-              webUrl: 'https://nohu-lab.vercel.app/programs/retirement-test',
+              mobileWebUrl: 'https://retireplan.kr/programs/retirement-test',
+              webUrl: 'https://retireplan.kr/programs/retirement-test',
             },
           },
           {
