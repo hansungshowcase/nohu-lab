@@ -352,20 +352,15 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
         } catch { /* share 취소 시 fallback */ }
       }
 
-      // PC: 새 탭에서 이미지 열기 (바로 확인 가능 + 우클릭 저장)
+      // PC/모바일: 파일 다운로드
       const blobUrl = URL.createObjectURL(blob)
-      const newTab = window.open(blobUrl, '_blank')
-      if (!newTab) {
-        // 팝업 차단 시 다운로드 fallback
-        const link = document.createElement('a')
-        link.download = `연금황금타이밍_${age}세.png`
-        link.href = blobUrl
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-      }
-      // 메모리 해제 (약간의 딜레이 후)
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+      const link = document.createElement('a')
+      link.download = `연금황금타이밍_${age}세.png`
+      link.href = blobUrl
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
       setSaveOk(true); setTimeout(() => setSaveOk(false), 2000)
     } catch (e) {
       console.error('이미지 저장 실패:', e)
@@ -588,44 +583,34 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
             </div>
           </div>
 
-          {/* 2단계: 내가 몇 세까지 살면? */}
+          {/* 2단계: 수명별 최적 전략 */}
           <div className="bg-white rounded-2xl border border-orange-100 p-5 sm:p-6">
-            <h3 className="text-[16px] font-bold text-gray-900 mb-4">내가 몇 세까지 살면?</h3>
-            <div className="space-y-3">
-              {[78, 82, 85, 88, 92].map(leAge => {
+            <h3 className="text-[16px] font-bold text-gray-900 mb-4">수명에 따라 답이 달라집니다</h3>
+            <div className="space-y-2">
+              {[
+                { le: 78, label: '78세' },
+                { le: 82, label: '82세' },
+                { le: 85, label: '85세' },
+                { le: 88, label: '88세' },
+                { le: 92, label: '92세' },
+              ].map(({ le: leAge, label }) => {
                 const e = Math.round(base * 0.7), d = Math.round(base * 1.36)
                 const earlyC = cum(e, na - 5, leAge), normalC = cum(base, na, leAge), deferC = cum(d, na + 5, leAge)
                 const mx = Math.max(earlyC, normalC, deferC)
-                const winner = mx === deferC ? '연기' : mx === normalC ? '정상' : '조기'
-                const diff = mx - Math.min(earlyC, normalC, deferC)
+                const winner = mx === deferC ? '늦게' : mx === normalC ? '정상' : '빨리'
+                const winColor = mx === deferC ? 'text-purple-600' : mx === normalC ? 'text-green-600' : 'text-blue-600'
                 return (
-                  <div key={leAge} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <p className="text-[14px] font-bold text-gray-800 mb-2.5">{leAge}세까지 산다면</p>
-                    <div className="grid grid-cols-3 gap-1.5 mb-2">
-                      <div className={`text-center rounded-lg py-2 px-1 ${earlyC === mx ? 'bg-orange-100 border border-orange-300' : 'bg-white border border-gray-200'}`}>
-                        <p className="text-[11px] text-gray-500">{na-5}세</p>
-                        <p className={`text-[12px] sm:text-[13px] font-bold ${earlyC === mx ? 'text-orange-600' : 'text-gray-600'}`}>{fM(earlyC)}</p>
-                      </div>
-                      <div className={`text-center rounded-lg py-2 px-1 ${normalC === mx ? 'bg-orange-100 border border-orange-300' : 'bg-white border border-gray-200'}`}>
-                        <p className="text-[11px] text-gray-500">{na}세</p>
-                        <p className={`text-[12px] sm:text-[13px] font-bold ${normalC === mx ? 'text-orange-600' : 'text-gray-600'}`}>{fM(normalC)}</p>
-                      </div>
-                      <div className={`text-center rounded-lg py-2 px-1 ${deferC === mx ? 'bg-orange-100 border border-orange-300' : 'bg-white border border-gray-200'}`}>
-                        <p className="text-[11px] text-gray-500">{na+5}세</p>
-                        <p className={`text-[12px] sm:text-[13px] font-bold ${deferC === mx ? 'text-orange-600' : 'text-gray-600'}`}>{fM(deferC)}</p>
-                      </div>
-                    </div>
-                    <p className="text-[12px] text-gray-600"><strong className="text-orange-600">{winner}수령</strong>이 가장 많고, 최악 대비 <strong className="text-orange-600">{fM(diff)}</strong> 더 받습니다</p>
+                  <div key={leAge} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
+                    <span className="text-[13px] text-gray-500 w-12">{label}</span>
+                    <span className={`text-[14px] font-bold ${winColor}`}>{winner} 받기</span>
+                    <span className="text-[13px] font-bold text-orange-600">{fM(mx)}</span>
                   </div>
                 )
               })}
             </div>
             {brk && (
-              <div className="mt-4 bg-amber-50 rounded-xl p-4 border border-amber-100">
-                <p className="text-[13px] text-gray-800 text-center leading-relaxed">
-                  <strong className="text-orange-600">{brk}세</strong>가 분기점입니다<br />
-                  <span className="text-[12px] text-gray-500">{brk}세보다 오래 살면 연기수령이, 일찍 사망하면 조기수령이 총액 기준 유리합니다</span>
-                </p>
+              <div className="mt-3 bg-orange-50 rounded-xl p-3 text-center">
+                <p className="text-[13px] text-orange-700 font-medium">{brk}세 넘게 살면 늦게 받는 게 이득</p>
               </div>
             )}
           </div>
