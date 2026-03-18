@@ -1,8 +1,20 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { SajuResult } from './sajuEngine'
 import { DAY_MASTER_PROFILES, getViralSummary } from './sajuData'
+
+declare global {
+  interface Window {
+    Kakao?: {
+      init: (key: string) => void
+      isInitialized: () => boolean
+      Share: {
+        sendDefault: (opts: Record<string, unknown>) => void
+      }
+    }
+  }
+}
 
 interface Props {
   result: SajuResult
@@ -13,9 +25,30 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
   const [copyDone, setCopyDone] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [kakaoReady, setKakaoReady] = useState(false)
 
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
   const viral = getViralSummary(result.dayMaster, result.isDayMasterStrong)
+
+  // 카카오 SDK 초기화
+  useEffect(() => {
+    function initKakao() {
+      if (window.Kakao && !window.Kakao.isInitialized()) {
+        window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_KEY || '')
+      }
+      if (window.Kakao?.isInitialized()) {
+        setKakaoReady(true)
+        return true
+      }
+      return false
+    }
+    if (initKakao()) return
+    let attempts = 0
+    const interval = setInterval(() => {
+      if (initKakao() || ++attempts >= 10) clearInterval(interval)
+    }, 500)
+    return () => clearInterval(interval)
+  }, [])
 
   const getShareUrl = useCallback(() => {
     const params = new URLSearchParams({
@@ -29,23 +62,21 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
   }, [result])
 
   const handleCopyLink = async () => {
+    const text = `${profile.emoji} ${viral}\n\n내 사주풀이 결과 보기:\n${getShareUrl()}`
     try {
-      const text = `${profile.emoji} ${viral}\n\n내 사주풀이 결과 보기:\n${getShareUrl()}`
       await navigator.clipboard.writeText(text)
-      setCopyDone(true)
-      setTimeout(() => setCopyDone(false), 2000)
     } catch {
       const ta = document.createElement('textarea')
-      ta.value = `${profile.emoji} ${viral}\n\n내 사주풀이 결과 보기:\n${getShareUrl()}`
+      ta.value = text
       ta.style.position = 'fixed'
       ta.style.left = '-9999px'
       document.body.appendChild(ta)
       ta.select()
       document.execCommand('copy')
       document.body.removeChild(ta)
-      setCopyDone(true)
-      setTimeout(() => setCopyDone(false), 2000)
     }
+    setCopyDone(true)
+    setTimeout(() => setCopyDone(false), 2000)
   }
 
   const handleSaveImage = async () => {
@@ -54,34 +85,20 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     try {
       const { toPng } = await import('html-to-image')
       const node = cardRef.current
-
-      // html-to-image 알려진 버그: 첫 호출은 폰트/스타일 로딩 전 렌더링됨
-      // 해결: 2~3번 호출하여 안정적인 결과 확보
       const options = {
-        quality: 1.0,
+        quality: 0.95,
         pixelRatio: 2,
         backgroundColor: '#ffffff',
         cacheBust: true,
         skipAutoScale: true,
-        filter: (el: HTMLElement) => {
-          // no-print 클래스 요소 제외
-          if (el.classList?.contains('no-print')) return false
-          return true
-        },
+        filter: (el: HTMLElement) => !el.classList?.contains('no-print'),
       }
 
-      // 워밍업 호출 (폰트/이미지 로딩 대기)
-      await toPng(node, options).catch(() => {})
-      // 실제 렌더링 (2번째 호출은 안정적)
-      await new Promise(r => setTimeout(r, 300))
       const dataUrl = await toPng(node, options)
-
-      // dataUrl 유효성 확인
       if (!dataUrl || !dataUrl.startsWith('data:image/png')) {
         throw new Error('Invalid PNG data')
       }
 
-      // data URL → Blob 변환
       const fetchRes = await fetch(dataUrl)
       const blob = await fetchRes.blob()
 
@@ -102,7 +119,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         }
       }
 
-      // 1순위: File System Access API (네이티브 저장 다이얼로그, Chrome/Edge)
+      // File System Access API (Chrome/Edge)
       const w = window as typeof window & { showSaveFilePicker?: (opts: Record<string, unknown>) => Promise<FileSystemFileHandle> }
       if (w.showSaveFilePicker) {
         try {
@@ -118,7 +135,6 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           setSaving(false)
           return
         } catch (err) {
-          // 사용자가 취소한 경우
           if (err instanceof Error && err.name === 'AbortError') {
             setSaving(false)
             return
@@ -126,76 +142,52 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         }
       }
 
-      // 2순위: <a download> (Firefox, Safari 등)
-      const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'image/png' }))
+      // Fallback: <a download>
+      const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
       link.download = 'saju-result.png'
-      link.type = 'image/png'
       link.style.display = 'none'
       document.body.appendChild(link)
       link.click()
-      setTimeout(() => {
-        document.body.removeChild(link)
-        URL.revokeObjectURL(blobUrl)
-      }, 5000)
+      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 3000)
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2000)
-    } catch (e) {
-      console.error('html-to-image 실패, html2canvas fallback:', e)
-      // Fallback: html2canvas
-      try {
-        const html2canvas = (await import('html2canvas')).default
-        const canvas = await html2canvas(cardRef.current!, {
-          scale: 2,
-          backgroundColor: '#ffffff',
-          useCORS: true,
-          logging: false,
-          scrollY: -window.scrollY,
-          scrollX: 0,
-          windowWidth: 720,
-        } as Parameters<typeof html2canvas>[1])
-        const fbRes = await fetch(canvas.toDataURL('image/png', 1.0))
-        const fbBlob = await fbRes.blob()
-        const fbBlobUrl = URL.createObjectURL(new Blob([fbBlob], { type: 'image/png' }))
-        const fbLink = document.createElement('a')
-        fbLink.href = fbBlobUrl
-        fbLink.download = 'saju-result.png'
-        fbLink.type = 'image/png'
-        fbLink.style.display = 'none'
-        document.body.appendChild(fbLink)
-        fbLink.click()
-        setTimeout(() => {
-          document.body.removeChild(fbLink)
-          URL.revokeObjectURL(fbBlobUrl)
-        }, 5000)
-        setSaveSuccess(true)
-        setTimeout(() => setSaveSuccess(false), 2000)
-      } catch {
-        alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
-      }
+    } catch {
+      alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
     }
     setSaving(false)
   }
 
-  const [kakaoCopied, setKakaoCopied] = useState(false)
-
-  const handleKakao = async () => {
-    const text = `${profile.emoji} ${viral}\n\n내 사주풀이 결과 보기:\n${getShareUrl()}`
-    try {
-      await navigator.clipboard.writeText(text)
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = text
-      ta.style.position = 'fixed'
-      ta.style.left = '-9999px'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
+  const handleKakao = () => {
+    const shareUrl = getShareUrl()
+    if (kakaoReady && window.Kakao) {
+      window.Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: `${profile.emoji} ${profile.title}`,
+          description: viral,
+          imageUrl: 'https://nohu-lab.vercel.app/api/og',
+          link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+        },
+        buttons: [
+          {
+            title: '내 사주도 보기',
+            link: {
+              mobileWebUrl: 'https://nohu-lab.vercel.app/programs/saju-reading',
+              webUrl: 'https://nohu-lab.vercel.app/programs/saju-reading',
+            },
+          },
+          {
+            title: '결과 보기',
+            link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+          },
+        ],
+      })
+    } else {
+      // 카카오 SDK 미로딩 시 링크 복사 fallback
+      handleCopyLink()
     }
-    setKakaoCopied(true)
-    setTimeout(() => setKakaoCopied(false), 3000)
   }
 
   return (
@@ -234,7 +226,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           <span className="w-11 h-11 rounded-full bg-[#FEE500]/50 group-hover:bg-[#FEE500]/80 flex items-center justify-center transition-all duration-200 group-hover:scale-110">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
           </span>
-          <span className="text-[#3C1E1E]">{kakaoCopied ? '복사됨! 카톡에 붙여넣기' : '카카오톡 공유하기'}</span>
+          <span className="text-[#3C1E1E]">카카오톡 공유</span>
         </button>
       </div>
     </div>

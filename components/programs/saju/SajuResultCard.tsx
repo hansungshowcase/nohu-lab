@@ -2,7 +2,7 @@
 
 import { forwardRef } from 'react'
 import {
-  SajuResult, STEMS, STEMS_HANJA, BRANCHES, BRANCHES_HANJA,
+  SajuResult, STEMS, STEMS_HANJA, BRANCHES_HANJA,
   ELEMENTS, ELEMENTS_HANJA, Pillar,
   STEM_ELEMENT, BRANCH_ELEMENT, STEM_YINYANG,
 } from './sajuEngine'
@@ -12,10 +12,8 @@ import {
   getUsefulGodAdvice, TEN_GOD_INTERPRETATIONS,
   SINSAL_INTERPRETATIONS, TWELVE_STAGE_INTERPRETATIONS,
   getDaeunInterpretation,
-  HAPCHUNG_INTERPRETATIONS, EXTRA_SINSAL_INTERPRETATIONS,
-  TWELVE_SINSAL_INTERPRETATIONS, JONGGUK_INTERPRETATIONS,
-  JOHU_INTERPRETATIONS, WOLUN_RATING_LABELS,
-  ROOT_STRENGTH_LABELS, GONGMANG_SEVERITY_LABELS,
+  HAPCHUNG_INTERPRETATIONS, JONGGUK_INTERPRETATIONS,
+  WOLUN_RATING_LABELS,
 } from './sajuData'
 
 interface Props {
@@ -390,176 +388,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           )
         })()}
 
-        {/* ═══ 투간/통근 분석 ═══ */}
-        <div>
-          <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-            <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
-            투간·통근(透干·通根) 분석
-          </h3>
-          <div className="bg-teal-50 rounded-xl p-3.5 sm:p-4 border border-teal-200">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">{
-                result.tuganTonggeun.rootStrength === 'strong' ? '🌲' :
-                result.tuganTonggeun.rootStrength === 'medium' ? '🌿' :
-                result.tuganTonggeun.rootStrength === 'weak' ? '🍀' : '🍂'
-              }</span>
-              <h4 className="text-[13px] sm:text-sm font-black text-teal-800">
-                일간 뿌리: {
-                  result.tuganTonggeun.rootStrength === 'strong' ? '깊은 뿌리 (강)' :
-                  result.tuganTonggeun.rootStrength === 'medium' ? '적당한 뿌리 (중)' :
-                  result.tuganTonggeun.rootStrength === 'weak' ? '약한 뿌리 (약)' : '뿌리 없음'
-                }
-              </h4>
-            </div>
-            <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed mb-2">
-              {ROOT_STRENGTH_LABELS[result.tuganTonggeun.rootStrength]?.detail || '일간의 통근 상태를 분석합니다.'}
-            </p>
-            {result.tuganTonggeun.tonggeun.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {Array.from(new Set(result.tuganTonggeun.tonggeun.map(t => `${t.stemName}→${t.inBranch}`))).map((label, i) => (
-                  <span key={i} className="text-[10px] sm:text-[11px] bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-medium">
-                    {label}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ═══ 조후용신 ═══ */}
-        <div>
-          <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-            <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
-            조후용신(調候用神) 분석
-          </h3>
-          {(() => {
-            const johuKey = result.johu.temperature === '더움' ? 'hot' :
-              result.johu.temperature === '따뜻함' ? 'warm' :
-              result.johu.temperature === '서늘함' ? 'cool' : 'cold'
-            const johuInfo = JOHU_INTERPRETATIONS[johuKey]
-            return (
-              <div className="bg-sky-50 rounded-xl p-3.5 sm:p-4 border border-sky-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-lg">{johuInfo?.emoji || '🌡️'}</span>
-                  <h4 className="text-[13px] sm:text-sm font-black text-sky-800">
-                    태어난 계절: {result.johu.season} ({result.johu.temperature})
-                  </h4>
-                </div>
-                <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed mb-2">
-                  {johuInfo?.description || result.johu.explanation}
-                </p>
-                <div className="bg-white/70 rounded-lg px-3 py-2 border border-sky-100 space-y-1">
-                  <p className="text-[11px] sm:text-[12px] text-sky-700 font-bold">
-                    조후 필요 오행: {ELEMENTS[result.johu.neededElement]}({ELEMENTS_HANJA[result.johu.neededElement]})
-                  </p>
-                  {johuInfo?.advice && (
-                    <p className="text-[10px] sm:text-[11px] text-sky-600">{johuInfo.advice}</p>
-                  )}
-                </div>
-              </div>
-            )
-          })()}
-        </div>
-
-        {/* ═══ 추가 신살 ═══ */}
-        {(() => {
-          const es = result.enhancedSinsal
-          const extraKeys: { key: string; has: boolean }[] = [
-            { key: 'cheonduk', has: es.hasCheonduk },
-            { key: 'wolduk', has: es.hasWolduk },
-            { key: 'bokseong', has: es.hasBokseong },
-            { key: 'taeguk', has: es.hasTaeguk },
-            { key: 'hakdang', has: es.hasHakdang },
-            { key: 'cheonui', has: es.hasCheonui },
-            { key: 'geumyeo', has: es.hasGeumyeo },
-            { key: 'hongyeom', has: es.hasHongyeom },
-            { key: 'baekho', has: es.hasBaekho },
-            { key: 'gwimungwan', has: es.hasGwimungwan },
-            { key: 'wonjin', has: es.hasWonjin },
-            { key: 'cheonla', has: es.hasCheonla },
-            { key: 'jimang', has: es.hasJimang },
-            { key: 'gyeokgak', has: es.hasGyeokgak },
-          ]
-          const extraSinsal = extraKeys
-            .filter(({ has }) => has)
-            .map(({ key }) => {
-              const info = EXTRA_SINSAL_INTERPRETATIONS[key]
-              return info ? { key, name: info.name, emoji: info.emoji, isPositive: info.isPositive, detail: info.detail, advice: info.advice } : null
-            })
-            .filter(Boolean) as { key: string; name: string; emoji: string; isPositive: boolean; detail: string; advice: string }[]
-
-          if (extraSinsal.length === 0) return null
-          return (
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
-                추가 신살 분석
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {extraSinsal.map(({ key, name, emoji, isPositive, detail, advice }) => (
-                  <div key={key} className={`rounded-xl p-3 sm:p-3.5 border ${isPositive ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="text-base">{emoji}</span>
-                      <span className={`text-[12px] sm:text-[13px] font-black ${isPositive ? 'text-emerald-800' : 'text-rose-800'}`}>{name}</span>
-                      <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold ${isPositive ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                        {isPositive ? '길신' : '흉신'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] sm:text-[12px] text-gray-600 leading-relaxed mb-1.5">{detail}</p>
-                    {advice && <p className="text-[10px] sm:text-[11px] text-orange-600 font-medium bg-orange-50 rounded-lg px-2 py-1.5">💡 {advice}</p>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* ═══ 12신살 ═══ */}
-        {(() => {
-          const twInfo = TWELVE_SINSAL_INTERPRETATIONS[result.enhancedSinsal.twelveAnimalSinsal]
-          return (
-            <div className="bg-violet-50 rounded-xl p-3.5 sm:p-4 border border-violet-200">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">{twInfo?.emoji || '🔮'}</span>
-                <h4 className="text-[13px] sm:text-sm font-black text-violet-800">
-                  12신살: {result.enhancedSinsal.twelveAnimalSinsal}
-                </h4>
-                <span className="text-[9px] sm:text-[10px] bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded-full font-medium">
-                  {twInfo?.keyword || ''}
-                </span>
-              </div>
-              <p className="text-[12px] sm:text-[13px] text-gray-700 leading-relaxed">
-                {twInfo?.detail || '12신살 분석 결과입니다.'}
-              </p>
-            </div>
-          )
-        })()}
-
-        {/* ═══ 심층 공망 분석 ═══ */}
-        {result.enhancedGongmang.severity !== 'none' && (
-          <div className="bg-gray-50 rounded-xl p-3.5 sm:p-4 border border-gray-200">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">{
-                result.enhancedGongmang.severity === 'high' ? '⚫' :
-                result.enhancedGongmang.severity === 'medium' ? '🔘' : '⚪'
-              }</span>
-              <h4 className="text-[13px] sm:text-sm font-black text-gray-800">
-                공망(空亡) 분석: {BRANCHES[result.enhancedGongmang.voidBranches[0]]}·{BRANCHES[result.enhancedGongmang.voidBranches[1]]} 공망
-              </h4>
-            </div>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {result.enhancedGongmang.yearVoid && <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">년주 공망</span>}
-              {result.enhancedGongmang.monthVoid && <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">월주 공망</span>}
-              {result.enhancedGongmang.hourVoid && <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">시주 공망</span>}
-            </div>
-            <p className="text-[12px] sm:text-[13px] text-gray-600 leading-relaxed">{
-              result.enhancedGongmang.severity === 'high' ? '주요 기둥이 공망에 빠져 해당 영역의 기운이 크게 약해집니다. 노력으로 보완하면 오히려 더 큰 성취를 이룹니다.' :
-              result.enhancedGongmang.severity === 'medium' ? '일부 기둥이 공망에 걸려 있지만 다른 기둥이 보완합니다. 해당 영역에서 노력이 더 필요해요.' :
-              '공망의 영향이 미미하여 큰 걱정은 필요 없습니다.'
-            }</p>
-          </div>
-        )}
-
         {/* ═══ 대운 흐름 ═══ */}
         <div>
           <h3 className="text-sm sm:text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -690,7 +518,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
             {year}년 월별 운세
           </h3>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 sm:gap-2">
             {result.wolun.map((w) => {
               const ratingColors: Record<number, string> = {
                 5: 'bg-yellow-50 border-yellow-300 text-yellow-800',
@@ -701,10 +529,9 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               }
               const ratingEmoji: Record<number, string> = { 5: '🌟', 4: '😊', 3: '😐', 2: '😟', 1: '⚠️' }
               return (
-                <div key={w.month} className={`rounded-lg p-1.5 sm:p-2 border text-center ${ratingColors[w.rating] || ratingColors[3]}`}>
-                  <p className="text-[9px] sm:text-[10px] font-bold">{w.month}월</p>
-                  <p className="text-sm sm:text-base">{ratingEmoji[w.rating] || '😐'}</p>
-                  <p className="text-[8px] sm:text-[9px] font-medium mt-0.5">{w.keyword}</p>
+                <div key={w.month} className={`rounded-lg p-2 sm:p-2.5 border text-center ${ratingColors[w.rating] || ratingColors[3]}`}>
+                  <p className="text-[10px] sm:text-[11px] font-bold">{w.month}월 {ratingEmoji[w.rating] || '😐'}</p>
+                  <p className="text-[10px] sm:text-[11px] font-medium mt-0.5 leading-tight">{w.keyword}</p>
                 </div>
               )
             })}
