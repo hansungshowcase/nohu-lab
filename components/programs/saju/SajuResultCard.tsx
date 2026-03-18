@@ -83,7 +83,7 @@ function ElementBar({ counts, total }: { counts: number[]; total: number }) {
           <span key={i} className={`${c === 0 ? 'text-red-500 font-bold' : 'text-gray-600'}`}>
             <span className="hidden sm:inline">{fullNames[i]}</span>
             <span className="sm:hidden">{names[i]}</span>
-            {' '}{c > 0 ? c.toFixed(1) : '없음'}
+            {' '}{c > 0 ? c.toFixed(1) : '-'}
           </span>
         ))}
       </div>
@@ -211,7 +211,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             대운(大運) 흐름
           </h3>
           <div className="space-y-2">
-            <div className="flex gap-1 overflow-x-auto pb-2">
+            <div className="flex gap-1 overflow-x-auto pb-2 pr-3">
               {result.daeun.map((d, i) => (
                 <div key={i} className={`flex-shrink-0 text-center rounded-xl p-2 sm:p-2.5 min-w-[60px] sm:min-w-[70px] border-2 ${
                   d.isCurrent ? 'bg-orange-50 border-orange-400 shadow-sm' : 'bg-gray-50 border-gray-200'

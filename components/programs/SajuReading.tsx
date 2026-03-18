@@ -316,7 +316,7 @@ function SajuReadingInner() {
 
         <button
           onClick={() => setPhase('intro')}
-          className="w-full py-3 text-gray-400 text-sm hover:text-gray-600 transition"
+          className="w-full py-3.5 text-gray-400 text-sm hover:text-gray-600 transition"
         >
           ← 돌아가기
         </button>
