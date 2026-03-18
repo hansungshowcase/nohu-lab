@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import TierBadge from '@/components/TierBadge'
 import ProgramCard from '@/components/ProgramCard'
 import { programRegistry, getAllCategories } from '@/app/programs/registry'
@@ -15,9 +15,21 @@ interface User {
 
 export default function DashboardPage() {
   const router = useRouter()
+  const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [category, setCategory] = useState('전체')
   const categories = ['전체', ...getAllCategories()]
+
+  // URL 파라미터에서 카테고리 읽기 (pathname 변경 시마다)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const cat = params.get('category')
+    if (cat && categories.includes(cat)) {
+      setCategory(cat)
+    } else if (!cat) {
+      setCategory('전체')
+    }
+  })
 
   useEffect(() => {
     const controller = new AbortController()
