@@ -893,6 +893,20 @@ function calculateDaeun(
     })
   }
 
+  // 현재 대운이 범위 밖인 경우 (너무 어리거나 고령)
+  const hasCurrent = result.some(d => d.isCurrent)
+  if (!hasCurrent && result.length > 0) {
+    const firstAge = result[0].startAge
+    const lastAge = result[result.length - 1].startAge
+    if (currentAge < firstAge) {
+      // 아직 첫 대운 전: 첫 번째를 현재로
+      result[0].isCurrent = true
+    } else if (currentAge >= lastAge + 10) {
+      // 마지막 대운 지남: 마지막을 현재로
+      result[result.length - 1].isCurrent = true
+    }
+  }
+
   return result
 }
 
