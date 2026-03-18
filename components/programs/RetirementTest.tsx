@@ -8,7 +8,7 @@ import ShareButtons from './retirement-test/ShareButtons'
 import AnalyzingScreen from './retirement-test/AnalyzingScreen'
 import { getCrossInsights, getDeepAdvice, getRiskAssessment, getCrevasseAnalysis, getRetirementFundCalc, getScenarios } from './retirement-test/ResultCardA4'
 
-type Phase = 'intro' | 'quiz' | 'profile' | 'analyzing' | 'result'
+type Phase = 'intro' | 'quiz' | 'analyzing' | 'result'
 
 const FREE_LIMIT = 2
 const STORAGE_KEY = 'retirement-test-count'
@@ -104,7 +104,7 @@ export default function RetirementTest() {
     if (currentQ < questions.length - 1) {
       setCurrentQ((prev) => prev + 1)
     } else {
-      setPhase('profile')
+      setPhase('analyzing')
     }
   }, [currentQ])
 
@@ -194,6 +194,38 @@ export default function RetirementTest() {
                 </div>
               ))}
             </div>
+            {/* 개인정보 입력 */}
+            <div className="space-y-3 text-left">
+              <div className="text-sm font-semibold text-gray-700 text-center">맞춤 분석을 위한 정보 (선택)</div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">나이</label>
+                  <div className="relative">
+                    <input type="number" value={userAge} onChange={e => setUserAge(e.target.value)} placeholder="45" min={20} max={80}
+                      className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 outline-none" />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">세</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">월소득</label>
+                  <div className="relative">
+                    <input type="number" value={userIncome} onChange={e => setUserIncome(e.target.value)} placeholder="400"
+                      className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 outline-none" />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">만원</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">순자산</label>
+                  <div className="relative">
+                    <input type="number" value={userAsset} onChange={e => setUserAsset(e.target.value)} placeholder="30000"
+                      className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 outline-none" />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">만원</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-400 text-center">입력 시 동년배 순위 비교 + 맞춤 재무 계획을 제공합니다</p>
+            </div>
+
             <div className="text-center text-sm text-gray-500 space-y-1">
               <p>소요 시간: 약 2분</p>
               <p>총 20문항 · {isMember ? '회원 무제한 이용' : `비회원 ${FREE_LIMIT}회 무료`}</p>
@@ -289,80 +321,6 @@ export default function RetirementTest() {
     )
   }
 
-  // Profile input screen (퀴즈 완료 후 개인정보 입력)
-  if (phase === 'profile') {
-    const handleProfileSubmit = () => {
-      setPhase('analyzing')
-    }
-
-    return (
-      <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-        <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
-          <div className="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-6 text-center">
-            <div className="text-3xl mb-2">📊</div>
-            <h2 className="text-xl font-bold">맞춤 분석을 위한 정보</h2>
-            <p className="text-orange-100 mt-1 text-sm">입력하시면 동년배 대비 순위와 맞춤 재무 계획을 제공합니다</p>
-          </div>
-          <div className="p-6 space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">나이</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={userAge}
-                  onChange={(e) => setUserAge(e.target.value)}
-                  placeholder="예: 45"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                  min={20} max={80}
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">세</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">월 소득 (세전)</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={userIncome}
-                  onChange={(e) => setUserIncome(e.target.value)}
-                  placeholder="예: 400"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">만원</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">현재 순자산 (부동산+금융자산-부채)</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={userAsset}
-                  onChange={(e) => setUserAsset(e.target.value)}
-                  placeholder="예: 30000"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">만원</span>
-              </div>
-              <p className="text-xs text-gray-400 mt-1">3억이면 30000, 5천만원이면 5000 입력</p>
-            </div>
-            <button
-              onClick={handleProfileSubmit}
-              className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-lg font-bold rounded-xl transition"
-            >
-              결과 분석하기
-            </button>
-            <button
-              onClick={() => { setPhase('analyzing') }}
-              className="w-full py-2 text-sm text-gray-400 hover:text-gray-600 transition"
-            >
-              건너뛰기 (기본 분석만 보기)
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   // Analyzing screen
   if (phase === 'analyzing') {
     return <AnalyzingScreen onComplete={handleAnalysisComplete} />
@@ -382,7 +340,7 @@ export default function RetirementTest() {
       : ''
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-lg mx-auto space-y-5">
       {/* Result card */}
       <ResultCard
         total={total}
@@ -407,7 +365,9 @@ export default function RetirementTest() {
         const totalNeed = monthlyNeed * 12 * retireYears
         const currentGap = Math.max(0, totalNeed - asset)
         const monthlySaveSimple = yearsLeft > 0 ? Math.round(currentGap / yearsLeft / 12) : 0
-        const monthlySaveInvest = yearsLeft > 0 ? Math.round(currentGap / (((Math.pow(1.05, yearsLeft) - 1) / 0.05) * 12 / 10000)) : 0
+        const r5 = 0.05 / 12
+        const n5 = yearsLeft * 12
+        const monthlySaveInvest = yearsLeft > 0 && n5 > 0 ? Math.round(currentGap / ((Math.pow(1 + r5, n5) - 1) / r5)) : 0
         const pensionExpected = income > 0 ? Math.round(income * 0.43 * 0.6) : 67 // 소득대체율 43% x 수급률
 
         return (
@@ -548,17 +508,37 @@ export default function RetirementTest() {
       })()}
 
       {/* 4대 영역 심층 조언 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-slide-up" style={{ animationDelay: '400ms' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">영역별 맞춤 실천 가이드</h3>
-        <div className="space-y-4">
-          {getDeepAdvice(total, categories, answers).map((adv, i) => (
-            <div key={i} className="border-l-4 border-orange-400 bg-orange-50/50 rounded-r-xl p-4">
-              <div className="font-bold text-gray-900 mb-2">{adv.title}</div>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{adv.advice}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      {(() => {
+        const icons: Record<string, string> = { '[F]': '💰', '[L]': '🏃', '[H]': '🏠', '[M]': '🧠' }
+        const colors: Record<string, string> = { '[F]': '#ea580c', '[L]': '#2563eb', '[H]': '#16a34a', '[M]': '#7c3aed' }
+        return (
+          <div className="space-y-3 animate-slide-up" style={{ animationDelay: '400ms' }}>
+            <h3 className="text-lg font-bold text-gray-900">영역별 맞춤 실천 가이드</h3>
+            {getDeepAdvice(total, categories, answers).map((adv, i) => {
+              const tag = adv.title.match(/\[[A-Z]\]/)?.[0] || ''
+              const icon = icons[tag] || '📋'
+              const color = colors[tag] || '#ea580c'
+              const title = adv.title.replace(/\[[A-Z]\]\s*/, '')
+              return (
+                <details key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group">
+                  <summary className="flex items-center gap-3 p-4 cursor-pointer list-none">
+                    <span className="text-2xl">{icon}</span>
+                    <div className="flex-1">
+                      <div className="font-bold text-gray-900 text-sm">{title}</div>
+                      <div className="text-xs mt-0.5" style={{ color }}>{adv.advice.slice(0, 40)}...</div>
+                    </div>
+                    <svg className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                  </summary>
+                  <div className="px-4 pb-4 pt-0">
+                    <div className="h-px bg-gray-100 mb-3" />
+                    <p className="text-sm text-gray-700 leading-relaxed">{adv.advice}</p>
+                  </div>
+                </details>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       {/* 3대 리스크 평가 */}
       <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-slide-up" style={{ animationDelay: '500ms' }}>

@@ -163,14 +163,43 @@ export default function MentalHealth() {
     return `${window.location.origin}/programs/mental-health?d=${scores.depression}&a=${scores.anxiety}&s=${scores.stress}&se=${scores.selfesteem}&i=${scores.insomnia}`
   }
 
-  function shareKakao(overallLabel: string, summary: string, scores: { depression: number; anxiety: number; stress: number; selfesteem: number; insomnia: number }) {
+  async function shareKakao(overallLabel: string, summary: string, scores: { depression: number; anxiety: number; stress: number; selfesteem: number; insomnia: number }) {
     const w = window as KakaoWindow
     const url = getResultUrl(scores)
-    if (w.Kakao) {
-      if (!w.Kakao.isInitialized()) w.Kakao.init(KAKAO_KEY)
-      try { w.Kakao.Share.sendDefault({ objectType: 'feed', content: { title: '심리 상태 자가진단 결과', description: `종합: ${overallLabel} | ${summary}`, imageUrl: `${window.location.origin}/api/og`, link: { mobileWebUrl: url, webUrl: url } }, buttons: [{ title: '결과 보기', link: { mobileWebUrl: url, webUrl: url } }] }); return } catch {}
+
+    // 카카오 SDK 로드 대기 (최대 3초)
+    if (!w.Kakao) {
+      for (let i = 0; i < 15; i++) {
+        await new Promise((r) => setTimeout(r, 200))
+        if ((window as KakaoWindow).Kakao) break
+      }
     }
-    if (navigator.share) navigator.share({ title: '심리 상태 자가진단 결과', text: `종합: ${overallLabel} | ${summary}`, url }).catch(() => {})
+
+    const kakao = (window as KakaoWindow).Kakao
+    if (kakao) {
+      if (!kakao.isInitialized()) kakao.init(KAKAO_KEY)
+      try {
+        kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: '심리 상태 자가진단 결과',
+            description: `종합: ${overallLabel} | ${summary}`,
+            imageUrl: `${window.location.origin}/api/og`,
+            link: { mobileWebUrl: url, webUrl: url },
+          },
+          buttons: [{ title: '결과 보기', link: { mobileWebUrl: url, webUrl: url } }],
+        })
+        return
+      } catch { /* fallback below */ }
+    }
+
+    // fallback: 카카오톡 앱이 없거나 SDK 로드 실패 시
+    const text = `심리 자가진단 결과 | 종합: ${overallLabel}\n${url}`
+    try { await navigator.clipboard.writeText(text) } catch {
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta)
+    }
+    alert('카카오톡 SDK를 불러오지 못했습니다.\n결과 링크가 클립보드에 복사되었습니다.\n카카오톡에서 붙여넣기 해주세요.')
   }
 
   async function saveImage() {

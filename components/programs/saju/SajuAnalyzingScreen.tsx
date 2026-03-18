@@ -82,7 +82,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] px-4">
       {/* 메인 아이콘 */}
-      <div className="relative mb-8">
+      <div className="relative mb-8 overflow-hidden p-8">
         <div className={`text-7xl transition-all duration-700 ${showPulse ? 'scale-110 opacity-100' : 'scale-100 opacity-80'}`}>
           🔮
         </div>

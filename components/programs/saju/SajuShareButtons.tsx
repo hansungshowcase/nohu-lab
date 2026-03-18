@@ -50,38 +50,25 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     if (!cardRef.current || saving) return
     setSaving(true)
     try {
-      const { toPng } = await import('html-to-image')
+      const html2canvas = (await import('html2canvas')).default
       const node = cardRef.current
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
-      const options = {
-        quality: 0.95,
-        pixelRatio: isMobile ? 1.5 : 2, // 모바일 메모리 절약
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const canvas = await html2canvas(node, {
+        scale: isMobile ? 1.5 : 2,
         backgroundColor: '#ffffff',
-        cacheBust: true,
-        skipAutoScale: true,
-        filter: (el: HTMLElement) => !el.classList?.contains('no-print'),
-      }
+        useCORS: true,
+        logging: false,
+      } as any)
 
-      // html-to-image 안정성: 3회 렌더링 (폰트/이미지 로딩 안정화)
-      await toPng(node, options).catch(() => {})
-      await toPng(node, options).catch(() => {})
-      const dataUrl = await toPng(node, options)
-      if (!dataUrl || !dataUrl.startsWith('data:image/png')) {
-        throw new Error('Invalid PNG data')
-      }
-
-      // data URL → blob 변환 (공통)
-      const toBlob = (url: string) => {
-        const byteString = atob(url.split(',')[1])
-        const ab = new ArrayBuffer(byteString.length)
-        const ia = new Uint8Array(ab)
-        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
-        return new Blob([ab], { type: 'image/png' })
-      }
+      // canvas → blob
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png', 0.95)
+      })
 
       // 모바일 저장
       if (isMobile) {
-        const blob = toBlob(dataUrl)
         const isKakao = /KAKAOTALK/i.test(navigator.userAgent)
 
         // 1순위: Web Share API (일반 모바일 브라우저)
@@ -130,7 +117,6 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       const w = window as typeof window & { showSaveFilePicker?: (opts: Record<string, unknown>) => Promise<FileSystemFileHandle> }
       if (w.showSaveFilePicker) {
         try {
-          const blob = toBlob(dataUrl)
           const handle = await w.showSaveFilePicker({
             suggestedName: 'saju-result.png',
             types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }],
@@ -151,13 +137,14 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       }
 
       // PC Fallback: <a download>
+      const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = dataUrl
+      link.href = blobUrl
       link.download = 'saju-result.png'
       link.style.display = 'none'
       document.body.appendChild(link)
       link.click()
-      setTimeout(() => document.body.removeChild(link), 1000)
+      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 1000)
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2000)
     } catch {

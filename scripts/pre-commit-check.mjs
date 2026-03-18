@@ -41,7 +41,7 @@ const mh = 'components/programs/MentalHealth.tsx'
 
 check('카카오 SDK 키 존재', fileContains(mh, '3913fde247b12ce25084eb42a9b17ed9'))
 check('Kakao.Share.sendDefault 호출', fileContains(mh, 'Share.sendDefault'))
-check('카카오 fallback (navigator.share)', fileContains(mh, 'navigator.share'))
+check('카카오 fallback (clipboard 복사)', fileContains(mh, 'clipboard.writeText'))
 check('이미지 저장 (html-to-image)', fileContains(mh, "import('html-to-image')"))
 check('이미지 저장 (toPng)', fileContains(mh, 'toPng'))
 check('Blob 다운로드', fileContains(mh, 'createObjectURL'))

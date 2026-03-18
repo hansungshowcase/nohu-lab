@@ -453,10 +453,13 @@ export function getRetirementFundCalc(total: number, answers: Record<number, num
   const pensionEstimate = pensionTotal * 12 * years
   const gap = Math.max(0, totalNeeded - pensionEstimate)
   const gapMin = Math.max(0, totalNeededMin - pensionEstimate)
-  // 월 저축액 계산
-  const monthlySave20 = gap > 0 ? Math.round(gap / 20 / 12) : 0 // 20년 단순저축
-  const monthlySave10 = gap > 0 ? Math.round(gap / 10 / 12) : 0 // 10년
-  const monthlySaveInvest = gap > 0 ? Math.round(gap / (((Math.pow(1.05, 20) - 1) / 0.05) * 12 / 10000)) : 0 // 연 5% 투자
+  // 월 저축액 계산 (gap은 만원 단위)
+  const monthlySave20 = gap > 0 ? Math.round(gap / 20 / 12) : 0 // 20년 단순저축 (만원/월)
+  const monthlySave10 = gap > 0 ? Math.round(gap / 10 / 12) : 0 // 10년 (만원/월)
+  // 연 5% 투자 시 월 적립액: FV = PMT * ((1+r)^n - 1) / r → PMT = FV * r / ((1+r)^n - 1)
+  const r = 0.05 / 12 // 월 이자율
+  const n = 20 * 12 // 총 개월수
+  const monthlySaveInvest = gap > 0 ? Math.round(gap / ((Math.pow(1 + r, n) - 1) / r)) : 0 // 만원/월
   return { monthly, monthlyMin, years, totalNeeded, totalNeededMin, pensionEstimate, gap, gapMin, monthlySave20, monthlySave10, monthlySaveInvest }
 }
 

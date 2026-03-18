@@ -104,8 +104,23 @@ export default function ShareButtons({
       if (!res.ok) throw new Error('이미지 생성 실패')
       const blob = await res.blob()
       const fileName = `노후준비_리포트_${total}점_${grade}.png`
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
-      // 모바일+PC 공통: 바로 다운로드
+      // 1순위: Web Share API로 파일 공유 (모바일 → 갤러리 저장 가능)
+      if (isMobile && navigator.share) {
+        try {
+          const file = new File([blob], fileName, { type: 'image/png' })
+          if (navigator.canShare?.({ files: [file] })) {
+            await navigator.share({ files: [file], title: '노후 준비 진단 리포트' })
+            return
+          }
+        } catch (e) {
+          if ((e as Error).name === 'AbortError') return
+          // share 실패 시 아래 fallback
+        }
+      }
+
+      // 2순위: <a download> (PC + 일부 모바일)
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
@@ -117,6 +132,13 @@ export default function ShareButtons({
         document.body.removeChild(link)
         URL.revokeObjectURL(blobUrl)
       }, 3000)
+
+      // 모바일에서 download가 안 먹히면 새 탭으로 열기 (꾹 눌러 저장)
+      if (isMobile) {
+        setTimeout(() => {
+          window.open(blobUrl, '_blank')
+        }, 500)
+      }
     } catch {
       alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
     } finally {
