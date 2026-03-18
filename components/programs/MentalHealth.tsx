@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useCallback } from 'react'
 import {
   SCALES, calculateScore, getLevel, getMaxScore, hasSuicideRisk,
+  getHighScoringItems, getOverallRisk,
   FUNCTIONAL_IMPAIRMENT_QUESTION, FUNCTIONAL_IMPAIRMENT_OPTIONS,
 } from './mental-health/questions'
 import { TIPS } from './mental-health/tips'
@@ -30,6 +31,8 @@ export default function MentalHealth() {
   const [currentQIdx, setCurrentQIdx] = useState(0)
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [functionalImpairment, setFunctionalImpairment] = useState<number | null>(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const activeScales = useMemo(() => {
     if (testType === 'all') return SCALES
@@ -52,7 +55,6 @@ export default function MentalHealth() {
   const currentQuestion = currentScale?.questions[currentQIdx]
   const answerKey = currentScale && currentQuestion ? `${currentScale.id}-${currentQuestion.id}` : ''
 
-  // 우울 검사 포함 여부 (기능장해 문항 표시 조건)
   const includesDepression = activeScales.some((s) => s.id === 'depression')
 
   function handleSelect(type: TestType) {
@@ -64,28 +66,35 @@ export default function MentalHealth() {
     setFunctionalImpairment(null)
   }
 
-  function handleAnswer(value: number) {
-    setAnswers((prev) => ({ ...prev, [answerKey]: value }))
-  }
-
-  function goNext() {
-    if (answers[answerKey] === undefined) return
+  const advanceToNext = useCallback(() => {
+    setIsTransitioning(false)
     if (currentQIdx < currentScale.questions.length - 1) {
       setCurrentQIdx((p) => p + 1)
     } else if (currentScaleIdx < activeScales.length - 1) {
       setCurrentScaleIdx((p) => p + 1)
       setCurrentQIdx(0)
     } else {
-      // 마지막 문항 완료 → 우울 포함 시 기능장해 문항, 아니면 결과
       if (includesDepression) {
         setPhase('functional')
       } else {
         setPhase('result')
       }
     }
+  }, [currentQIdx, currentScale, currentScaleIdx, activeScales, includesDepression])
+
+  function handleAnswer(value: number) {
+    if (isTransitioning) return
+    setAnswers((prev) => ({ ...prev, [answerKey]: value }))
+    // 자동 전환
+    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current)
+    setIsTransitioning(true)
+    autoAdvanceTimer.current = setTimeout(advanceToNext, 300)
   }
 
   function goPrev() {
+    if (isTransitioning) return
+    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current)
+    setIsTransitioning(false)
     if (currentQIdx > 0) {
       setCurrentQIdx((p) => p - 1)
     } else if (currentScaleIdx > 0) {
@@ -95,11 +104,13 @@ export default function MentalHealth() {
   }
 
   function restart() {
+    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current)
     setPhase('intro')
     setAnswers({})
     setCurrentScaleIdx(0)
     setCurrentQIdx(0)
     setFunctionalImpairment(null)
+    setIsTransitioning(false)
   }
 
   // === INTRO ===
@@ -235,11 +246,12 @@ export default function MentalHealth() {
                   <button
                     key={opt.value}
                     onClick={() => handleAnswer(opt.value)}
+                    disabled={isTransitioning}
                     className={`w-full text-left px-4 py-3 rounded-xl text-[14px] font-medium transition-all duration-200 ${
                       selected
-                        ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                        ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.98]'
                         : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 border border-transparent hover:border-orange-200'
-                    }`}
+                    } ${isTransitioning ? 'pointer-events-none' : ''}`}
                   >
                     <span className="mr-2 opacity-60">{opt.value}.</span>
                     {opt.label}
@@ -249,21 +261,14 @@ export default function MentalHealth() {
             </div>
           </div>
 
-          {/* Navigation */}
-          <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-50">
+          {/* Navigation - 이전 버튼만 */}
+          <div className="flex justify-start items-center mt-6 pt-4 border-t border-gray-50">
             <button
               onClick={goPrev}
-              disabled={globalIdx === 0}
+              disabled={globalIdx === 0 || isTransitioning}
               className="px-4 py-2 text-[14px] text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
               ← 이전
-            </button>
-            <button
-              onClick={goNext}
-              disabled={answers[answerKey] === undefined}
-              className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white text-[14px] font-semibold rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
-            >
-              {globalIdx === totalQuestions - 1 ? (includesDepression ? '다음 →' : '결과 보기') : '다음 →'}
             </button>
           </div>
         </div>
@@ -299,10 +304,13 @@ export default function MentalHealth() {
                 return (
                   <button
                     key={opt.value}
-                    onClick={() => setFunctionalImpairment(opt.value)}
+                    onClick={() => {
+                      setFunctionalImpairment(opt.value)
+                      setTimeout(() => setPhase('result'), 300)
+                    }}
                     className={`w-full text-left px-4 py-3 rounded-xl text-[14px] font-medium transition-all duration-200 ${
                       selected
-                        ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                        ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.98]'
                         : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 border border-transparent hover:border-orange-200'
                     }`}
                   >
@@ -313,11 +321,10 @@ export default function MentalHealth() {
             </div>
           </div>
 
-          <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-50">
+          <div className="flex justify-start items-center mt-6 pt-4 border-t border-gray-50">
             <button
               onClick={() => {
                 setPhase('quiz')
-                // 마지막 스케일 마지막 문항으로 돌아가기
                 const lastScale = activeScales.length - 1
                 setCurrentScaleIdx(lastScale)
                 setCurrentQIdx(activeScales[lastScale].questions.length - 1)
@@ -325,13 +332,6 @@ export default function MentalHealth() {
               className="px-4 py-2 text-[14px] text-gray-500 hover:text-gray-700 transition"
             >
               ← 이전
-            </button>
-            <button
-              onClick={() => setPhase('result')}
-              disabled={functionalImpairment === null}
-              className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 text-white text-[14px] font-semibold rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
-            >
-              결과 보기
             </button>
           </div>
         </div>
@@ -347,14 +347,17 @@ export default function MentalHealth() {
     return {
       scaleId: scale.id,
       scaleName: scale.name.replace(/ \(.*\)/, ''),
+      scaleFullName: scale.name,
       score,
       maxScore,
       level: level!,
       percentage: Math.round((score / maxScore) * 100),
+      highItems: getHighScoringItems(scale.id, answers, 2),
     }
   })
 
   const suicideRisk = includesDepression && hasSuicideRisk(answers)
+  const overallRisk = getOverallRisk(results.map((r) => ({ scaleId: r.scaleId, score: r.score })))
 
   const radarData = results.map((r) => ({
     subject: r.scaleName,
@@ -364,11 +367,23 @@ export default function MentalHealth() {
 
   const functionalLabels = ['전혀 어렵지 않았다', '약간 어려웠다', '많이 어려웠다', '매우 많이 어려웠다']
 
+  const today = new Date()
+  const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`
+
   return (
     <div className="max-w-xl mx-auto space-y-6 animate-fade-in">
-      <div className="text-center space-y-2">
-        <h2 className="text-xl font-bold text-gray-900">검사 결과</h2>
-        <p className="text-gray-500 text-[14px]">당신의 심리 상태 분석 결과입니다</p>
+      {/* 결과지 헤더 */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-900">심리 상태 선별검사 결과</h2>
+          <span className="text-[12px] text-gray-400">{dateStr}</span>
+        </div>
+        <div className="flex items-center gap-2 text-[13px] text-gray-500">
+          <span>검사 도구:</span>
+          <span className="font-medium text-gray-700">
+            {results.map((r) => r.scaleFullName).join(', ')}
+          </span>
+        </div>
       </div>
 
       {/* 자살위험 경고 */}
@@ -390,9 +405,53 @@ export default function MentalHealth() {
         </div>
       )}
 
+      {/* 종합 소견 */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-gray-900">종합 소견</h3>
+          <div
+            className="px-3 py-1 rounded-lg text-[13px] font-bold text-white"
+            style={{ backgroundColor: overallRisk.color }}
+          >
+            {overallRisk.label}
+          </div>
+        </div>
+        <p className="text-[14px] text-gray-700 leading-relaxed">{overallRisk.description}</p>
+
+        {/* 종합 점수 요약 테이블 */}
+        <div className="bg-gray-50 rounded-xl overflow-hidden mt-2">
+          <table className="w-full text-[13px]">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">영역</th>
+                <th className="text-center py-2.5 px-2 text-gray-500 font-medium">점수</th>
+                <th className="text-center py-2.5 px-2 text-gray-500 font-medium">판정</th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.map((r) => (
+                <tr key={r.scaleId} className="border-b border-gray-100 last:border-0">
+                  <td className="py-2.5 px-3 font-medium text-gray-800">{r.scaleName}</td>
+                  <td className="py-2.5 px-2 text-center text-gray-600">{r.score} / {r.maxScore}</td>
+                  <td className="py-2.5 px-2 text-center">
+                    <span
+                      className="inline-block px-2 py-0.5 rounded text-[11px] font-bold text-white"
+                      style={{ backgroundColor: r.level.color }}
+                    >
+                      {r.level.label}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Radar Chart */}
       {results.length >= 3 && (
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
+          <h3 className="font-semibold text-gray-900 text-[14px] mb-2 px-1">영역별 분포</h3>
           <ResponsiveContainer width="100%" height={280}>
             <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
               <PolarGrid stroke="#e5e7eb" />
@@ -417,14 +476,16 @@ export default function MentalHealth() {
         </div>
       )}
 
-      {/* Score Cards */}
+      {/* 영역별 상세 분석 */}
       <div className="space-y-3">
         {results.map((r) => {
           const tipData = TIPS[r.scaleId]?.[r.level.label]
+          const scale = SCALES.find((s) => s.id === r.scaleId)!
+
           return (
             <div key={r.scaleId} className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">{r.scaleName}</h3>
+                <h3 className="font-bold text-gray-900">{r.scaleFullName}</h3>
                 <div
                   className="px-3 py-1 rounded-lg text-[13px] font-bold text-white"
                   style={{ backgroundColor: r.level.color }}
@@ -447,12 +508,69 @@ export default function MentalHealth() {
                 </div>
               </div>
 
-              {/* Tips */}
+              {/* 심각도 분포 바 (전체 레벨 중 현재 위치) */}
+              <div className="space-y-1">
+                <p className="text-[12px] text-gray-400">심각도 분포</p>
+                <div className="flex rounded-lg overflow-hidden h-6">
+                  {scale.levels.map((lvl, i) => {
+                    const width = ((lvl.max - lvl.min + 1) / (r.maxScore + 1)) * 100
+                    const isActive = r.score >= lvl.min && r.score <= lvl.max
+                    return (
+                      <div
+                        key={i}
+                        className="relative flex items-center justify-center"
+                        style={{ width: `${width}%`, backgroundColor: lvl.color, opacity: isActive ? 1 : 0.25 }}
+                      >
+                        {isActive && (
+                          <span className="text-white text-[10px] font-bold truncate px-1">
+                            ▼ {r.score}점
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="flex text-[10px] text-gray-400">
+                  {scale.levels.map((lvl, i) => {
+                    const width = ((lvl.max - lvl.min + 1) / (r.maxScore + 1)) * 100
+                    return (
+                      <div key={i} style={{ width: `${width}%` }} className="truncate px-0.5">
+                        {lvl.label}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* 주요 증상 항목 */}
+              {r.highItems.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[12px] text-gray-400 font-medium">주요 증상 항목 (2점 이상)</p>
+                  {r.highItems.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 bg-orange-50/50 rounded-lg p-2.5">
+                      <div className="flex gap-0.5 mt-0.5 shrink-0">
+                        {Array.from({ length: item.maxScore }, (_, j) => (
+                          <div
+                            key={j}
+                            className={`w-2 h-2 rounded-full ${j < item.score ? 'bg-orange-500' : 'bg-gray-200'}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[12px] text-gray-700 leading-relaxed">{item.questionText}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 임상 해석 및 권고 */}
               {tipData && (
                 <div className="bg-gray-50 rounded-xl p-4 space-y-2">
                   <p className="text-[14px] font-medium text-gray-800">{tipData.title}</p>
                   <p className="text-[13px] text-gray-500">{tipData.description}</p>
-                  <p className="text-[13px] text-orange-600 font-medium">{tipData.recommendation}</p>
+                  <div className="flex items-start gap-2 bg-orange-50 rounded-lg p-2.5 mt-1">
+                    <span className="text-orange-500 text-[13px] mt-0.5 shrink-0">→</span>
+                    <p className="text-[13px] text-orange-700 font-medium">{tipData.recommendation}</p>
+                  </div>
                   <ul className="space-y-1.5 mt-2">
                     {tipData.tips.map((tip, i) => (
                       <li key={i} className="text-[13px] text-gray-600 flex items-start gap-2">

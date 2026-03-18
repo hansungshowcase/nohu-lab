@@ -173,3 +173,63 @@ export function getMaxScore(scaleId: string): number {
 export function hasSuicideRisk(answers: Record<string, number>): boolean {
   return (answers['depression-9'] ?? 0) >= 1
 }
+
+// 문항별 분석: 높은 점수 문항 추출
+export interface ItemAnalysis {
+  questionText: string
+  score: number
+  maxScore: number
+}
+
+export function getHighScoringItems(scaleId: string, answers: Record<string, number>, threshold: number = 2): ItemAnalysis[] {
+  const scale = SCALES.find((s) => s.id === scaleId)
+  if (!scale) return []
+  const maxPerItem = scale.likertOptions[scale.likertOptions.length - 1].value
+
+  return scale.questions
+    .map((q) => {
+      const raw = answers[`${scaleId}-${q.id}`] ?? 0
+      // PSS 역채점 문항은 낮은 점수가 높은 스트레스
+      const effectiveScore = (scaleId === 'stress' && PSS_REVERSE_ITEMS.includes(q.id))
+        ? (maxPerItem - raw)
+        : raw
+      return { questionText: q.text, score: effectiveScore, maxScore: maxPerItem }
+    })
+    .filter((item) => item.score >= threshold)
+    .sort((a, b) => b.score - a.score)
+}
+
+// 종합 위험도 판정
+export function getOverallRisk(results: { scaleId: string; score: number }[]): {
+  level: 'low' | 'moderate' | 'high' | 'critical'
+  label: string
+  color: string
+  description: string
+} {
+  let maxSeverity = 0
+  for (const r of results) {
+    const scale = SCALES.find((s) => s.id === r.scaleId)
+    if (!scale) continue
+    const levelIdx = scale.levels.findIndex((l) => r.score >= l.min && r.score <= l.max)
+    if (levelIdx > maxSeverity) maxSeverity = levelIdx
+  }
+
+  // 복수 영역 중등도 이상이면 한 단계 올림
+  const moderateCount = results.filter((r) => {
+    const scale = SCALES.find((s) => s.id === r.scaleId)
+    if (!scale) return false
+    const idx = scale.levels.findIndex((l) => r.score >= l.min && r.score <= l.max)
+    return idx >= 2
+  }).length
+
+  if (moderateCount >= 2 && maxSeverity < 3) maxSeverity = Math.min(maxSeverity + 1, 3)
+
+  const levels = [
+    { level: 'low' as const, label: '양호', color: '#22c55e', description: '현재 심리 상태가 전반적으로 양호합니다. 현재의 생활 습관을 유지하시기 바랍니다.' },
+    { level: 'moderate' as const, label: '주의', color: '#eab308', description: '일부 영역에서 경미한 증상이 관찰됩니다. 생활 습관 개선과 자기 관리를 통해 호전될 수 있습니다.' },
+    { level: 'high' as const, label: '경고', color: '#f97316', description: '중등도 이상의 증상이 관찰됩니다. 전문 상담사 또는 정신건강의학과 상담을 권장합니다.' },
+    { level: 'critical' as const, label: '위험', color: '#ef4444', description: '심각한 수준의 증상이 관찰됩니다. 가능한 빨리 정신건강의학과 전문의 진료를 받으시기 바랍니다.' },
+  ]
+
+  return levels[Math.min(maxSeverity, 3)]
+}
