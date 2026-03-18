@@ -105,14 +105,6 @@ function allScenarios(na: number, base: number, le: number): S[] {
 }
 
 // 결과 표시용 핵심 3가지: 5년 조기 / 정상 / 5년 연기
-function displayScenarios(na: number, base: number, le: number): S[] {
-  const e = Math.round(base * 0.7), d = Math.round(base * 1.36)
-  return [
-    { label: '5년 조기수령', age: na - 5, monthly: e, pct: '-30%', cumul: cum(e, na - 5, le), type: 'early', diff: e - base, yearsDiff: -5 },
-    { label: '정상수령', age: na, monthly: base, pct: '기준', cumul: cum(base, na, le), type: 'normal', diff: 0, yearsDiff: 0 },
-    { label: '5년 연기수령', age: na + 5, monthly: d, pct: '+36%', cumul: cum(d, na + 5, le), type: 'deferred', diff: d - base, yearsDiff: 5 },
-  ]
-}
 function beAge(a: S, b: S): number | null {
   const e = a.age < b.age ? a : b, l = a.age < b.age ? b : a
   if (l.monthly <= e.monthly) return null
@@ -138,7 +130,6 @@ const STEPS = [
 // ══ 컴포넌트 ══
 export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   const resultRef = useRef<HTMLDivElement>(null)
-  const captureRef = useRef<HTMLDivElement>(null)
   const ivRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [myAge, setAge] = useState('')
   const [myIncome, setMyIncome] = useState('')
