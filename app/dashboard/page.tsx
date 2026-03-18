@@ -49,6 +49,7 @@ export default function DashboardPage() {
       .catch((err) => {
         if (err.name === 'AbortError') return
         if (err.message === 'unauthorized') router.push('/')
+        else setUser({ memberId: '', nickname: '오류', tier: 0 } as User)
       })
     return () => controller.abort()
   }, [])

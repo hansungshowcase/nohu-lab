@@ -195,9 +195,17 @@ function AdminContent() {
   // 선택된 방의 메시지 로드
   useEffect(() => {
     if (!selectedRoom) return
-    fetchChatMessages(selectedRoom)
-    chatPollRef.current = setInterval(() => fetchChatMessages(selectedRoom), 3000)
+    const controller = new AbortController()
+    const fetchMsg = () => {
+      fetch(`/api/chat/messages?roomId=${selectedRoom}`, { signal: controller.signal })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data) setChatMessages(data) })
+        .catch(() => {})
+    }
+    fetchMsg()
+    chatPollRef.current = setInterval(fetchMsg, 3000)
     return () => {
+      controller.abort()
       if (chatPollRef.current) clearInterval(chatPollRef.current)
     }
   }, [selectedRoom])

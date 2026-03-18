@@ -129,7 +129,6 @@ export async function GET(request: NextRequest) {
       const batch = allMembers.slice(i, i + 500).map(m => ({
         nickname: m.nickname,
         tier: mapGradeToTier(m.levelName, m.memberLevel),
-        last_login: new Date().toISOString(),
       }))
       const { error } = await supabase
         .from('members')

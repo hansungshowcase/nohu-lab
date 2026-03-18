@@ -104,14 +104,17 @@ export async function GET(request: NextRequest) {
     // 4. DB에 회원 등록/업데이트 (upsert로 레이스 컨디션 방지)
     const supabase = getServiceSupabase()
 
+    const naverPhone = naverProfile.mobile?.replace(/-/g, '') || ''
+    const upsertData: Record<string, unknown> = {
+      nickname: naverNickname,
+      tier: cafeTier,
+      last_login: new Date().toISOString(),
+    }
+    if (naverPhone) upsertData.phone = naverPhone
+
     const { data: member, error: upsertError } = await supabase
       .from('members')
-      .upsert({
-        nickname: naverNickname,
-        phone: naverProfile.mobile?.replace(/-/g, '') || '',
-        tier: cafeTier,
-        last_login: new Date().toISOString(),
-      }, { onConflict: 'nickname' })
+      .upsert(upsertData, { onConflict: 'nickname' })
       .select()
       .single()
 
