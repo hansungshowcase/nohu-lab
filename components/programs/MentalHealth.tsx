@@ -22,12 +22,14 @@ const CAFE_URL = 'https://cafe.naver.com/eovhskfktmak'
 
 function getTestCount(): number {
   if (typeof window === 'undefined') return 0
-  return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10)
+  try { return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0 }
+  catch { return 0 }
 }
 
 function incrementTestCount(): void {
   if (typeof window === 'undefined') return
-  localStorage.setItem(STORAGE_KEY, String(getTestCount() + 1))
+  try { localStorage.setItem(STORAGE_KEY, String(getTestCount() + 1)) }
+  catch { /* Safari private browsing 등 localStorage 접근 불가 시 무시 */ }
 }
 
 interface KakaoWindow extends Window {
@@ -48,6 +50,7 @@ export default function MentalHealth() {
   const [isMember, setIsMember] = useState(false)
   const [showLimitModal, setShowLimitModal] = useState(false)
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const transitionLock = useRef(false) // React batching 우회용 동기 가드
 
   // 회원 여부 확인
   useEffect(() => {
@@ -99,7 +102,9 @@ export default function MentalHealth() {
   }
 
   const advanceToNext = useCallback(() => {
+    transitionLock.current = false
     setIsTransitioning(false)
+    if (!currentScale) return // null safety
     if (currentQIdx < currentScale.questions.length - 1) {
       setCurrentQIdx((p) => p + 1)
     } else if (currentScaleIdx < activeScales.length - 1) {
@@ -108,10 +113,12 @@ export default function MentalHealth() {
     } else {
       setPhase('functional')
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [currentQIdx, currentScale, currentScaleIdx, activeScales])
 
   function handleAnswer(value: number) {
-    if (isTransitioning) return
+    if (transitionLock.current) return // 동기 가드 (React batching 우회)
+    transitionLock.current = true
     setAnswers((prev) => ({ ...prev, [answerKey]: value }))
     if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current)
     setIsTransitioning(true)
@@ -119,8 +126,9 @@ export default function MentalHealth() {
   }
 
   function goPrev() {
-    if (isTransitioning) return
+    if (transitionLock.current) return
     if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current)
+    transitionLock.current = false
     setIsTransitioning(false)
     if (currentQIdx > 0) {
       setCurrentQIdx((p) => p - 1)
@@ -128,10 +136,12 @@ export default function MentalHealth() {
       setCurrentScaleIdx((p) => p - 1)
       setCurrentQIdx(activeScales[currentScaleIdx - 1].questions.length - 1)
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function restart() {
     if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current)
+    transitionLock.current = false
     setPhase('intro')
     setAnswers({})
     setCurrentScaleIdx(0)
@@ -237,7 +247,7 @@ export default function MentalHealth() {
         {/* 제한 모달 */}
         {showLimitModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6" onClick={() => setShowLimitModal(false)}>
-            <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4 animate-fade-in max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="text-5xl">🔒</div>
               <h3 className="text-lg font-bold text-gray-900">무료 체험이 끝났습니다</h3>
               <p className="text-[14px] text-gray-500 leading-relaxed">
@@ -254,7 +264,7 @@ export default function MentalHealth() {
               </a>
               <button
                 onClick={() => setShowLimitModal(false)}
-                className="text-[13px] text-gray-400 hover:text-gray-600 transition"
+                className="text-[13px] text-gray-400 hover:text-gray-600 transition py-3 px-4 min-h-[44px]"
               >
                 닫기
               </button>
@@ -311,7 +321,7 @@ export default function MentalHealth() {
                     key={opt.value}
                     onClick={() => handleAnswer(opt.value)}
                     disabled={isTransitioning}
-                    className={`w-full text-left px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${
+                    className={`w-full text-left px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${
                       selected
                         ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.98]'
                         : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 border border-transparent hover:border-orange-200'
@@ -329,7 +339,7 @@ export default function MentalHealth() {
             <button
               onClick={goPrev}
               disabled={globalIdx === 0 || isTransitioning}
-              className="px-3 sm:px-4 py-2 text-[13px] sm:text-[14px] text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="px-3 sm:px-4 py-3 text-[13px] sm:text-[14px] text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
               ← 이전
             </button>
@@ -367,12 +377,15 @@ export default function MentalHealth() {
                 return (
                   <button
                     key={opt.value}
+                    disabled={transitionLock.current}
                     onClick={() => {
+                      if (transitionLock.current) return
+                      transitionLock.current = true
                       setFunctionalImpairment(opt.value)
                       if (!isMember) incrementTestCount()
-                      setTimeout(() => setPhase('result'), 300)
+                      setTimeout(() => { transitionLock.current = false; setPhase('result') }, 300)
                     }}
-                    className={`w-full text-left px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${
+                    className={`w-full text-left px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${
                       selected
                         ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.98]'
                         : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 border border-transparent hover:border-orange-200'
@@ -393,7 +406,7 @@ export default function MentalHealth() {
                 setCurrentScaleIdx(lastScale)
                 setCurrentQIdx(activeScales[lastScale].questions.length - 1)
               }}
-              className="px-3 sm:px-4 py-2 text-[13px] sm:text-[14px] text-gray-500 hover:text-gray-700 transition"
+              className="px-3 sm:px-4 py-3 text-[13px] sm:text-[14px] text-gray-500 hover:text-gray-700 transition"
             >
               ← 이전
             </button>
@@ -555,7 +568,7 @@ export default function MentalHealth() {
                     const isActive = r.score >= lvl.min && r.score <= lvl.max
                     return (
                       <div key={i} className="relative flex items-center justify-center" style={{ width: `${width}%`, backgroundColor: lvl.color, opacity: isActive ? 1 : 0.25 }}>
-                        {isActive && <span className="text-white text-[8px] sm:text-[10px] font-bold">▼{r.score}</span>}
+                        {isActive && <span className="text-white text-[10px] sm:text-[11px] font-bold">▼{r.score}</span>}
                       </div>
                     )
                   })}
@@ -563,7 +576,7 @@ export default function MentalHealth() {
                 <div className="flex">
                   {scale.levels.map((lvl, i) => {
                     const width = ((lvl.max - lvl.min + 1) / (r.maxScore + 1)) * 100
-                    return <div key={i} style={{ width: `${width}%` }} className="text-[8px] sm:text-[10px] text-gray-400 truncate leading-tight">{lvl.label.replace(/\s/g, '')}</div>
+                    return <div key={i} style={{ width: `${width}%` }} className="text-[10px] sm:text-[11px] text-gray-400 truncate leading-tight">{lvl.label.replace(/\s/g, '')}</div>
                   })}
                 </div>
               </div>
