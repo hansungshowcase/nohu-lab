@@ -143,11 +143,26 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   const [saveOk, setSaveOk] = useState(false)
   const [started, setStarted] = useState(false)
 
+  // URL 파라미터 읽기 (결과 공유용)
+  const [urlParams] = useState(() => {
+    if (typeof window === 'undefined') return null
+    const p = new URLSearchParams(window.location.search)
+    const a = p.get('age'), i = p.get('income'), l = p.get('le')
+    return a && i ? { age: a, income: i, le: l || '85' } : null
+  })
+
   useEffect(() => {
     const u = getU()
     setUsage(u)
     if (userTier === 0 && u >= MF) setBlocked(true)
-  }, [userTier])
+    if (urlParams) { setAge(urlParams.age); setMyIncome(urlParams.income); setLE(urlParams.le); setStarted(true) }
+  }, [userTier, urlParams])
+
+  // URL 파라미터: base 계산 후 결과 표시
+  useEffect(() => {
+    if (urlParams && base > 0 && !done && started) { setDone(true); setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100) }
+  }, [urlParams, base, done, started])
+
   useEffect(() => () => { if (ivRef.current) clearTimeout(ivRef.current as unknown as ReturnType<typeof setTimeout>) }, [])
 
   const isGuest = userTier === 0
@@ -346,16 +361,25 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
     setSaving(false)
   }
 
-  const getUrl = useCallback(() => `${window.location.origin}/programs/pension-timing`, [])
+  const BASE_URL = 'https://nohu-lab.vercel.app/programs/pension-timing'
+  const getShareUrl = useCallback(() => {
+    if (!myAge || !myIncome) return BASE_URL
+    return `${BASE_URL}?age=${myAge}&income=${myIncome.replace(/,/g, '')}&le=${le}`
+  }, [myAge, myIncome, le])
+
   const handleCopy = async () => {
-    const t = `⏰ 연금 수령 황금 타이밍\n내 나이에 맞는 최적의 연금 개시 시점은?\n${getUrl()}`
-    try { await navigator.clipboard.writeText(t) } catch { const a = document.createElement('textarea'); a.value = t; a.style.position = 'fixed'; a.style.left = '-9999px'; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a) }
+    const u = getShareUrl()
+    try { await navigator.clipboard.writeText(u) } catch { const a = document.createElement('textarea'); a.value = u; a.style.position = 'fixed'; a.style.left = '-9999px'; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a) }
     setCopy(true); setTimeout(() => setCopy(false), 2000)
   }
-  const handleKakao = () => {
-    const w = window as typeof window & { Kakao?: { isInitialized: () => boolean; init: (k: string) => void; Share: { sendDefault: (o: Record<string, unknown>) => void } } }
-    if (!w.Kakao) { handleCopy(); return }; if (!w.Kakao.isInitialized()) w.Kakao.init('3913fde247b12ce25084eb42a9b17ed9')
-    try { const u = getUrl(); w.Kakao.Share.sendDefault({ objectType: 'feed', content: { title: '⏰ 연금 수령 황금 타이밍', description: `${age}세 분석: ${best?.age}세에 시작하면 가장 이득!`, imageUrl: 'https://nohu-lab.vercel.app/globe.svg', link: { mobileWebUrl: u, webUrl: u } }, buttons: [{ title: '나도 분석해보기', link: { mobileWebUrl: u, webUrl: u } }] }) } catch { handleCopy() }
+  const [kakaoMsg, setKakaoMsg] = useState('')
+  const handleKakao = async () => {
+    const u = getShareUrl()
+    if (navigator.share) {
+      try { await navigator.share({ title: '연금 수령 황금 타이밍', text: best ? `${age}세 분석: ${best.age}세에 시작하면 가장 이득!` : '', url: u }); return } catch {}
+    }
+    try { await navigator.clipboard.writeText(u) } catch { const a = document.createElement('textarea'); a.value = u; a.style.position = 'fixed'; a.style.left = '-9999px'; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a) }
+    setKakaoMsg('링크가 복사되었습니다!\n카카오톡에서 붙여넣기 하세요'); setTimeout(() => setKakaoMsg(''), 4000)
   }
 
   // ── 차단 ──
@@ -558,44 +582,44 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
             </div>
           </div>
 
-          {/* 2단계: 기대수명별 최적 전략 */}
+          {/* 2단계: 내가 몇 세까지 살면? */}
           <div className="bg-white rounded-2xl border border-orange-100 p-5 sm:p-6">
-            <h3 className="text-[16px] font-bold text-gray-900 mb-1">오래 살수록 전략이 달라집니다</h3>
-            <p className="text-[12px] text-gray-500 mb-4">기대수명에 따라 가장 유리한 선택이 바뀝니다</p>
-            <div className="space-y-2.5">
-              {[
-                { leAge: 78, desc: '건강이 걱정된다면' },
-                { leAge: 82, desc: '평균보다 조금 짧다면' },
-                { leAge: 85, desc: '한국 평균 수준이라면' },
-                { leAge: 88, desc: '건강에 자신 있다면' },
-                { leAge: 92, desc: '장수 가능성이 높다면' },
-              ].map(({ leAge, desc }) => {
+            <h3 className="text-[16px] font-bold text-gray-900 mb-4">내가 몇 세까지 살면?</h3>
+            <div className="space-y-3">
+              {[78, 82, 85, 88, 92].map(leAge => {
                 const e = Math.round(base * 0.7), d = Math.round(base * 1.36)
-                const vals = [
-                  { label: '조기', val: cum(e, na - 5, leAge), color: 'blue' },
-                  { label: '정상', val: cum(base, na, leAge), color: 'green' },
-                  { label: '연기', val: cum(d, na + 5, leAge), color: 'purple' },
-                ]
-                const best2 = vals.reduce((a, b) => b.val > a.val ? b : a)
+                const earlyC = cum(e, na - 5, leAge), normalC = cum(base, na, leAge), deferC = cum(d, na + 5, leAge)
+                const mx = Math.max(earlyC, normalC, deferC)
+                const winner = mx === deferC ? '연기' : mx === normalC ? '정상' : '조기'
+                const diff = mx - Math.min(earlyC, normalC, deferC)
                 return (
-                  <div key={leAge} className="bg-gray-50 rounded-xl p-3.5 border border-gray-100">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[13px] text-gray-500">{desc}</span>
-                      <span className="text-[12px] font-semibold text-gray-400">{leAge}세까지</span>
+                  <div key={leAge} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <p className="text-[14px] font-bold text-gray-800 mb-2.5">{leAge}세까지 산다면</p>
+                    <div className="grid grid-cols-3 gap-1.5 mb-2">
+                      <div className={`text-center rounded-lg py-2 px-1 ${earlyC === mx ? 'bg-orange-100 border border-orange-300' : 'bg-white border border-gray-200'}`}>
+                        <p className="text-[11px] text-gray-500">{na-5}세</p>
+                        <p className={`text-[12px] sm:text-[13px] font-bold ${earlyC === mx ? 'text-orange-600' : 'text-gray-600'}`}>{fM(earlyC)}</p>
+                      </div>
+                      <div className={`text-center rounded-lg py-2 px-1 ${normalC === mx ? 'bg-orange-100 border border-orange-300' : 'bg-white border border-gray-200'}`}>
+                        <p className="text-[11px] text-gray-500">{na}세</p>
+                        <p className={`text-[12px] sm:text-[13px] font-bold ${normalC === mx ? 'text-orange-600' : 'text-gray-600'}`}>{fM(normalC)}</p>
+                      </div>
+                      <div className={`text-center rounded-lg py-2 px-1 ${deferC === mx ? 'bg-orange-100 border border-orange-300' : 'bg-white border border-gray-200'}`}>
+                        <p className="text-[11px] text-gray-500">{na+5}세</p>
+                        <p className={`text-[12px] sm:text-[13px] font-bold ${deferC === mx ? 'text-orange-600' : 'text-gray-600'}`}>{fM(deferC)}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-[14px] font-bold text-gray-800">
-                        <span className={best2.color === 'blue' ? 'text-blue-600' : best2.color === 'green' ? 'text-green-600' : 'text-purple-600'}>{best2.label}수령</span>이 유리
-                      </p>
-                      <p className="text-[13px] font-bold text-orange-600">{fM(best2.val)}</p>
-                    </div>
+                    <p className="text-[12px] text-gray-600"><strong className="text-orange-600">{winner}수령</strong>이 가장 많고, 최악 대비 <strong className="text-orange-600">{fM(diff)}</strong> 더 받습니다</p>
                   </div>
                 )
               })}
             </div>
             {brk && (
-              <div className="mt-4 bg-amber-50 rounded-xl p-3.5 border border-amber-100 text-center">
-                <p className="text-[13px] text-gray-700"><strong className="text-orange-600">{brk}세</strong>가 분기점 — 이보다 오래 살면 연기, 짧으면 조기가 유리</p>
+              <div className="mt-4 bg-amber-50 rounded-xl p-4 border border-amber-100">
+                <p className="text-[13px] text-gray-800 text-center leading-relaxed">
+                  <strong className="text-orange-600">{brk}세</strong>가 분기점입니다<br />
+                  <span className="text-[12px] text-gray-500">{brk}세보다 오래 살면 연기수령이, 일찍 사망하면 조기수령이 총액 기준 유리합니다</span>
+                </p>
               </div>
             )}
           </div>
@@ -769,21 +793,26 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
           {/* 공유 */}
           <div className="space-y-3">
             <p className="text-center text-[13px] text-gray-500 font-medium">친구에게도 알려주세요!</p>
-            <div className="grid grid-cols-3 gap-2.5">
+            <button onClick={handleKakao}
+              className="w-full min-h-[52px] py-3.5 bg-[#FEE500] active:bg-[#F5DC00] text-[#3C1E1E] rounded-xl text-[14px] font-bold flex items-center justify-center gap-2.5 transition-all duration-150 active:scale-[0.97]">
+              <svg width="20" height="20" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><path fill="#3C1E1E" d="M128 36C70.6 36 24 72.8 24 118c0 29.2 19.4 54.8 48.6 69.2l-10 36.8c-.8 3 2.6 5.4 5.2 3.6l42.8-28.4c5.6.8 11.4 1.2 17.4 1.2c57.4 0 104-36.8 104-82.4S185.4 36 128 36"/></svg>
+              카카오톡으로 공유하기
+            </button>
+            {kakaoMsg && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center">
+                <p className="text-[13px] text-green-700 font-medium whitespace-pre-line">{kakaoMsg}</p>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2.5">
               <button onClick={handleCopy}
-                className="min-h-[60px] py-3.5 bg-gray-100 hover:bg-gray-200 hover:shadow-md text-gray-700 rounded-xl text-[12px] font-medium flex flex-col items-center justify-center gap-1.5 transition-all duration-200 active:scale-90 hover:-translate-y-0.5">
-                <span className={`text-xl transition-transform duration-300 ${copyOk ? 'scale-125' : ''}`}>{copyOk ? '✅' : '🔗'}</span>
-                <span>{copyOk ? '복사됨!' : '링크 복사'}</span>
+                className="min-h-[48px] py-3 bg-gray-100 active:bg-gray-200 text-gray-700 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 transition-all duration-150 active:scale-95">
+                <span className="text-lg">{copyOk ? '✅' : '🔗'}</span>
+                <span>{copyOk ? '복사됨!' : '결과 링크 복사'}</span>
               </button>
               <button onClick={handleImg} disabled={saving}
-                className="min-h-[60px] py-3.5 bg-indigo-50 hover:bg-indigo-100 hover:shadow-md text-indigo-700 rounded-xl text-[12px] font-medium flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 transition-all duration-200 active:scale-90 hover:-translate-y-0.5">
-                <span className={`text-xl transition-transform duration-300 ${saving ? 'animate-spin' : ''} ${saveOk ? 'scale-125' : ''}`}>{saving ? '⏳' : saveOk ? '✅' : '📷'}</span>
+                className="min-h-[48px] py-3 bg-indigo-50 active:bg-indigo-100 text-indigo-700 rounded-xl text-[13px] font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-all duration-150 active:scale-95">
+                <span className={`text-lg ${saving ? 'animate-spin' : ''}`}>{saving ? '⏳' : saveOk ? '✅' : '📷'}</span>
                 <span>{saving ? '저장 중...' : saveOk ? '저장 완료!' : '이미지 저장'}</span>
-              </button>
-              <button onClick={handleKakao}
-                className="min-h-[60px] py-3.5 bg-[#FEE500] hover:bg-[#F5DC00] hover:shadow-lg text-[#3C1E1E] rounded-xl text-[12px] font-bold flex flex-col items-center justify-center gap-1.5 transition-all duration-200 active:scale-90 hover:-translate-y-1 ring-2 ring-[#FEE500]/60 shadow-md shadow-yellow-300/30">
-                <svg className="transition-transform duration-200 hover:scale-110" width="22" height="22" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><path fill="#3C1E1E" d="M128 36C70.6 36 24 72.8 24 118c0 29.2 19.4 54.8 48.6 69.2l-10 36.8c-.8 3 2.6 5.4 5.2 3.6l42.8-28.4c5.6.8 11.4 1.2 17.4 1.2c57.4 0 104-36.8 104-82.4S185.4 36 128 36"/></svg>
-                <span>카카오톡 공유하기</span>
               </button>
             </div>
           </div>

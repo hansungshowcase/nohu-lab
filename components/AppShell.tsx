@@ -20,9 +20,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [sharedMode, setSharedMode] = useState(false)
   const isLoginPage = pathname === '/' || pathname === '/admin/login'
 
-  // 공유 링크 감지 (사주풀이 결과 링크)
+  // 공유 링크 감지 (사주풀이/연금 결과 링크)
   useEffect(() => {
-    const isShared = pathname === '/programs/saju-reading' && window.location.search.includes('y=')
+    const search = window.location.search
+    const isShared =
+      (pathname === '/programs/saju-reading' && search.includes('y=')) ||
+      (pathname === '/programs/pension-timing' && search.includes('age='))
     setSharedMode(isShared)
   }, [pathname])
 
