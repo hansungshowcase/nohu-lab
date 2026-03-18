@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import TierBadge from '@/components/TierBadge'
 import ProgramCard from '@/components/ProgramCard'
@@ -130,6 +130,50 @@ export default function DashboardPage() {
           <p className="text-gray-400 text-[14px]">해당 카테고리에 프로그램이 없습니다</p>
         </div>
       )}
+
+      {/* 실시간 이용자 수 */}
+      <LiveUserCount />
+    </div>
+  )
+}
+
+function LiveUserCount() {
+  const [count, setCount] = useState(0)
+  const [visible, setVisible] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    // 초기 랜덤 숫자
+    const initial = Math.floor(Math.random() * (179 - 30 + 1)) + 30
+    setCount(initial)
+    setTimeout(() => setVisible(true), 1000)
+
+    // 15~30초마다 ±5~15 범위로 자연스럽게 변동
+    timerRef.current = setInterval(() => {
+      setCount(prev => {
+        const delta = Math.floor(Math.random() * 11) + 5
+        const direction = Math.random() > 0.5 ? 1 : -1
+        const next = prev + delta * direction
+        return Math.max(30, Math.min(179, next))
+      })
+    }, Math.floor(Math.random() * 15000) + 15000)
+
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [])
+
+  if (!visible) return null
+
+  return (
+    <div className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 animate-slide-up">
+      <div className="bg-white/90 backdrop-blur-md rounded-full px-4 py-2.5 shadow-lg shadow-black/5 border border-gray-200/60 flex items-center gap-2.5">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+        </span>
+        <span className="text-sm text-gray-600 font-medium">
+          <strong className="text-gray-900">{count}</strong>명 이용 중
+        </span>
+      </div>
     </div>
   )
 }
