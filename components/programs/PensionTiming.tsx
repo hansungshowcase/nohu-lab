@@ -213,6 +213,12 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   }, [allSc])
 
   // 소득 대비 % (안전 계산)
+  const BASE_URL = 'https://retireplan.kr/programs/pension-timing'
+  const getShareUrl = useCallback(() => {
+    if (!myAge || !myIncome) return BASE_URL
+    return `${BASE_URL}?age=${myAge}&income=${myIncome.replace(/,/g, '')}&le=${le}`
+  }, [myAge, myIncome, le])
+
   const incomeRatio = useMemo(() => {
     if (!inc || inc < 10000 || !base) return 0
     return Math.round(base / inc * 100)
@@ -371,12 +377,6 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
     }
     setSaving(false)
   }
-
-  const BASE_URL = 'https://retireplan.kr/programs/pension-timing'
-  const getShareUrl = useCallback(() => {
-    if (!myAge || !myIncome) return BASE_URL
-    return `${BASE_URL}?age=${myAge}&income=${myIncome.replace(/,/g, '')}&le=${le}`
-  }, [myAge, myIncome, le])
 
   const handleCopy = async () => {
     const u = getShareUrl()
