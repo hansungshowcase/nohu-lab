@@ -84,8 +84,21 @@ export default function MentalHealth() {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isMember, setIsMember] = useState(false)
   const [showLimitModal, setShowLimitModal] = useState(false)
+  const [saving, setSaving] = useState(false)
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const transitionLock = useRef(false)
+  const resultRef = useRef<HTMLDivElement>(null)
+
+  // URL 파라미터로 공유된 결과 읽기
+  const [sharedScores] = useState<Record<string, number> | null>(() => {
+    if (typeof window === 'undefined') return null
+    const p = new URLSearchParams(window.location.search)
+    const d = p.get('d'), a = p.get('a'), s = p.get('s'), se = p.get('se'), i = p.get('i')
+    if (d !== null && a !== null && s !== null && se !== null && i !== null) {
+      return { depression: +d, anxiety: +a, stress: +s, selfesteem: +se, insomnia: +i }
+    }
+    return null
+  })
 
   useEffect(() => {
     const c = new AbortController()
@@ -146,13 +159,109 @@ export default function MentalHealth() {
     setPhase('intro'); setAnswers({}); setCurrentScaleIdx(0); setCurrentQIdx(0); setFunctionalImpairment(null); setIsTransitioning(false)
   }
 
-  function shareKakao(overallLabel: string, summary: string) {
-    const w = window as KakaoWindow, url = `${window.location.origin}/programs/mental-health`
+  function getResultUrl(scores: { depression: number; anxiety: number; stress: number; selfesteem: number; insomnia: number }) {
+    return `${window.location.origin}/programs/mental-health?d=${scores.depression}&a=${scores.anxiety}&s=${scores.stress}&se=${scores.selfesteem}&i=${scores.insomnia}`
+  }
+
+  function shareKakao(overallLabel: string, summary: string, scores: { depression: number; anxiety: number; stress: number; selfesteem: number; insomnia: number }) {
+    const w = window as KakaoWindow
+    const url = getResultUrl(scores)
     if (w.Kakao) {
       if (!w.Kakao.isInitialized()) w.Kakao.init(KAKAO_KEY)
-      try { w.Kakao.Share.sendDefault({ objectType: 'feed', content: { title: '심리 상태 자가진단 결과', description: `종합: ${overallLabel} | ${summary}`, imageUrl: `${window.location.origin}/api/og`, link: { mobileWebUrl: url, webUrl: url } }, buttons: [{ title: '나도 검사해보기', link: { mobileWebUrl: url, webUrl: url } }] }); return } catch {}
+      try { w.Kakao.Share.sendDefault({ objectType: 'feed', content: { title: '심리 상태 자가진단 결과', description: `종합: ${overallLabel} | ${summary}`, imageUrl: `${window.location.origin}/api/og`, link: { mobileWebUrl: url, webUrl: url } }, buttons: [{ title: '결과 보기', link: { mobileWebUrl: url, webUrl: url } }] }); return } catch {}
     }
-    if (navigator.share) navigator.share({ title: '심리 상태 자가진단', text: `종합: ${overallLabel} | ${summary}`, url }).catch(() => {})
+    if (navigator.share) navigator.share({ title: '심리 상태 자가진단 결과', text: `종합: ${overallLabel} | ${summary}`, url }).catch(() => {})
+  }
+
+  async function saveImage() {
+    if (!resultRef.current || saving) return
+    setSaving(true)
+    try {
+      const { toPng } = await import('html-to-image')
+      const dataUrl = await toPng(resultRef.current, { quality: 0.95, pixelRatio: 2, backgroundColor: '#f9fafb', cacheBust: true })
+      // 모바일: Web Share API
+      if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+        try {
+          const res = await fetch(dataUrl); const blob = await res.blob()
+          const file = new File([blob], 'mental-health-result.png', { type: 'image/png' })
+          await navigator.share({ files: [file], title: '심리 자가진단 결과' })
+          setSaving(false); return
+        } catch (err) { if (err instanceof Error && err.name === 'AbortError') { setSaving(false); return } }
+      }
+      // PC: 다운로드
+      const link = document.createElement('a'); link.href = dataUrl; link.download = 'mental-health-result.png'
+      document.body.appendChild(link); link.click(); document.body.removeChild(link)
+    } catch { alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.') }
+    setSaving(false)
+  }
+
+  // === SHARED RESULT (URL 파라미터로 공유된 결과) ===
+  if (sharedScores && phase === 'intro') {
+    const sharedResults = activeScales.map((scale) => {
+      const score = sharedScores[scale.id as keyof typeof sharedScores] ?? 0
+      const level = getLevel(scale.id, score)
+      const maxScore = getMaxScore(scale.id)
+      const levelIdx = scale.levels.findIndex((l) => score >= l.min && score <= l.max)
+      return { scaleId: scale.id, scaleName: scale.name.replace(/ \(.*\)/, ''), scaleCode: scale.name.match(/\((.+)\)/)?.[1] || '', score, maxScore, level: level!, levelIdx: Math.max(levelIdx, 0) }
+    })
+    const sharedOverall = getOverallRisk(sharedResults.map((r) => ({ scaleId: r.scaleId, score: r.score })))
+    const sharedCross = getCrossInterpretation(sharedResults.map((r) => ({ scaleId: r.scaleId, levelIdx: r.levelIdx })))
+    const sharedSummary = sharedResults.map((r) => `${r.scaleName} ${r.level.label}`).join(' · ')
+    const today = new Date()
+    const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`
+
+    return (
+      <div className="max-w-lg mx-auto px-4 py-2 space-y-5 animate-fade-in" ref={resultRef}>
+        <div className="text-center border-b-2 border-gray-300 pb-4">
+          <p className="text-[11px] sm:text-[12px] text-gray-400 mb-1">노후연구소</p>
+          <h2 className="text-[20px] sm:text-[24px] font-bold text-gray-900">정신건강 선별검사 결과</h2>
+          <p className="text-[13px] sm:text-[14px] text-gray-400 mt-1">{dateStr}</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
+          <div className="text-center">
+            <p className="text-[13px] text-gray-400 mb-2">종합 판정</p>
+            <div className="inline-block px-5 py-2 rounded-full text-[18px] sm:text-[20px] font-bold text-white" style={{ backgroundColor: sharedOverall.color }}>{sharedOverall.label}</div>
+          </div>
+          <p className="text-[14px] sm:text-[15px] text-gray-700 leading-[1.8]">{sharedOverall.description}</p>
+        </div>
+
+        <div className="border border-gray-200 rounded-xl overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50"><tr><th className="text-left py-3 px-4 text-[13px] sm:text-[14px] font-semibold text-gray-600">영역</th><th className="text-center py-3 px-3 text-[13px] sm:text-[14px] font-semibold text-gray-600 w-[65px]">점수</th><th className="text-left py-3 px-3 text-[13px] sm:text-[14px] font-semibold text-gray-600">판정</th></tr></thead>
+            <tbody>
+              {sharedResults.map((r, i) => (
+                <tr key={r.scaleId} className={i < sharedResults.length - 1 ? 'border-b border-gray-100' : ''}>
+                  <td className="py-3 px-4 text-[14px] sm:text-[15px] text-gray-800 font-medium">{r.scaleName}</td>
+                  <td className="py-3 px-3 text-center text-[14px] sm:text-[15px] text-gray-700">{r.score}<span className="text-gray-300">/{r.maxScore}</span></td>
+                  <td className="py-3 px-3"><span className="text-[13px] sm:text-[14px] font-semibold" style={{ color: SEVERITY_COLORS[Math.min(r.levelIdx, 4)] }}>{r.level.label}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {sharedCross.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-[15px] sm:text-[16px] font-bold text-gray-900">복합 소견</h3>
+            {sharedCross.map((note, i) => (
+              <div key={i} className="bg-amber-50/40 border border-amber-200/50 rounded-xl p-4 sm:p-5 flex gap-3">
+                <span className="text-amber-500 text-[18px] shrink-0 mt-0.5">⚡</span>
+                <p className="text-[13px] sm:text-[14px] text-gray-700 leading-[1.85]">{note}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="bg-amber-50/70 border border-amber-200/60 rounded-xl p-3">
+          <p className="text-[12px] sm:text-[13px] text-amber-700 leading-relaxed">{DISCLAIMER}</p>
+        </div>
+
+        <div className="space-y-2.5 pb-4">
+          <button onClick={startQuiz} className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] text-[14px] sm:text-[15px] transition-all">나도 검사해보기</button>
+        </div>
+      </div>
+    )
   }
 
   // === INTRO ===
@@ -284,7 +393,7 @@ export default function MentalHealth() {
   const resultsSummary = results.map((r) => `${r.scaleName} ${r.level.label}`).join(' · ')
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-2 space-y-5 animate-fade-in">
+    <div className="max-w-lg mx-auto px-4 py-2 space-y-5 animate-fade-in" ref={resultRef}>
 
       {/* ── 헤더 ── */}
       <div className="text-center border-b-2 border-gray-300 pb-4">
@@ -441,12 +550,16 @@ export default function MentalHealth() {
         <p className="text-[12px] sm:text-[13px] text-gray-400 leading-relaxed">{DISCLAIMER}</p>
       </div>
 
-      {/* ── 공유 / 재검사 ── */}
+      {/* ── 공유 / 이미지 / 재검사 ── */}
       <div className="space-y-2.5 pb-4">
-        <button onClick={() => shareKakao(overallRisk.label, resultsSummary)}
+        <button onClick={() => { const scores = { depression: results[0].score, anxiety: results[1].score, stress: results[2].score, selfesteem: results[3].score, insomnia: results[4].score }; shareKakao(overallRisk.label, resultsSummary, scores) }}
           className="w-full py-3.5 bg-[#FEE500] hover:bg-[#F5DC00] text-[#3C1E1E] font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all">
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
-          카카오톡으로 공유하기
+          카카오톡으로 결과 공유하기
+        </button>
+        <button onClick={saveImage} disabled={saving}
+          className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all disabled:opacity-50">
+          {saving ? '저장 중...' : '📷 결과 이미지 저장'}
         </button>
         <button onClick={restart} className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] text-[14px] sm:text-[15px] transition-all">
           다시 검사하기
