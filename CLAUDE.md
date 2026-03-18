@@ -16,18 +16,11 @@
 - **nohu-lab.vercel.app = nohu-lab 프로젝트가 서빙 중**
 - Vercel 프로젝트 ID: prj_6cnk29cR0jHrn0ZvnZWrlbiJvtob
 - **배포 전 반드시**: `git pull origin main --no-rebase`로 다른 터미널의 최신 변경사항 반영 후 배포
-- 배포 명령: `vercel --prod --yes`
-- 배포 후 반드시: `vercel alias set <배포URL> nohu-lab.vercel.app` 으로 도메인 연결
-- **배포 이중 검증 (필수)**: alias 설정 후 반드시 `vercel alias ls | grep nohu-lab.vercel.app`으로 내 배포 URL이 연결되어 있는지 확인. 다른 터미널이 덮어씌울 수 있으므로 **5초 후 한 번 더 확인**. 두 번 모두 내 배포 URL이어야 최종 보고. 검증 실패 시 사용자에게 "다른 터미널이 덮어씌우고 있다"고 알릴 것
-- **배포 충돌 방지 (필수)**: 다른 터미널이 동시에 배포하면 alias를 서로 덮어씌우는 문제 발생. 이를 방지하기 위해:
-  1. 배포 시작 전: `vercel alias ls | grep nohu-lab.vercel.app`으로 현재 어떤 배포가 연결되어 있는지 확인
-  2. alias 설정 후 **10초 대기** 후 재검증 (5초로는 부족, 다른 터미널이 그 사이 덮어씌울 수 있음)
-  3. 검증 실패(내 URL이 아닌 경우) 시: 즉시 `vercel alias set`을 **재실행**하고 다시 10초 후 검증
-  4. 2회 연속 실패 시: 사용자에게 "다른 터미널과 배포 충돌 중"이라고 알리고 사용자 판단 요청
-  5. **사용자에게 배포 완료를 보고할 때 반드시 최종 alias 검증 결과를 포함할 것**
+- **자동 배포 연동됨**: `git push origin main` 하면 Vercel이 자동 빌드+배포+alias 설정
+- 배포 방법: 코드 수정 → `git add` → `git commit` → `git push origin main` → 자동 배포
+- 수동 배포가 필요한 경우: `vercel --prod --yes` → `vercel alias set <배포URL> nohu-lab.vercel.app`
 - 배포 전 반드시 `vercel projects ls`로 현재 프로젝트 확인 후 올바른 프로젝트에 배포
-- **절대 다른 Vercel 프로젝트(cafe-settlement) 건들지 않기**
-- 자동배포 미연동, 수동 `vercel --prod` 필요
+- **cafe-settlement 프로젝트 절대 접근 금지** — 코드 읽기, 수정, 배포, 설정 변경 등 어떤 작업도 금지. 사용자가 명시적으로 요청할 때만 접근 가능
 - 환경변수: JWT_SECRET, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY (Vercel에 설정됨)
 
 ## Vercel 프로젝트 현황 (2026-03-16 기준)
@@ -64,6 +57,7 @@
 - 콘텐츠가 **AI에 의해 인용/요약될 수 있도록** 명확하고 구체적으로 작성
 
 ## 절대 금지 사항
+- **cafe-settlement 프로젝트에 절대 접근 금지** — 읽기, 수정, 배포, 설정 변경 모두 금지 (사용자 명시적 요청 시에만 허용)
 - **Vercel 프로젝트를 새로 만들거나 삭제하지 않기** (사용자가 명시적으로 요청할 때만)
 - **GitHub 저장소를 새로 만들거나 삭제하지 않기** (사용자가 명시적으로 요청할 때만)
 - 사용자가 요청하지 않은 코드 수정 금지
