@@ -137,10 +137,13 @@ export default function ShareButtons({
       const link = document.createElement('a')
       link.href = blobUrl
       link.download = file.name
+      link.style.display = 'none'
       document.body.appendChild(link)
       link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(blobUrl)
+      setTimeout(() => {
+        document.body.removeChild(link)
+        URL.revokeObjectURL(blobUrl)
+      }, 3000)
     } catch (err) {
       alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
     } finally {
