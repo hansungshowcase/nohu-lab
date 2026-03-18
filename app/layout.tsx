@@ -64,17 +64,41 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'WebApplication',
-              name: '노후연구소',
-              url: 'https://nohu-lab.vercel.app',
-              description: '노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 은퇴 준비를 위한 무료 도구 모음.',
-              applicationCategory: 'FinanceApplication',
-              operatingSystem: 'Web',
-              offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
-              inLanguage: 'ko',
-            }),
+            __html: JSON.stringify([
+              {
+                '@context': 'https://schema.org',
+                '@type': 'WebApplication',
+                name: '노후연구소',
+                url: 'https://nohu-lab.vercel.app',
+                description: '노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 은퇴 준비를 위한 무료 도구 모음.',
+                applicationCategory: 'FinanceApplication',
+                operatingSystem: 'Web',
+                offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+                inLanguage: 'ko',
+                author: { '@type': 'Organization', name: '노후연구소', url: 'https://cafe.naver.com/eovhskfktmak' },
+              },
+              {
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: [
+                  {
+                    '@type': 'Question',
+                    name: '노후 준비 점수 테스트란 무엇인가요?',
+                    acceptedAnswer: { '@type': 'Answer', text: '20개 질문으로 재정 준비도, 생활/건강, 주거/자산, 마인드/지식 4개 영역의 노후 준비 상태를 진단하는 무료 테스트입니다. 총 80점 만점으로 S~F 등급을 받을 수 있습니다.' },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'AI 사주풀이는 어떻게 이용하나요?',
+                    acceptedAnswer: { '@type': 'Answer', text: '생년월일과 성별만 입력하면 전통 사주명리학 기반으로 타고난 성격, 오행 밸런스, 재물운, 연애운, 올해 운세를 무료로 분석해드립니다.' },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: '연금 수령 최적 시기는 언제인가요?',
+                    acceptedAnswer: { '@type': 'Answer', text: '조기수령(60세), 정상수령(65세), 연기수령(70세) 각각의 총 수령액을 비교 분석하여 나에게 최적인 연금 개시 시점을 찾아드립니다.' },
+                  },
+                ],
+              },
+            ]),
           }}
         />
       </head>
