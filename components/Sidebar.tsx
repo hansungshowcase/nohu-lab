@@ -95,7 +95,7 @@ export default function Sidebar({ user }: { user: User | null }) {
           return (
             <button
               key={item.href}
-              onClick={() => { setOpen(false); router.push(item.href) }}
+              onClick={() => { setOpen(false); window.location.href = item.href }}
               className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm transition-all duration-200 active:scale-[0.97] text-left ${
                 isActive
                   ? 'bg-white/80 text-amber-900 font-semibold shadow-sm shadow-amber-200/30 border border-amber-200/40'
