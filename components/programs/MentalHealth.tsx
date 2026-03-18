@@ -305,26 +305,42 @@ export default function MentalHealth() {
         {results.map((r) => {
           const tipData = TIPS[r.scaleId]?.[r.level.label]
           if (!tipData) return null
+          const scale = SCALES.find((s) => s.id === r.scaleId)!
+          const pct = Math.round((r.score / r.maxScore) * 100)
+          const sevColor = SEVERITY_COLORS[Math.min(r.levelIdx, 4)]
           return (
             <div key={r.scaleId} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              {/* 영역 헤더 */}
-              <div className="flex items-center justify-between px-4 sm:px-5 py-3 bg-gray-50 border-b border-gray-100">
-                <span className="text-[14px] sm:text-[15px] font-bold text-gray-800">{r.scaleName} ({r.scaleCode})</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[14px] sm:text-[15px] font-bold" style={{ color: SEVERITY_COLORS[Math.min(r.levelIdx, 4)] }}>{r.score}점</span>
-                  <span className="text-[12px] sm:text-[13px] font-semibold px-2.5 py-0.5 rounded-full text-white" style={{ backgroundColor: SEVERITY_COLORS[Math.min(r.levelIdx, 4)] }}>{r.level.label}</span>
+              {/* 헤더 */}
+              <div className="px-4 sm:px-5 py-3.5 bg-gray-50 border-b border-gray-100">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-[14px] sm:text-[15px] font-bold text-gray-800">{r.scaleName} ({r.scaleCode})</span>
+                  <span className="text-[12px] sm:text-[13px] font-semibold px-2.5 py-1 rounded-full text-white" style={{ backgroundColor: sevColor }}>{r.level.label}</span>
+                </div>
+                {/* 점수 게이지 */}
+                <div className="space-y-1">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[22px] sm:text-[26px] font-bold" style={{ color: sevColor }}>{r.score}</span>
+                    <span className="text-[13px] text-gray-400">/ {r.maxScore}점</span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: sevColor }} />
+                  </div>
+                  <div className="flex justify-between text-[10px] sm:text-[11px] text-gray-400 mt-0.5">
+                    {scale.levels.map((lvl, i) => (
+                      <span key={i} className={r.levelIdx === i ? 'font-bold text-gray-600' : ''}>{lvl.label}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
               {/* 소견 본문 */}
-              <div className="px-4 sm:px-5 py-4 space-y-3">
+              <div className="px-4 sm:px-5 py-4 sm:py-5 space-y-3.5">
                 <div>
-                  <p className="text-[13px] sm:text-[14px] font-semibold text-gray-800 mb-1">{tipData.title}</p>
-                  <p className="text-[13px] sm:text-[14px] text-gray-600 leading-[1.8]">{tipData.description}</p>
+                  <p className="text-[14px] sm:text-[15px] font-bold text-gray-800 mb-2">{tipData.title}</p>
+                  <p className="text-[13px] sm:text-[14px] text-gray-600 leading-[1.85]">{tipData.description}</p>
                 </div>
-                <div className="bg-orange-50/60 rounded-lg p-3 sm:p-3.5">
-                  <p className="text-[13px] sm:text-[14px] text-orange-800 font-medium leading-relaxed">
-                    <span className="text-orange-500 mr-1">▸</span>{tipData.recommendation}
-                  </p>
+                <div className="bg-orange-50/70 border border-orange-100/60 rounded-lg p-3.5 sm:p-4">
+                  <p className="text-[11px] sm:text-[12px] font-semibold text-orange-500 mb-1.5">임상 권고</p>
+                  <p className="text-[13px] sm:text-[14px] text-orange-900 leading-[1.8]">{tipData.recommendation}</p>
                 </div>
               </div>
             </div>
