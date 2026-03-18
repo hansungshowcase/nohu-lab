@@ -124,19 +124,24 @@ function AdminContent() {
 
   async function handleAddMember() {
     if (!newMember.nickname.trim()) return
-    const res = await fetch('/api/members', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nickname: newMember.nickname.trim(), tier: newMember.tier }),
-    })
-    const data = await res.json()
-    if (res.ok) {
-      setMembers((prev) => [data, ...prev])
-      setNewMember({ nickname: '', tier: 1 })
-      setMessage(`${newMember.nickname.trim()} 회원이 등록되었습니다.`)
-      setTimeout(() => setMessage(''), 3000)
-    } else {
-      setMessage(data.error || '등록에 실패했습니다.')
+    try {
+      const res = await fetch('/api/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: newMember.nickname.trim(), tier: newMember.tier }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMembers((prev) => [data, ...prev])
+        setNewMember({ nickname: '', tier: 1 })
+        setMessage(`${newMember.nickname.trim()} 회원이 등록되었습니다.`)
+        setTimeout(() => setMessage(''), 3000)
+      } else {
+        setMessage(data.error || '등록에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      }
+    } catch {
+      setMessage('네트워크 오류가 발생했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
   }
@@ -148,19 +153,24 @@ function AdminContent() {
       .filter(Boolean)
     if (nicknames.length === 0) return
 
-    const res = await fetch('/api/members/bulk', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nicknames, tier: newMember.tier }),
-    })
-    const data = await res.json()
-    if (res.ok) {
-      setMessage(`${data.added}명 등록 완료${data.skipped > 0 ? ` (중복 ${data.skipped}명 건너뜀)` : ''}`)
-      setBulkInput('')
-      fetchMembers()
-      setTimeout(() => setMessage(''), 5000)
-    } else {
-      setMessage(data.error || '등록에 실패했습니다.')
+    try {
+      const res = await fetch('/api/members/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nicknames, tier: newMember.tier }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMessage(`${data.added}명 등록 완료${data.skipped > 0 ? ` (중복 ${data.skipped}명 건너뜀)` : ''}`)
+        setBulkInput('')
+        fetchMembers()
+        setTimeout(() => setMessage(''), 5000)
+      } else {
+        setMessage(data.error || '등록에 실패했습니다.')
+        setTimeout(() => setMessage(''), 3000)
+      }
+    } catch {
+      setMessage('네트워크 오류가 발생했습니다.')
       setTimeout(() => setMessage(''), 3000)
     }
   }

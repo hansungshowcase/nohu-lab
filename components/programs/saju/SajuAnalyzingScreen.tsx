@@ -132,7 +132,7 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
             <div className="flex-1">
               <span>{step.text}</span>
               {i === currentStep && (
-                <span className="block text-[10px] text-orange-400 mt-0.5">{step.detail}</span>
+                <span className="block text-xs text-orange-400 mt-0.5">{step.detail}</span>
               )}
             </div>
             {i === currentStep && (

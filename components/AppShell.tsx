@@ -50,8 +50,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // 비회원 배너 표시
   useEffect(() => {
     if (user && user.tier === 0) {
-      const dismissed = sessionStorage.getItem('guest-banner-dismissed')
-      if (!dismissed) setShowGuestBanner(true)
+      try {
+        const dismissed = sessionStorage.getItem('guest-banner-dismissed')
+        if (!dismissed) setShowGuestBanner(true)
+      } catch {
+        setShowGuestBanner(true)
+      }
     } else {
       setShowGuestBanner(false)
     }
@@ -90,7 +94,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 회원가입 →
               </span>
               <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowGuestBanner(false); sessionStorage.setItem('guest-banner-dismissed', '1') }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowGuestBanner(false); try { sessionStorage.setItem('guest-banner-dismissed', '1') } catch {} }}
                 className="p-2.5 -mr-1 hover:bg-white/20 rounded-lg transition"
                 aria-label="배너 닫기"
               >

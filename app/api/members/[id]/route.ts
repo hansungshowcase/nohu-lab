@@ -27,6 +27,10 @@ export async function PATCH(
     }
     if (body.phone !== undefined) updateData.phone = typeof body.phone === 'string' ? body.phone.replace(/-/g, '') : ''
 
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: '변경할 데이터가 없습니다.' }, { status: 400 })
+    }
+
     const { data, error } = await supabase
       .from('members')
       .update(updateData)

@@ -151,7 +151,7 @@ function SajuReadingInner() {
               { emoji: '💼', text: '직업운' },
               { emoji: '🗓️', text: '이달의 운세' },
             ].map(item => (
-              <div key={item.text} className="flex items-center gap-2 text-[13px] sm:text-sm text-gray-600">
+              <div key={item.text} className="flex items-center gap-2 text-sm text-gray-600">
                 <span className="text-lg sm:text-xl">{item.emoji}</span>
                 <span>{item.text}</span>
               </div>
@@ -160,7 +160,7 @@ function SajuReadingInner() {
         </div>
 
         <div className="bg-orange-50 rounded-xl p-3 sm:p-4 text-center">
-          <p className="text-[13px] sm:text-sm text-orange-700">
+          <p className="text-sm text-orange-700">
             ⏱️ 소요시간 약 <strong>30초</strong> · 무료 · 회원가입 불필요
           </p>
         </div>
@@ -194,7 +194,7 @@ function SajuReadingInner() {
         <div className="text-center py-2">
           <div className="text-4xl sm:text-5xl mb-2">📅</div>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">생년월일을 입력하세요</h2>
-          <p className="text-[13px] sm:text-sm text-gray-400 mt-1">양력 기준으로 입력해주세요</p>
+          <p className="text-sm text-gray-400 mt-1">양력 기준으로 입력해주세요</p>
         </div>
 
         <div className="space-y-3 sm:space-y-4">
@@ -337,19 +337,19 @@ function SajuReadingInner() {
           <div className="flex gap-2.5">
             <button
               onClick={handlePrint}
-              className="flex-1 py-3.5 bg-gradient-to-b from-emerald-50 to-emerald-100/50 border border-emerald-200 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] text-emerald-700 rounded-2xl text-[13px] sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 bg-gradient-to-b from-emerald-50 to-emerald-100/50 border border-emerald-200 hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] text-emerald-700 rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2"
             >
               <span className="text-base">🖨️</span> A4 인쇄
             </button>
             <button
               onClick={handleRetry}
-              className="flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] text-white rounded-2xl text-[13px] sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+              className="flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] text-white rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
             >
               <span className="text-base">🔄</span> 다시 풀기
             </button>
           </div>
 
-          <p className="text-center text-[11px] text-gray-300 pb-4">
+          <p className="text-center text-xs text-gray-300 pb-4">
             본 결과는 전통 사주명리학을 기반으로 한 재미 콘텐츠입니다
           </p>
 

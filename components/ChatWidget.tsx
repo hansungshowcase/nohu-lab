@@ -145,7 +145,7 @@ export default function ChatWidget({ user }: { user: User | null }) {
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5 min-h-0">
             {!loaded ? (
               <div className="flex items-center justify-center h-full">
-                <div className="animate-spin h-6 w-6 border-3 border-orange-500 border-t-transparent rounded-full" />
+                <div className="animate-spin h-6 w-6 border-2 border-orange-500 border-t-transparent rounded-full" />
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 gap-2">

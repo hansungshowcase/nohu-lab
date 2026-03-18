@@ -24,12 +24,18 @@ export async function POST(request: NextRequest) {
     let syncCount = 0
     let errorCount = 0
 
+    const seenNicks = new Set<string>()
     const batch = members
       .filter((m: { nickname?: string }) => (m.nickname || '').trim())
       .map((m: { nickname: string; tier?: number; levelName?: string }) => ({
         nickname: m.nickname.trim(),
         tier: (Number(m.tier) >= 1 && Number(m.tier) <= 4) ? Math.round(Number(m.tier)) : mapGradeToTier(m.levelName || '일반회원'),
       }))
+      .filter(m => {
+        if (seenNicks.has(m.nickname)) return false
+        seenNicks.add(m.nickname)
+        return true
+      })
 
     for (let i = 0; i < batch.length; i += 500) {
       const chunk = batch.slice(i, i + 500)

@@ -33,9 +33,14 @@ export async function POST(request: NextRequest) {
 
     const existingSet = new Set((existing || []).map((m) => m.nickname))
 
+    const seen = new Set<string>()
     const newMembers = nicknames
       .map((n: string) => (typeof n === 'string' ? n.trim() : ''))
-      .filter((n: string) => n && !existingSet.has(n))
+      .filter((n: string) => {
+        if (!n || existingSet.has(n) || seen.has(n)) return false
+        seen.add(n)
+        return true
+      })
       .map((nickname: string) => ({
         nickname: nickname.slice(0, 50),
         phone: '',
