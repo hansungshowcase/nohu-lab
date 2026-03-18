@@ -46,69 +46,66 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     setTimeout(() => setCopyDone(false), 2000)
   }
 
+  // 이미지 저장 모달 (모바일: 길게 눌러 저장 안내)
+  const [imageModal, setImageModal] = useState<string | null>(null)
+
   const handleSaveImage = async () => {
     if (!cardRef.current || saving) return
     setSaving(true)
     try {
       const { toPng } = await import('html-to-image')
       const node = cardRef.current
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
       const options = {
         quality: 0.95,
-        pixelRatio: 2,
+        pixelRatio: isMobile ? 1.5 : 2, // 모바일 메모리 절약
         backgroundColor: '#ffffff',
         cacheBust: true,
         skipAutoScale: true,
         filter: (el: HTMLElement) => !el.classList?.contains('no-print'),
       }
 
-      // html-to-image 안정성: 2회 렌더링 (첫 번째는 폰트/이미지 로딩용)
+      // html-to-image 안정성: 3회 렌더링 (폰트/이미지 로딩 안정화)
+      await toPng(node, options).catch(() => {})
       await toPng(node, options).catch(() => {})
       const dataUrl = await toPng(node, options)
       if (!dataUrl || !dataUrl.startsWith('data:image/png')) {
         throw new Error('Invalid PNG data')
       }
 
-      const fetchRes = await fetch(dataUrl)
-      const blob = await fetchRes.blob()
-      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
-
-      // 모바일: Web Share API (파일 공유)
-      if (isMobile && navigator.share) {
+      // 모바일: Web Share API 시도 → 실패 시 이미지 모달로 안내
+      if (isMobile) {
         try {
-          const file = new File([blob], 'saju-result.png', { type: 'image/png' })
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: '사주풀이 결과' })
-            setSaving(false)
-            setSaveSuccess(true)
-            setTimeout(() => setSaveSuccess(false), 2000)
-            return
+          // data URL → blob 변환
+          const byteString = atob(dataUrl.split(',')[1])
+          const ab = new ArrayBuffer(byteString.length)
+          const ia = new Uint8Array(ab)
+          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
+          const blob = new Blob([ab], { type: 'image/png' })
+
+          if (navigator.share && navigator.canShare) {
+            const file = new File([blob], 'saju-result.png', { type: 'image/png' })
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], title: '사주풀이 결과' })
+              setSaving(false)
+              setSaveSuccess(true)
+              setTimeout(() => setSaveSuccess(false), 2000)
+              return
+            }
           }
         } catch (err) {
           if (err instanceof Error && err.name === 'AbortError') {
             setSaving(false)
             return
           }
-          // share 실패 시 아래 fallback으로
+          // share 실패 시 아래 모달 fallback으로
         }
-      }
 
-      // 모바일 fallback: Blob URL + <a download> (iOS Safari 포함)
-      if (isMobile) {
-        const blobUrl = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = blobUrl
-        link.download = 'saju-result.png'
-        // iOS Safari는 새 탭에서 열기
-        if (/iPhone|iPad/i.test(navigator.userAgent) && !navigator.share) {
-          link.target = '_blank'
-        }
-        link.style.display = 'none'
-        document.body.appendChild(link)
-        link.click()
-        setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 3000)
+        // 모바일 fallback: 이미지를 모달로 표시 (길게 눌러 저장)
+        setImageModal(dataUrl)
+        setSaving(false)
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 2000)
-        setSaving(false)
         return
       }
 
@@ -116,6 +113,11 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       const w = window as typeof window & { showSaveFilePicker?: (opts: Record<string, unknown>) => Promise<FileSystemFileHandle> }
       if (w.showSaveFilePicker) {
         try {
+          const byteString = atob(dataUrl.split(',')[1])
+          const ab = new ArrayBuffer(byteString.length)
+          const ia = new Uint8Array(ab)
+          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i)
+          const blob = new Blob([ab], { type: 'image/png' })
           const handle = await w.showSaveFilePicker({
             suggestedName: 'saju-result.png',
             types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }],
@@ -136,14 +138,13 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       }
 
       // PC Fallback: <a download>
-      const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = blobUrl
+      link.href = dataUrl
       link.download = 'saju-result.png'
       link.style.display = 'none'
       document.body.appendChild(link)
       link.click()
-      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 3000)
+      setTimeout(() => document.body.removeChild(link), 1000)
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 2000)
     } catch {
@@ -203,6 +204,39 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* 이미지 저장 모달 (모바일) */}
+      {imageModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setImageModal(null)}
+        >
+          <div
+            className="bg-white rounded-2xl p-4 max-w-sm w-full max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-center text-base font-bold text-gray-800 mb-2">
+              이미지를 길게 눌러 저장하세요
+            </p>
+            <p className="text-center text-sm text-gray-500 mb-3">
+              아래 이미지를 꾹 누르면 저장 메뉴가 나타납니다
+            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageModal}
+              alt="사주풀이 결과"
+              className="w-full rounded-lg border border-gray-200"
+              style={{ WebkitTouchCallout: 'default' }}
+            />
+            <button
+              onClick={() => setImageModal(null)}
+              className="mt-3 w-full py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-semibold text-gray-700 transition"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 공유 헤더 */}
       <div className="text-center">
         <p className="text-base sm:text-lg font-bold text-gray-800">결과를 공유해보세요</p>
