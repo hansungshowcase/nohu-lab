@@ -332,15 +332,16 @@ export default function MentalHealth() {
         })}
       </div>
 
-      {/* ── 교차 해석 ── */}
+      {/* ── 복합 소견 ── */}
       {crossNotes.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <h3 className="text-[15px] sm:text-[16px] font-bold text-gray-900">복합 소견</h3>
-          <div className="bg-amber-50/50 border border-amber-200/60 rounded-xl p-4 space-y-2.5">
-            {crossNotes.map((note, i) => (
-              <p key={i} className="text-[13px] sm:text-[14px] text-gray-700 leading-[1.8]">{note}</p>
-            ))}
-          </div>
+          {crossNotes.map((note, i) => (
+            <div key={i} className="bg-amber-50/40 border border-amber-200/50 rounded-xl p-4 sm:p-5 flex gap-3">
+              <span className="text-amber-500 text-[18px] shrink-0 mt-0.5">⚡</span>
+              <p className="text-[13px] sm:text-[14px] text-gray-700 leading-[1.85]">{note}</p>
+            </div>
+          ))}
         </div>
       )}
 
@@ -350,14 +351,21 @@ export default function MentalHealth() {
         {results.map((r) => {
           const tipData = TIPS[r.scaleId]?.[r.level.label]
           if (!tipData || tipData.tips.length === 0) return null
+          const icons: Record<string, string> = { '우울': '😔', '불안': '😰', '스트레스': '🤯', '자존감': '💛', '수면': '🌙' }
           return (
-            <div key={r.scaleId} className="space-y-1.5">
-              <p className="text-[13px] sm:text-[14px] font-semibold text-gray-700">{r.scaleName}</p>
-              {tipData.tips.map((tip, i) => (
-                <p key={i} className="text-[13px] sm:text-[14px] text-gray-600 leading-[1.7] pl-3">
-                  <span className="text-gray-400 mr-1.5">–</span>{tip}
-                </p>
-              ))}
+            <div key={r.scaleId} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                <span className="text-[16px]">{icons[r.scaleName] || '📋'}</span>
+                <span className="text-[13px] sm:text-[14px] font-bold text-gray-800">{r.scaleName}</span>
+              </div>
+              <div className="px-4 py-3 space-y-2.5">
+                {tipData.tips.map((tip, i) => (
+                  <div key={i} className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 shrink-0 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-[11px] font-bold mt-0.5">{i + 1}</span>
+                    <p className="text-[13px] sm:text-[14px] text-gray-600 leading-[1.75]">{tip}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           )
         })}
