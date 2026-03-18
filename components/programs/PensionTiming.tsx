@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 
 // ── 2026년 최신 국민연금 데이터 (NPS 공식 기반) ──
 const A_VAL = 3_193_511 // 2026년 A값
@@ -213,12 +213,6 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   }, [allSc])
 
   // 소득 대비 % (안전 계산)
-  const BASE_URL = 'https://retireplan.kr/programs/pension-timing'
-  const getShareUrl = useCallback(() => {
-    if (!myAge || !myIncome) return BASE_URL
-    return `${BASE_URL}?age=${myAge}&income=${myIncome.replace(/,/g, '')}&le=${le}`
-  }, [myAge, myIncome, le])
-
   const incomeRatio = useMemo(() => {
     if (!inc || inc < 10000 || !base) return 0
     return Math.round(base / inc * 100)
@@ -228,6 +222,12 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
     const n = v.replace(/[^0-9]/g, '')
     setMyIncome(n ? parseInt(n).toLocaleString() : '')
     setDone(false)
+  }
+
+  function getShareUrl() {
+    const base_url = 'https://retireplan.kr/programs/pension-timing'
+    if (!myAge || !myIncome) return base_url
+    return `${base_url}?age=${myAge}&income=${myIncome.replace(/,/g, '')}&le=${le}`
   }
 
   function handleCalc() {
