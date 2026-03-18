@@ -279,7 +279,7 @@ function SajuReadingInner() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setGender('male')}
-                className={`py-3 rounded-xl text-sm font-medium transition border-2 ${
+                className={`py-3.5 rounded-xl text-sm font-medium transition border-2 ${
                   gender === 'male'
                     ? 'bg-orange-50 border-orange-400 text-orange-700'
                     : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
@@ -289,7 +289,7 @@ function SajuReadingInner() {
               </button>
               <button
                 onClick={() => setGender('female')}
-                className={`py-3 rounded-xl text-sm font-medium transition border-2 ${
+                className={`py-3.5 rounded-xl text-sm font-medium transition border-2 ${
                   gender === 'female'
                     ? 'bg-pink-50 border-pink-400 text-pink-700'
                     : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
