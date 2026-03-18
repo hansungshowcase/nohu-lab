@@ -19,6 +19,15 @@ export default function DashboardPage() {
   const [category, setCategory] = useState('전체')
   const categories = ['전체', ...getAllCategories()]
 
+  // URL 파라미터에서 카테고리 읽기
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const cat = params.get('category')
+    if (cat && categories.includes(cat)) {
+      setCategory(cat)
+    }
+  }, [])
+
   useEffect(() => {
     const controller = new AbortController()
     fetch('/api/auth/me', { signal: controller.signal })
