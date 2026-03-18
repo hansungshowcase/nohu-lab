@@ -218,7 +218,8 @@ export function calculateScore(scaleId: string, answers: Record<string, number>)
 
   return scale.questions.reduce((sum, q) => {
     const key = `${scaleId}-${q.id}`
-    const raw = answers[key] ?? 0
+    if (!(key in answers)) return sum // 미응답 문항 제외
+    const raw = answers[key]
     if (reverseItems.includes(q.id)) {
       return sum + (maxPerItem - raw)
     }
@@ -256,8 +257,9 @@ export function getHighScoringItems(scaleId: string, answers: Record<string, num
   const reverseItems = scale.reverseItems ?? []
 
   return scale.questions
+    .filter((q) => `${scaleId}-${q.id}` in answers)
     .map((q) => {
-      const raw = answers[`${scaleId}-${q.id}`] ?? 0
+      const raw = answers[`${scaleId}-${q.id}`]
       const effectiveScore = reverseItems.includes(q.id) ? (maxPerItem - raw) : raw
       return { questionText: q.text, score: effectiveScore, maxScore: maxPerItem }
     })

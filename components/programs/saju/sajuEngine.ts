@@ -675,27 +675,99 @@ function analyzeElements(pillars: Pillar[], dayMasterElement: number, monthBranc
   const missing = counts.map((c, i) => c < 0.5 ? i : -1).filter(i => i >= 0)
   const strongIdx = counts.indexOf(Math.max(...counts))
 
-  // 신강/신약 판단 (월령 반영)
-  const produceMe = (dayMasterElement + 4) % 5
+  // ── 신강/신약 판단: 득령·득지·득세 3요소 ──
+  const produceMe = (dayMasterElement + 4) % 5  // 인성 오행
+
+  // 득령(得令): 월지 오행이 일간과 같거나(비겁) 일간을 생하면(인성)
+  const monthEl = BRANCH_ELEMENT[monthBranch]
+  const deukryeong = (monthEl === dayMasterElement) || produces(monthEl, dayMasterElement)
+
+  // 득지(得地): 일지 지장간에 비겁/인성 오행이 있으면 (특히 정기)
+  const dayBranchIdx = pillars.length >= 3 ? pillars[2].branch : monthBranch
+  const dayBranchHidden = HIDDEN_STEMS[dayBranchIdx]
+  const deukji = dayBranchHidden.some(h => {
+    const el = STEM_ELEMENT[h]
+    return el === dayMasterElement || produces(el, dayMasterElement)
+  })
+
+  // 득세(得勢): 천간+지지 중 비겁/인성이 과반수
+  let helpCount = 0
+  let totalItems = 0
+  for (const p of pillars) {
+    const sEl = STEM_ELEMENT[p.stem]
+    if (sEl === dayMasterElement || sEl === produceMe) helpCount++
+    totalItems++
+    const bEl = BRANCH_ELEMENT[p.branch]
+    if (bEl === dayMasterElement || bEl === produceMe) helpCount++
+    totalItems++
+  }
+  const deukse = helpCount >= Math.ceil(totalItems / 2)
+
+  // 3요소 중 2개 이상이면 신강
+  const strengthFactors = [deukryeong, deukji, deukse].filter(Boolean).length
+  const isDayMasterStrong = strengthFactors >= 2
+
+  // 점수 계산 (종격 판별 등에 사용)
   const myStrength = (counts[dayMasterElement] + counts[produceMe]) * seasonWeight
   const totalStrength = counts.reduce((a, b) => a + b, 0)
-  const isDayMasterStrong = myStrength > totalStrength * 0.45
-  const dayMasterScore = Math.round(Math.min(100, Math.max(0, (myStrength / totalStrength) * 100)))
+  const rawScore = (myStrength / totalStrength) * 100
+  // 득령/득지/득세 반영 보정
+  const factorBonus = strengthFactors * 5 - 7.5
+  const dayMasterScore = Math.round(Math.min(100, Math.max(0, rawScore + factorBonus)))
 
   // 오행 균형도 계산
   const avg = totalStrength / 5
   const variance = counts.reduce((sum, c) => sum + Math.pow(c - avg, 2), 0) / 5
   const elementBalance = Math.round(Math.max(0, 100 - variance * 8))
 
-  // 용신 판단
-  let usefulGod: number
+  // ── 용신 판단: 억부 + 조후 + 통관 통합 ──
+
+  // 1) 억부용신 (기본)
+  let eokbuGod: number
   if (isDayMasterStrong) {
-    const drain = (dayMasterElement + 1) % 5
-    const control = (dayMasterElement + 2) % 5
-    usefulGod = counts[drain] <= counts[control] ? drain : control
+    const drain = (dayMasterElement + 1) % 5    // 식상 (설기)
+    const control = (dayMasterElement + 2) % 5   // 재성 (극)
+    eokbuGod = counts[drain] <= counts[control] ? drain : control
   } else {
-    const support = (dayMasterElement + 4) % 5
-    usefulGod = counts[support] <= counts[dayMasterElement] ? support : dayMasterElement
+    const support = (dayMasterElement + 4) % 5   // 인성 (생)
+    eokbuGod = counts[support] <= counts[dayMasterElement] ? support : dayMasterElement
+  }
+
+  // 2) 조후용신 (계절 극단)
+  let johuGod: number | null = null
+  // 여름(사오미): 수가 필요
+  if (monthBranch === 5 || monthBranch === 6 || monthBranch === 7) {
+    johuGod = dayMasterElement === 4 ? 3 : 4  // 수일간이면 금, 아니면 수
+  }
+  // 겨울(해자축): 화가 필요
+  else if (monthBranch === 11 || monthBranch === 0 || monthBranch === 1) {
+    johuGod = dayMasterElement === 1 ? 0 : 1  // 화일간이면 목, 아니면 화
+  }
+
+  // 3) 통관용신: 가장 강한 두 오행이 상극이면 중재 오행
+  let tongguanGod: number | null = null
+  const sortedEls = counts.map((c, i) => ({ el: i, count: c })).sort((a, b) => b.count - a.count)
+  if (sortedEls.length >= 2) {
+    const top1 = sortedEls[0].el
+    const top2 = sortedEls[1].el
+    if (controls(top1, top2) || controls(top2, top1)) {
+      const controller = controls(top1, top2) ? top1 : top2
+      tongguanGod = (controller + 1) % 5  // 통관 = 극하는 쪽이 생하는 오행
+    }
+  }
+
+  // 통합: 극단 계절(여름/겨울)이면 조후 우선, 아니면 억부 + 통관 고려
+  let usefulGod: number
+  const isExtremeSeason = monthBranch === 5 || monthBranch === 6 || monthBranch === 7 ||
+                          monthBranch === 11 || monthBranch === 0 || monthBranch === 1
+  if (isExtremeSeason && johuGod !== null) {
+    // 조후와 억부가 같으면 최선, 다르면 조후 우선
+    usefulGod = johuGod
+  } else if (tongguanGod !== null && sortedEls[0].count > totalStrength * 0.35 && sortedEls[1].count > totalStrength * 0.25) {
+    // 두 오행이 모두 강하게 충돌할 때만 통관 적용
+    usefulGod = tongguanGod
+  } else {
+    usefulGod = eokbuGod
   }
 
   return { counts, missing, strongElement: strongIdx, isDayMasterStrong, usefulGod, dayMasterScore, elementBalance }
@@ -932,14 +1004,38 @@ function calculateGongmang(dayPillar: Pillar, pillars: Pillar[]): GongmangInfo {
 // ═══════════════════════════════════════════════
 function determineGyeokguk(
   dayMaster: number, dayMasterElement: number, monthPillar: Pillar,
-  isDayMasterStrong: boolean, dayMasterYinYang: number
+  isDayMasterStrong: boolean, dayMasterYinYang: number,
+  allPillars?: Pillar[]
 ): GyeokgukInfo {
-  // 월지의 정기(正氣)로 격국 판단
+  // ── 격국 판단: 투간 우선순위 (정기→중기→여기→월지정기) ──
   const monthHidden = HIDDEN_STEMS[monthPillar.branch]
-  const mainHidden = monthHidden[monthHidden.length - 1] // 정기
-  const tenGod = getTenGod(dayMasterElement, dayMasterYinYang, mainHidden)
+  // 지장간 순서: [여기, (중기), 정기] - 마지막이 정기(본기)
+  // 투간 확인: 월지 지장간이 사주의 천간에 나타나는지 (일간 제외)
+  const allStems: number[] = allPillars
+    ? allPillars.filter((_, i) => i !== 2).map(p => p.stem)  // 일간(index 2) 제외
+    : []
 
-  // 정격 (Normal Structures) - 월지 정기의 십신으로 격국 결정
+  let tenGod: string = ''
+  if (allStems.length > 0) {
+    // 정기(본기) 투간 → 중기 투간 → 여기 투간 순으로 확인
+    const checkOrder = [...monthHidden].reverse()  // 정기→중기→여기 순
+    for (const hiddenStem of checkOrder) {
+      if (allStems.includes(hiddenStem) && STEM_ELEMENT[hiddenStem] !== dayMasterElement) {
+        // 비겁은 격국으로 쓰지 않음 (건록/양인격 제외)
+        tenGod = getTenGod(dayMasterElement, dayMasterYinYang, hiddenStem)
+        if (tenGod !== '비견' && tenGod !== '겁재') break
+        tenGod = ''  // 비겁이면 다음 지장간 확인
+      }
+    }
+  }
+
+  // 투간이 없으면 월지 정기의 십신으로 격국 결정 (기존 방식)
+  if (!tenGod) {
+    const mainHidden = monthHidden[monthHidden.length - 1]
+    tenGod = getTenGod(dayMasterElement, dayMasterYinYang, mainHidden)
+  }
+
+  // 정격 (Normal Structures) - 십신으로 격국 결정
   const gyeokMap: Record<string, { name: string; desc: string; quality: 'good' | 'neutral' | 'challenging' }> = {
     '비견': { name: '건록격(建祿格)', desc: '자립심이 강하고 독립적으로 성공하는 격국입니다. 남에게 기대지 않고 자기 힘으로 일어서며, 실무 능력이 뛰어나 어떤 분야에서든 인정받습니다.', quality: 'neutral' },
     '겁재': { name: '양인격(羊刃格)', desc: '강한 추진력과 결단력의 격국입니다. 리더십이 뛰어나지만 때로는 과감함이 독이 될 수 있어요. 승부욕이 강해 경쟁에서 빛을 발합니다.', quality: 'neutral' },
@@ -1243,45 +1339,50 @@ function calculateJohu(dayMasterElement: number, monthBranch: number): JohuYongs
     else { season = '늦겨울(季冬)'; temperature = '추움' }  // monthBranch === 1
   }
 
-  // 조후 판단: 계절에 따라 필요한 오행 결정
-  let neededElement: number
-  let explanation: string
+  // ── 조후 판단: 일간(10천간) × 계절 상세 규칙 ──
+  // 일간별 계절별 조후용신 매트릭스
+  // key: `${dayMasterElement}_${seasonGroup}` → { element, explanation }
+  // seasonGroup: 'spring'(인묘진), 'summer'(사오미), 'autumn'(신유술), 'winter'(해자축)
+  let seasonGroup: 'spring' | 'summer' | 'autumn' | 'winter'
+  if (monthBranch === 2 || monthBranch === 3 || monthBranch === 4) seasonGroup = 'spring'
+  else if (monthBranch === 5 || monthBranch === 6 || monthBranch === 7) seasonGroup = 'summer'
+  else if (monthBranch === 8 || monthBranch === 9 || monthBranch === 10) seasonGroup = 'autumn'
+  else seasonGroup = 'winter'
 
-  if (monthBranch === 5 || monthBranch === 6 || monthBranch === 7) {
-    // 여름 (사오미) → 수(水)로 식히거나 금(金)으로 서늘하게
-    neededElement = 4  // 수
-    explanation = `여름에 태어나 열기가 강합니다. 수(水)의 기운으로 열을 식혀 균형을 잡아야 합니다.`
-    // 수가 일간이면 금으로 대체
-    if (dayMasterElement === 4) {
-      neededElement = 3  // 금
-      explanation = `여름에 태어난 수(水) 일간은 금(金)의 도움으로 힘을 보강하면 좋습니다.`
-    }
-  } else if (monthBranch === 11 || monthBranch === 0 || monthBranch === 1) {
-    // 겨울 (해자축) → 화(火)로 따뜻하게
-    neededElement = 1  // 화
-    explanation = `겨울에 태어나 차가운 기운이 강합니다. 화(火)의 기운으로 온기를 더해야 합니다.`
-    // 화가 일간이면 목으로 대체
-    if (dayMasterElement === 1) {
-      neededElement = 0  // 목
-      explanation = `겨울에 태어난 화(火) 일간은 목(木)의 도움으로 불을 살려야 합니다.`
-    }
-  } else if (monthBranch === 2 || monthBranch === 3 || monthBranch === 4) {
-    // 봄 (인묘진) → 화(火)로 목의 기운을 설기, 또는 금(金)으로 조절
-    neededElement = 1  // 화
-    explanation = `봄에 태어나 목(木)의 기운이 왕성합니다. 화(火)로 설기하여 균형을 잡으면 좋습니다.`
-    if (dayMasterElement === 1) {
-      neededElement = 4  // 수
-      explanation = `봄에 태어난 화(火) 일간은 수(水)의 조절로 과열을 방지하면 좋습니다.`
-    }
-  } else {
-    // 가을 (신유술) → 화(火)로 따뜻하게, 목(木)으로 생기
-    neededElement = 1  // 화
-    explanation = `가을에 태어나 금(金)의 서늘한 기운이 강합니다. 화(火)로 온기를 더하면 좋습니다.`
-    if (dayMasterElement === 1) {
-      neededElement = 0  // 목
-      explanation = `가을에 태어난 화(火) 일간은 목(木)의 도움으로 화기를 유지하면 좋습니다.`
-    }
+  // 일간별 조후용신 상세 테이블
+  type JohuRule = { el: number; desc: string }
+  const johuTable: Record<string, JohuRule> = {
+    // 목(갑을) - 봄: 왕성하니 화로 설기 + 수로 자양
+    '0_spring': { el: 1, desc: '봄 목(木) 일간은 왕성하므로 화(火)로 기운을 발산하고, 수(水)로 뿌리를 적시면 좋습니다.' },
+    '0_summer': { el: 4, desc: '여름 목(木) 일간은 화가 강해 수(水)로 뿌리를 보호해야 합니다. 열기에 타지 않도록 수분 보충이 핵심입니다.' },
+    '0_autumn': { el: 1, desc: '가을 목(木) 일간은 금(金)의 극을 받으니 화(火)로 금을 제어하면 좋습니다.' },
+    '0_winter': { el: 1, desc: '겨울 목(木) 일간은 추위에 얼어붙으니 화(火)의 따뜻한 기운이 반드시 필요합니다.' },
+    // 화(병정) - 여름: 과열이니 수로 식힘
+    '1_spring': { el: 0, desc: '봄 화(火) 일간은 목(木)의 생조를 받아 기세가 좋습니다. 적절한 토(土)로 설기하면 안정됩니다.' },
+    '1_summer': { el: 4, desc: '여름 화(火) 일간은 화기가 과다하니 수(水)로 반드시 식혀야 합니다. 과열 방지가 핵심입니다.' },
+    '1_autumn': { el: 0, desc: '가을 화(火) 일간은 금(金) 기운에 설기되니 목(木)으로 화를 살려야 합니다.' },
+    '1_winter': { el: 0, desc: '겨울 화(火) 일간은 수(水)의 극을 받아 약해지니 목(木)으로 불을 살리는 것이 급선무입니다.' },
+    // 토(무기) - 계절별 조절
+    '2_spring': { el: 1, desc: '봄 토(土) 일간은 목(木)의 극을 받으니 화(火)로 목을 설기시키고 토를 생해주면 좋습니다.' },
+    '2_summer': { el: 4, desc: '여름 토(土) 일간은 화가 과다하면 토가 건조해지니 수(水)로 적셔야 합니다.' },
+    '2_autumn': { el: 1, desc: '가을 토(土) 일간은 금(金)으로 설기가 과해지니 화(火)로 토를 따뜻하게 하면 좋습니다.' },
+    '2_winter': { el: 1, desc: '겨울 토(土) 일간은 수(水)의 극과 추위에 화(火)의 온기가 반드시 필요합니다.' },
+    // 금(경신) - 가을: 왕성하니 화로 단련
+    '3_spring': { el: 2, desc: '봄 금(金) 일간은 목(木)이 왕성한 시기에 토(土)의 생조가 필요합니다.' },
+    '3_summer': { el: 4, desc: '여름 금(金) 일간은 화(火)의 극이 강하니 수(水)로 열을 식히고 금을 보호해야 합니다.' },
+    '3_autumn': { el: 1, desc: '가을 금(金) 일간은 금이 왕성하니 화(火)로 단련하여 유용한 그릇으로 만들어야 합니다.' },
+    '3_winter': { el: 1, desc: '겨울 금(金) 일간은 추위에 수(水)가 넘치니 화(火)로 따뜻하게 하고 토(土)로 수를 제어하면 좋습니다.' },
+    // 수(임계) - 겨울: 과다하니 토로 제어 + 화로 따뜻하게
+    '4_spring': { el: 3, desc: '봄 수(水) 일간은 목(木)으로 설기가 되니 금(金)으로 수를 보강하면 좋습니다.' },
+    '4_summer': { el: 3, desc: '여름 수(水) 일간은 화(火)가 강해 금(金)의 생조로 수를 보충해야 합니다.' },
+    '4_autumn': { el: 1, desc: '가을 수(水) 일간은 금(金)의 생조를 받아 기세가 좋습니다. 화(火)로 따뜻하게 조절하면 좋습니다.' },
+    '4_winter': { el: 1, desc: '겨울 수(水) 일간은 수가 범람하니 화(火)의 온기가 절대적으로 필요하고 토(土)로 수를 제어해야 합니다.' },
   }
+
+  const johuKey = `${dayMasterElement}_${seasonGroup}`
+  const johuRule = johuTable[johuKey] || { el: 1, desc: '화(火)의 기운이 필요합니다.' }
+  const neededElement = johuRule.el
+  const explanation = johuRule.desc
 
   return { season, temperature, neededElement, explanation }
 }
@@ -1642,8 +1743,8 @@ export function calculateSaju(
   // 공망 분석
   const gongmang = calculateGongmang(dayPillar, pillars)
 
-  // 격국 판단
-  const gyeokguk = determineGyeokguk(dayMaster, dayMasterElement, monthPillar, analysis.isDayMasterStrong, dayMasterYinYang)
+  // 격국 판단 (투간 우선순위 적용)
+  const gyeokguk = determineGyeokguk(dayMaster, dayMasterElement, monthPillar, analysis.isDayMasterStrong, dayMasterYinYang, pillars)
 
   // 합충형파해 종합 분석
   const hapChung = analyzeHapChung(pillars)
