@@ -58,17 +58,24 @@ function SajuReadingInner() {
     if (y && m && d) {
       const yy = parseInt(y, 10), mm = parseInt(m, 10), dd = parseInt(d, 10)
       if (isNaN(yy) || isNaN(mm) || isNaN(dd)) return
+      if (yy < 1920 || yy > new Date().getFullYear() || mm < 1 || mm > 12 || dd < 1 || dd > 31) return
+      const testDate = new Date(yy, mm - 1, dd)
+      if (testDate.getMonth() !== mm - 1 || testDate > new Date()) return
       const hour = h && h !== '' ? parseInt(h, 10) : null
-      if (hour !== null && isNaN(hour)) return
+      if (hour !== null && (isNaN(hour) || hour < 0 || hour > 23)) return
       const gen = g === 'f' ? 'female' : 'male'
-      const saju = calculateSaju(yy, mm, dd, hour, gen)
-      setResult(saju)
-      setBirthYear(y)
-      setBirthMonth(m)
-      setBirthDay(d)
-      if (h && h !== '') setBirthHour(parseInt(h, 10))
-      setGender(gen)
-      setPhase('result')
+      try {
+        const saju = calculateSaju(yy, mm, dd, hour, gen)
+        setResult(saju)
+        setBirthYear(y)
+        setBirthMonth(m)
+        setBirthDay(d)
+        if (h && h !== '') setBirthHour(parseInt(h, 10))
+        setGender(gen)
+        setPhase('result')
+      } catch {
+        // 비정상 입력 → 인트로 화면 유지
+      }
     }
   }, [searchParams])
 
@@ -107,9 +114,13 @@ function SajuReadingInner() {
     const m = parseInt(birthMonth, 10)
     const d = parseInt(birthDay, 10)
     const hour = birthHour >= 0 ? birthHour : null
-    const saju = calculateSaju(y, m, d, hour, gender)
-    setResult(saju)
-    setPhase('analyzing')
+    try {
+      const saju = calculateSaju(y, m, d, hour, gender)
+      setResult(saju)
+      setPhase('analyzing')
+    } catch {
+      setError('사주 계산에 실패했습니다. 입력값을 확인해주세요.')
+    }
   }
 
   const handleAnalyzeComplete = useCallback(() => {

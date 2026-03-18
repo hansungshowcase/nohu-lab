@@ -363,16 +363,14 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
       if (isMobile) {
         const isKakao = /KAKAOTALK/i.test(navigator.userAgent)
 
-        // 1순위: Web Share API
-        if (!isKakao && navigator.share && navigator.canShare) {
+        // 1순위: Web Share API (갤럭시/아이폰 공유시트)
+        if (navigator.share) {
           try {
             const file = new File([blob], `연금분석_${age}세.png`, { type: 'image/png' })
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({ files: [file], title: '연금수령 황금타이밍' })
-              setSaving(false)
-              setSaveOk(true); setTimeout(() => setSaveOk(false), 2000)
-              return
-            }
+            await navigator.share({ files: [file], title: '연금수령 황금타이밍' })
+            setSaving(false)
+            setSaveOk(true); setTimeout(() => setSaveOk(false), 2000)
+            return
           } catch (err) {
             if (err instanceof Error && err.name === 'AbortError') { setSaving(false); return }
           }
@@ -386,7 +384,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
         a.style.display = 'none'
         document.body.appendChild(a)
         a.click()
-        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(blobUrl) }, 1000)
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(blobUrl) }, 3000)
 
         if (isKakao) {
           setTimeout(() => { alert('이미지가 다운로드되지 않으면,\n오른쪽 상단 ⋯ 메뉴에서\n"다른 브라우저로 열기"를 눌러주세요.') }, 500)

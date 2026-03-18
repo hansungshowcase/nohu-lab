@@ -80,10 +80,12 @@ body {
 .card-hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px -12px rgba(234, 88, 12, 0.15),
-              0 4px 16px -4px rgba(0, 0, 0, 0.06);
+@media (hover: hover) {
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px -12px rgba(234, 88, 12, 0.15),
+                0 4px 16px -4px rgba(0, 0, 0, 0.06);
+  }
 }
 
 /* Subtle gradient bg */

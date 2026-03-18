@@ -96,7 +96,7 @@ export default function ProgramCard({ program, userTier }: Props) {
         <span className="text-[11px] text-orange-600 font-semibold animate-pulse">
           {tierInfo?.cafeName || `Tier ${program.minTier}`} 이상 이용 가능
         </span>
-        <span className="text-[11px] text-orange-600 font-medium flex items-center gap-0.5 opacity-0 group-hover/locked:opacity-100 transition-opacity duration-300">
+        <span className="text-[11px] text-orange-600 font-medium flex items-center gap-0.5">
           등업하기
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />

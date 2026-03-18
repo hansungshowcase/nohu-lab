@@ -83,6 +83,7 @@ export default function MentalHealth() {
   const [isMember, setIsMember] = useState(false)
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const transitionLock = useRef(false)
   const resultRef = useRef<HTMLDivElement>(null)
@@ -161,6 +162,18 @@ export default function MentalHealth() {
     return `${window.location.origin}/programs/mental-health?d=${scores.depression}&a=${scores.anxiety}&s=${scores.stress}&se=${scores.selfesteem}&i=${scores.insomnia}`
   }
 
+  async function copyLink(scores: { depression: number; anxiety: number; stress: number; selfesteem: number; insomnia: number }) {
+    const url = getResultUrl(scores)
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.left = '-9999px'
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta)
+    }
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
+  }
+
   async function shareKakao(overallLabel: string, summary: string, scores: { depression: number; anxiety: number; stress: number; selfesteem: number; insomnia: number }) {
     const w = window as KakaoWindow
     const url = getResultUrl(scores)
@@ -227,9 +240,19 @@ export default function MentalHealth() {
 
       if (!dataUrl || !dataUrl.startsWith('data:image')) throw new Error('이미지 생성 실패')
 
-      // Blob → download
+      // Blob → 모바일/PC 분기 다운로드
       const res = await fetch(dataUrl)
       const blob = await res.blob()
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+
+      if (isMobile && navigator.share) {
+        try {
+          const file = new File([blob], 'mental-health-result.png', { type: 'image/png' })
+          await navigator.share({ files: [file], title: '심리 자가진단 결과' })
+          return
+        } catch (e) { if ((e as Error).name === 'AbortError') return }
+      }
+
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
@@ -340,6 +363,9 @@ export default function MentalHealth() {
           <button onClick={saveImage} disabled={saving}
             className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all disabled:opacity-50">
             {saving ? '저장 중...' : '📷 결과 이미지 저장'}
+          </button>
+          <button onClick={() => copyLink(sharedScores)} className="no-print w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all">
+            {linkCopied ? '✅ 링크가 복사되었습니다' : '🔗 결과 링크 복사'}
           </button>
           <button onClick={startQuiz} className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] text-[14px] sm:text-[15px] transition-all">나도 검사해보기</button>
         </div>
