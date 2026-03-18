@@ -61,6 +61,8 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         filter: (el: HTMLElement) => !el.classList?.contains('no-print'),
       }
 
+      // html-to-image 안정성: 2회 렌더링 (첫 번째는 폰트/이미지 로딩용)
+      await toPng(node, options).catch(() => {})
       const dataUrl = await toPng(node, options)
       if (!dataUrl || !dataUrl.startsWith('data:image/png')) {
         throw new Error('Invalid PNG data')
@@ -68,25 +70,49 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
 
       const fetchRes = await fetch(dataUrl)
       const blob = await fetchRes.blob()
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
 
-      // 모바일: Web Share API
-      if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+      // 모바일: Web Share API (파일 공유)
+      if (isMobile && navigator.share) {
         try {
           const file = new File([blob], 'saju-result.png', { type: 'image/png' })
-          await navigator.share({ files: [file], title: '사주풀이 결과' })
-          setSaving(false)
-          setSaveSuccess(true)
-          setTimeout(() => setSaveSuccess(false), 2000)
-          return
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: '사주풀이 결과' })
+            setSaving(false)
+            setSaveSuccess(true)
+            setTimeout(() => setSaveSuccess(false), 2000)
+            return
+          }
         } catch (err) {
           if (err instanceof Error && err.name === 'AbortError') {
             setSaving(false)
             return
           }
+          // share 실패 시 아래 fallback으로
         }
       }
 
-      // File System Access API (Chrome/Edge)
+      // 모바일 fallback: Blob URL + <a download> (iOS Safari 포함)
+      if (isMobile) {
+        const blobUrl = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = blobUrl
+        link.download = 'saju-result.png'
+        // iOS Safari는 새 탭에서 열기
+        if (/iPhone|iPad/i.test(navigator.userAgent) && !navigator.share) {
+          link.target = '_blank'
+        }
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 3000)
+        setSaveSuccess(true)
+        setTimeout(() => setSaveSuccess(false), 2000)
+        setSaving(false)
+        return
+      }
+
+      // PC: File System Access API (Chrome/Edge)
       const w = window as typeof window & { showSaveFilePicker?: (opts: Record<string, unknown>) => Promise<FileSystemFileHandle> }
       if (w.showSaveFilePicker) {
         try {
@@ -109,7 +135,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         }
       }
 
-      // Fallback: <a download>
+      // PC Fallback: <a download>
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
@@ -179,15 +205,15 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     <div className="space-y-4">
       {/* 공유 헤더 */}
       <div className="text-center">
-        <p className="text-sm sm:text-base font-bold text-gray-800">결과를 공유해보세요</p>
-        <p className="text-xs text-gray-400 mt-0.5">친구와 사주를 비교하면 더 재밌어요</p>
+        <p className="text-base sm:text-lg font-bold text-gray-800">결과를 공유해보세요</p>
+        <p className="text-sm text-gray-400 mt-0.5">친구와 사주를 비교하면 더 재밌어요</p>
       </div>
 
       {/* 공유 버튼 */}
       <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
         <button
           onClick={handleCopyLink}
-          className="group relative py-4 bg-gradient-to-b from-blue-50 to-blue-100/50 border border-blue-200 hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5"
+          className="group relative py-4 bg-gradient-to-b from-blue-50 to-blue-100/50 border border-blue-200 hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5"
         >
           <span className="w-11 h-11 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center text-xl transition-all duration-200 group-hover:scale-110">
             {copyDone ? '✅' : '🔗'}
@@ -197,7 +223,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         <button
           onClick={handleSaveImage}
           disabled={saving}
-          className="group relative py-4 bg-gradient-to-b from-purple-50 to-purple-100/50 border border-purple-200 hover:border-purple-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:hover:translate-y-0"
+          className="group relative py-4 bg-gradient-to-b from-purple-50 to-purple-100/50 border border-purple-200 hover:border-purple-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:hover:translate-y-0"
         >
           <span className="w-11 h-11 rounded-full bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center text-xl transition-all duration-200 group-hover:scale-110">
             {saving ? '⏳' : saveSuccess ? '✅' : '📷'}
@@ -206,7 +232,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         </button>
         <button
           onClick={handleKakao}
-          className="group relative py-4 bg-gradient-to-b from-[#FEE500]/40 to-[#FEE500]/60 border border-[#F5DC00] hover:border-[#EDCF00] hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5"
+          className="group relative py-4 bg-gradient-to-b from-[#FEE500]/40 to-[#FEE500]/60 border border-[#F5DC00] hover:border-[#EDCF00] hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5"
         >
           <span className="w-11 h-11 rounded-full bg-[#FEE500]/50 group-hover:bg-[#FEE500]/80 flex items-center justify-center transition-all duration-200 group-hover:scale-110">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
