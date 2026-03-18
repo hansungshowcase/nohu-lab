@@ -48,7 +48,7 @@ export default function Sidebar({ user }: { user: User | null }) {
   const sidebarContent = (
     <div className="flex flex-col h-full" style={{ background: 'linear-gradient(180deg, #fdf8f0 0%, #faf5eb 40%, #f7f0e3 100%)' }}>
       {/* Logo */}
-      <div className="px-6 pt-7 pb-5">
+      <header className="px-6 pt-7 pb-5">
         <Link href="/dashboard" className="flex items-center gap-3.5 group">
           <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-700 to-orange-800 flex items-center justify-center shadow-lg shadow-amber-800/15 group-hover:shadow-xl group-hover:shadow-amber-800/25 transition-all duration-300">
             <span className="text-amber-100 text-lg font-black">N</span>
@@ -62,7 +62,7 @@ export default function Sidebar({ user }: { user: User | null }) {
             </span>
           </div>
         </Link>
-      </div>
+      </header>
 
       {/* User Card */}
       <div className="mx-4 mb-4">

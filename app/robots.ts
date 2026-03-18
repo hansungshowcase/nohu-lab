@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/admin/', '/admin/login'],
+        disallow: ['/api/', '/admin/', '/admin/login', '/dashboard', '/chat'],
       },
     ],
     sitemap: 'https://nohu-lab.vercel.app/sitemap.xml',
