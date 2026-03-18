@@ -231,7 +231,7 @@ export default function MentalHealth() {
         )}
 
         {/* Question */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 min-h-[280px] sm:min-h-[320px] flex flex-col">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 min-h-0 sm:min-h-[320px] flex flex-col">
           <div className="flex-1">
             <div className="text-[12px] sm:text-[13px] text-gray-400 mb-2 sm:mb-3">
               Q{currentQIdx + 1}.
@@ -292,7 +292,7 @@ export default function MentalHealth() {
           <p className="text-[12px] sm:text-[13px] text-orange-700">이 문항은 점수에 포함되지 않으며 참고용입니다.</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 min-h-[260px] sm:min-h-[280px] flex flex-col">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 min-h-0 sm:min-h-[280px] flex flex-col">
           <div className="flex-1">
             <h3 className="text-[15px] sm:text-[17px] font-semibold text-gray-900 leading-relaxed mb-4 sm:mb-6">
               {FUNCTIONAL_IMPAIRMENT_QUESTION}
@@ -376,13 +376,15 @@ export default function MentalHealth() {
     <div className="max-w-lg mx-auto px-4 space-y-4 sm:space-y-6 animate-fade-in">
       {/* 결과지 헤더 */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">종합 심리 선별검사 결과</h2>
-          <span className="text-[11px] sm:text-[12px] text-gray-400">{dateStr}</span>
+        <div className="flex items-center justify-between mb-2 sm:mb-4">
+          <h2 className="text-[16px] sm:text-xl font-bold text-gray-900">종합 심리 선별검사 결과</h2>
+          <span className="text-[11px] text-gray-400 shrink-0 ml-2">{dateStr}</span>
         </div>
-        <p className="text-[12px] sm:text-[13px] text-gray-500">
-          검사 도구: {results.map((r) => r.scaleFullName).join(', ')}
-        </p>
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          {results.map((r) => (
+            <span key={r.scaleId} className="text-[10px] sm:text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">{r.scaleFullName}</span>
+          ))}
+        </div>
       </div>
 
       {/* 자살위험 경고 */}
@@ -440,16 +442,18 @@ export default function MentalHealth() {
       </div>
 
       {/* Radar Chart */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-4">
+      <div className="bg-white rounded-2xl border border-gray-100 p-2 sm:p-4">
         <h3 className="font-semibold text-gray-900 text-[13px] sm:text-[14px] mb-1 px-1">영역별 분포</h3>
-        <ResponsiveContainer width="100%" height={240}>
-          <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
-            <PolarGrid stroke="#e5e7eb" />
-            <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: '#374151', fontWeight: 600 }} />
-            <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: '#9ca3af' }} />
-            <Radar dataKey="score" stroke="#f97316" fill="#f97316" fillOpacity={0.2} strokeWidth={2} />
-          </RadarChart>
-        </ResponsiveContainer>
+        <div className="w-full" style={{ aspectRatio: '1 / 0.85' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="60%">
+              <PolarGrid stroke="#e5e7eb" />
+              <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: '#374151', fontWeight: 600 }} />
+              <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
+              <Radar dataKey="score" stroke="#f97316" fill="#f97316" fillOpacity={0.2} strokeWidth={2} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* 영역별 상세 */}
@@ -480,22 +484,22 @@ export default function MentalHealth() {
 
               {/* 심각도 분포 바 */}
               <div className="space-y-0.5">
-                <p className="text-[11px] sm:text-[12px] text-gray-400">심각도 분포</p>
+                <p className="text-[11px] text-gray-400">심각도 분포</p>
                 <div className="flex rounded-lg overflow-hidden h-5 sm:h-6">
                   {scale.levels.map((lvl, i) => {
                     const width = ((lvl.max - lvl.min + 1) / (r.maxScore + 1)) * 100
                     const isActive = r.score >= lvl.min && r.score <= lvl.max
                     return (
                       <div key={i} className="relative flex items-center justify-center" style={{ width: `${width}%`, backgroundColor: lvl.color, opacity: isActive ? 1 : 0.25 }}>
-                        {isActive && <span className="text-white text-[9px] sm:text-[10px] font-bold truncate px-0.5">▼{r.score}</span>}
+                        {isActive && <span className="text-white text-[8px] sm:text-[10px] font-bold">▼{r.score}</span>}
                       </div>
                     )
                   })}
                 </div>
-                <div className="flex text-[9px] sm:text-[10px] text-gray-400">
+                <div className="flex">
                   {scale.levels.map((lvl, i) => {
                     const width = ((lvl.max - lvl.min + 1) / (r.maxScore + 1)) * 100
-                    return <div key={i} style={{ width: `${width}%` }} className="truncate px-0.5">{lvl.label}</div>
+                    return <div key={i} style={{ width: `${width}%` }} className="text-[8px] sm:text-[10px] text-gray-400 truncate leading-tight">{lvl.label.replace(/\s/g, '')}</div>
                   })}
                 </div>
               </div>
