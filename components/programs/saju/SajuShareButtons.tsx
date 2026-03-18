@@ -178,24 +178,24 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
     setSaving(false)
   }
 
-  const handleKakao = () => {
+  const [kakaoCopied, setKakaoCopied] = useState(false)
+
+  const handleKakao = async () => {
     const text = `${profile.emoji} ${viral}\n\n내 사주풀이 결과 보기:\n${getShareUrl()}`
-    const shareUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=49a70b42eb588f908af788e24a790891&ka=sdk%2F1.0.0&text=${encodeURIComponent(text)}&link=${encodeURIComponent(getShareUrl())}`
-
-    // 모바일: 카카오톡 앱으로 직접 공유 시도
-    if (/Mobi|Android/i.test(navigator.userAgent)) {
-      const kakaoLink = `https://story.kakao.com/share?url=${encodeURIComponent(getShareUrl())}`
-      window.open(kakaoLink, '_blank')
-      return
-    }
-
-    // PC: 새 창에서 카카오톡 공유
     try {
-      window.open(shareUrl, '_blank', 'width=500,height=600')
+      await navigator.clipboard.writeText(text)
     } catch {
-      // fallback: 링크 복사
-      handleCopyLink()
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.left = '-9999px'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
     }
+    setKakaoCopied(true)
+    setTimeout(() => setKakaoCopied(false), 3000)
   }
 
   return (
@@ -234,7 +234,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           <span className="w-11 h-11 rounded-full bg-[#FEE500]/50 group-hover:bg-[#FEE500]/80 flex items-center justify-center transition-all duration-200 group-hover:scale-110">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
           </span>
-          <span className="text-[#3C1E1E]">카카오톡 공유하기</span>
+          <span className="text-[#3C1E1E]">{kakaoCopied ? '복사됨! 카톡에 붙여넣기' : '카카오톡 공유하기'}</span>
         </button>
       </div>
     </div>
