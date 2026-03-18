@@ -5,10 +5,14 @@ import { mapGradeToTier } from '@/lib/types'
 
 const CAFE_ID = '20898041'
 
+function getBaseUrl() {
+  return process.env.NEXT_PUBLIC_BASE_URL || 'https://retireplan.kr'
+}
+
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser()
   if (!user || user.tier !== 4) {
-    return NextResponse.redirect(new URL('/dashboard', process.env.NEXT_PUBLIC_BASE_URL!))
+    return NextResponse.redirect(new URL('/dashboard', getBaseUrl()))
   }
 
   const { searchParams } = new URL(request.url)
@@ -16,12 +20,12 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get('state')
 
   if (!code) {
-    return NextResponse.redirect(new URL('/admin?sync=failed&reason=no_code', process.env.NEXT_PUBLIC_BASE_URL!))
+    return NextResponse.redirect(new URL('/admin?sync=failed&reason=no_code', getBaseUrl()))
   }
 
   const savedState = request.cookies.get('oauth_state')?.value
   if (!savedState || savedState !== state) {
-    const res = NextResponse.redirect(new URL('/admin?sync=failed&reason=invalid_state', process.env.NEXT_PUBLIC_BASE_URL!))
+    const res = NextResponse.redirect(new URL('/admin?sync=failed&reason=invalid_state', getBaseUrl()))
     res.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
     return res
   }
@@ -40,12 +44,12 @@ export async function GET(request: NextRequest) {
       }),
     })
     if (!tokenRes.ok) {
-      return NextResponse.redirect(new URL(`/admin?sync=failed&reason=token_failed`, process.env.NEXT_PUBLIC_BASE_URL!))
+      return NextResponse.redirect(new URL(`/admin?sync=failed&reason=token_failed`, getBaseUrl()))
     }
     const tokenData = await tokenRes.json()
 
     if (!tokenData.access_token) {
-      return NextResponse.redirect(new URL(`/admin?sync=failed&reason=token_failed`, process.env.NEXT_PUBLIC_BASE_URL!))
+      return NextResponse.redirect(new URL(`/admin?sync=failed&reason=token_failed`, getBaseUrl()))
     }
 
     const accessToken = tokenData.access_token
@@ -106,13 +110,13 @@ export async function GET(request: NextRequest) {
     // API 에러가 있고 회원도 없으면 실패
     if (allMembers.length === 0 && apiError) {
       return NextResponse.redirect(
-        new URL('/admin?sync=failed&reason=api_error', process.env.NEXT_PUBLIC_BASE_URL!)
+        new URL('/admin?sync=failed&reason=api_error', getBaseUrl())
       )
     }
 
     if (allMembers.length === 0) {
       return NextResponse.redirect(
-        new URL('/admin?sync=failed&reason=no_members', process.env.NEXT_PUBLIC_BASE_URL!)
+        new URL('/admin?sync=failed&reason=no_members', getBaseUrl())
       )
     }
 
@@ -124,8 +128,8 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < allMembers.length; i += 500) {
       const batch = allMembers.slice(i, i + 500).map(m => ({
         nickname: m.nickname,
-        phone: '',
         tier: mapGradeToTier(m.levelName, m.memberLevel),
+        last_login: new Date().toISOString(),
       }))
       const { error } = await supabase
         .from('members')
@@ -135,13 +139,13 @@ export async function GET(request: NextRequest) {
     }
 
     const response = NextResponse.redirect(
-      new URL(`/admin?sync=success&count=${syncCount}&errors=${errorCount}`, process.env.NEXT_PUBLIC_BASE_URL!)
+      new URL(`/admin?sync=success&count=${syncCount}&errors=${errorCount}`, getBaseUrl())
     )
     response.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
     return response
   } catch (err) {
     // sync error
-    const response = NextResponse.redirect(new URL('/admin?sync=error', process.env.NEXT_PUBLIC_BASE_URL!))
+    const response = NextResponse.redirect(new URL('/admin?sync=error', getBaseUrl()))
     response.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
     return response
   }

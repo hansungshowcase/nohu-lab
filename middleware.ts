@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
 const COOKIE_NAME = 'cafe-auth-token'
-const jwtSecret = process.env.JWT_SECRET || 'MISSING_JWT_SECRET_DO_NOT_USE_IN_PRODUCTION'
-const JWT_SECRET = new TextEncoder().encode(jwtSecret)
+const JWT_SECRET = process.env.JWT_SECRET
+  ? new TextEncoder().encode(process.env.JWT_SECRET)
+  : null
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -23,7 +24,7 @@ export async function middleware(request: NextRequest) {
 
   if (!isProtected) return NextResponse.next()
 
-  if (!token) {
+  if (!token || !JWT_SECRET) {
     // /admin 경로는 관리자 로그인으로 리다이렉트
     if (pathname.startsWith('/admin')) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
@@ -32,7 +33,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
+    const { payload } = await jwtVerify(token, JWT_SECRET!)
 
     // /admin 경로는 tier 4만 접근 가능
     if (pathname.startsWith('/admin') && Number(payload.tier) !== 4) {

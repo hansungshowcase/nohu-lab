@@ -43,7 +43,7 @@ export default function ProgramCard({ program, userTier }: Props) {
               </div>
               {!program.badge && (
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ring-1 ${badgeStyle}`}>
-                  {tierInfo.cafeName}
+                  {tierInfo?.cafeName || `Tier ${program.minTier}`}
                 </span>
               )}
             </div>
@@ -94,7 +94,7 @@ export default function ProgramCard({ program, userTier }: Props) {
       </div>
       <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
         <span className="text-[11px] text-orange-600 font-semibold animate-pulse">
-          {tierInfo.cafeName} 이상 이용 가능
+          {tierInfo?.cafeName || `Tier ${program.minTier}`} 이상 이용 가능
         </span>
         <span className="text-[11px] text-orange-600 font-medium flex items-center gap-0.5 opacity-0 group-hover/locked:opacity-100 transition-opacity duration-300">
           등업하기

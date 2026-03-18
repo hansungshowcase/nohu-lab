@@ -28,6 +28,6 @@ export async function GET() {
       lastVerifyStatus: lastAnyResult.data?.[0]?.status || null,
     })
   } catch {
-    return NextResponse.json({ totalMembers: 0 })
+    return NextResponse.json({ error: '서버 오류' }, { status: 500 })
   }
 }

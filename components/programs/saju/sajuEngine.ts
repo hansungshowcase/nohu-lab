@@ -422,11 +422,12 @@ function getMonthPillar(yearStem: number, month: number, day: number): Pillar {
 // 일주 계산 (기준일 역산법)
 // ═══════════════════════════════════════════════
 function getDayPillar(year: number, month: number, day: number): Pillar {
+  // 기준일: 2024-01-01 = 병진일(丙辰) → stem=2(병), branch=4(진)
   const ref = new Date(2024, 0, 1)
   const target = new Date(year, month - 1, day)
   const diffDays = Math.round((target.getTime() - ref.getTime()) / 86400000)
-  const stem = ((diffDays % 10) + 10) % 10
-  const branch = ((diffDays % 12) + 12) % 12
+  const stem = (((diffDays + 2) % 10) + 10) % 10
+  const branch = (((diffDays + 4) % 12) + 12) % 12
   return { stem, branch }
 }
 
@@ -1314,7 +1315,7 @@ function analyzeTuganTonggeun(pillars: Pillar[]): TuganTonggeunInfo {
 // ═══════════════════════════════════════════════
 // 조후용신 계산
 // ═══════════════════════════════════════════════
-function calculateJohu(dayMasterElement: number, monthBranch: number): JohuYongsinInfo {
+function calculateJohu(dayMasterElement: number, monthBranch: number, dayMaster?: number): JohuYongsinInfo {
   // 계절 판별
   let season: string
   let temperature: string

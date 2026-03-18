@@ -5,6 +5,10 @@ import { mapGradeToTier } from '@/lib/types'
 
 const CAFE_ID = '20898041'
 
+function getBaseUrl() {
+  return process.env.NEXT_PUBLIC_BASE_URL || 'https://retireplan.kr'
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
@@ -12,12 +16,12 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get('error')
 
   if (error || !code) {
-    return NextResponse.redirect(new URL('/?error=naver_denied', process.env.NEXT_PUBLIC_BASE_URL!))
+    return NextResponse.redirect(new URL('/?error=naver_denied', getBaseUrl()))
   }
 
   const savedState = request.cookies.get('oauth_state')?.value
   if (!savedState || savedState !== state) {
-    const res = NextResponse.redirect(new URL('/?error=invalid_state', process.env.NEXT_PUBLIC_BASE_URL!))
+    const res = NextResponse.redirect(new URL('/?error=invalid_state', getBaseUrl()))
     res.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
     return res
   }
@@ -36,12 +40,12 @@ export async function GET(request: NextRequest) {
       }),
     })
     if (!tokenRes.ok) {
-      return NextResponse.redirect(new URL('/?error=token_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+      return NextResponse.redirect(new URL('/?error=token_failed', getBaseUrl()))
     }
     const tokenData = await tokenRes.json()
 
     if (!tokenData.access_token) {
-      return NextResponse.redirect(new URL('/?error=token_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+      return NextResponse.redirect(new URL('/?error=token_failed', getBaseUrl()))
     }
 
     const accessToken = tokenData.access_token
@@ -51,19 +55,19 @@ export async function GET(request: NextRequest) {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
     if (!profileRes.ok) {
-      return NextResponse.redirect(new URL('/?error=profile_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+      return NextResponse.redirect(new URL('/?error=profile_failed', getBaseUrl()))
     }
     const profileData = await profileRes.json()
 
     if (profileData.resultcode !== '00') {
-      return NextResponse.redirect(new URL('/?error=profile_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+      return NextResponse.redirect(new URL('/?error=profile_failed', getBaseUrl()))
     }
 
     const naverProfile = profileData.response
     if (!naverProfile) {
-      return NextResponse.redirect(new URL('/?error=profile_failed', process.env.NEXT_PUBLIC_BASE_URL!))
+      return NextResponse.redirect(new URL('/?error=profile_failed', getBaseUrl()))
     }
-    const naverNickname = naverProfile.nickname || naverProfile.name || '회원'
+    const naverNickname = naverProfile.nickname || naverProfile.name || `회원_${Date.now()}`
 
     // 3. 카페 가입 여부 및 등급 확인
     let cafeTier: 1 | 2 | 3 | 4 = 1
@@ -93,7 +97,7 @@ export async function GET(request: NextRequest) {
 
     if (!cafeJoined) {
       return NextResponse.redirect(
-        new URL('/?error=not_cafe_member', process.env.NEXT_PUBLIC_BASE_URL!)
+        new URL('/?error=not_cafe_member', getBaseUrl())
       )
     }
 
@@ -112,7 +116,7 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (upsertError || !member) {
-      return NextResponse.redirect(new URL('/?error=server_error', process.env.NEXT_PUBLIC_BASE_URL!))
+      return NextResponse.redirect(new URL('/?error=server_error', getBaseUrl()))
     }
 
     const memberId = member.id
@@ -125,7 +129,7 @@ export async function GET(request: NextRequest) {
     })
 
     const response = NextResponse.redirect(
-      new URL('/dashboard', process.env.NEXT_PUBLIC_BASE_URL!)
+      new URL('/dashboard', getBaseUrl())
     )
 
     response.cookies.set(COOKIE_NAME, token, {
@@ -140,7 +144,7 @@ export async function GET(request: NextRequest) {
     return response
   } catch {
     const res = NextResponse.redirect(
-      new URL('/?error=server_error', process.env.NEXT_PUBLIC_BASE_URL!)
+      new URL('/?error=server_error', getBaseUrl())
     )
     res.cookies.set('oauth_state', '', { maxAge: 0, path: '/' })
     return res

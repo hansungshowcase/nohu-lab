@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import TierBadge from '@/components/TierBadge'
 import ProgramCard from '@/components/ProgramCard'
@@ -18,7 +18,7 @@ export default function DashboardPage() {
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [category, setCategory] = useState('전체')
-  const categories = ['전체', ...getAllCategories()]
+  const categories = useMemo(() => ['전체', ...getAllCategories()], [])
 
   // URL 파라미터에서 카테고리 읽기 (초기 로드)
   useEffect(() => {

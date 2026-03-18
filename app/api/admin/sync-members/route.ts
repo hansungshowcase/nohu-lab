@@ -38,7 +38,6 @@ export async function POST(request: NextRequest) {
       const batch = validMembers.slice(i, i + 500).map((m: SyncMember) => ({
         nickname: m.nickname.trim().slice(0, 50),
         tier: Math.min(Math.max(Number(m.tier) || 1, 1), 4),
-        phone: '',
       }))
       const { error } = await supabase
         .from('members')

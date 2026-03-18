@@ -28,7 +28,6 @@ export async function POST(request: NextRequest) {
       .filter((m: { nickname?: string }) => (m.nickname || '').trim())
       .map((m: { nickname: string; tier?: number; levelName?: string }) => ({
         nickname: m.nickname.trim(),
-        phone: '',
         tier: (Number(m.tier) >= 1 && Number(m.tier) <= 4) ? Math.round(Number(m.tier)) : mapGradeToTier(m.levelName || '일반회원'),
       }))
 
