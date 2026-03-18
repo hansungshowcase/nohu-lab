@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     // 2. 카페 회원 목록 조회
     let page = 1
-    const allMembers: { nickname: string; levelName: string }[] = []
+    const allMembers: { nickname: string; levelName: string; memberLevel: number }[] = []
     let apiError = ''
 
     while (true) {
@@ -91,9 +91,10 @@ export async function GET(request: NextRequest) {
 
       for (const m of members) {
         const nickname = m.nickname || m.nick || m.memberNickName || ''
-        const levelName = m.memberLevelName || m.levelName || m.memberLevel || '일반회원'
+        const levelName = m.memberLevelName || m.levelName || ''
+        const memberLevel = Number(m.memberLevel) || 0
         if (nickname) {
-          allMembers.push({ nickname, levelName: String(levelName) })
+          allMembers.push({ nickname, levelName: String(levelName || '일반회원'), memberLevel })
         }
       }
 
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest) {
       const batch = allMembers.slice(i, i + 500).map(m => ({
         nickname: m.nickname,
         phone: '',
-        tier: mapGradeToTier(m.levelName),
+        tier: mapGradeToTier(m.levelName, m.memberLevel),
       }))
       const { error } = await supabase
         .from('members')

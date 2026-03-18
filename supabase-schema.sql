@@ -59,7 +59,7 @@ CREATE POLICY "Authenticated read programs" ON programs
 CREATE TABLE IF NOT EXISTS verify_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nickname TEXT NOT NULL,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'found', 'not_found', 'error')),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'found', 'completed', 'not_found', 'error')),
   grade_name TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
