@@ -590,6 +590,10 @@ export default function MentalHealth() {
           className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all disabled:opacity-50">
           {saving ? '저장 중...' : '📷 결과 이미지 저장'}
         </button>
+        <button onClick={() => { const scores = { depression: results[0].score, anxiety: results[1].score, stress: results[2].score, selfesteem: results[3].score, insomnia: results[4].score }; copyLink(scores) }}
+          className="no-print w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all">
+          {linkCopied ? '✅ 링크가 복사되었습니다' : '🔗 결과 링크 복사'}
+        </button>
         <button onClick={restart} className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] text-[14px] sm:text-[15px] transition-all">
           다시 검사하기
         </button>
