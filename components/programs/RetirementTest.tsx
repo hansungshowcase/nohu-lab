@@ -6,6 +6,7 @@ import { getResultByScore, ResultCode } from './retirement-test/results'
 import ResultCard from './retirement-test/ResultCard'
 import ShareButtons from './retirement-test/ShareButtons'
 import AnalyzingScreen from './retirement-test/AnalyzingScreen'
+import { getCrossInsights, getDeepAdvice, getRiskAssessment, getCrevasseAnalysis, getRetirementFundCalc, getScenarios, getResources } from './retirement-test/ResultCardA4'
 
 type Phase = 'intro' | 'quiz' | 'analyzing' | 'result'
 
@@ -288,6 +289,131 @@ export default function RetirementTest() {
         result={result}
         categories={categories}
       />
+
+      {/* 교차 분석 인사이트 */}
+      {(() => {
+        const insights = getCrossInsights(categories)
+        return insights.length > 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">교차 분석 인사이트</h3>
+            <div className="space-y-3">
+              {insights.map((ins, i) => (
+                <div key={i} className="bg-orange-50 rounded-xl p-4">
+                  <div className="font-semibold text-gray-900 mb-1">{ins.title}</div>
+                  <p className="text-sm text-gray-600 leading-relaxed">{ins.insight}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null
+      })()}
+
+      {/* 4대 영역 심층 조언 */}
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">4대 영역 심층 분석</h3>
+        <div className="space-y-4">
+          {getDeepAdvice(total, categories, answers).map((adv, i) => (
+            <div key={i} className="border border-gray-100 rounded-xl p-4">
+              <div className="font-semibold text-orange-700 mb-2">{adv.title}</div>
+              <p className="text-sm text-gray-600 leading-relaxed">{adv.advice}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 3대 리스크 평가 */}
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">3대 은퇴 리스크 평가</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {getRiskAssessment(categories, answers).map((risk, i) => (
+            <div key={i} className="rounded-xl p-4 text-center" style={{ backgroundColor: `${risk.color}10` }}>
+              <div className="text-sm font-semibold mb-1" style={{ color: risk.color }}>{risk.name}</div>
+              <div className="text-lg font-bold mb-2" style={{ color: risk.color }}>{risk.level}</div>
+              <p className="text-xs text-gray-500 leading-relaxed">{risk.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 소득 크레바스 진단 */}
+      {(() => {
+        const crevasse = getCrevasseAnalysis(answers)
+        return (
+          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-3">소득 크레바스 진단</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="px-3 py-1 rounded-full text-sm font-bold text-white" style={{ backgroundColor: crevasse.color }}>{crevasse.level}</span>
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed mb-3">{crevasse.detail}</p>
+            <div className="space-y-2">
+              {crevasse.strategy.map((s, i) => (
+                <div key={i} className="flex gap-2 text-sm text-gray-600">
+                  <span className="text-orange-500 shrink-0">{'>'}</span>
+                  <span>{s}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* 필요 노후자금 산출 */}
+      {(() => {
+        const fund = getRetirementFundCalc(total, answers)
+        return (
+          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">필요 노후자금 산출</h3>
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="bg-orange-50 rounded-xl p-3">
+                <div className="text-xs text-gray-500">월 생활비</div>
+                <div className="text-xl font-bold text-orange-700">{fund.monthly}만원</div>
+              </div>
+              <div className="bg-orange-50 rounded-xl p-3">
+                <div className="text-xs text-gray-500">필요 총액 ({fund.years}년)</div>
+                <div className="text-xl font-bold text-orange-700">{(fund.totalNeeded / 10000).toFixed(1)}억원</div>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-3">
+                <div className="text-xs text-gray-500">예상 연금 수령</div>
+                <div className="text-xl font-bold text-blue-700">{(fund.pensionEstimate / 10000).toFixed(1)}억원</div>
+              </div>
+              <div className="bg-red-50 rounded-xl p-3">
+                <div className="text-xs text-gray-500">추가 확보 필요</div>
+                <div className="text-xl font-bold text-red-600">{(fund.gap / 10000).toFixed(1)}억원</div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* 시나리오 분석 */}
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">은퇴 후 시나리오 분석</h3>
+        <div className="space-y-3">
+          {getScenarios(total, categories).map((sc, i) => (
+            <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: `${sc.color}10` }}>
+              <span className="px-2.5 py-1 rounded-lg text-xs font-bold text-white shrink-0" style={{ backgroundColor: sc.color }}>{sc.label}</span>
+              <div className="flex-1">
+                <div className="font-semibold text-sm" style={{ color: sc.color }}>{sc.monthly}</div>
+                <div className="text-xs text-gray-500">{sc.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 추천 자원 */}
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">추천 자원</h3>
+        <div className="space-y-3">
+          {getResources(categories).map((res, i) => (
+            <div key={i} className="border border-gray-100 rounded-xl p-3">
+              <div className="font-semibold text-sm text-gray-900">{res.name}</div>
+              <div className="text-xs text-orange-600 font-medium">{res.url}</div>
+              <div className="text-xs text-gray-500 mt-0.5">{res.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Share buttons */}
       <ShareButtons
