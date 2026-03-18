@@ -44,9 +44,11 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    // 각 검색엔진에서 발급받은 인증 코드 입력
-    // google: 'GOOGLE_VERIFICATION_CODE',
-    // other: { 'naver-site-verification': 'NAVER_VERIFICATION_CODE' },
+    google: 'FYC_0_M9IrB3NuTQ760U0IZIixgEpX9Jpa-haEgFdxI',
+    other: {
+      'naver-site-verification': 'ea2195e8aa87f5ef0b774de1fbf867bef850014e',
+      'msvalidate.01': '870DA1E0B88DA9550212E4690FE359E8',
+    },
   },
   appleWebApp: {
     capable: true,
