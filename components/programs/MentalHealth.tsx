@@ -217,7 +217,7 @@ export default function MentalHealth() {
           <div className="space-y-2">
             {currentScale.likertOptions.map((opt) => (
               <button key={opt.value} onClick={() => handleAnswer(opt.value)} disabled={isTransitioning}
-                className={`w-full text-left px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${answers[answerKey] === opt.value ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.98]' : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 border border-transparent hover:border-orange-200'} ${isTransitioning ? 'pointer-events-none' : ''}`}>
+                className={`w-full text-left px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-150 ease-out ${answers[answerKey] === opt.value ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.97]' : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 active:bg-orange-100 active:scale-[0.97] border border-transparent hover:border-orange-200'} ${isTransitioning ? 'pointer-events-none' : ''}`}>
                 <span className="mr-2 opacity-60">{opt.value}.</span>{opt.label}
               </button>
             ))}
@@ -248,7 +248,7 @@ export default function MentalHealth() {
           {FUNCTIONAL_IMPAIRMENT_OPTIONS.map((opt) => (
             <button key={opt.value} disabled={transitionLock.current}
               onClick={() => { if (transitionLock.current) return; transitionLock.current = true; setFunctionalImpairment(opt.value); if (!isMember) incrementTestCount(); setTimeout(() => { transitionLock.current = false; setPhase('analyzing') }, 300) }}
-              className={`w-full text-left px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${functionalImpairment === opt.value ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.98]' : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 border border-transparent hover:border-orange-200'}`}>
+              className={`w-full text-left px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-150 ease-out ${functionalImpairment === opt.value ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.97]' : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 active:bg-orange-100 active:scale-[0.97] border border-transparent hover:border-orange-200'}`}>
               {opt.label}
             </button>
           ))}
