@@ -6,7 +6,7 @@ import { getResultByScore, ResultCode } from './retirement-test/results'
 import ResultCard from './retirement-test/ResultCard'
 import ShareButtons from './retirement-test/ShareButtons'
 import AnalyzingScreen from './retirement-test/AnalyzingScreen'
-import { getCrossInsights, getDeepAdvice, getRiskAssessment, getCrevasseAnalysis, getRetirementFundCalc, getScenarios } from './retirement-test/ResultCardA4'
+import { getCrossInsights, getDeepAdvice, getRetirementFundCalc } from './retirement-test/ResultCardA4'
 
 type Phase = 'intro' | 'quiz' | 'analyzing' | 'result'
 
@@ -540,55 +540,89 @@ export default function RetirementTest() {
         )
       })()}
 
-      {/* 3대 리스크 평가 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-slide-up" style={{ animationDelay: '500ms' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">3대 은퇴 리스크</h3>
-        <div className="space-y-3">
-          {getRiskAssessment(categories, answers).map((risk, i) => (
-            <div key={i} className="rounded-xl p-4 border" style={{ borderColor: `${risk.color}40`, backgroundColor: `${risk.color}08` }}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-gray-900">{risk.name}</span>
-                <span className="px-3 py-0.5 rounded-full text-xs font-bold text-white" style={{ backgroundColor: risk.color }}>{risk.level}</span>
-              </div>
-              <p className="text-sm text-gray-600 leading-relaxed">{risk.detail}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* 나의 연금 수령 타임라인 */}
+      {userAge && (() => {
+        const age = parseInt(userAge) || 45
+        const income = parseInt(userIncome) || 300
+        const nps = Math.round(income * 0.43 * 0.6) // 국민연금 예상
+        const personalPension = answers[2] >= 3 ? 50 : answers[2] >= 2 ? 25 : 0
+        const retirePension = answers[16] >= 3 ? 40 : answers[16] >= 2 ? 20 : 0
+        const timeline = [
+          { age: 55, label: '개인연금 수령 시작', amount: personalPension, icon: '1', desc: `연금저축/IRP에서 월 ${personalPension}만원 수령 가능 (연금소득세 3.3~5.5%)` },
+          { age: 60, label: '퇴직연금 수령 가능', amount: retirePension, icon: '2', desc: `퇴직연금 연금 수령 시 퇴직소득세 60~70%만 과세 (일시금 대비 30~40% 절세)` },
+          { age: 65, label: '국민연금 수령 시작', amount: nps, icon: '3', desc: `예상 월 ${nps}만원 (소득대체율 43% 기준). 연기 시 연 7.2% 증액` },
+        ].filter(t => t.age > age || t.amount > 0)
+        const totalMonthly = nps + personalPension + retirePension
 
-      {/* 소득 크레바스 진단 */}
-      {(() => {
-        const crevasse = getCrevasseAnalysis(answers)
         return (
-          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-slide-up" style={{ animationDelay: '600ms' }}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-gray-900">소득 크레바스 진단</h3>
-              <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style={{ backgroundColor: crevasse.color }}>{crevasse.level}</span>
-            </div>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">{crevasse.detail}</p>
-            <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-              <div className="text-xs font-semibold text-gray-700 mb-2">실천 전략</div>
-              {crevasse.strategy.map((s, i) => (
-                <div key={i} className="flex gap-2 text-sm text-gray-700">
-                  <span className="text-orange-500 font-bold shrink-0">{i + 1}.</span>
-                  <span>{s}</span>
+          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 animate-slide-up" style={{ animationDelay: '500ms' }}>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">나의 연금 수령 타임라인</h3>
+            <div className="space-y-0">
+              {timeline.map((t, i) => (
+                <div key={i} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold shrink-0">{t.icon}</div>
+                    {i < timeline.length - 1 && <div className="w-0.5 flex-1 bg-orange-200 my-1" />}
+                  </div>
+                  <div className="pb-4 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900">{t.age}세</span>
+                      <span className="text-sm text-orange-600 font-semibold">{t.label}</span>
+                    </div>
+                    <div className="text-lg font-bold text-orange-700 mt-0.5">월 {t.amount}만원</div>
+                    <p className="text-xs text-gray-500 mt-0.5">{t.desc}</p>
+                  </div>
                 </div>
               ))}
+            </div>
+            <div className="bg-orange-50 rounded-xl p-4 mt-2 text-center">
+              <div className="text-xs text-gray-500">65세 이후 예상 총 월 연금</div>
+              <div className="text-3xl font-black text-orange-700">{totalMonthly}만원</div>
+              <div className="text-xs text-gray-400 mt-1">적정 생활비 298만원 대비 {totalMonthly >= 298 ? '충분' : `${298 - totalMonthly}만원 부족`}</div>
             </div>
           </div>
         )
       })()}
 
-      {/* 시나리오 분석 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-slide-up" style={{ animationDelay: '700ms' }}>
-        <h3 className="text-lg font-bold text-gray-900 mb-4">은퇴 후 생활비 시나리오</h3>
+      {/* 자산 인출 순서 전략 */}
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 animate-slide-up" style={{ animationDelay: '600ms' }}>
+        <h3 className="text-lg font-bold text-gray-900 mb-3">세금 줄이는 자산 인출 순서</h3>
+        <p className="text-xs text-gray-500 mb-4">은퇴 후 자산을 빼는 순서에 따라 세금이 수백만원 차이납니다</p>
+        <div className="space-y-2">
+          {[
+            { order: 1, title: '비과세 자산 먼저', detail: 'ISA 만기자금, 비과세 저축 → 세금 0원', color: '#16a34a' },
+            { order: 2, title: '연금계좌 (연 1,500만원 이내)', detail: '연금소득세 3.3~5.5%만 과세. 1,500만원 초과 시 종합소득세 합산 → 세율 급등', color: '#2563eb' },
+            { order: 3, title: '퇴직연금 (연금 수령)', detail: '퇴직소득세의 60~70%만 과세. 일시금 수령 대비 30~40% 절세', color: '#7c3aed' },
+            { order: 4, title: '일반 금융자산 (마지막)', detail: '이자·배당소득 연 2,000만원 초과 시 금융소득종합과세 → 건보료 폭탄', color: '#dc2626' },
+          ].map(item => (
+            <div key={item.order} className="flex gap-3 items-start p-3 rounded-xl" style={{ backgroundColor: `${item.color}08` }}>
+              <div className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-bold shrink-0" style={{ backgroundColor: item.color }}>{item.order}</div>
+              <div>
+                <div className="font-bold text-sm text-gray-900">{item.title}</div>
+                <div className="text-xs text-gray-500 mt-0.5">{item.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 이번 달 행동 플랜 */}
+      <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-5 text-white animate-slide-up" style={{ animationDelay: '700ms' }}>
+        <h3 className="text-lg font-bold mb-4">이번 달 바로 실행할 3가지</h3>
         <div className="space-y-3">
-          {getScenarios(total, categories).map((sc, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 rounded-xl border" style={{ borderColor: `${sc.color}30`, backgroundColor: `${sc.color}08` }}>
-              <span className="px-3 py-1.5 rounded-lg text-sm font-bold text-white shrink-0" style={{ backgroundColor: sc.color }}>{sc.label}</span>
-              <div className="flex-1">
-                <div className="text-lg font-bold" style={{ color: sc.color }}>{sc.monthly}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{sc.desc}</div>
+          {[
+            { check: total < 49, text: '국민연금공단(1355)에 전화해서 내 예상 수령액 확인하기', sub: '5분이면 됩니다. nps.or.kr에서도 조회 가능' },
+            { check: answers[2] <= 2, text: '연금저축 계좌 개설하고 월 50만원 자동이체 설정하기', sub: '연 99만원 세액공제. 증권사 앱에서 10분 완료' },
+            { check: answers[16] <= 2, text: '퇴직연금 운용현황 확인하고 TDF로 전환 검토하기', sub: '회사 HR팀에 DB/DC 여부, 적립금 확인 요청' },
+            { check: true, text: '배우자와 30분 은퇴 후 생활에 대해 대화하기', sub: '월 생활비, 살고 싶은 곳, 하고 싶은 일 이야기' },
+          ].filter(a => a.check).slice(0, 3).map((action, i) => (
+            <div key={i} className="bg-white/15 backdrop-blur rounded-xl p-3">
+              <div className="flex gap-2 items-start">
+                <div className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</div>
+                <div>
+                  <div className="font-semibold text-sm">{action.text}</div>
+                  <div className="text-xs opacity-80 mt-0.5">{action.sub}</div>
+                </div>
               </div>
             </div>
           ))}
