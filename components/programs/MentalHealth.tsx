@@ -190,18 +190,17 @@ export default function MentalHealth() {
         style: { overflow: 'visible', maxHeight: 'none' },
         filter: (el: HTMLElement) => !el.classList?.contains('no-print'),
       })
-      // 모바일: Web Share API
-      if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
-        try {
-          const res = await fetch(dataUrl); const blob = await res.blob()
-          const file = new File([blob], 'mental-health-result.png', { type: 'image/png' })
-          await navigator.share({ files: [file], title: '심리 자가진단 결과' })
-          setSaving(false); return
-        } catch (err) { if (err instanceof Error && err.name === 'AbortError') { setSaving(false); return } }
-      }
-      // PC: 다운로드
-      const link = document.createElement('a'); link.href = dataUrl; link.download = 'mental-health-result.png'
-      document.body.appendChild(link); link.click(); document.body.removeChild(link)
+      // dataUrl → Blob → download (모바일 갤러리 저장 호환)
+      const res = await fetch(dataUrl)
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = 'mental-health-result.png'
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 3000)
     } catch { alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.') }
     setSaving(false)
   }
