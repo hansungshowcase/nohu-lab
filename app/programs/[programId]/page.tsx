@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, lazy, Suspense } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { getProgramById } from '@/app/programs/registry'
 import { TIER_MAP } from '@/lib/types'
 import TierBadge from '@/components/TierBadge'
@@ -26,8 +26,11 @@ interface User {
 export default function ProgramPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
   const programId = params.programId as string
+  // 공유 링크 접속 여부 감지 (URL에 y, m, d 파라미터가 있으면 공유 링크)
+  const isSharedLink = programId === 'saju-reading' && searchParams.has('y') && searchParams.has('m') && searchParams.has('d')
   const program = getProgramById(programId)
 
   useEffect(() => {
@@ -93,20 +96,22 @@ export default function ProgramPage() {
   const ProgramComponent = programComponents[programId]
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
-      <div className="flex items-center gap-3 mb-6 sm:mb-8">
-        <button
-          onClick={() => router.push('/dashboard')}
-          className="p-2 hover:bg-orange-50 rounded-lg transition"
-        >
-          ←
-        </button>
-        <span className="text-2xl">{program.icon}</span>
-        <h1 className="text-xl font-bold text-gray-900">
-          {program.name}
-        </h1>
-        <TierBadge tier={program.minTier} />
-      </div>
+    <div className={isSharedLink ? "max-w-2xl mx-auto px-2 sm:px-4 py-3 sm:py-6" : "max-w-4xl mx-auto px-4 py-6 sm:py-8"}>
+      {!isSharedLink && (
+        <div className="flex items-center gap-3 mb-6 sm:mb-8">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="p-2 hover:bg-orange-50 rounded-lg transition"
+          >
+            ←
+          </button>
+          <span className="text-2xl">{program.icon}</span>
+          <h1 className="text-xl font-bold text-gray-900">
+            {program.name}
+          </h1>
+          <TierBadge tier={program.minTier} />
+        </div>
+      )}
 
       {ProgramComponent ? (
         <Suspense
