@@ -1,7 +1,8 @@
 # CLAUDE.md - 노후연구소 프로젝트 규칙
 
 ## 프로젝트 개요
-- **사이트**: https://nohu-lab.vercel.app
+- **사이트**: https://retireplan.kr (메인 도메인)
+- **이전 도메인**: https://nohu-lab.vercel.app (계속 작동, 자동 리다이렉트)
 - **용도**: 네이버 카페 회원용 웹앱 (로그인, 대시보드, 각종 프로그램 제공)
 - **GitHub**: hansungshowcase/nohu-lab
 - **git config**: user.name=hansungshowcase, email=hansungshowcase@users.noreply.github.com
@@ -13,18 +14,19 @@
 
 ## Vercel 배포 규칙
 - Vercel 계정: hansung1 (qhdl10100-6263, qhdl10100@gmail.com)
-- **nohu-lab.vercel.app = nohu-lab 프로젝트가 서빙 중**
+- **retireplan.kr = 메인 도메인 (nohu-lab 프로젝트가 서빙)**
+- **nohu-lab.vercel.app = 이전 도메인 (계속 작동)**
 - Vercel 프로젝트 ID: prj_6cnk29cR0jHrn0ZvnZWrlbiJvtob
 - **배포 전 반드시**: `git pull origin main --no-rebase`로 다른 터미널의 최신 변경사항 반영 후 배포
 - **자동 배포 연동됨**: `git push origin main` 하면 Vercel이 자동 빌드+배포+alias 설정
 - 배포 방법: 코드 수정 → `git add` → `git commit` → `git push origin main` → 자동 배포
-- 수동 배포가 필요한 경우: `vercel --prod --yes` → `vercel alias set <배포URL> nohu-lab.vercel.app`
+- 수동 배포가 필요한 경우: `vercel --prod --yes` → `vercel alias set <배포URL> retireplan.kr`
 - 배포 전 반드시 `vercel projects ls`로 현재 프로젝트 확인 후 올바른 프로젝트에 배포
 - **cafe-settlement 프로젝트 절대 접근 금지** — 코드 읽기, 수정, 배포, 설정 변경 등 어떤 작업도 금지. 사용자가 명시적으로 요청할 때만 접근 가능
 - 환경변수: JWT_SECRET, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY (Vercel에 설정됨)
 
 ## Vercel 프로젝트 현황 (2026-03-16 기준)
-- **nohu-lab** → nohu-lab.vercel.app (메인 웹앱) ✅ 사용 중
+- **nohu-lab** → retireplan.kr (메인 도메인) + nohu-lab.vercel.app (이전 도메인) ✅ 사용 중
 - **cafe-settlement** → cafe-settlement.vercel.app (정산 시스템) ✅ 사용 중
 - cafe-webapp → 중복 프로젝트로 삭제됨 (2026-03-16)
 
@@ -90,7 +92,7 @@ npm run dev
 
 # 8. 배포
 vercel --prod --yes
-vercel alias set <배포URL> nohu-lab.vercel.app
+vercel alias set <배포URL> retireplan.kr
 ```
 
 ## 브랜치 구조
