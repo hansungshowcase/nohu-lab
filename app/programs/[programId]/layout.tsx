@@ -7,15 +7,15 @@ interface Props {
 }
 
 const SEO_DESCRIPTIONS: Record<string, string> = {
-  'retirement-test': '나의 노후 준비 점수는 몇 점? 재정, 건강, 주거, 마인드 4개 영역 20문항으로 은퇴 준비 상태를 무료 진단합니다.',
-  'saju-reading': '내 사주는 어떤 운명? 생년월일로 타고난 성격, 오행 밸런스, 재물운, 연애운, 올해 운세를 AI가 무료로 분석합니다.',
-  'pension-timing': '연금 언제 받는 게 유리할까? 조기·정상·연기수령 총 수령액을 비교하여 나에게 최적인 연금 개시 시점을 찾아드립니다.',
-  'text-counter': '글자수 세기 도구. 텍스트의 글자수, 공백 제외 글자수, 단어수, 줄수, 바이트를 실시간으로 계산합니다.',
-  'image-resizer': '이미지 크기 변경 도구. 이미지를 원하는 크기로 간편하게 리사이즈하고 PNG로 다운로드합니다.',
-  'nickname-generator': '랜덤 닉네임 생성기. 재미있는 한국어 닉네임을 한 번에 여러 개 생성하고 복사할 수 있습니다.',
-  'hashtag-recommender': '해시태그 추천기. 게시글 내용을 입력하면 SNS에 적합한 해시태그를 자동으로 추천해드립니다.',
-  'text-converter': '텍스트 변환기. 대소문자 변환, 한영 자판 변환, 텍스트 뒤집기 등 다양한 텍스트 변환 도구입니다.',
-  'mental-health': '나의 심리 상태는? 우울, 불안, 스트레스 수준을 간단한 자가진단으로 체크하고 맞춤 관리 팁을 받아보세요.',
+  'retirement-test': 'retireplan.kr 노후 준비 점수 테스트: 재정·건강·주거·마인드 4영역 20문항, 80점 만점 S~F등급 판정. 무료, 2분 소요.',
+  'saju-reading': 'retireplan.kr 무료 사주풀이: 생년월일 입력으로 일간 성격, 오행 분석, 재물운, 연애운, 2026년 운세 확인. 사주명리학 기반.',
+  'pension-timing': 'retireplan.kr 연금 수령 타이밍 분석: 조기수령(60세) vs 정상수령(65세) vs 연기수령(70세) 총 수령액 비교. 2026 연금개혁 반영.',
+  'text-counter': 'retireplan.kr 글자수 세기: 글자수, 공백 제외, 단어수, 줄수, 바이트를 실시간 계산. 무료 온라인 도구.',
+  'image-resizer': 'retireplan.kr 이미지 리사이저: 이미지 크기를 픽셀 단위로 변경, 비율 유지, PNG 다운로드. 무료.',
+  'nickname-generator': 'retireplan.kr 랜덤 닉네임 생성기: 한국어 형용사+명사 조합 닉네임을 중복 없이 생성. 무료.',
+  'hashtag-recommender': 'retireplan.kr 해시태그 추천기: 게시글 내용 입력 시 SNS용 해시태그 자동 추천. 무료.',
+  'text-converter': 'retireplan.kr 텍스트 변환기: 대소문자, 한영 자판, 텍스트 뒤집기, 공백 제거 등 7가지 변환. 무료.',
+  'mental-health': 'retireplan.kr 심리 자가진단: PHQ-9(우울), GAD-7(불안), PSS-10(스트레스), RSES(자존감), ISI(수면) 5개 공인 척도. 무료.',
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
