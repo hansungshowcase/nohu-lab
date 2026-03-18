@@ -433,12 +433,12 @@ export default function MentalHealth() {
             {overallRisk.label}
           </div>
         </div>
-        <p className="text-[14px] sm:text-[15px] text-gray-700 leading-[1.8]">{overallRisk.description}</p>
+        <p className="text-[15px] sm:text-[16px] text-gray-700 leading-[1.85]">{overallRisk.description}</p>
       </div>
 
       {/* ── 검사 결과 요약 ── */}
       <div className="space-y-3 animate-slide-up" style={{ animationDelay: '350ms' }}>
-        <h3 className="text-[15px] sm:text-[16px] font-bold text-gray-900">검사 결과</h3>
+        <h3 className="text-[16px] sm:text-[17px] font-bold text-gray-900">검사 결과</h3>
         <div className="border border-gray-200 rounded-xl overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -470,46 +470,29 @@ export default function MentalHealth() {
 
       {/* ── 영역별 소견 ── */}
       <div className="space-y-4 animate-slide-up" style={{ animationDelay: '500ms' }}>
-        <h3 className="text-[15px] sm:text-[16px] font-bold text-gray-900">영역별 소견</h3>
+        <h3 className="text-[16px] sm:text-[17px] font-bold text-gray-900">영역별 소견</h3>
         {results.map((r) => {
           const tipData = TIPS[r.scaleId]?.[r.level.label]
           if (!tipData) return null
-          const scale = SCALES.find((s) => s.id === r.scaleId)!
-          const pct = Math.round((r.score / r.maxScore) * 100)
           const sevColor = SEVERITY_COLORS[Math.min(r.levelIdx, 4)]
           return (
-            <div key={r.scaleId} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              {/* 헤더 */}
-              <div className="px-4 sm:px-5 py-3.5 bg-gray-50 border-b border-gray-100">
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-[14px] sm:text-[15px] font-bold text-gray-800">{r.scaleName} ({r.scaleCode})</span>
-                  <span className="text-[12px] sm:text-[13px] font-semibold px-2.5 py-1 rounded-full text-white" style={{ backgroundColor: sevColor }}>{r.level.label}</span>
-                </div>
-                {/* 점수 게이지 */}
-                <div className="space-y-1">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-[22px] sm:text-[26px] font-bold" style={{ color: sevColor }}>{r.score}</span>
-                    <span className="text-[13px] text-gray-400">/ {r.maxScore}점</span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: sevColor }} />
-                  </div>
-                  <div className="flex justify-between text-[10px] sm:text-[11px] text-gray-400 mt-0.5">
-                    {scale.levels.map((lvl, i) => (
-                      <span key={i} className={r.levelIdx === i ? 'font-bold text-gray-600' : ''}>{lvl.label}</span>
-                    ))}
+            <div key={r.scaleId} className="rounded-xl overflow-hidden" style={{ borderLeft: `4px solid ${sevColor}` }}>
+              <div className="bg-white border border-gray-200 border-l-0 rounded-r-xl p-4 sm:p-5 space-y-3">
+                {/* 영역 이름 + 점수 */}
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[15px] sm:text-[16px] font-bold text-gray-900">{r.scaleName}</h4>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[15px] sm:text-[16px] font-bold" style={{ color: sevColor }}>{r.score}<span className="text-[12px] text-gray-400 font-normal">/{r.maxScore}</span></span>
+                    <span className="text-[12px] sm:text-[13px] font-bold px-2.5 py-1 rounded-full text-white" style={{ backgroundColor: sevColor }}>{r.level.label}</span>
                   </div>
                 </div>
-              </div>
-              {/* 소견 본문 */}
-              <div className="px-4 sm:px-5 py-4 sm:py-5 space-y-3.5">
-                <div>
-                  <p className="text-[14px] sm:text-[15px] font-bold text-gray-800 mb-2">{tipData.title}</p>
-                  <p className="text-[13px] sm:text-[14px] text-gray-600 leading-[1.85]">{tipData.description}</p>
-                </div>
-                <div className="bg-orange-50/70 border border-orange-100/60 rounded-lg p-3.5 sm:p-4">
-                  <p className="text-[11px] sm:text-[12px] font-semibold text-orange-500 mb-1.5">임상 권고</p>
-                  <p className="text-[13px] sm:text-[14px] text-orange-900 leading-[1.8]">{tipData.recommendation}</p>
+                {/* 소견 */}
+                <p className="text-[14px] sm:text-[15px] text-gray-600 leading-[1.8]">{tipData.description}</p>
+                {/* 권고 */}
+                <div className="bg-gray-50 rounded-lg p-3.5 sm:p-4">
+                  <p className="text-[14px] sm:text-[15px] text-gray-800 leading-[1.8]">
+                    <span className="font-bold text-orange-600 mr-1">→</span>{tipData.recommendation}
+                  </p>
                 </div>
               </div>
             </div>
@@ -520,11 +503,11 @@ export default function MentalHealth() {
       {/* ── 복합 소견 ── */}
       {crossNotes.length > 0 && (
         <div className="space-y-3 animate-slide-up" style={{ animationDelay: '650ms' }}>
-          <h3 className="text-[15px] sm:text-[16px] font-bold text-gray-900">복합 소견</h3>
+          <h3 className="text-[16px] sm:text-[17px] font-bold text-gray-900">복합 소견</h3>
           {crossNotes.map((note, i) => (
             <div key={i} className="bg-amber-50/40 border border-amber-200/50 rounded-xl p-4 sm:p-5 flex gap-3">
               <span className="text-amber-500 text-[18px] shrink-0 mt-0.5">⚡</span>
-              <p className="text-[13px] sm:text-[14px] text-gray-700 leading-[1.85]">{note}</p>
+              <p className="text-[14px] sm:text-[15px] text-gray-700 leading-[1.85]">{note}</p>
             </div>
           ))}
         </div>

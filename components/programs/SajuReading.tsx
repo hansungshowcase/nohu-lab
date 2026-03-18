@@ -199,10 +199,11 @@ function SajuReadingInner() {
 
         <div className="space-y-3 sm:space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="saju-year" className="block text-sm font-medium text-gray-700 mb-1">
               출생 연도 {animalHint && <span className="text-orange-500 text-xs">({animalHint})</span>}
             </label>
             <input
+              id="saju-year"
               type="tel"
               inputMode="numeric"
               placeholder="예: 1990 (4자리)"
@@ -219,8 +220,9 @@ function SajuReadingInner() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">월</label>
+              <label htmlFor="saju-month" className="block text-sm font-medium text-gray-700 mb-1">월</label>
               <input
+                id="saju-month"
                 ref={monthRef}
                 type="tel"
                 inputMode="numeric"
@@ -237,8 +239,9 @@ function SajuReadingInner() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">일</label>
+              <label htmlFor="saju-day" className="block text-sm font-medium text-gray-700 mb-1">일</label>
               <input
+                id="saju-day"
                 ref={dayRef}
                 type="tel"
                 inputMode="numeric"
@@ -255,10 +258,11 @@ function SajuReadingInner() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="saju-hour" className="block text-sm font-medium text-gray-700 mb-1">
               태어난 시간 <span className="text-gray-400 text-xs">(선택사항)</span>
             </label>
             <select
+              id="saju-hour"
               value={birthHour}
               onChange={e => setBirthHour(parseInt(e.target.value, 10))}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 bg-white"

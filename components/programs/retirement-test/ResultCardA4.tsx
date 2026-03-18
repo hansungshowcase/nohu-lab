@@ -197,7 +197,7 @@ const questionDiagnosis: Record<number, { title: string; scores: Record<number, 
 }
 
 // ── 교차 분석 인사이트 ──
-function getCrossInsights(categories: CategoryScore[]): { icon: string; title: string; insight: string }[] {
+export function getCrossInsights(categories: CategoryScore[]): { icon: string; title: string; insight: string }[] {
   const f = categories.find(c => c.key === 'finance')!
   const l = categories.find(c => c.key === 'lifestyle')!
   const h = categories.find(c => c.key === 'housing')!
@@ -234,7 +234,7 @@ function getCrossInsights(categories: CategoryScore[]): { icon: string; title: s
 }
 
 // ── 3층 연금체계 분석 ──
-function getPensionAnalysis(answers: Record<number, number>): { tier: string; icon: string; status: string; color: string; detail: string }[] {
+export function getPensionAnalysis(answers: Record<number, number>): { tier: string; icon: string; status: string; color: string; detail: string }[] {
   const q2 = answers[2] || 1
   const q16 = answers[16] || 1
   return [
@@ -271,7 +271,7 @@ function getPensionAnalysis(answers: Record<number, number>): { tier: string; ic
 }
 
 // ── 3대 리스크 평가 ──
-function getRiskAssessment(categories: CategoryScore[], answers: Record<number, number>): { name: string; level: string; color: string; icon: string; detail: string }[] {
+export function getRiskAssessment(categories: CategoryScore[], answers: Record<number, number>): { name: string; level: string; color: string; icon: string; detail: string }[] {
   const f = categories.find(c => c.key === 'finance')!
 
   const longevityRisk = f.score <= 8 ? '높음' : f.score <= 14 ? '중간' : '낮음'
@@ -318,7 +318,7 @@ function getRiskAssessment(categories: CategoryScore[], answers: Record<number, 
 }
 
 // ── 소득 크레바스 진단 ──
-function getCrevasseAnalysis(answers: Record<number, number>): { level: string; color: string; detail: string; strategy: string[] } {
+export function getCrevasseAnalysis(answers: Record<number, number>): { level: string; color: string; detail: string; strategy: string[] } {
   const q20 = answers[20] || 1
   const q12 = answers[12] || 1
   const combined = q20 + q12
@@ -347,7 +347,7 @@ function getCrevasseAnalysis(answers: Record<number, number>): { level: string; 
 }
 
 // ── 맞춤 종합 조언 (찐 조언) ──
-function getDeepAdvice(total: number, categories: CategoryScore[], answers: Record<number, number>): { title: string; advice: string }[] {
+export function getDeepAdvice(total: number, categories: CategoryScore[], answers: Record<number, number>): { title: string; advice: string }[] {
   const f = categories.find(c => c.key === 'finance')!
   const l = categories.find(c => c.key === 'lifestyle')!
   const h = categories.find(c => c.key === 'housing')!
@@ -430,7 +430,7 @@ function getDeepAdvice(total: number, categories: CategoryScore[], answers: Reco
 }
 
 // ── 필요 노후자금 산출 ──
-function getRetirementFundCalc(total: number, answers: Record<number, number>): { monthly: number; years: number; totalNeeded: number; pensionEstimate: number; gap: number } {
+export function getRetirementFundCalc(total: number, answers: Record<number, number>): { monthly: number; years: number; totalNeeded: number; pensionEstimate: number; gap: number } {
   const q8 = answers[8] || 1
   const monthly = q8 >= 3 ? 280 : q8 >= 2 ? 240 : 200
   const years = 25
@@ -470,7 +470,7 @@ function getMonthlyBreakdown(total: number): { item: string; amount: string; not
 }
 
 // ── 시나리오 분석 ──
-function getScenarios(total: number, categories: CategoryScore[]): { label: string; color: string; monthly: string; desc: string }[] {
+export function getScenarios(total: number, categories: CategoryScore[]): { label: string; color: string; monthly: string; desc: string }[] {
   const f = categories.find(c => c.key === 'finance')!
   const base = total >= 61 ? 300 : total >= 37 ? 240 : 200
   const optimistic = Math.round(base * (1 + f.score / 30))
@@ -484,7 +484,7 @@ function getScenarios(total: number, categories: CategoryScore[]): { label: stri
 }
 
 // ── 추천 자원 ──
-function getResources(categories: CategoryScore[]): { name: string; url: string; desc: string }[] {
+export function getResources(categories: CategoryScore[]): { name: string; url: string; desc: string }[] {
   const resources: { name: string; url: string; desc: string }[] = []
   const f = categories.find(c => c.key === 'finance')!
   const m = categories.find(c => c.key === 'mindset')!

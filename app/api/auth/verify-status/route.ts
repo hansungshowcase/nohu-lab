@@ -81,6 +81,8 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (upsertError || !member) {
+      // upsert 실패 시 completed→found로 롤백하여 재시도 가능하게
+      await supabase.from('verify_requests').update({ status: 'found' }).eq('id', id)
       return NextResponse.json({ status: 'error' })
     }
 

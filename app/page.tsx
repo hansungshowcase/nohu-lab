@@ -70,6 +70,7 @@ export default function LoginPage() {
           setVerifying(false)
 
           if (data.status === 'found') {
+            setLoading(false)
             router.push('/dashboard')
           } else if (data.status === 'not_found') {
             setError('노후연구소 카페에 가입되지 않은 닉네임입니다.\n카페에 먼저 가입해주세요.')
@@ -105,6 +106,7 @@ export default function LoginPage() {
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
+          setLoading(false)
           router.push('/dashboard')
           return
         }
@@ -258,6 +260,7 @@ export default function LoginPage() {
                 if (!res.ok) { setError('서버 오류가 발생했습니다.'); setLoading(false); return }
                 const data = await res.json()
                 if (data.success) {
+                  setLoading(false)
                   router.push('/dashboard')
                 } else {
                   setError(data.error || '비회원 로그인에 실패했습니다.')
