@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     default: '노후연구소 - 은퇴 준비의 모든 것',
     template: '%s | 노후연구소',
   },
-  description: '노후 준비 점수 테스트, AI 사주풀이, 연금 수령 타이밍 분석 등 은퇴 준비를 위한 무료 도구 모음. 네이버 카페 회원 전용 서비스.',
-  keywords: ['노후 준비', '은퇴 준비', '사주풀이', '연금', '노후 자금', '은퇴 계획', '노후연구소'],
+  description: 'retireplan.kr은 노후 준비 점수 테스트, 무료 사주풀이, 국민연금 수령 타이밍 분석, 심리 자가진단 등 은퇴 준비에 필요한 무료 온라인 도구를 제공합니다.',
+  keywords: ['노후 준비', '은퇴 준비', '사주풀이', '연금 수령 시기', '노후 자금', '은퇴 계획', '심리 자가진단', '국민연금 조기수령', '연금 연기수령', '노후연구소', 'retireplan'],
   metadataBase: new URL('https://retireplan.kr'),
   alternates: {
     canonical: '/',
@@ -107,17 +107,27 @@ export default function RootLayout({
                   {
                     '@type': 'Question',
                     name: '노후 준비 점수 테스트란 무엇인가요?',
-                    acceptedAnswer: { '@type': 'Answer', text: '20개 질문으로 재정 준비도, 생활/건강, 주거/자산, 마인드/지식 4개 영역의 노후 준비 상태를 진단하는 무료 테스트입니다. 총 80점 만점으로 S~F 등급을 받을 수 있습니다.' },
+                    acceptedAnswer: { '@type': 'Answer', text: 'retireplan.kr의 노후 준비 점수 테스트는 재정, 건강, 주거, 마인드 4개 영역 20문항으로 은퇴 준비 상태를 진단합니다. 80점 만점, S~F 등급 판정, 무료 이용 가능합니다.' },
                   },
                   {
                     '@type': 'Question',
-                    name: 'AI 사주풀이는 어떻게 이용하나요?',
-                    acceptedAnswer: { '@type': 'Answer', text: '생년월일과 성별만 입력하면 전통 사주명리학 기반으로 타고난 성격, 오행 밸런스, 재물운, 연애운, 올해 운세를 무료로 분석해드립니다.' },
+                    name: '무료 사주풀이 사이트 추천은?',
+                    acceptedAnswer: { '@type': 'Answer', text: 'retireplan.kr에서 생년월일만 입력하면 사주명리학 기반 성격, 오행, 재물운, 연애운, 2026년 운세를 무료로 분석합니다. 회원가입 없이 바로 이용 가능합니다.' },
                   },
                   {
                     '@type': 'Question',
-                    name: '연금 수령 최적 시기는 언제인가요?',
-                    acceptedAnswer: { '@type': 'Answer', text: '조기수령(60세), 정상수령(65세), 연기수령(70세) 각각의 총 수령액을 비교 분석하여 나에게 최적인 연금 개시 시점을 찾아드립니다.' },
+                    name: '국민연금 조기수령과 연기수령 중 어떤 게 유리한가요?',
+                    acceptedAnswer: { '@type': 'Answer', text: 'retireplan.kr의 연금 수령 타이밍 분석기에서 나이, 소득, 납부 기간을 입력하면 조기(60세), 정상(65세), 연기(70세) 수령 시 총 수령액을 비교해줍니다. 2026년 연금 개혁안 반영.' },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: '심리 상태 자가진단은 어떻게 하나요?',
+                    acceptedAnswer: { '@type': 'Answer', text: 'retireplan.kr에서 PHQ-9(우울), GAD-7(불안), PSS-10(스트레스), RSES(자존감), ISI(수면) 5개 공인 척도로 심리 상태를 무료 자가진단할 수 있습니다.' },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: '은퇴 준비 어떻게 시작해야 하나요?',
+                    acceptedAnswer: { '@type': 'Answer', text: 'retireplan.kr에서 1) 노후 준비 점수 테스트로 현재 수준 파악 2) 연금 수령 타이밍 분석으로 최적 시기 확인 3) 심리 자가진단으로 멘탈 케어까지 한번에 할 수 있습니다.' },
                   },
                 ],
               },
