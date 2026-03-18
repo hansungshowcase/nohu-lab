@@ -15,10 +15,10 @@ export interface Scale {
   questions: Question[]
   likertOptions: LikertOption[]
   levels: { label: string; min: number; max: number; color: string }[]
+  reverseItems?: number[]
 }
 
 // ── PHQ-9 공식 한국어판 ──
-// 출처: PHQ Screeners (www.phqscreeners.com), 한국어 타당화 연구
 const PHQ9_QUESTIONS: Question[] = [
   { id: 1, text: '기분이 가라앉거나, 우울하거나, 희망이 없다고 느꼈다' },
   { id: 2, text: '평소 하던 일에 대한 흥미가 없어지거나 즐거움을 느끼지 못했다' },
@@ -39,7 +39,6 @@ const PHQ9_LIKERT: LikertOption[] = [
 ]
 
 // ── GAD-7 공식 한국어판 ──
-// 출처: 국가트라우마센터, 고려대 학생상담센터 검증본
 const GAD7_QUESTIONS: Question[] = [
   { id: 1, text: '초조하거나 불안하거나 조마조마하게 느꼈다' },
   { id: 2, text: '걱정하는 것을 멈추거나 조절할 수가 없었다' },
@@ -58,7 +57,6 @@ const GAD7_LIKERT: LikertOption[] = [
 ]
 
 // ── PSS-10 공식 한국어판 ──
-// 출처: Cohen et al. PSS 한국어 타당화 (0~4점, 5점 리커트)
 const PSS10_QUESTIONS: Question[] = [
   { id: 1, text: '예상치 못했던 일 때문에 당황했던 적이 얼마나 있었습니까?' },
   { id: 2, text: '인생에서 중요한 일들을 조절할 수 없다는 느낌을 얼마나 경험하였습니까?' },
@@ -80,12 +78,54 @@ const PSS10_LIKERT: LikertOption[] = [
   { value: 4, label: '매우 자주 있었다' },
 ]
 
-// PSS-10 역채점 문항 (긍정 문항: 4, 5, 7, 8번)
-export const PSS_REVERSE_ITEMS = [4, 5, 7, 8]
+// ── RSES-10 로젠버그 자존감 척도 한국어판 ──
+// 출처: Rosenberg Self-Esteem Scale 한국어 타당화
+const RSES_QUESTIONS: Question[] = [
+  { id: 1, text: '나는 내가 적어도 다른 사람만큼은 가치 있는 사람이라고 느낀다' },
+  { id: 2, text: '나는 좋은 자질을 많이 가지고 있다고 느낀다' },
+  { id: 3, text: '대체로 나는 실패한 사람이라는 느낌이 든다' },
+  { id: 4, text: '나는 대부분의 다른 사람들만큼 일을 잘 할 수 있다' },
+  { id: 5, text: '나에게는 자랑할 만한 것이 별로 없다고 느낀다' },
+  { id: 6, text: '나는 나 자신에 대해 긍정적인 태도를 가지고 있다' },
+  { id: 7, text: '나는 대체로 나 자신에 대해 만족한다' },
+  { id: 8, text: '나 자신을 좀 더 존경할 수 있었으면 좋겠다' },
+  { id: 9, text: '나는 가끔 내가 쓸모없는 사람이라고 느낀다' },
+  { id: 10, text: '때때로 나는 내가 좋지 않은 사람이라고 생각한다' },
+]
 
-// PHQ-9: 5단계 심각도 (정신건강의학과 임상 기준)
-// GAD-7: 4단계 심각도
-// PSS-10: 한국 임상 기준 커트오프
+const RSES_LIKERT: LikertOption[] = [
+  { value: 0, label: '전혀 그렇지 않다' },
+  { value: 1, label: '그렇지 않다' },
+  { value: 2, label: '그렇다' },
+  { value: 3, label: '매우 그렇다' },
+]
+
+// ── ISI-7 불면증 심각도 척도 한국어판 ──
+// 출처: Insomnia Severity Index 한국어 타당화
+const ISI_QUESTIONS: Question[] = [
+  { id: 1, text: '잠들기 어려운 정도가 어떻습니까?' },
+  { id: 2, text: '잠을 유지하기 어려운 정도가 어떻습니까?' },
+  { id: 3, text: '너무 일찍 깨는 문제가 어떻습니까?' },
+  { id: 4, text: '현재 수면 양상에 대해 얼마나 만족/불만족합니까?' },
+  { id: 5, text: '수면 문제가 낮 동안의 기능(피로, 집중력 등)에 얼마나 방해가 됩니까?' },
+  { id: 6, text: '수면 문제로 인한 삶의 질 저하가 남에게 얼마나 드러납니까?' },
+  { id: 7, text: '현재 수면 문제에 대해 얼마나 걱정/고민하고 있습니까?' },
+]
+
+const ISI_LIKERT: LikertOption[] = [
+  { value: 0, label: '전혀 없다' },
+  { value: 1, label: '약간' },
+  { value: 2, label: '보통' },
+  { value: 3, label: '심함' },
+  { value: 4, label: '매우 심함' },
+]
+
+export const PSS_REVERSE_ITEMS = [4, 5, 7, 8]
+// RSES 역채점: 긍정 문항(1,2,4,6,7)은 역채점 → 높을수록 낮은 자존감
+// 원래 RSES는 높을수록 높은 자존감이지만, 이 도구는 "심리 문제 선별"이므로
+// 부정 문항(3,5,8,9,10) 그대로 + 긍정 문항(1,2,4,6,7) 역채점 → 높을수록 낮은 자존감
+export const RSES_REVERSE_ITEMS = [1, 2, 4, 6, 7]
+
 export const SCALES: Scale[] = [
   {
     id: 'depression',
@@ -100,6 +140,7 @@ export const SCALES: Scale[] = [
       { label: '중등도 심한 우울', min: 15, max: 19, color: '#ef4444' },
       { label: '심한 우울', min: 20, max: 27, color: '#dc2626' },
     ],
+    reverseItems: [],
   },
   {
     id: 'anxiety',
@@ -113,6 +154,7 @@ export const SCALES: Scale[] = [
       { label: '중등도 불안', min: 10, max: 14, color: '#f97316' },
       { label: '심한 불안', min: 15, max: 21, color: '#ef4444' },
     ],
+    reverseItems: [],
   },
   {
     id: 'stress',
@@ -126,10 +168,39 @@ export const SCALES: Scale[] = [
       { label: '중등도 스트레스', min: 17, max: 18, color: '#f97316' },
       { label: '심한 스트레스', min: 19, max: 40, color: '#ef4444' },
     ],
+    reverseItems: PSS_REVERSE_ITEMS,
+  },
+  {
+    id: 'selfesteem',
+    name: '자존감 (RSES-10)',
+    description: '아래 문항을 읽고 자신에게 해당하는 정도를 선택해주세요.',
+    questions: RSES_QUESTIONS,
+    likertOptions: RSES_LIKERT,
+    levels: [
+      { label: '정상', min: 0, max: 14, color: '#22c55e' },
+      { label: '경미한 저하', min: 15, max: 19, color: '#eab308' },
+      { label: '중등도 저하', min: 20, max: 24, color: '#f97316' },
+      { label: '심한 저하', min: 25, max: 30, color: '#ef4444' },
+    ],
+    reverseItems: RSES_REVERSE_ITEMS,
+  },
+  {
+    id: 'insomnia',
+    name: '수면 (ISI-7)',
+    description: '최근 2주 동안의 수면 상태에 대해 답변해주세요.',
+    questions: ISI_QUESTIONS,
+    likertOptions: ISI_LIKERT,
+    levels: [
+      { label: '정상', min: 0, max: 7, color: '#22c55e' },
+      { label: '역치 이하 불면', min: 8, max: 14, color: '#eab308' },
+      { label: '중등도 불면', min: 15, max: 21, color: '#f97316' },
+      { label: '심한 불면', min: 22, max: 28, color: '#ef4444' },
+    ],
+    reverseItems: [],
   },
 ]
 
-// PHQ-9 기능 장해 추가 문항 (점수에 미포함, 임상 참고용)
+// PHQ-9 기능 장해 추가 문항
 export const FUNCTIONAL_IMPAIRMENT_QUESTION = '위의 문제들 중 하나라도 해당되는 것이 있다면, 이러한 문제들로 인해 일을 하거나 집안일을 하거나 다른 사람들과 어울려 지내는 데 얼마나 어려움이 있었습니까?'
 
 export const FUNCTIONAL_IMPAIRMENT_OPTIONS: LikertOption[] = [
@@ -142,14 +213,14 @@ export const FUNCTIONAL_IMPAIRMENT_OPTIONS: LikertOption[] = [
 export function calculateScore(scaleId: string, answers: Record<string, number>): number {
   const scale = SCALES.find((s) => s.id === scaleId)
   if (!scale) return 0
+  const maxPerItem = scale.likertOptions[scale.likertOptions.length - 1].value
+  const reverseItems = scale.reverseItems ?? []
 
   return scale.questions.reduce((sum, q) => {
     const key = `${scaleId}-${q.id}`
     const raw = answers[key] ?? 0
-
-    // PSS-10 역채점 (0~4 스케일: 4 - raw)
-    if (scaleId === 'stress' && PSS_REVERSE_ITEMS.includes(q.id)) {
-      return sum + (4 - raw)
+    if (reverseItems.includes(q.id)) {
+      return sum + (maxPerItem - raw)
     }
     return sum + raw
   }, 0)
@@ -158,7 +229,6 @@ export function calculateScore(scaleId: string, answers: Record<string, number>)
 export function getLevel(scaleId: string, score: number) {
   const scale = SCALES.find((s) => s.id === scaleId)
   if (!scale) return { label: '알 수 없음', color: 'gray', min: 0, max: 0 }
-
   return scale.levels.find((l) => score >= l.min && score <= l.max) ?? scale.levels[0]
 }
 
@@ -169,12 +239,10 @@ export function getMaxScore(scaleId: string): number {
   return scale.questions.length * maxPerItem
 }
 
-// PHQ-9 9번 문항 자살위험 체크
 export function hasSuicideRisk(answers: Record<string, number>): boolean {
   return (answers['depression-9'] ?? 0) >= 1
 }
 
-// 문항별 분석: 높은 점수 문항 추출
 export interface ItemAnalysis {
   questionText: string
   score: number
@@ -185,21 +253,18 @@ export function getHighScoringItems(scaleId: string, answers: Record<string, num
   const scale = SCALES.find((s) => s.id === scaleId)
   if (!scale) return []
   const maxPerItem = scale.likertOptions[scale.likertOptions.length - 1].value
+  const reverseItems = scale.reverseItems ?? []
 
   return scale.questions
     .map((q) => {
       const raw = answers[`${scaleId}-${q.id}`] ?? 0
-      // PSS 역채점 문항은 낮은 점수가 높은 스트레스
-      const effectiveScore = (scaleId === 'stress' && PSS_REVERSE_ITEMS.includes(q.id))
-        ? (maxPerItem - raw)
-        : raw
+      const effectiveScore = reverseItems.includes(q.id) ? (maxPerItem - raw) : raw
       return { questionText: q.text, score: effectiveScore, maxScore: maxPerItem }
     })
     .filter((item) => item.score >= threshold)
     .sort((a, b) => b.score - a.score)
 }
 
-// 종합 위험도 판정
 export function getOverallRisk(results: { scaleId: string; score: number }[]): {
   level: 'low' | 'moderate' | 'high' | 'critical'
   label: string
@@ -214,7 +279,6 @@ export function getOverallRisk(results: { scaleId: string; score: number }[]): {
     if (levelIdx > maxSeverity) maxSeverity = levelIdx
   }
 
-  // 복수 영역 중등도 이상이면 한 단계 올림
   const moderateCount = results.filter((r) => {
     const scale = SCALES.find((s) => s.id === r.scaleId)
     if (!scale) return false
