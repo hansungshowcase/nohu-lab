@@ -288,15 +288,42 @@ export default function MentalHealth() {
           </table>
         </div>
 
-        {sharedCross.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-[15px] sm:text-[16px] font-bold text-gray-900">복합 소견</h3>
-            {sharedCross.map((note, i) => (
-              <div key={i} className="bg-amber-50/40 border border-amber-200/50 rounded-xl p-4 sm:p-5 flex gap-3">
-                <span className="text-amber-500 text-[18px] shrink-0 mt-0.5">⚡</span>
-                <p className="text-[13px] sm:text-[14px] text-gray-700 leading-[1.85]">{note}</p>
+        {/* 영역별 소견 */}
+        <div className="space-y-4">
+          <h3 className="text-[16px] sm:text-[17px] font-bold text-gray-900">영역별 소견</h3>
+          {sharedResults.map((r) => {
+            const tipData = TIPS[r.scaleId]?.[r.level.label]
+            if (!tipData) return null
+            const sevColor = SEVERITY_COLORS[Math.min(r.levelIdx, 4)]
+            return (
+              <div key={r.scaleId} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5" style={{ borderLeftWidth: '4px', borderLeftColor: sevColor }}>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-[15px] sm:text-[16px] font-bold text-gray-900">{r.scaleName}</h4>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[15px] sm:text-[16px] font-bold" style={{ color: sevColor }}>{r.score}<span className="text-[12px] text-gray-400 font-normal">/{r.maxScore}</span></span>
+                    <span className="text-[11px] sm:text-[12px] font-bold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: sevColor }}>{r.level.label}</span>
+                  </div>
+                </div>
+                <p className="text-[14px] sm:text-[15px] text-gray-600 leading-[1.85] mb-3 break-keep">{tipData.description}</p>
+                <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                  <p className="text-[14px] sm:text-[15px] text-gray-800 leading-[1.85] break-keep">
+                    <span className="font-bold text-orange-600 mr-1">→</span>{tipData.recommendation}
+                  </p>
+                </div>
               </div>
-            ))}
+            )
+          })}
+        </div>
+
+        {/* 종합 의견 */}
+        {sharedCross.length > 0 && (
+          <div>
+            <h3 className="text-[16px] sm:text-[17px] font-bold text-gray-900 mb-3">종합 의견</h3>
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-4">
+              {sharedCross.map((note, i) => (
+                <p key={i} className="text-[14px] sm:text-[15px] text-gray-700 leading-[1.85] break-keep">{note}</p>
+              ))}
+            </div>
           </div>
         )}
 
@@ -305,6 +332,15 @@ export default function MentalHealth() {
         </div>
 
         <div className="space-y-2.5 pb-4">
+          <button onClick={() => shareKakao(sharedOverall.label, sharedSummary, sharedScores)}
+            className="w-full py-3.5 bg-[#FEE500] hover:bg-[#F5DC00] text-[#3C1E1E] font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
+            카카오톡으로 공유하기
+          </button>
+          <button onClick={saveImage} disabled={saving}
+            className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all disabled:opacity-50">
+            {saving ? '저장 중...' : '📷 결과 이미지 저장'}
+          </button>
           <button onClick={startQuiz} className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] text-[14px] sm:text-[15px] transition-all">나도 검사해보기</button>
         </div>
       </div>
