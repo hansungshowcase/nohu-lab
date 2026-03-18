@@ -18,6 +18,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: '#ea580c',
 }
 
 export const metadata: Metadata = {
@@ -34,6 +35,14 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: '노후연구소',
+  },
+  formatDetection: {
+    telephone: false,
   },
   openGraph: {
     title: '노후연구소 - 은퇴 준비의 모든 것',
@@ -60,6 +69,8 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.0/kakao.min.js" crossOrigin="anonymous" async />
         <script
           type="application/ld+json"

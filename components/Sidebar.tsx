@@ -97,7 +97,7 @@ export default function Sidebar({ user }: { user: User | null }) {
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] transition-all duration-200 ${
+              className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm transition-all duration-200 active:scale-[0.97] ${
                 isActive
                   ? 'bg-white/80 text-amber-900 font-semibold shadow-sm shadow-amber-200/30 border border-amber-200/40'
                   : 'text-amber-800/60 hover:bg-white/50 hover:text-amber-900'

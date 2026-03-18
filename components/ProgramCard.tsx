@@ -26,7 +26,7 @@ export default function ProgramCard({ program, userTier }: Props) {
   if (canAccess) {
     return (
       <Link href={`/programs/${program.id}`}>
-        <div className={`group bg-white rounded-2xl p-5 border ${program.badge ? 'border-orange-200 ring-1 ring-orange-100' : 'border-gray-100'} card-hover h-full relative overflow-hidden`}>
+        <div className={`group bg-white rounded-2xl p-5 border ${program.badge ? 'border-orange-200 ring-1 ring-orange-100' : 'border-gray-100'} card-hover h-full relative overflow-hidden active:scale-[0.98] transition-transform`}>
           {program.badge && (
             <div className="absolute top-0 right-0">
               <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-2xl shadow-sm flex items-center gap-1">
@@ -69,7 +69,7 @@ export default function ProgramCard({ program, userTier }: Props) {
 
   return (
     <div
-      className="group/locked bg-white/60 rounded-2xl p-5 border border-gray-100 h-full relative overflow-hidden cursor-pointer"
+      className="group/locked bg-white/60 rounded-2xl p-5 border border-gray-100 h-full relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
       onClick={() => router.push('/dashboard/tier-guide')}
     >
       <div className="absolute top-4 right-4">

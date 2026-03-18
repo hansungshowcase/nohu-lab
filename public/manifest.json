@@ -1,0 +1,17 @@
+{
+  "name": "노후연구소",
+  "short_name": "노후연구소",
+  "description": "은퇴 준비를 위한 무료 도구 모음",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafbfc",
+  "theme_color": "#ea580c",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/globe.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
