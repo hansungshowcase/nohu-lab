@@ -440,7 +440,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
       <div className="bg-white rounded-2xl border border-orange-100 p-5 sm:p-7">
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl mb-4 shadow-lg shadow-orange-500/20 text-3xl">⏰</div>
-          <h2 className="text-[18px] sm:text-xl font-bold text-gray-900">연금 수령 황금타이밍</h2>
+          <h2 className="text-[17px] sm:text-xl font-bold text-gray-900">연금수령 황금타이밍</h2>
           <p className="text-[14px] text-gray-500 mt-2">국민연금, 언제 받아야 가장 이득일까?</p>
         </div>
         <div className="space-y-3 mb-6">
@@ -536,7 +536,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
           <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 rounded-2xl border border-amber-200 p-5 sm:p-6 shadow-sm">
             <div className="text-center mb-5">
               <p className="text-[13px] font-bold text-amber-700 mb-2">🏆 분석 결과</p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
                 <span className="text-orange-600">{best.age}세</span>에 받기 시작하면<br />가장 이득입니다
               </h3>
               <p className="text-[13px] text-gray-500 mt-2">{by}년생 · 기대수명 {lifeExp}세 기준</p>
@@ -611,7 +611,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
             return (
               <div className={`rounded-2xl border p-5 ${aboveAvg ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200'}`}>
                 <div className="text-center">
-                  <p className={`text-[28px] sm:text-[32px] font-black ${aboveAvg ? 'text-purple-600' : 'text-blue-600'}`}>{brkAge}세</p>
+                  <p className={`text-[24px] sm:text-[28px] font-black ${aboveAvg ? 'text-purple-600' : 'text-blue-600'}`}>{brkAge}세</p>
                   <p className="text-[15px] font-bold text-gray-800 mt-1">
                     {aboveAvg
                       ? '평균수명(83세)보다 낮아서, 대부분 늦게 받는 게 유리'
@@ -645,19 +645,19 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="rounded-2xl p-4 sm:p-5 text-center bg-red-50 border border-red-200">
                     <p className="text-[13px] text-red-600 font-semibold mb-2">해지하면</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-red-600">{fM(lump)}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-red-600">{fM(lump)}</p>
                     <p className="text-[12px] text-red-400 mt-2">납부액 + 이자</p>
                   </div>
                   <div className="rounded-2xl p-4 sm:p-5 text-center bg-green-50 border border-green-200">
                     <p className="text-[13px] text-green-600 font-semibold mb-2">연금으로 받으면</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-green-600">{fM(sc[1].cumul)}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-green-600">{fM(sc[1].cumul)}</p>
                     <p className="text-[12px] text-green-500 mt-2">{lifeExp}세까지 누적</p>
                   </div>
                 </div>
 
                 {/* 결론 */}
                 <div className="bg-green-600 rounded-2xl p-4 sm:p-5 text-center text-white">
-                  <p className="text-[20px] sm:text-[22px] font-bold">연금이 {ratio}배 유리</p>
+                  <p className="text-[18px] sm:text-[20px] font-bold">연금이 {ratio}배 유리</p>
                   <p className="text-[14px] font-medium mt-1 text-green-100">차이: {fM(diff)}</p>
                 </div>
 
