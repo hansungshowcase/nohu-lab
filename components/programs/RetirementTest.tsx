@@ -6,7 +6,7 @@ import { getResultByScore, ResultCode } from './retirement-test/results'
 import ResultCard from './retirement-test/ResultCard'
 import ShareButtons from './retirement-test/ShareButtons'
 import AnalyzingScreen from './retirement-test/AnalyzingScreen'
-import { getCrossInsights, getDeepAdvice, getRiskAssessment, getCrevasseAnalysis, getRetirementFundCalc, getScenarios, getResources } from './retirement-test/ResultCardA4'
+import { getCrossInsights, getDeepAdvice, getRiskAssessment, getCrevasseAnalysis, getRetirementFundCalc, getScenarios } from './retirement-test/ResultCardA4'
 
 type Phase = 'intro' | 'quiz' | 'analyzing' | 'result'
 
@@ -294,7 +294,7 @@ export default function RetirementTest() {
       {(() => {
         const insights = getCrossInsights(categories)
         return insights.length > 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
             <h3 className="text-lg font-bold text-gray-900 mb-4">교차 분석 인사이트</h3>
             <div className="space-y-3">
               {insights.map((ins, i) => (
@@ -308,28 +308,66 @@ export default function RetirementTest() {
         ) : null
       })()}
 
+      {/* 필요 노후자금 + 월 저축 계획 */}
+      {(() => {
+        const fund = getRetirementFundCalc(total, answers)
+        const monthlySave = fund.gap > 0 ? Math.round(fund.gap / 20 / 12) : 0
+        return (
+          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-slide-up" style={{ animationDelay: '300ms' }}>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">나의 노후자금 계산</h3>
+            <div className="grid grid-cols-2 gap-3 text-center mb-4">
+              <div className="bg-orange-50 rounded-xl p-4">
+                <div className="text-xs text-gray-500 mb-1">은퇴 후 월 생활비</div>
+                <div className="text-2xl font-bold text-orange-700">{fund.monthly}만원</div>
+              </div>
+              <div className="bg-orange-50 rounded-xl p-4">
+                <div className="text-xs text-gray-500 mb-1">{fund.years}년간 필요 총액</div>
+                <div className="text-2xl font-bold text-orange-700">{(fund.totalNeeded / 10000).toFixed(1)}억원</div>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-4">
+                <div className="text-xs text-gray-500 mb-1">예상 연금 수령</div>
+                <div className="text-2xl font-bold text-blue-700">{(fund.pensionEstimate / 10000).toFixed(1)}억원</div>
+              </div>
+              <div className="bg-red-50 rounded-xl p-4">
+                <div className="text-xs text-gray-500 mb-1">추가 확보 필요</div>
+                <div className="text-2xl font-bold text-red-600">{(fund.gap / 10000).toFixed(1)}억원</div>
+              </div>
+            </div>
+            {fund.gap > 0 && (
+              <div className="bg-gradient-to-r from-orange-500 to-amber-600 rounded-xl p-5 text-white text-center">
+                <div className="text-sm opacity-90 mb-1">지금부터 매월 저축해야 할 금액 (20년 기준)</div>
+                <div className="text-3xl font-bold">{monthlySave.toLocaleString()}만원</div>
+                <div className="text-xs opacity-75 mt-1">연 5% 수익률 가정 시 약 {Math.round(monthlySave * 0.6).toLocaleString()}만원으로 줄일 수 있습니다</div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
       {/* 4대 영역 심층 조언 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">4대 영역 심층 분석</h3>
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-slide-up" style={{ animationDelay: '400ms' }}>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">영역별 맞춤 실천 가이드</h3>
         <div className="space-y-4">
           {getDeepAdvice(total, categories, answers).map((adv, i) => (
-            <div key={i} className="border border-gray-100 rounded-xl p-4">
-              <div className="font-semibold text-orange-700 mb-2">{adv.title}</div>
-              <p className="text-sm text-gray-600 leading-relaxed">{adv.advice}</p>
+            <div key={i} className="border-l-4 border-orange-400 bg-orange-50/50 rounded-r-xl p-4">
+              <div className="font-bold text-gray-900 mb-2">{adv.title}</div>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{adv.advice}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* 3대 리스크 평가 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">3대 은퇴 리스크 평가</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-slide-up" style={{ animationDelay: '500ms' }}>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">3대 은퇴 리스크</h3>
+        <div className="space-y-3">
           {getRiskAssessment(categories, answers).map((risk, i) => (
-            <div key={i} className="rounded-xl p-4 text-center" style={{ backgroundColor: `${risk.color}10` }}>
-              <div className="text-sm font-semibold mb-1" style={{ color: risk.color }}>{risk.name}</div>
-              <div className="text-lg font-bold mb-2" style={{ color: risk.color }}>{risk.level}</div>
-              <p className="text-xs text-gray-500 leading-relaxed">{risk.detail}</p>
+            <div key={i} className="rounded-xl p-4 border" style={{ borderColor: `${risk.color}40`, backgroundColor: `${risk.color}08` }}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-gray-900">{risk.name}</span>
+                <span className="px-3 py-0.5 rounded-full text-xs font-bold text-white" style={{ backgroundColor: risk.color }}>{risk.level}</span>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed">{risk.detail}</p>
             </div>
           ))}
         </div>
@@ -339,16 +377,17 @@ export default function RetirementTest() {
       {(() => {
         const crevasse = getCrevasseAnalysis(answers)
         return (
-          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">소득 크레바스 진단</h3>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="px-3 py-1 rounded-full text-sm font-bold text-white" style={{ backgroundColor: crevasse.color }}>{crevasse.level}</span>
+          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-slide-up" style={{ animationDelay: '600ms' }}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold text-gray-900">소득 크레바스 진단</h3>
+              <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style={{ backgroundColor: crevasse.color }}>{crevasse.level}</span>
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed mb-3">{crevasse.detail}</p>
-            <div className="space-y-2">
+            <p className="text-sm text-gray-600 leading-relaxed mb-4">{crevasse.detail}</p>
+            <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+              <div className="text-xs font-semibold text-gray-700 mb-2">실천 전략</div>
               {crevasse.strategy.map((s, i) => (
-                <div key={i} className="flex gap-2 text-sm text-gray-600">
-                  <span className="text-orange-500 shrink-0">{'>'}</span>
+                <div key={i} className="flex gap-2 text-sm text-gray-700">
+                  <span className="text-orange-500 font-bold shrink-0">{i + 1}.</span>
                   <span>{s}</span>
                 </div>
               ))}
@@ -357,59 +396,17 @@ export default function RetirementTest() {
         )
       })()}
 
-      {/* 필요 노후자금 산출 */}
-      {(() => {
-        const fund = getRetirementFundCalc(total, answers)
-        return (
-          <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">필요 노후자금 산출</h3>
-            <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="bg-orange-50 rounded-xl p-3">
-                <div className="text-xs text-gray-500">월 생활비</div>
-                <div className="text-xl font-bold text-orange-700">{fund.monthly}만원</div>
-              </div>
-              <div className="bg-orange-50 rounded-xl p-3">
-                <div className="text-xs text-gray-500">필요 총액 ({fund.years}년)</div>
-                <div className="text-xl font-bold text-orange-700">{(fund.totalNeeded / 10000).toFixed(1)}억원</div>
-              </div>
-              <div className="bg-blue-50 rounded-xl p-3">
-                <div className="text-xs text-gray-500">예상 연금 수령</div>
-                <div className="text-xl font-bold text-blue-700">{(fund.pensionEstimate / 10000).toFixed(1)}억원</div>
-              </div>
-              <div className="bg-red-50 rounded-xl p-3">
-                <div className="text-xs text-gray-500">추가 확보 필요</div>
-                <div className="text-xl font-bold text-red-600">{(fund.gap / 10000).toFixed(1)}억원</div>
-              </div>
-            </div>
-          </div>
-        )
-      })()}
-
       {/* 시나리오 분석 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">은퇴 후 시나리오 분석</h3>
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 animate-slide-up" style={{ animationDelay: '700ms' }}>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">은퇴 후 생활비 시나리오</h3>
         <div className="space-y-3">
           {getScenarios(total, categories).map((sc, i) => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: `${sc.color}10` }}>
-              <span className="px-2.5 py-1 rounded-lg text-xs font-bold text-white shrink-0" style={{ backgroundColor: sc.color }}>{sc.label}</span>
+            <div key={i} className="flex items-center gap-4 p-4 rounded-xl border" style={{ borderColor: `${sc.color}30`, backgroundColor: `${sc.color}08` }}>
+              <span className="px-3 py-1.5 rounded-lg text-sm font-bold text-white shrink-0" style={{ backgroundColor: sc.color }}>{sc.label}</span>
               <div className="flex-1">
-                <div className="font-semibold text-sm" style={{ color: sc.color }}>{sc.monthly}</div>
-                <div className="text-xs text-gray-500">{sc.desc}</div>
+                <div className="text-lg font-bold" style={{ color: sc.color }}>{sc.monthly}</div>
+                <div className="text-xs text-gray-500 mt-0.5">{sc.desc}</div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 추천 자원 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">추천 자원</h3>
-        <div className="space-y-3">
-          {getResources(categories).map((res, i) => (
-            <div key={i} className="border border-gray-100 rounded-xl p-3">
-              <div className="font-semibold text-sm text-gray-900">{res.name}</div>
-              <div className="text-xs text-orange-600 font-medium">{res.url}</div>
-              <div className="text-xs text-gray-500 mt-0.5">{res.desc}</div>
             </div>
           ))}
         </div>
