@@ -17,7 +17,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [showGuestBanner, setShowGuestBanner] = useState(false)
+  const [sharedMode, setSharedMode] = useState(false)
   const isLoginPage = pathname === '/' || pathname === '/admin/login'
+
+  // 공유 링크 감지 (사주풀이 결과 링크)
+  useEffect(() => {
+    const isShared = pathname === '/programs/saju-reading' && window.location.search.includes('y=')
+    setSharedMode(isShared)
+  }, [pathname])
 
   useEffect(() => {
     if (isLoginPage) {
@@ -49,6 +56,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isLoginPage) {
     return <>{children}</>
+  }
+
+  // 공유 링크: 사이드바/배너/채팅 없이 결과만 풀스크린
+  if (sharedMode) {
+    return (
+      <div className="min-h-screen bg-white">
+        <main className="min-h-screen">{children}</main>
+      </div>
+    )
   }
 
   return (
