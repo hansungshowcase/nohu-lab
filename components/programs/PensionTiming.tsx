@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 
 // ── 2026년 최신 국민연금 데이터 (NPS 공식 기반) ──
 const A_VAL = 3_193_511 // 2026년 A값
@@ -154,25 +154,29 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   const [started, setStarted] = useState(false)
   const [kakaoMsg, setKakaoMsg] = useState('')
 
-  // URL 파라미터 읽기 (결과 공유용)
-  const [urlParams] = useState(() => {
-    if (typeof window === 'undefined') return null
-    const p = new URLSearchParams(window.location.search)
-    const a = p.get('age'), i = p.get('income'), l = p.get('le')
-    return a && i ? { age: a, income: i, le: l || '85' } : null
-  })
+  const [urlLoaded, setUrlLoaded] = useState(false)
 
   useEffect(() => {
     const u = getU()
     setUsage(u)
     if (userTier === 0 && u >= MF) setBlocked(true)
-    if (urlParams) { setAge(urlParams.age); setMyIncome(urlParams.income); setLE(urlParams.le); setStarted(true) }
-  }, [userTier, urlParams])
+
+    // URL 파라미터 읽기 (결과 공유용)
+    const p = new URLSearchParams(window.location.search)
+    const pAge = p.get('age'), pIncome = p.get('income'), pLe = p.get('le')
+    if (pAge && pIncome) {
+      setAge(pAge)
+      setMyIncome(pIncome)
+      if (pLe) setLE(pLe)
+      setStarted(true)
+      setUrlLoaded(true)
+    }
+  }, [userTier])
 
   // URL 파라미터: base 계산 후 결과 표시
   useEffect(() => {
-    if (urlParams && base > 0 && !done && started) { setDone(true); setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100) }
-  }, [urlParams, base, done, started])
+    if (urlLoaded && base > 0 && !done && started) { setDone(true); setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100) }
+  }, [urlLoaded, base, done, started])
 
   useEffect(() => () => { if (ivRef.current) clearTimeout(ivRef.current as unknown as ReturnType<typeof setTimeout>) }, [])
 
@@ -222,6 +226,12 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
     const n = v.replace(/[^0-9]/g, '')
     setMyIncome(n ? parseInt(n).toLocaleString() : '')
     setDone(false)
+  }
+
+  function getShareUrl() {
+    const base_url = 'https://retireplan.kr/programs/pension-timing'
+    if (!myAge || !myIncome) return base_url
+    return `${base_url}?age=${myAge}&income=${myIncome.replace(/,/g, '')}&le=${le}`
   }
 
   function handleCalc() {
