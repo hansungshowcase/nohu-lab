@@ -121,7 +121,7 @@ export default function ChatWidget({ user }: { user: User | null }) {
     <>
       {/* 채팅창 */}
       {open && (
-        <div className="fixed bottom-20 right-3 sm:right-6 w-[min(340px,calc(100vw-1.5rem))] h-[480px] max-h-[calc(100dvh-8rem)] bg-white rounded-2xl shadow-2xl shadow-black/15 border border-gray-200 flex flex-col z-50 animate-[slideUp_0.2s_ease-out]">
+        <div className="fixed sm:bottom-20 sm:right-6 sm:w-[340px] sm:h-[480px] sm:max-h-[calc(100dvh-8rem)] sm:rounded-2xl inset-0 sm:inset-auto w-full h-full bg-white shadow-2xl shadow-black/15 border-0 sm:border border-gray-200 flex flex-col z-50 animate-[slideUp_0.15s_ease-out] safe-bottom">
           {/* 헤더 */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 shrink-0">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
