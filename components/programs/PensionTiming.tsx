@@ -350,28 +350,14 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
 
       const dataUrl = canvas.toDataURL('image/png')
 
-      const blob = await (await fetch(dataUrl)).blob()
-
-      // 모바일: Web Share API → 갤러리 저장/공유
-      const file = new File([blob], `연금분석_${age}세.png`, { type: 'image/png' })
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: '연금 수령 황금 타이밍' })
-          setSaving(false)
-          setSaveOk(true); setTimeout(() => setSaveOk(false), 2000)
-          return
-        } catch { /* share 취소 시 fallback */ }
-      }
-
-      // PC/iOS fallback: 파일 다운로드
-      const blobUrl = URL.createObjectURL(blob)
+      // 다운로드
       const link = document.createElement('a')
       link.download = `연금황금타이밍_${age}세.png`
-      link.href = blobUrl
+      link.href = dataUrl
+      link.style.display = 'none'
       document.body.appendChild(link)
       link.click()
-      document.body.removeChild(link)
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000)
+      setTimeout(() => document.body.removeChild(link), 100)
       setSaveOk(true); setTimeout(() => setSaveOk(false), 2000)
     } catch (e) {
       console.error('이미지 저장 실패:', e)
@@ -385,21 +371,25 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
     try { await navigator.clipboard.writeText(u) } catch { const a = document.createElement('textarea'); a.value = u; a.style.position = 'fixed'; a.style.left = '-9999px'; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a) }
     setCopy(true); setTimeout(() => setCopy(false), 2000)
   }
-  const handleKakao = async () => {
+  const handleKakao = () => {
     const u = getShareUrl()
-    const shareData = { title: '연금 수령 황금 타이밍', text: best ? `${age}세 분석: ${best.age}세에 시작하면 가장 이득!` : '', url: u }
+    const w = window as typeof window & { Kakao?: { isInitialized: () => boolean; init: (k: string) => void; Share: { sendDefault: (o: Record<string, unknown>) => void } } }
 
-    // 1순위: Web Share API (모바일 공유 시트 → 카카오톡 선택)
-    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-      try { await navigator.share(shareData); return } catch {}
-    }
-    // 2순위: navigator.share만 있는 경우
-    if (navigator.share) {
-      try { await navigator.share(shareData); return } catch {}
+    // Kakao SDK
+    if (w.Kakao) {
+      try {
+        if (!w.Kakao.isInitialized()) w.Kakao.init('3913fde247b12ce25084eb42a9b17ed9')
+        w.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: { title: '연금수령 황금타이밍', description: best ? `${age}세 분석: ${best.age}세에 시작하면 가장 이득!` : '나에게 최적인 연금 개시 시점은?', imageUrl: 'https://retireplan.kr/api/og', link: { mobileWebUrl: u, webUrl: u } },
+          buttons: [{ title: '결과 보기', link: { mobileWebUrl: u, webUrl: u } }],
+        })
+        return
+      } catch { /* SDK 실패 시 fallback */ }
     }
 
-    // 3순위: 클립보드 복사 + 안내
-    try { await navigator.clipboard.writeText(u) } catch { const a = document.createElement('textarea'); a.value = u; a.style.position = 'fixed'; a.style.left = '-9999px'; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a) }
+    // fallback: 클립보드 복사
+    try { navigator.clipboard.writeText(u) } catch { const a = document.createElement('textarea'); a.value = u; a.style.position = 'fixed'; a.style.left = '-9999px'; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a) }
     setKakaoMsg('링크가 복사되었습니다!\n카카오톡에서 붙여넣기 하세요'); setTimeout(() => setKakaoMsg(''), 4000)
   }
 
