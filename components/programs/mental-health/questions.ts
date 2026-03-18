@@ -32,9 +32,9 @@ const PHQ9_QUESTIONS: Question[] = [
 ]
 
 const PHQ9_LIKERT: LikertOption[] = [
-  { value: 0, label: '전혀 아니다' },
-  { value: 1, label: '여러 날 동안' },
-  { value: 2, label: '일주일 이상' },
+  { value: 0, label: '전혀 없었다' },
+  { value: 1, label: '며칠 정도 (2~6일)' },
+  { value: 2, label: '절반 이상 (7일 이상)' },
   { value: 3, label: '거의 매일' },
 ]
 
@@ -50,10 +50,10 @@ const GAD7_QUESTIONS: Question[] = [
 ]
 
 const GAD7_LIKERT: LikertOption[] = [
-  { value: 0, label: '전혀 방해 받지 않았다' },
-  { value: 1, label: '며칠 동안 방해 받았다' },
-  { value: 2, label: '일주일 이상 방해 받았다' },
-  { value: 3, label: '거의 매일 방해 받았다' },
+  { value: 0, label: '전혀 없었다' },
+  { value: 1, label: '며칠 정도 (2~6일)' },
+  { value: 2, label: '절반 이상 (7일 이상)' },
+  { value: 3, label: '거의 매일' },
 ]
 
 // ── PSS-10 공식 한국어판 ──
@@ -71,11 +71,11 @@ const PSS10_QUESTIONS: Question[] = [
 ]
 
 const PSS10_LIKERT: LikertOption[] = [
-  { value: 0, label: '전혀 없었다' },
-  { value: 1, label: '거의 없었다' },
-  { value: 2, label: '때때로 있었다' },
-  { value: 3, label: '자주 있었다' },
-  { value: 4, label: '매우 자주 있었다' },
+  { value: 0, label: '전혀 없었다 (0일)' },
+  { value: 1, label: '거의 없었다 (월 1~2일)' },
+  { value: 2, label: '가끔 있었다 (주 1~2일)' },
+  { value: 3, label: '자주 있었다 (주 3~4일)' },
+  { value: 4, label: '거의 매일 있었다' },
 ]
 
 // ── RSES-10 로젠버그 자존감 척도 한국어판 ──
@@ -114,10 +114,10 @@ const ISI_QUESTIONS: Question[] = [
 
 const ISI_LIKERT: LikertOption[] = [
   { value: 0, label: '전혀 없다' },
-  { value: 1, label: '약간' },
-  { value: 2, label: '보통' },
-  { value: 3, label: '심함' },
-  { value: 4, label: '매우 심함' },
+  { value: 1, label: '약간 있다' },
+  { value: 2, label: '어느 정도 있다' },
+  { value: 3, label: '많이 있다' },
+  { value: 4, label: '아주 심하다' },
 ]
 
 export const PSS_REVERSE_ITEMS = [4, 5, 7, 8]

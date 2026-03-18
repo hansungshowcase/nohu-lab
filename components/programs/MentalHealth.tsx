@@ -206,20 +206,30 @@ export default function MentalHealth() {
     if (!resultRef.current || saving) return
     setSaving(true)
     try {
-      const { toPng } = await import('html-to-image')
+      let dataUrl = ''
       const node = resultRef.current
-      // 전체 높이 캡처 (스크롤 짤림 방지)
-      const dataUrl = await toPng(node, {
-        quality: 0.95,
-        pixelRatio: 2,
-        backgroundColor: '#ffffff',
-        cacheBust: true,
-        width: node.scrollWidth,
-        height: node.scrollHeight,
-        style: { overflow: 'visible', maxHeight: 'none' },
-        filter: (el: HTMLElement) => !el.classList?.contains('no-print'),
-      })
-      // dataUrl → Blob → download (모바일 갤러리 저장 호환)
+
+      // 1차: html-to-image
+      try {
+        const { toPng } = await import('html-to-image')
+        dataUrl = await toPng(node, {
+          quality: 0.95, pixelRatio: 2, backgroundColor: '#ffffff', cacheBust: true,
+          width: node.scrollWidth, height: node.scrollHeight,
+          style: { overflow: 'visible', maxHeight: 'none' },
+          filter: (el: HTMLElement) => !el.classList?.contains('no-print'),
+        })
+      } catch {
+        // 2차: html2canvas fallback
+        try {
+          const html2canvas = (await import('html2canvas')).default
+          const canvas = await html2canvas(node, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false })
+          dataUrl = canvas.toDataURL('image/png', 0.95)
+        } catch { throw new Error('캡처 실패') }
+      }
+
+      if (!dataUrl || !dataUrl.startsWith('data:image')) throw new Error('이미지 생성 실패')
+
+      // Blob → download
       const res = await fetch(dataUrl)
       const blob = await res.blob()
       const blobUrl = URL.createObjectURL(blob)
@@ -230,7 +240,7 @@ export default function MentalHealth() {
       document.body.appendChild(link)
       link.click()
       setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 3000)
-    } catch { alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.') }
+    } catch { alert('이미지 저장에 실패했습니다.\n스크린샷(전원+볼륨↓)을 이용해주세요.') }
     setSaving(false)
   }
 
