@@ -1,26 +1,16 @@
 import { Program } from '@/lib/types'
 
 export const programRegistry: Program[] = [
-  // ── minTier 0 - 비회원 ──
+  // ── 재무·투자 섹터 ──
   {
     id: 'retirement-test',
     name: '노후 준비 점수 테스트',
     description: '20개 질문으로 알아보는 나의 노후 준비 상태',
     minTier: 0,
     icon: '📊',
-    category: '테스트',
+    category: '재무·투자',
     isActive: true,
     badge: '인기',
-  },
-  {
-    id: 'saju-reading',
-    name: '사주풀이',
-    description: '생년월일로 알아보는 나의 타고난 운명과 올해 운세',
-    minTier: 0,
-    icon: '🔮',
-    category: '테스트',
-    isActive: true,
-    badge: 'NEW',
   },
   {
     id: 'pension-timing',
@@ -28,21 +18,33 @@ export const programRegistry: Program[] = [
     description: '조기·정상·연기수령 비교로 나에게 최적인 연금 개시 시점을 찾아드립니다',
     minTier: 0,
     icon: '⏰',
-    category: '재무',
+    category: '재무·투자',
     isActive: true,
     badge: 'NEW',
   },
+  // ── 심리·건강 섹터 ──
   {
     id: 'mental-health',
     name: '심리 상태 자가진단',
     description: '우울, 불안, 스트레스 수준을 간단하게 체크해보세요',
     minTier: 0,
     icon: '🧠',
-    category: '테스트',
+    category: '심리·건강',
     isActive: true,
     badge: 'NEW',
   },
-  // ── minTier 1 - 코어회원 ──
+  // ── 운세·풀이 섹터 ──
+  {
+    id: 'saju-reading',
+    name: '사주풀이',
+    description: '생년월일로 알아보는 나의 타고난 운명과 올해 운세',
+    minTier: 0,
+    icon: '🔮',
+    category: '운세·풀이',
+    isActive: true,
+    badge: 'NEW',
+  },
+  // ── 유틸리티 섹터 ──
   {
     id: 'text-counter',
     name: '글자수 카운터',
@@ -70,14 +72,13 @@ export const programRegistry: Program[] = [
     category: '유틸리티',
     isActive: true,
   },
-  // ── minTier 2 - 우수회원 ──
   {
     id: 'hashtag-recommender',
     name: '해시태그 추천기',
     description: '게시글 내용에 맞는 해시태그를 추천합니다',
     minTier: 2,
     icon: '#️⃣',
-    category: '콘텐츠',
+    category: '유틸리티',
     isActive: true,
   },
   {

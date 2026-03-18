@@ -37,7 +37,7 @@ export default function Sidebar({ user }: { user: User | null }) {
     ...categories.map((cat) => ({
       href: `/dashboard?category=${encodeURIComponent(cat)}`,
       label: cat,
-      icon: cat === '유틸리티' ? '🔧' : cat === '콘텐츠' ? '📄' : cat === '분석' ? '📊' : cat === '테스트' ? '📋' : cat === '재무' ? '💰' : '📁',
+      icon: cat === '재무·투자' ? '💰' : cat === '심리·건강' ? '🧠' : cat === '운세·풀이' ? '🔮' : cat === '유틸리티' ? '🔧' : '📁',
     })),
     { href: '/dashboard/tier-guide', label: '등급 안내', icon: '🏆' },
     ...(user.tier === 4
