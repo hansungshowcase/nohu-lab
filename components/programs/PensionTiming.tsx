@@ -382,12 +382,6 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
     setSaving(false)
   }
 
-  const getShareUrl = useCallback(() => {
-    const base = 'https://retireplan.kr/programs/pension-timing'
-    if (!myAge || !myIncome) return base
-    return `${base}?age=${myAge}&income=${myIncome.replace(/,/g, '')}&le=${le}`
-  }, [myAge, myIncome, le])
-
   const handleCopy = async () => {
     const u = getShareUrl()
     try { await navigator.clipboard.writeText(u) } catch { const a = document.createElement('textarea'); a.value = u; a.style.position = 'fixed'; a.style.left = '-9999px'; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a) }
