@@ -8,7 +8,7 @@ import {
 } from './mental-health/questions'
 import { TIPS, getCrossInterpretation } from './mental-health/tips'
 
-type Phase = 'intro' | 'quiz' | 'functional' | 'result'
+type Phase = 'intro' | 'quiz' | 'functional' | 'analyzing' | 'result'
 
 const DISCLAIMER = '본 검사는 선별 목적의 자가 참고용으로, 의학적 진단을 대체하지 않습니다. 정확한 진단 및 치료를 위해 정신건강의학과 전문의 상담을 권장합니다.'
 const KAKAO_KEY = '3913fde247b12ce25084eb42a9b17ed9'
@@ -31,6 +31,49 @@ interface KakaoWindow extends Window {
 
 // 심각도별 색상 (빨강 대신 부드러운 톤)
 const SEVERITY_COLORS = ['#22c55e', '#d4a017', '#c2751a', '#a8423f', '#8b2252']
+
+function AnalyzingScreen({ steps, onComplete }: { steps: string[]; onComplete: () => void }) {
+  const [current, setCurrent] = useState(0)
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const stepDuration = 2800 / steps.length
+    const stepTimer = setInterval(() => {
+      setCurrent((prev) => {
+        if (prev >= steps.length - 1) { clearInterval(stepTimer); return prev }
+        return prev + 1
+      })
+    }, stepDuration)
+    const progressTimer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) { clearInterval(progressTimer); return 100 }
+        return prev + 1.2
+      })
+    }, 30)
+    const doneTimer = setTimeout(onComplete, 3200)
+    return () => { clearInterval(stepTimer); clearInterval(progressTimer); clearTimeout(doneTimer) }
+  }, [steps.length, onComplete])
+
+  return (
+    <div className="max-w-lg mx-auto px-4 flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
+      <div className="w-20 h-20 mb-6 relative">
+        <div className="absolute inset-0 rounded-full border-4 border-orange-100" />
+        <div className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center text-3xl">🧠</div>
+      </div>
+      <h3 className="text-[17px] sm:text-[19px] font-bold text-gray-900 mb-3">검사 결과 분석 중</h3>
+      <div className="w-full max-w-xs mb-4">
+        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full transition-all duration-100" style={{ width: `${Math.min(progress, 100)}%` }} />
+        </div>
+        <p className="text-[12px] text-gray-400 text-right mt-1">{Math.min(Math.round(progress), 100)}%</p>
+      </div>
+      <div className="h-6">
+        <p className="text-[13px] sm:text-[14px] text-gray-500 animate-pulse">{steps[Math.min(current, steps.length - 1)]}</p>
+      </div>
+    </div>
+  )
+}
 
 export default function MentalHealth() {
   const [phase, setPhase] = useState<Phase>('intro')
@@ -204,7 +247,7 @@ export default function MentalHealth() {
         <div className="space-y-2">
           {FUNCTIONAL_IMPAIRMENT_OPTIONS.map((opt) => (
             <button key={opt.value} disabled={transitionLock.current}
-              onClick={() => { if (transitionLock.current) return; transitionLock.current = true; setFunctionalImpairment(opt.value); if (!isMember) incrementTestCount(); setTimeout(() => { transitionLock.current = false; setPhase('result') }, 300) }}
+              onClick={() => { if (transitionLock.current) return; transitionLock.current = true; setFunctionalImpairment(opt.value); if (!isMember) incrementTestCount(); setTimeout(() => { transitionLock.current = false; setPhase('analyzing') }, 300) }}
               className={`w-full text-left px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-200 ${functionalImpairment === opt.value ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.98]' : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 border border-transparent hover:border-orange-200'}`}>
               {opt.label}
             </button>
@@ -216,6 +259,12 @@ export default function MentalHealth() {
       </div>
     </div>
   )
+
+  // === ANALYZING ===
+  if (phase === 'analyzing') {
+    const steps = ['응답 데이터 수집 중...', '우울·불안 척도 분석 중...', '스트레스·자존감 평가 중...', '수면 상태 분석 중...', '교차 영역 종합 분석 중...', '결과 보고서 생성 중...']
+    return <AnalyzingScreen steps={steps} onComplete={() => setPhase('result')} />
+  }
 
   // === RESULT ===
   const results = activeScales.map((scale) => {
