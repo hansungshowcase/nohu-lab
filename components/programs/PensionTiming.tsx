@@ -266,8 +266,9 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
       const recAge = lump > 0 && base > 0 ? Math.round((na + Math.ceil(lump / base) / 12) * 10) / 10 : 0
       const realMonthly = Math.round(base - tax / 12 - healthIns)
 
+      const isMob = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
       const wrap = document.createElement('div')
-      wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:420px;padding:24px;background:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif;'
+      wrap.style.cssText = `position:absolute;left:-9999px;top:0;width:${isMob ? 360 : 420}px;padding:24px;background:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif;`
       wrap.innerHTML = `
         <div style="padding:4px;">
           <!-- 헤더 -->
@@ -340,12 +341,15 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
       document.body.appendChild(wrap)
 
       const html2canvas = (await import('html2canvas')).default
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const canvas = await html2canvas(wrap, {
-        scale: 2,
+        scale: isMob ? 1.5 : 2,
         backgroundColor: '#ffffff',
         useCORS: true,
         logging: false,
-      } as Parameters<typeof html2canvas>[1])
+        width: wrap.scrollWidth,
+        height: wrap.scrollHeight,
+      } as any)
       document.body.removeChild(wrap)
 
       // canvas → blob
