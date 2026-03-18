@@ -1011,7 +1011,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
           <div style={s({ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' })}>
             <div>
               <div style={s({ fontSize: '11px', fontWeight: 700, color: '#374151' })}>노후연구소</div>
-              <div style={s({ fontSize: '8px', color: '#9ca3af', marginTop: '2px' })}>nohu-lab.com · cafe.naver.com/eovhskfktmak</div>
+              <div style={s({ fontSize: '8px', color: '#9ca3af', marginTop: '2px' })}>retireplan.kr · cafe.naver.com/eovhskfktmak</div>
             </div>
             <div style={s({ textAlign: 'right', maxWidth: '380px' })}>
               <div style={s({ fontSize: '7.5px', color: '#9ca3af', lineHeight: '1.5' })}>

@@ -131,7 +131,7 @@ const ResultCard = forwardRef<HTMLDivElement, ResultCardProps>(
         {/* Footer */}
         <div className="bg-gray-50 px-6 py-3 text-center border-t border-gray-100">
           <div className="text-xs text-gray-400">
-            nohu-lab.com · 나도 테스트하기
+            retireplan.kr · 나도 테스트하기
           </div>
         </div>
       </div>
