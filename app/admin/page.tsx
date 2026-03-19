@@ -327,7 +327,7 @@ function AdminContent() {
       )}
 
       {/* 탭 */}
-      <div className="flex gap-2 mb-6 border-b border-orange-100">
+      <div className="flex gap-2 mb-6 border-b border-orange-100 overflow-x-auto scrollbar-hide">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -522,7 +522,7 @@ function AdminContent() {
                       <td className="px-4 py-3">
                         <button
                           onClick={() => handleDelete(member.id, member.nickname)}
-                          className="text-red-500 hover:text-red-700 text-xs"
+                          className="text-red-500 hover:text-red-700 text-xs px-2 py-1.5"
                         >
                           삭제
                         </button>

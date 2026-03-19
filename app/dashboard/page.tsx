@@ -80,7 +80,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="mb-8 sm:mb-10 ml-12 lg:ml-0 animate-fade-in">
         <div className="flex items-center gap-3 mb-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight truncate max-w-[200px] sm:max-w-none">
             {user.nickname}님
           </h1>
         </div>

@@ -197,7 +197,7 @@ export default function RetirementTest() {
             {/* 개인정보 입력 */}
             <div className="space-y-3 text-left">
               <div className="text-sm font-semibold text-gray-700 text-center">맞춤 분석을 위한 정보 (선택)</div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">나이</label>
                   <div className="relative">
@@ -374,7 +374,7 @@ export default function RetirementTest() {
           <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden animate-slide-up" style={{ animationDelay: '150ms' }}>
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 text-center">
               <div className="text-sm opacity-80 mb-1">{data.label} 동년배 자산 순위</div>
-              <div className="text-5xl font-black">{percentile >= 50 ? `상위 ${100 - percentile}%` : `하위 ${percentile}%`}</div>
+              <div className="text-4xl sm:text-5xl font-black">{percentile >= 50 ? `상위 ${100 - percentile}%` : `하위 ${percentile}%`}</div>
               <div className="text-sm opacity-80 mt-2">
                 내 순자산 {asset >= 10000 ? `${(asset/10000).toFixed(1)}억` : `${asset.toLocaleString()}만`}원
                 &nbsp;|&nbsp; {data.label} 평균 {(data.avg/10000).toFixed(1)}억원
@@ -459,22 +459,22 @@ export default function RetirementTest() {
             <div className="grid grid-cols-2 gap-3 text-center mb-4">
               <div className="bg-orange-50 rounded-xl p-4">
                 <div className="text-xs text-gray-500 mb-1">적정 월 생활비</div>
-                <div className="text-2xl font-bold text-orange-700">{fund.monthly}만원</div>
+                <div className="text-xl sm:text-2xl font-bold text-orange-700">{fund.monthly}만원</div>
                 <div className="text-[10px] text-gray-400">최소 {fund.monthlyMin}만원</div>
               </div>
               <div className="bg-orange-50 rounded-xl p-4">
                 <div className="text-xs text-gray-500 mb-1">{fund.years}년간 필요 총액</div>
-                <div className="text-2xl font-bold text-orange-700">{(fund.totalNeeded / 10000).toFixed(1)}억원</div>
+                <div className="text-xl sm:text-2xl font-bold text-orange-700">{(fund.totalNeeded / 10000).toFixed(1)}억원</div>
                 <div className="text-[10px] text-gray-400">최소 {(fund.totalNeededMin / 10000).toFixed(1)}억원</div>
               </div>
               <div className="bg-blue-50 rounded-xl p-4">
                 <div className="text-xs text-gray-500 mb-1">예상 연금 수령</div>
-                <div className="text-2xl font-bold text-blue-700">{(fund.pensionEstimate / 10000).toFixed(1)}억원</div>
+                <div className="text-xl sm:text-2xl font-bold text-blue-700">{(fund.pensionEstimate / 10000).toFixed(1)}억원</div>
                 <div className="text-[10px] text-gray-400">국민+개인연금 합산</div>
               </div>
               <div className="bg-red-50 rounded-xl p-4">
                 <div className="text-xs text-gray-500 mb-1">추가 확보 필요</div>
-                <div className="text-2xl font-bold text-red-600">{(fund.gap / 10000).toFixed(1)}억원</div>
+                <div className="text-xl sm:text-2xl font-bold text-red-600">{(fund.gap / 10000).toFixed(1)}억원</div>
                 <div className="text-[10px] text-gray-400">최소 {(fund.gapMin / 10000).toFixed(1)}억원</div>
               </div>
             </div>
