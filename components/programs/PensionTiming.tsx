@@ -497,7 +497,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
       <div className="space-y-2.5">
         {STEPS.map((s, i) => (<div key={i} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-500 ${i < step ? 'bg-green-50 border border-green-200' : i === step ? 'bg-orange-50 border border-orange-200' : 'bg-gray-50 border border-gray-100 opacity-40'}`}>
           <span className="text-lg w-6 text-center shrink-0">{i < step ? '✅' : i === step ? s.i : '⏳'}</span>
-          <span className={`text-[13px] font-medium ${i < step ? 'text-green-700' : i === step ? 'text-orange-700' : 'text-gray-400'}`}>{s.t}</span>
+          <span className={`text-[14px] font-medium ${i < step ? 'text-green-700' : i === step ? 'text-orange-700' : 'text-gray-400'}`}>{s.t}</span>
           {i === step && <div className="ml-auto w-4 h-4 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin" />}
         </div>))}
       </div>
@@ -625,7 +625,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2 min-w-0 flex-wrap">
                         {ib && <span className="text-sm">🏆</span>}
-                        <span className={`text-[13px] sm:text-[14px] font-bold truncate ${ib ? 'text-orange-700' : 'text-gray-700'}`}>{s.label}</span>
+                        <span className={`text-[13px] sm:text-[14px] font-bold break-keep ${ib ? 'text-orange-700' : 'text-gray-700'}`}>{s.label}</span>
                         <span className={`text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full font-semibold shrink-0 ${s.type === 'early' ? 'bg-blue-100 text-blue-700' : s.type === 'deferred' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>{s.pct}</span>
                       </div>
                     </div>
@@ -849,8 +849,8 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
                 { l: '예상 월 연금', v: fm(base), bold: true },
               ].map(r => (
                 <div key={r.l} className="flex items-start justify-between gap-2 py-1.5 border-b border-gray-50 last:border-0">
-                  <span className="text-[12px] text-gray-500 shrink-0">{r.l}</span>
-                  <span className={`text-[12px] sm:text-[13px] text-right ${r.bold ? 'font-bold text-orange-600' : 'font-semibold text-gray-800'}`}>{r.v}</span>
+                  <span className="text-[12px] text-gray-500 shrink-0 break-keep">{r.l}</span>
+                  <span className={`text-[12px] sm:text-[13px] text-right break-keep ${r.bold ? 'font-bold text-orange-600' : 'font-semibold text-gray-800'}`}>{r.v}</span>
                 </div>
               ))}
             </div>

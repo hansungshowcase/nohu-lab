@@ -76,7 +76,7 @@ const ResultCard = forwardRef<HTMLDivElement, ResultCardProps>(
           <div className="space-y-3">
             {categories.map((cat) => (
               <div key={cat.key}>
-                <div className="flex justify-between text-xs mb-1">
+                <div className="flex justify-between text-[13px] mb-1">
                   <span className="text-gray-600">{cat.label}</span>
                   <span className="font-medium text-gray-900">
                     {cat.score}/{cat.max}
@@ -130,7 +130,7 @@ const ResultCard = forwardRef<HTMLDivElement, ResultCardProps>(
 
         {/* Footer */}
         <div className="bg-gray-50 px-6 py-3 text-center border-t border-gray-100">
-          <div className="text-xs text-gray-400">
+          <div className="text-[13px] text-gray-400">
             retireplan.kr · 나도 테스트하기
           </div>
         </div>
