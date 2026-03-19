@@ -126,7 +126,7 @@ export default function ImageResizer() {
                 type="number"
                 value={width}
                 onChange={(e) => handleWidthChange(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
+                className="w-full px-3 py-3 min-h-[44px] rounded-lg border border-orange-200 bg-white text-gray-900"
               />
             </div>
             <div className="flex-1">
@@ -137,17 +137,17 @@ export default function ImageResizer() {
                 type="number"
                 value={height}
                 onChange={(e) => handleHeightChange(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
+                className="w-full px-3 py-3 min-h-[44px] rounded-lg border border-orange-200 bg-white text-gray-900"
               />
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm text-gray-700 min-h-[44px] cursor-pointer">
             <input
               type="checkbox"
               checked={keepRatio}
               onChange={(e) => setKeepRatio(e.target.checked)}
-              className="rounded"
+              className="rounded w-5 h-5"
             />
             비율 유지
           </label>
@@ -155,7 +155,7 @@ export default function ImageResizer() {
           <div className="flex gap-3">
             <button
               onClick={handleDownload}
-              className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition"
+              className="px-6 py-3 min-h-[44px] bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition"
             >
               다운로드
             </button>
@@ -165,7 +165,7 @@ export default function ImageResizer() {
                 setWidth(0)
                 setHeight(0)
               }}
-              className="px-6 py-2 bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
+              className="px-6 py-3 min-h-[44px] bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
             >
               다른 이미지
             </button>

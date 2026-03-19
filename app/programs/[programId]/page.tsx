@@ -108,7 +108,7 @@ export default function ProgramPage() {
             ←
           </button>
           <span className="text-2xl">{program.icon}</span>
-          <h1 className="text-[16px] sm:text-xl font-bold text-gray-900 truncate">
+          <h1 className="text-[16px] sm:text-xl font-bold text-gray-900 break-keep">
             {program.name}
           </h1>
           <TierBadge tier={program.minTier} />

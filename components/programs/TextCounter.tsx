@@ -45,7 +45,7 @@ export default function TextCounter() {
       {text && (
         <button
           onClick={() => setText('')}
-          className="px-4 py-2 text-sm bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
+          className="px-4 py-3 min-h-[44px] text-sm bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
         >
           초기화
         </button>

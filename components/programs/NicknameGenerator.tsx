@@ -58,7 +58,7 @@ export default function NicknameGenerator() {
           <select
             value={count}
             onChange={(e) => setCount(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
+            className="w-full px-3 py-3 min-h-[44px] rounded-lg border border-orange-200 bg-white text-gray-900"
           >
             {[3, 5, 10, 20].map((n) => (
               <option key={n} value={n}>{n}개</option>
@@ -67,7 +67,7 @@ export default function NicknameGenerator() {
         </div>
         <button
           onClick={generate}
-          className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition"
+          className="px-6 py-3 min-h-[44px] bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition"
         >
           🎲 생성하기
         </button>
@@ -85,7 +85,7 @@ export default function NicknameGenerator() {
               </span>
               <button
                 onClick={() => copyToClipboard(nick)}
-                className="text-sm text-orange-600 hover:text-orange-700"
+                className="text-sm text-orange-600 hover:text-orange-700 px-3 py-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-orange-50 transition"
               >
                 복사
               </button>

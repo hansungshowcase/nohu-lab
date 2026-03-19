@@ -199,7 +199,7 @@ export default function TextConverter() {
           <button
             key={m.id}
             onClick={() => setMode(m.id)}
-            className={`px-3 py-1.5 rounded-lg text-sm transition ${
+            className={`px-3 py-2.5 min-h-[44px] rounded-lg text-sm transition ${
               mode === m.id
                 ? 'bg-orange-600 text-white'
                 : 'bg-orange-50 text-gray-700 hover:bg-orange-100'
@@ -220,7 +220,7 @@ export default function TextConverter() {
           </div>
           <button
             onClick={handleCopy}
-            className="mt-2 px-4 py-2 text-sm bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
+            className="mt-2 px-4 py-3 min-h-[44px] text-sm bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
           >
             {copied ? '✅ 복사됨!' : '결과 복사'}
           </button>
