@@ -139,7 +139,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
       <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 px-4 sm:px-6 py-5 sm:py-7 text-white rounded-t-2xl print:rounded-none">
         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 mb-1.5">
           <p className="text-orange-200 text-xs tracking-[0.15em] uppercase">四柱命理 분석 리포트</p>
-          <p className="text-orange-200 text-[11px] sm:text-sm">{result.animal}띠 · {result.gender === 'male' ? '남' : '여'}성 · {result.birthYear}.{String(result.birthMonth).padStart(2,'0')}.{String(result.birthDay).padStart(2,'0')}</p>
+          <p className="text-orange-200 text-xs sm:text-sm">{result.animal}띠 · {result.gender === 'male' ? '남' : '여'}성 · {result.birthYear}.{String(result.birthMonth).padStart(2,'0')}.{String(result.birthDay).padStart(2,'0')}</p>
         </div>
         <h2 className="text-xl sm:text-2xl font-black leading-snug">{profile.emoji} {profile.title}</h2>
         <p className="text-orange-100 text-sm sm:text-base mt-1">{viralSummary}</p>
@@ -375,15 +375,15 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           <p className="text-sm sm:text-base text-gray-800 leading-[1.9]">{usefulGodAdvice}</p>
           <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2 text-center">
             <div className="bg-white rounded-lg p-2 sm:p-2.5 border border-orange-100 min-w-0">
-              <p className="text-[10px] sm:text-xs text-gray-500">행운 색</p>
+              <p className="text-xs text-gray-500">행운 색</p>
               <p className="text-xs sm:text-base font-bold text-gray-800 break-keep">{profile.luckyColor}</p>
             </div>
             <div className="bg-white rounded-lg p-2 sm:p-2.5 border border-orange-100 min-w-0">
-              <p className="text-[10px] sm:text-xs text-gray-500">행운 방향</p>
+              <p className="text-xs text-gray-500">행운 방향</p>
               <p className="text-xs sm:text-base font-bold text-gray-800 break-keep">{profile.luckyDirection}</p>
             </div>
             <div className="bg-white rounded-lg p-2 sm:p-2.5 border border-orange-100 min-w-0">
-              <p className="text-[10px] sm:text-xs text-gray-500">행운 숫자</p>
+              <p className="text-xs text-gray-500">행운 숫자</p>
               <p className="text-xs sm:text-base font-bold text-gray-800 break-keep">{profile.luckyNumber}</p>
             </div>
           </div>
