@@ -54,7 +54,7 @@ function AnalyzingScreen({ steps, onComplete }: { steps: string[]; onComplete: (
   }, [steps.length, onComplete])
 
   return (
-    <div className="max-w-lg mx-auto px-4 flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
+    <div className="max-w-lg mx-auto flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
       <div className="w-20 h-20 mb-6 relative">
         <div className="absolute inset-0 rounded-full border-4 border-orange-100" />
         <div className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
@@ -281,7 +281,7 @@ export default function MentalHealth() {
     const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`
 
     return (
-      <div className="max-w-lg mx-auto px-4 py-2 space-y-5 animate-fade-in" ref={resultRef}>
+      <div className="max-w-lg mx-auto py-2 space-y-5 animate-fade-in" ref={resultRef}>
         <div className="text-center border-b-2 border-gray-300 pb-4">
           <p className="text-[11px] sm:text-[12px] text-gray-400 mb-1">노후연구소</p>
           <h2 className="text-[20px] sm:text-[24px] font-bold text-gray-900">정신건강 선별검사 결과</h2>
@@ -293,7 +293,7 @@ export default function MentalHealth() {
             <p className="text-[13px] text-gray-400 mb-2">종합 판정</p>
             <div className="inline-block px-5 py-2 rounded-full text-[18px] sm:text-[20px] font-bold text-white" style={{ backgroundColor: sharedOverall.color }}>{sharedOverall.label}</div>
           </div>
-          <p className="text-[14px] sm:text-[15px] text-gray-700 leading-[1.8]">{sharedOverall.description}</p>
+          <p className="text-[14px] sm:text-[15px] text-gray-700 leading-[1.8] break-keep">{sharedOverall.description}</p>
         </div>
 
         <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -375,7 +375,7 @@ export default function MentalHealth() {
 
   // === INTRO ===
   if (phase === 'intro') return (
-    <div className="max-w-lg mx-auto px-4 space-y-5 animate-fade-in">
+    <div className="max-w-lg mx-auto space-y-5 animate-fade-in">
       <div className="text-center space-y-3 pt-2">
         <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
           <span className="text-3xl sm:text-4xl">🧠</span>
@@ -414,7 +414,7 @@ export default function MentalHealth() {
   if (phase === 'quiz') {
     const progress = ((globalIdx + 1) / totalQuestions) * 100
     return (
-      <div className="max-w-lg mx-auto px-4 space-y-4 animate-fade-in">
+      <div className="max-w-lg mx-auto space-y-4 animate-fade-in">
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-[12px] sm:text-[13px] text-gray-500">
             <span className="font-medium text-orange-600">{currentScale.name}</span>
@@ -471,7 +471,7 @@ export default function MentalHealth() {
   const resultsSummary = results.map((r) => `${r.scaleName} ${r.level.label}`).join(' · ')
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-2 space-y-5 animate-fade-in" ref={resultRef}>
+    <div className="max-w-lg mx-auto py-2 space-y-5 animate-fade-in" ref={resultRef}>
 
       {/* ── 헤더 ── */}
       <div className="text-center border-b-2 border-gray-300 pb-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
@@ -484,7 +484,7 @@ export default function MentalHealth() {
       {suicideRisk && (
         <div className="bg-red-50 border-l-4 border-red-400 rounded-r-lg p-4 space-y-2">
           <h3 className="font-bold text-red-800 text-[15px] sm:text-[16px]">긴급 안내</h3>
-          <p className="text-[14px] sm:text-[15px] text-red-700 leading-relaxed">자해 또는 자살 관련 문항에 양성 응답이 확인되었습니다. 힘든 상황이시라면 아래 전문 상담 연락처로 즉시 도움을 받으시기 바랍니다.</p>
+          <p className="text-[14px] sm:text-[15px] text-red-700 leading-relaxed break-keep">자해 또는 자살 관련 문항에 양성 응답이 확인되었습니다. 힘든 상황이시라면 아래 전문 상담 연락처로 즉시 도움을 받으시기 바랍니다.</p>
           <div className="text-[14px] sm:text-[15px] font-semibold text-red-800 space-y-1">
             <p>자살예방 상담전화 <span className="underline">1393</span> (24시간)</p>
             <p>정신건강 위기상담 <span className="underline">1577-0199</span></p>
@@ -500,7 +500,7 @@ export default function MentalHealth() {
             {overallRisk.label}
           </div>
         </div>
-        <p className="text-[15px] sm:text-[16px] text-gray-700 leading-[1.85]">{overallRisk.description}</p>
+        <p className="text-[15px] sm:text-[16px] text-gray-700 leading-[1.85] break-keep">{overallRisk.description}</p>
       </div>
 
       {/* ── 검사 결과 요약 ── */}
