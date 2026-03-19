@@ -48,21 +48,37 @@ export default function ImageResizer() {
 
   function handleDownload() {
     if (!image || !canvasRef.current) return
-    const maxDim = 10000
+    const maxDim = 4096 // 모바일 canvas 제한 고려
     const w = Math.min(Math.max(width, 1), maxDim)
     const h = Math.min(Math.max(height, 1), maxDim)
     const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')!
+    const ctx = canvas.getContext('2d')
+    if (!ctx) { alert('이미지 처리에 실패했습니다.'); return }
     canvas.width = w
     canvas.height = h
 
     const img = new Image()
     img.onload = () => {
       ctx.drawImage(img, 0, 0, w, h)
-      const link = document.createElement('a')
-      link.download = `resized_${w}x${h}.png`
-      link.href = canvas.toDataURL('image/png')
-      link.click()
+      canvas.toBlob((blob) => {
+        if (!blob) return
+        const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+        if (isMobile && navigator.share) {
+          try {
+            const file = new File([blob], `resized_${w}x${h}.png`, { type: 'image/png' })
+            navigator.share({ files: [file], title: '리사이즈 이미지' }).catch(() => {})
+            return
+          } catch { /* fallback */ }
+        }
+        const blobUrl = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.download = `resized_${w}x${h}.png`
+        link.href = blobUrl
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 3000)
+      }, 'image/png')
     }
     img.src = image
   }
