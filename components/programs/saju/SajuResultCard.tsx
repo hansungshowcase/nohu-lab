@@ -31,7 +31,7 @@ function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pil
       {isMe && <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs bg-orange-500 text-white px-2 sm:px-2.5 py-0.5 rounded-full whitespace-nowrap font-bold">★ 나</div>}
       <span className="text-xs text-gray-400 mb-0.5 truncate">{label}</span>
       <span className={`text-xs px-1.5 py-0.5 rounded mb-1 truncate ${isMe ? 'bg-orange-100 text-orange-600 font-bold' : 'bg-gray-100 text-gray-500'}`}>{tenGod || '-'}</span>
-      <div className={`border-2 rounded-xl w-full max-w-[72px] overflow-hidden ${isMe ? 'border-orange-400 shadow-sm shadow-orange-100' : 'border-gray-200'}`}>
+      <div className={`border-2 rounded-xl w-full max-w-[68px] sm:max-w-[72px] overflow-hidden ${isMe ? 'border-orange-400 shadow-sm shadow-orange-100' : 'border-gray-200'}`}>
         <div className={`${elBgs[stemEl]} p-1.5 sm:p-2 text-center`}>
           <div className={`text-xl sm:text-2xl font-black ${elColors[stemEl]}`}>{STEMS_HANJA[pillar.stem]}</div>
           <div className="text-xs text-gray-500 leading-tight">{STEMS[pillar.stem]}·{ELEMENTS[stemEl]}·{yinyang}</div>
@@ -149,7 +149,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
         {/* ═══ 1. 당신의 사주팔자 ═══ */}
         <div>
-          <div className="flex gap-1.5 sm:gap-2 justify-center pt-2 pb-4 px-2 sm:px-1">
+          <div className="flex gap-1 sm:gap-2 justify-center pt-2 pb-4 px-1 sm:px-1">
             {pillars.map((p, i) => (
               result.hourPillar || i > 0 ? (
                 <PillarBox key={i} label={p.label} pillar={p.pillar} tenGod={p.tenGod} isMe={p.isMe} />
@@ -373,16 +373,16 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             당신에게 필요한 기운은 <strong>{ELEMENTS[result.usefulGod]}({ELEMENTS_HANJA[result.usefulGod]})</strong>입니다.
           </p>
           <p className="text-sm sm:text-base text-gray-800 leading-[1.9]">{usefulGodAdvice}</p>
-          <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2 text-center">
-            <div className="bg-white rounded-lg p-2 sm:p-2.5 border border-orange-100 min-w-0">
+          <div className="mt-3 grid grid-cols-3 gap-1 sm:gap-2 text-center">
+            <div className="bg-white rounded-lg p-1.5 sm:p-2.5 border border-orange-100 min-w-0">
               <p className="text-[10px] sm:text-xs text-gray-500">행운 색</p>
               <p className="text-xs sm:text-base font-bold text-gray-800 break-keep">{profile.luckyColor}</p>
             </div>
-            <div className="bg-white rounded-lg p-2 sm:p-2.5 border border-orange-100 min-w-0">
+            <div className="bg-white rounded-lg p-1.5 sm:p-2.5 border border-orange-100 min-w-0">
               <p className="text-[10px] sm:text-xs text-gray-500">행운 방향</p>
               <p className="text-xs sm:text-base font-bold text-gray-800 break-keep">{profile.luckyDirection}</p>
             </div>
-            <div className="bg-white rounded-lg p-2 sm:p-2.5 border border-orange-100 min-w-0">
+            <div className="bg-white rounded-lg p-1.5 sm:p-2.5 border border-orange-100 min-w-0">
               <p className="text-[10px] sm:text-xs text-gray-500">행운 숫자</p>
               <p className="text-xs sm:text-base font-bold text-gray-800 break-keep">{profile.luckyNumber}</p>
             </div>

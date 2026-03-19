@@ -97,7 +97,7 @@ export default function ProgramPage() {
   const ProgramComponent = programComponents[programId]
 
   return (
-    <div className={isSharedLink ? "max-w-2xl mx-auto px-2 sm:px-4 py-3 sm:py-6" : "max-w-4xl mx-auto px-4 py-6 sm:py-8"}>
+    <div className={isSharedLink ? "max-w-2xl mx-auto px-3 sm:px-4 py-3 sm:py-6" : "max-w-4xl mx-auto px-4 py-6 sm:py-8"}>
       {!isSharedLink && (
         <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
           <button
@@ -108,7 +108,7 @@ export default function ProgramPage() {
             ←
           </button>
           <span className="text-2xl">{program.icon}</span>
-          <h1 className="text-[16px] sm:text-xl font-bold text-gray-900 break-keep">
+          <h1 className="text-[16px] sm:text-xl font-bold text-gray-900 break-keep min-w-0">
             {program.name}
           </h1>
           <TierBadge tier={program.minTier} />

@@ -296,15 +296,15 @@ export default function MentalHealth() {
           <p className="text-[14px] sm:text-[15px] text-gray-700 leading-[1.8] break-keep">{sharedOverall.description}</p>
         </div>
 
-        <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="border border-gray-200 rounded-xl overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50"><tr><th className="text-left py-3 px-4 text-[13px] sm:text-[14px] font-semibold text-gray-600">영역</th><th className="text-center py-3 px-3 text-[13px] sm:text-[14px] font-semibold text-gray-600 w-[65px]">점수</th><th className="text-left py-3 px-3 text-[13px] sm:text-[14px] font-semibold text-gray-600">판정</th></tr></thead>
+            <thead className="bg-gray-50"><tr><th className="text-left py-3 px-2 sm:px-4 text-[13px] sm:text-[14px] font-semibold text-gray-600">영역</th><th className="text-center py-3 px-2 sm:px-3 text-[13px] sm:text-[14px] font-semibold text-gray-600 w-[65px]">점수</th><th className="text-left py-3 px-2 sm:px-3 text-[13px] sm:text-[14px] font-semibold text-gray-600">판정</th></tr></thead>
             <tbody>
               {sharedResults.map((r, i) => (
                 <tr key={r.scaleId} className={i < sharedResults.length - 1 ? 'border-b border-gray-100' : ''}>
-                  <td className="py-3 px-4 text-[14px] sm:text-[15px] text-gray-800 font-medium">{r.scaleName}</td>
-                  <td className="py-3 px-3 text-center text-[14px] sm:text-[15px] text-gray-700">{r.score}<span className="text-gray-300">/{r.maxScore}</span></td>
-                  <td className="py-3 px-3"><span className="text-[13px] sm:text-[14px] font-semibold" style={{ color: SEVERITY_COLORS[Math.min(r.levelIdx, 4)] }}>{r.level.label}</span></td>
+                  <td className="py-3 px-2 sm:px-4 text-[14px] sm:text-[15px] text-gray-800 font-medium">{r.scaleName}</td>
+                  <td className="py-3 px-2 sm:px-3 text-center text-[14px] sm:text-[15px] text-gray-700">{r.score}<span className="text-gray-300">/{r.maxScore}</span></td>
+                  <td className="py-3 px-2 sm:px-3"><span className="text-[13px] sm:text-[14px] font-semibold" style={{ color: SEVERITY_COLORS[Math.min(r.levelIdx, 4)] }}>{r.level.label}</span></td>
                 </tr>
               ))}
             </tbody>
@@ -384,9 +384,9 @@ export default function MentalHealth() {
         <p className="text-gray-500 text-[14px] sm:text-[15px]">5개 영역 · {totalQuestions}문항 · 약 5분</p>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 space-y-3">
-        <div className="grid grid-cols-5 gap-1.5 sm:gap-2 text-center">
+        <div className="grid grid-cols-5 gap-1 sm:gap-2 text-center">
           {[{ i: '😔', l: '우울' }, { i: '😰', l: '불안' }, { i: '🤯', l: '스트레스' }, { i: '💛', l: '자존감' }, { i: '🌙', l: '수면' }].map((x) => (
-            <div key={x.l} className="bg-orange-50/50 rounded-xl py-2.5 px-0.5 sm:px-1 min-w-0"><div className="text-xl sm:text-2xl">{x.i}</div><div className="text-[10px] sm:text-[12px] text-gray-600 font-medium mt-1 truncate">{x.l}</div></div>
+            <div key={x.l} className="bg-orange-50/50 rounded-xl py-2.5 px-0 sm:px-1 min-w-0"><div className="text-xl sm:text-2xl">{x.i}</div><div className="text-[10px] sm:text-[12px] text-gray-600 font-medium mt-1 truncate">{x.l}</div></div>
           ))}
         </div>
         <p className="text-[13px] text-gray-500 text-center">정신건강의학과 공인 척도 기반 · 결과 미저장</p>
@@ -506,21 +506,21 @@ export default function MentalHealth() {
       {/* ── 검사 결과 요약 ── */}
       <div className="space-y-3 animate-slide-up" style={{ animationDelay: '350ms' }}>
         <h3 className="text-[16px] sm:text-[17px] font-bold text-gray-900">검사 결과</h3>
-        <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="border border-gray-200 rounded-xl overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left py-3 px-4 text-[13px] sm:text-[14px] font-semibold text-gray-600">영역</th>
-                <th className="text-center py-3 px-3 text-[13px] sm:text-[14px] font-semibold text-gray-600 w-[65px]">점수</th>
-                <th className="text-left py-3 px-3 text-[13px] sm:text-[14px] font-semibold text-gray-600">판정</th>
+                <th className="text-left py-3 px-2 sm:px-4 text-[13px] sm:text-[14px] font-semibold text-gray-600">영역</th>
+                <th className="text-center py-3 px-2 sm:px-3 text-[13px] sm:text-[14px] font-semibold text-gray-600 w-[65px]">점수</th>
+                <th className="text-left py-3 px-2 sm:px-3 text-[13px] sm:text-[14px] font-semibold text-gray-600">판정</th>
               </tr>
             </thead>
             <tbody>
               {results.map((r, i) => (
                 <tr key={r.scaleId} className={i < results.length - 1 ? 'border-b border-gray-100' : ''}>
-                  <td className="py-3 px-4 text-[14px] sm:text-[15px] text-gray-800 font-medium">{r.scaleName}</td>
-                  <td className="py-3 px-3 text-center text-[14px] sm:text-[15px] text-gray-700">{r.score}<span className="text-gray-300">/{r.maxScore}</span></td>
-                  <td className="py-3 px-3">
+                  <td className="py-3 px-2 sm:px-4 text-[14px] sm:text-[15px] text-gray-800 font-medium">{r.scaleName}</td>
+                  <td className="py-3 px-2 sm:px-3 text-center text-[14px] sm:text-[15px] text-gray-700">{r.score}<span className="text-gray-300">/{r.maxScore}</span></td>
+                  <td className="py-3 px-2 sm:px-3">
                     <span className="text-[13px] sm:text-[14px] font-semibold" style={{ color: SEVERITY_COLORS[Math.min(r.levelIdx, 4)] }}>
                       {r.level.label}
                     </span>

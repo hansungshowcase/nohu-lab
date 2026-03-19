@@ -168,7 +168,7 @@ export default function RetirementTest() {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
-          <div className="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-8 text-center">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-5 sm:p-8 text-center">
             <div className="text-5xl mb-4">🏦</div>
             <h2 className="text-2xl font-bold">나의 노후 준비 점수는?</h2>
             <p className="text-orange-100 mt-2 text-sm">
@@ -374,7 +374,7 @@ export default function RetirementTest() {
           <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden animate-slide-up" style={{ animationDelay: '150ms' }}>
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 text-center">
               <div className="text-sm opacity-80 mb-1">{data.label} 동년배 자산 순위</div>
-              <div className="text-3xl sm:text-5xl font-black">{percentile >= 50 ? `상위 ${100 - percentile}%` : `하위 ${percentile}%`}</div>
+              <div className="text-2xl sm:text-5xl font-black">{percentile >= 50 ? `상위 ${100 - percentile}%` : `하위 ${percentile}%`}</div>
               <div className="text-xs sm:text-sm opacity-80 mt-2 flex flex-wrap justify-center gap-x-1">
                 <span>내 순자산 {asset >= 10000 ? `${(asset/10000).toFixed(1)}억` : `${asset.toLocaleString()}만`}원</span>
                 <span>| {data.label} 평균 {(data.avg/10000).toFixed(1)}억원</span>

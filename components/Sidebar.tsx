@@ -72,7 +72,7 @@ export default function Sidebar({ user }: { user: User | null }) {
               {user.nickname.charAt(0)}
             </span>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="font-semibold text-[13px] text-amber-950 truncate">
               {user.nickname}
             </div>

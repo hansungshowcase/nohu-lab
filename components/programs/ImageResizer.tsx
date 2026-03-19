@@ -90,7 +90,7 @@ export default function ImageResizer() {
       {!image ? (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-orange-200 rounded-lg p-12 text-center cursor-pointer hover:border-orange-500 transition"
+          className="border-2 border-dashed border-orange-200 rounded-lg p-6 sm:p-12 text-center cursor-pointer hover:border-orange-500 transition"
         >
           <div className="text-4xl mb-3">🖼️</div>
           <p className="text-gray-600">

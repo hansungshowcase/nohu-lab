@@ -268,7 +268,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
 
       const isMob = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
       const wrap = document.createElement('div')
-      wrap.style.cssText = `position:absolute;left:-9999px;top:0;width:${isMob ? 360 : 420}px;padding:24px;background:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif;`
+      wrap.style.cssText = `position:absolute;left:-9999px;top:0;width:${isMob ? 340 : 420}px;padding:${isMob ? '16px' : '24px'};background:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif;`
       wrap.innerHTML = `
         <div style="padding:4px;">
           <!-- 헤더 -->
