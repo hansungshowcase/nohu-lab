@@ -384,9 +384,9 @@ export default function MentalHealth() {
         <p className="text-gray-500 text-[14px] sm:text-[15px]">5개 영역 · {totalQuestions}문항 · 약 5분</p>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 space-y-3">
-        <div className="grid grid-cols-5 gap-1.5 sm:gap-2 text-center">
+        <div className="grid grid-cols-5 gap-1 sm:gap-2 text-center">
           {[{ i: '😔', l: '우울' }, { i: '😰', l: '불안' }, { i: '🤯', l: '스트레스' }, { i: '💛', l: '자존감' }, { i: '🌙', l: '수면' }].map((x) => (
-            <div key={x.l} className="bg-orange-50/50 rounded-xl py-2.5 px-0.5 sm:px-1 min-w-0"><div className="text-xl sm:text-2xl">{x.i}</div><div className="text-[11px] sm:text-[12px] text-gray-600 font-medium mt-1 break-keep">{x.l}</div></div>
+            <div key={x.l} className="bg-orange-50/50 rounded-xl py-2.5 px-0.5 sm:px-1 min-w-0"><div className="text-xl sm:text-2xl">{x.i}</div><div className="text-[12px] sm:text-[13px] text-gray-600 font-medium mt-1 break-keep">{x.l}</div></div>
           ))}
         </div>
         <p className="text-[13px] text-gray-500 text-center">정신건강의학과 공인 척도 기반 · 결과 미저장</p>
