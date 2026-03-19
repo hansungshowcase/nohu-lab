@@ -532,7 +532,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
           ))}
         </div>
         <div className="bg-orange-50 rounded-xl p-3 mb-5 text-center">
-          <p className="text-[11px] text-orange-600">2026년 연금개혁 반영 · 소득대체율 43% · A값 319만원 · 최신 NPS 데이터 기준</p>
+          <p className="text-[12px] text-orange-600">2026년 연금개혁 반영 · 소득대체율 43% · A값 319만원 · 최신 NPS 데이터 기준</p>
         </div>
         <button onClick={() => setStarted(true)} className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-[15px] rounded-xl transition-all shadow-md shadow-orange-500/20 active:scale-[0.98]">시작하기</button>
       </div>

@@ -152,7 +152,7 @@ export default function RetirementTest() {
           </a>
           <button
             onClick={() => setShowLimitModal(false)}
-            className="w-full py-2.5 text-sm text-gray-400 hover:text-gray-600 transition"
+            className="w-full min-h-[44px] py-2.5 text-sm text-gray-400 hover:text-gray-600 transition"
           >
             닫기
           </button>
@@ -223,7 +223,7 @@ export default function RetirementTest() {
                   </div>
                 </div>
               </div>
-              <p className="text-[11px] text-gray-400 text-center">입력 시 동년배 순위 비교 + 맞춤 재무 계획을 제공합니다</p>
+              <p className="text-[13px] text-gray-400 text-center">입력 시 동년배 순위 비교 + 맞춤 재무 계획을 제공합니다</p>
             </div>
 
             <div className="text-center text-sm text-gray-500 space-y-1">
@@ -411,7 +411,7 @@ export default function RetirementTest() {
                 <div className="bg-orange-50 rounded-xl p-3 text-center">
                   <div className="text-xs text-gray-500">매월 저축 필요</div>
                   <div className="text-xl font-bold text-orange-700">{monthlySaveInvest > 0 ? `${monthlySaveInvest.toLocaleString()}만원` : '-'}</div>
-                  <div className="text-[10px] text-gray-400">연 5% 투자 시</div>
+                  <div className="text-[11px] text-gray-400">연 5% 투자 시</div>
                 </div>
               </div>
 
@@ -460,22 +460,22 @@ export default function RetirementTest() {
               <div className="bg-orange-50 rounded-xl p-4">
                 <div className="text-xs text-gray-500 mb-1">적정 월 생활비</div>
                 <div className="text-xl sm:text-2xl font-bold text-orange-700">{fund.monthly}만원</div>
-                <div className="text-[10px] text-gray-400">최소 {fund.monthlyMin}만원</div>
+                <div className="text-[11px] text-gray-400">최소 {fund.monthlyMin}만원</div>
               </div>
               <div className="bg-orange-50 rounded-xl p-4">
                 <div className="text-xs text-gray-500 mb-1">{fund.years}년간 필요 총액</div>
                 <div className="text-xl sm:text-2xl font-bold text-orange-700">{(fund.totalNeeded / 10000).toFixed(1)}억원</div>
-                <div className="text-[10px] text-gray-400">최소 {(fund.totalNeededMin / 10000).toFixed(1)}억원</div>
+                <div className="text-[11px] text-gray-400">최소 {(fund.totalNeededMin / 10000).toFixed(1)}억원</div>
               </div>
               <div className="bg-blue-50 rounded-xl p-4">
                 <div className="text-xs text-gray-500 mb-1">예상 연금 수령</div>
                 <div className="text-xl sm:text-2xl font-bold text-blue-700">{(fund.pensionEstimate / 10000).toFixed(1)}억원</div>
-                <div className="text-[10px] text-gray-400">국민+개인연금 합산</div>
+                <div className="text-[11px] text-gray-400">국민+개인연금 합산</div>
               </div>
               <div className="bg-red-50 rounded-xl p-4">
                 <div className="text-xs text-gray-500 mb-1">추가 확보 필요</div>
                 <div className="text-xl sm:text-2xl font-bold text-red-600">{(fund.gap / 10000).toFixed(1)}억원</div>
-                <div className="text-[10px] text-gray-400">최소 {(fund.gapMin / 10000).toFixed(1)}억원</div>
+                <div className="text-[11px] text-gray-400">최소 {(fund.gapMin / 10000).toFixed(1)}억원</div>
               </div>
             </div>
 
@@ -486,12 +486,12 @@ export default function RetirementTest() {
                   <div className="flex items-center justify-center gap-2 sm:gap-4">
                     <div>
                       <div className="text-xl sm:text-2xl font-bold">{fund.monthlySave20.toLocaleString()}만원</div>
-                      <div className="text-[10px] opacity-75">20년 단순 저축</div>
+                      <div className="text-[11px] opacity-75">20년 단순 저축</div>
                     </div>
                     <div className="text-lg opacity-50">→</div>
                     <div>
                       <div className="text-xl sm:text-2xl font-bold">{fund.monthlySaveInvest.toLocaleString()}만원</div>
-                      <div className="text-[10px] opacity-75">연 5% 투자 시</div>
+                      <div className="text-[11px] opacity-75">연 5% 투자 시</div>
                     </div>
                   </div>
                 </div>
@@ -659,7 +659,7 @@ export default function RetirementTest() {
       <div className="text-center">
         <button
           onClick={handleStart}
-          className="px-6 py-2.5 text-sm text-gray-500 hover:text-gray-700 underline transition"
+          className="px-6 py-3 min-h-[44px] text-sm text-gray-500 hover:text-gray-700 underline transition"
         >
           다시 테스트하기
         </button>
