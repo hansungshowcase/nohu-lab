@@ -202,7 +202,7 @@ export default function RetirementTest() {
                   <label className="block text-xs text-gray-500 mb-1">나이</label>
                   <div className="relative">
                     <input type="number" value={userAge} onChange={e => setUserAge(e.target.value)} placeholder="45" min={20} max={80}
-                      className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 outline-none" />
+                      className="w-full px-3 py-3 rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 outline-none" />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">세</span>
                   </div>
                 </div>
@@ -210,7 +210,7 @@ export default function RetirementTest() {
                   <label className="block text-xs text-gray-500 mb-1">월소득</label>
                   <div className="relative">
                     <input type="number" value={userIncome} onChange={e => setUserIncome(e.target.value)} placeholder="400"
-                      className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 outline-none" />
+                      className="w-full px-3 py-3 rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 outline-none" />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">만원</span>
                   </div>
                 </div>
@@ -218,12 +218,12 @@ export default function RetirementTest() {
                   <label className="block text-xs text-gray-500 mb-1">순자산</label>
                   <div className="relative">
                     <input type="number" value={userAsset} onChange={e => setUserAsset(e.target.value)} placeholder="30000"
-                      className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 outline-none" />
+                      className="w-full px-3 py-3 rounded-lg border border-gray-200 text-base focus:ring-2 focus:ring-orange-500 outline-none" />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">만원</span>
                   </div>
                 </div>
               </div>
-              <p className="text-[10px] text-gray-400 text-center">입력 시 동년배 순위 비교 + 맞춤 재무 계획을 제공합니다</p>
+              <p className="text-[11px] text-gray-400 text-center">입력 시 동년배 순위 비교 + 맞춤 재무 계획을 제공합니다</p>
             </div>
 
             <div className="text-center text-sm text-gray-500 space-y-1">
@@ -311,7 +311,7 @@ export default function RetirementTest() {
           {currentQ > 0 && (
             <button
               onClick={handlePrev}
-              className="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition font-medium"
+              className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition font-medium"
             >
               ← 이전
             </button>

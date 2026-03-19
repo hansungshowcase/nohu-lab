@@ -386,7 +386,7 @@ export default function MentalHealth() {
       <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-6 space-y-3">
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2 text-center">
           {[{ i: '😔', l: '우울' }, { i: '😰', l: '불안' }, { i: '🤯', l: '스트레스' }, { i: '💛', l: '자존감' }, { i: '🌙', l: '수면' }].map((x) => (
-            <div key={x.l} className="bg-orange-50/50 rounded-xl py-2.5 px-0.5 sm:px-1 min-w-0"><div className="text-xl sm:text-2xl">{x.i}</div><div className="text-[10px] sm:text-[12px] text-gray-600 font-medium mt-1 truncate">{x.l}</div></div>
+            <div key={x.l} className="bg-orange-50/50 rounded-xl py-2.5 px-0.5 sm:px-1 min-w-0"><div className="text-xl sm:text-2xl">{x.i}</div><div className="text-[11px] sm:text-[12px] text-gray-600 font-medium mt-1 break-keep">{x.l}</div></div>
           ))}
         </div>
         <p className="text-[13px] text-gray-500 text-center">정신건강의학과 공인 척도 기반 · 결과 미저장</p>
@@ -435,7 +435,7 @@ export default function MentalHealth() {
           <div className="space-y-2">
             {currentScale.likertOptions.map((opt) => (
               <button key={opt.value} onClick={() => handleAnswer(opt.value)} disabled={isTransitioning}
-                className={`w-full text-left px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all duration-150 ease-out ${answers[answerKey] === opt.value ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.97]' : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 active:bg-orange-100 active:scale-[0.97] border border-transparent hover:border-orange-200'} ${isTransitioning ? 'pointer-events-none' : ''}`}>
+                className={`w-full text-left px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl text-[14px] font-medium transition-all duration-150 ease-out ${answers[answerKey] === opt.value ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 scale-[0.97]' : 'bg-gray-50 text-gray-700 hover:bg-orange-50 hover:text-orange-700 active:bg-orange-100 active:scale-[0.97] border border-transparent hover:border-orange-200'} ${isTransitioning ? 'pointer-events-none' : ''}`}>
                 <span className="mr-2 opacity-60">{opt.value}.</span>{opt.label}
               </button>
             ))}
