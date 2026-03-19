@@ -54,7 +54,7 @@ export default function ProgramCard({ program, userTier }: Props) {
               {program.description}
             </p>
             <div className="mt-4">
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 group-hover:from-orange-600 group-hover:to-amber-700 text-white text-[12px] font-semibold rounded-lg shadow-sm group-hover:shadow-lg shadow-orange-500/15 group-hover:shadow-orange-500/30 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 animate-subtle-pulse">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-orange-500 to-amber-600 group-hover:from-orange-600 group-hover:to-amber-700 text-white text-[13px] font-semibold rounded-lg shadow-sm group-hover:shadow-lg shadow-orange-500/15 group-hover:shadow-orange-500/30 transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 animate-subtle-pulse">
                 바로 이용하기
                 <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />

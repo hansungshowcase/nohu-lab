@@ -95,7 +95,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </span>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowGuestBanner(false); try { sessionStorage.setItem('guest-banner-dismissed', '1') } catch {} }}
-                className="p-2.5 -mr-1 hover:bg-white/20 rounded-lg transition"
+                className="p-2.5 -mr-1 hover:bg-white/20 rounded-lg transition min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="배너 닫기"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
