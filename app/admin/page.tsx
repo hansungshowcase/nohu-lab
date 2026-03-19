@@ -315,7 +315,7 @@ function AdminContent() {
   )
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">
         관리자 패널
       </h1>
@@ -327,12 +327,12 @@ function AdminContent() {
       )}
 
       {/* 탭 */}
-      <div className="flex gap-2 mb-6 border-b border-orange-100 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-1 sm:gap-2 mb-6 border-b border-orange-100 overflow-x-auto scrollbar-hide">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition relative ${
+            className={`px-3 sm:px-4 py-3 text-sm font-medium border-b-2 transition relative whitespace-nowrap ${
               tab === t.id
                 ? 'border-orange-600 text-orange-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -350,10 +350,10 @@ function AdminContent() {
 
       {/* 동기화 경고 (모든 탭에서 표시) */}
       {syncWarning && (
-        <div className="mb-4 bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3 cursor-pointer" onClick={() => setTab('sync')}>
-          <span className="text-xl mt-0.5">&#9888;&#65039;</span>
-          <div>
-            <p className="font-bold text-red-800">회원 동기화가 정상 작동하지 않고 있습니다</p>
+        <div className="mb-4 bg-red-50 border-2 border-red-300 rounded-xl p-3 sm:p-4 flex items-start gap-2 sm:gap-3 cursor-pointer" onClick={() => setTab('sync')}>
+          <span className="text-xl mt-0.5 shrink-0">&#9888;&#65039;</span>
+          <div className="min-w-0">
+            <p className="font-bold text-red-800 text-sm sm:text-base">회원 동기화가 정상 작동하지 않고 있습니다</p>
             <p className="text-sm text-red-700 mt-0.5">
               {(syncStatus?.totalMembers || 0) <= 1
                 ? 'DB에 등록된 회원이 없습니다. 확장프로그램이 실행 중인지 확인하세요.'
@@ -367,17 +367,17 @@ function AdminContent() {
       {/* 회원 관리 탭 */}
       {tab === 'members' && (
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="닉네임 검색..."
-              className="flex-1 min-w-0 px-4 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
+              className="flex-1 min-w-0 px-4 py-3 rounded-lg border border-orange-200 bg-white text-gray-900 text-base"
             />
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium"
+              className="px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium whitespace-nowrap"
             >
               {showAddForm ? '닫기' : '+ 회원 등록'}
             </button>
@@ -385,7 +385,7 @@ function AdminContent() {
               href="https://cafe.naver.com/ManageWholeMember.nhn?clubid=20898041"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-white border border-orange-300 text-orange-700 rounded-lg text-sm font-medium hover:bg-orange-50"
+              className="px-4 py-3 bg-white border border-orange-300 text-orange-700 rounded-lg text-sm font-medium hover:bg-orange-50 whitespace-nowrap"
             >
               카페 회원 목록 보기
             </a>
@@ -418,7 +418,7 @@ function AdminContent() {
                       value={newMember.nickname}
                       onChange={(e) => setNewMember({ ...newMember, nickname: e.target.value })}
                       placeholder="카페에서 확인한 닉네임"
-                      className="w-full px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
+                      className="w-full px-3 py-3 rounded-lg border border-orange-200 bg-white text-gray-900 text-base"
                     />
                   </div>
                   <div>
@@ -487,7 +487,50 @@ function AdminContent() {
               <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full mx-auto" />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* 모바일: 카드 레이아웃 */}
+            <div className="sm:hidden space-y-2">
+              {filtered.map((member) => (
+                <div key={member.id} className="bg-white rounded-lg border border-orange-100 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900 text-sm break-words">{member.nickname}</span>
+                    <button
+                      onClick={() => handleDelete(member.id, member.nickname)}
+                      className="text-red-500 hover:text-red-700 text-sm px-3 py-2 min-h-[44px] shrink-0"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <select
+                      value={member.tier}
+                      onChange={(e) => handleTierChange(member.id, parseInt(e.target.value))}
+                      className="px-2 py-2 rounded border border-orange-200 bg-white text-gray-900 text-sm min-h-[44px]"
+                    >
+                      {[1, 2, 3, 4].map((t) => (
+                        <option key={t} value={t}>{TIER_MAP[t].name}</option>
+                      ))}
+                    </select>
+                    <span className="text-gray-500 text-[13px]">
+                      {member.last_login
+                        ? new Date(member.last_login).toLocaleString('ko-KR')
+                        : '-'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              <div className="text-sm text-gray-400 mt-2">
+                총 {filtered.length}명
+              </div>
+              {filtered.length === 0 && (
+                <div className="text-center py-8 text-gray-400">
+                  {search ? '검색 결과가 없습니다.' : '등록된 회원이 없습니다. 카페 회원 동기화를 실행하세요.'}
+                </div>
+              )}
+            </div>
+
+            {/* 데스크톱: 테이블 레이아웃 */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-orange-50">
@@ -514,7 +557,7 @@ function AdminContent() {
                           ))}
                         </select>
                       </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">
+                      <td className="px-4 py-3 text-gray-500 text-sm">
                         {member.last_login
                           ? new Date(member.last_login).toLocaleString('ko-KR')
                           : '-'}
@@ -522,7 +565,7 @@ function AdminContent() {
                       <td className="px-4 py-3">
                         <button
                           onClick={() => handleDelete(member.id, member.nickname)}
-                          className="text-red-500 hover:text-red-700 text-xs px-2 py-1.5"
+                          className="text-red-500 hover:text-red-700 text-sm px-3 py-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
                         >
                           삭제
                         </button>
@@ -531,7 +574,7 @@ function AdminContent() {
                   ))}
                 </tbody>
               </table>
-              <div className="text-xs text-gray-400 mt-2 px-4">
+              <div className="text-sm text-gray-400 mt-2 px-4">
                 총 {filtered.length}명
               </div>
               {filtered.length === 0 && (
@@ -540,6 +583,7 @@ function AdminContent() {
                 </div>
               )}
             </div>
+            </>
           )}
         </div>
       )}
@@ -818,7 +862,27 @@ function AdminContent() {
           <p className="text-sm text-gray-500">
             프로그램은 코드에서 직접 추가/수정합니다.
           </p>
-          <div className="overflow-x-auto">
+          {/* 모바일: 카드 레이아웃 */}
+          <div className="sm:hidden space-y-2">
+            {programRegistry.map((p) => (
+              <div key={p.id} className="bg-white rounded-lg border border-orange-100 p-3 space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-gray-900 font-medium">{p.icon} {p.name}</span>
+                  <span className={`text-[13px] px-2 py-1 rounded-full shrink-0 ${p.isActive ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
+                    {p.isActive ? '활성' : '비활성'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[13px] text-gray-500">
+                  <span>{p.category}</span>
+                  <span>·</span>
+                  <TierBadge tier={p.minTier} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 데스크톱: 테이블 레이아웃 */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-orange-50">
@@ -839,7 +903,7 @@ function AdminContent() {
                       <TierBadge tier={p.minTier} />
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full ${p.isActive ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
+                      <span className={`text-sm px-2 py-1 rounded-full ${p.isActive ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
                         {p.isActive ? '활성' : '비활성'}
                       </span>
                     </td>
@@ -854,7 +918,7 @@ function AdminContent() {
       {/* 대시보드 탭 */}
       {tab === 'dashboard' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
             <div className="bg-white rounded-lg p-4 border border-orange-100">
               <div className="text-2xl font-bold text-gray-900">
                 {members.length}
@@ -885,13 +949,13 @@ function AdminContent() {
                 .map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-orange-100"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white rounded-lg px-4 py-3 border border-orange-100 gap-1 sm:gap-2"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900">{m.nickname}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-medium text-gray-900 break-words">{m.nickname}</span>
                       <TierBadge tier={m.tier} />
                     </div>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 shrink-0">
                       {new Date(m.last_login!).toLocaleString('ko-KR')}
                     </span>
                   </div>

@@ -57,7 +57,7 @@ export default function Sidebar({ user }: { user: User | null }) {
             <span className="font-extrabold text-[17px] text-amber-950 tracking-tight">
               노후연구소
             </span>
-            <span className="block text-[9px] text-amber-600/60 font-semibold tracking-[0.2em] uppercase mt-0.5">
+            <span className="block text-[10px] text-amber-600/60 font-semibold tracking-[0.2em] uppercase mt-0.5">
               Retirement Lab
             </span>
           </div>

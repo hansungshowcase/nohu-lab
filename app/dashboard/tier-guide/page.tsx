@@ -147,7 +147,7 @@ export default function TierGuidePage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <h2 className={`text-[16px] font-bold ${t.accent}`}>{t.name}</h2>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold ${t.badgeBg}`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ${t.badgeBg}`}>
                     {t.method}
                   </span>
                 </div>
@@ -167,7 +167,7 @@ export default function TierGuidePage() {
                     ].map((stat) => (
                       <div key={stat.label} className={`${t.statBg} rounded-xl px-2 py-2.5 text-center backdrop-blur-sm`}>
                         <div className="text-[16px] font-bold text-gray-800">{stat.value}</div>
-                        <div className="text-[10px] text-gray-400 font-medium mt-0.5">{stat.label}</div>
+                        <div className="text-[12px] text-gray-400 font-medium mt-0.5">{stat.label}</div>
                       </div>
                     ))}
                   </div>

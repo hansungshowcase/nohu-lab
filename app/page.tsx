@@ -186,7 +186,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[12px] font-semibold text-gray-500 mb-2 uppercase tracking-wider">
+              <label className="block text-[13px] font-semibold text-gray-500 mb-2 uppercase tracking-wider">
                 카페 닉네임
               </label>
               <input
@@ -212,7 +212,7 @@ export default function LoginPage() {
                   <div className="w-4 h-4 spinner shrink-0" style={{ borderTopColor: '#d97706' }} />
                   <span>카페 회원 여부를 확인하고 있습니다... ({verifySeconds}초)</span>
                 </div>
-                <p className="text-[11px] text-amber-500 mt-1.5 ml-6">확장프로그램이 카페에서 검색 중입니다. 최대 60초 소요됩니다.</p>
+                <p className="text-[12px] text-amber-500 mt-1.5 ml-6">확장프로그램이 카페에서 검색 중입니다. 최대 60초 소요됩니다.</p>
               </div>
             )}
 
@@ -278,7 +278,7 @@ export default function LoginPage() {
           </button>
 
           {/* Footer */}
-          <p className="text-center text-[12px] text-gray-400 mt-6 leading-relaxed">
+          <p className="text-center text-[13px] text-gray-400 mt-6 leading-relaxed">
             카페 등급에 따라 사용 가능한 도구가 다릅니다
           </p>
 
@@ -293,7 +293,7 @@ export default function LoginPage() {
             </a>
             <a
               href="/admin/login"
-              className="inline-block text-[11px] text-gray-300 hover:text-gray-500 transition-colors mt-1"
+              className="inline-block text-[12px] text-gray-300 hover:text-gray-500 transition-colors mt-1"
             >
               관리자 로그인
             </a>
