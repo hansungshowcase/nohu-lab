@@ -194,12 +194,12 @@ export default function TextConverter() {
         />
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
         {MODES.map((m) => (
           <button
             key={m.id}
             onClick={() => setMode(m.id)}
-            className={`px-3 py-1.5 rounded-lg text-sm transition ${
+            className={`px-3 py-2.5 sm:py-1.5 rounded-lg text-sm transition ${
               mode === m.id
                 ? 'bg-orange-600 text-white'
                 : 'bg-orange-50 text-gray-700 hover:bg-orange-100'
@@ -215,7 +215,7 @@ export default function TextConverter() {
           <label className="block text-sm text-gray-700 mb-1">
             변환 결과
           </label>
-          <div className="bg-orange-50 rounded-lg p-4 text-gray-900 whitespace-pre-wrap min-h-[80px]">
+          <div className="bg-orange-50 rounded-lg p-4 text-gray-900 whitespace-pre-wrap break-words overflow-hidden min-h-[80px]">
             {result}
           </div>
           <button

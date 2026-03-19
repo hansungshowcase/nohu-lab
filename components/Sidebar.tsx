@@ -138,7 +138,7 @@ export default function Sidebar({ user }: { user: User | null }) {
       {/* Mobile hamburger */}
       <button
         onClick={() => setOpen(!open)}
-        className="lg:hidden fixed top-3 left-3 z-50 p-3 rounded-xl shadow-lg shadow-amber-900/5 border border-amber-200/40 transition-all" style={{ background: 'rgba(253,248,240,0.95)', backdropFilter: 'blur(8px)' }}
+        className="lg:hidden fixed top-3 left-3 z-50 p-3 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl shadow-lg shadow-amber-900/5 border border-amber-200/40 transition-all" style={{ background: 'rgba(253,248,240,0.95)', backdropFilter: 'blur(8px)' }}
         aria-label="메뉴 열기"
       >
         <svg className="w-5 h-5 text-amber-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

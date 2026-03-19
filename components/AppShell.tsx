@@ -85,13 +85,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             rel="noopener noreferrer"
             className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-2 flex items-center justify-between gap-2 animate-slide-up cursor-pointer hover:from-orange-600 hover:to-amber-600 transition-all"
           >
-            <div className="flex items-center gap-1.5 text-[13px] font-medium flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-[12px] sm:text-[13px] font-medium flex-1 min-w-0">
               <span className="text-sm shrink-0">🔒</span>
-              <span className="break-words">비회원은 프로그램 <strong>2회</strong> 제한 · 회원가입하면 무제한!</span>
+              <span className="break-words leading-tight">비회원은 프로그램 <strong>2회</strong> 제한 · 회원가입하면 무제한!</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="px-4 py-1.5 bg-white text-orange-600 text-sm font-bold rounded-lg whitespace-nowrap hover:scale-110 transition-transform animate-banner-btn">
-                회원가입 →
+              <span className="px-3 sm:px-4 py-1.5 bg-white text-orange-600 text-xs sm:text-sm font-bold rounded-lg whitespace-nowrap hover:scale-110 transition-transform animate-banner-btn">
+                가입 →
               </span>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowGuestBanner(false); try { sessionStorage.setItem('guest-banner-dismissed', '1') } catch {} }}

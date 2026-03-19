@@ -90,7 +90,7 @@ export default function ImageResizer() {
       {!image ? (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-orange-200 rounded-lg p-12 text-center cursor-pointer hover:border-orange-500 transition"
+          className="border-2 border-dashed border-orange-200 rounded-lg p-6 sm:p-12 text-center cursor-pointer hover:border-orange-500 transition"
         >
           <div className="text-4xl mb-3">🖼️</div>
           <p className="text-gray-600">
@@ -110,7 +110,7 @@ export default function ImageResizer() {
             <img
               src={image}
               alt="Preview"
-              className="max-h-64 mx-auto rounded"
+              className="max-h-64 max-w-full mx-auto rounded"
             />
             <p className="text-center text-sm text-gray-500 mt-2">
               원본: {originalSize.width} × {originalSize.height}
@@ -152,10 +152,10 @@ export default function ImageResizer() {
             비율 유지
           </label>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleDownload}
-              className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition"
+              className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition"
             >
               다운로드
             </button>
@@ -165,7 +165,7 @@ export default function ImageResizer() {
                 setWidth(0)
                 setHeight(0)
               }}
-              className="px-6 py-2 bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
+              className="px-6 py-3 bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
             >
               다른 이미지
             </button>

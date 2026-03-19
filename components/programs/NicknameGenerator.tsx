@@ -50,7 +50,7 @@ export default function NicknameGenerator() {
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      <div className="flex gap-4 items-end">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
         <div className="flex-1">
           <label className="block text-sm text-gray-700 mb-1">
             생성 개수
@@ -58,7 +58,7 @@ export default function NicknameGenerator() {
           <select
             value={count}
             onChange={(e) => setCount(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
+            className="w-full px-3 py-3 sm:py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
           >
             {[3, 5, 10, 20].map((n) => (
               <option key={n} value={n}>{n}개</option>
@@ -67,7 +67,7 @@ export default function NicknameGenerator() {
         </div>
         <button
           onClick={generate}
-          className="px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition"
+          className="w-full sm:w-auto px-6 py-3 sm:py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition"
         >
           🎲 생성하기
         </button>
@@ -80,7 +80,7 @@ export default function NicknameGenerator() {
               key={i}
               className="flex items-center justify-between bg-orange-50 rounded-lg px-4 py-3"
             >
-              <span className="text-gray-900 font-medium">
+              <span className="text-gray-900 font-medium break-all">
                 {nick}
               </span>
               <button

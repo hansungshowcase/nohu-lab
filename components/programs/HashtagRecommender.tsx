@@ -86,7 +86,7 @@ export default function HashtagRecommender() {
           <span
             key={k}
             onClick={() => setText((prev) => prev + ' ' + k)}
-            className="text-xs bg-orange-50 text-gray-600 px-2 py-1 rounded cursor-pointer hover:bg-orange-100 transition"
+            className="text-xs bg-orange-50 text-gray-600 px-2.5 py-1.5 rounded cursor-pointer hover:bg-orange-100 transition"
           >
             {k}
           </span>
@@ -107,7 +107,7 @@ export default function HashtagRecommender() {
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full text-sm font-medium"
+                className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full text-sm font-medium break-all"
               >
                 {tag}
               </span>

@@ -140,7 +140,7 @@ function SajuReadingInner() {
   // ── 인트로 화면 ──
   if (phase === 'intro') {
     return (
-      <div className="max-w-2xl mx-auto px-1 space-y-4 sm:space-y-6 animate-fadeIn">
+      <div className="max-w-2xl mx-auto px-4 space-y-4 sm:space-y-6 animate-fadeIn">
         <div className="text-center py-4 sm:py-6">
           <div className="text-5xl sm:text-7xl mb-3 sm:mb-4 animate-bounce">🔮</div>
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
@@ -201,7 +201,7 @@ function SajuReadingInner() {
     const animalHint = animalIdx >= 0 ? `${BRANCHES_ANIMAL[animalIdx]}띠` : ''
 
     return (
-      <div className="max-w-2xl mx-auto px-1 space-y-4 sm:space-y-6 animate-fadeIn">
+      <div className="max-w-2xl mx-auto px-4 space-y-4 sm:space-y-6 animate-fadeIn">
         <div className="text-center py-2">
           <div className="text-4xl sm:text-5xl mb-2">📅</div>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">생년월일을 입력하세요</h2>
