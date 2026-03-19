@@ -87,7 +87,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           >
             <div className="flex items-center gap-1.5 text-xs font-medium flex-1 min-w-0">
               <span className="text-sm shrink-0">🔒</span>
-              <span>비회원은 프로그램 <strong>2회</strong> 제한 · 회원가입하면 무제한!</span>
+              <span className="truncate">비회원은 프로그램 <strong>2회</strong> 제한 · 회원가입하면 무제한!</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className="px-4 py-1.5 bg-white text-orange-600 text-sm font-bold rounded-lg whitespace-nowrap hover:scale-110 transition-transform animate-banner-btn">

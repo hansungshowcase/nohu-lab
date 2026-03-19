@@ -374,10 +374,10 @@ export default function RetirementTest() {
           <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden animate-slide-up" style={{ animationDelay: '150ms' }}>
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 text-center">
               <div className="text-sm opacity-80 mb-1">{data.label} 동년배 자산 순위</div>
-              <div className="text-4xl sm:text-5xl font-black">{percentile >= 50 ? `상위 ${100 - percentile}%` : `하위 ${percentile}%`}</div>
-              <div className="text-sm opacity-80 mt-2">
-                내 순자산 {asset >= 10000 ? `${(asset/10000).toFixed(1)}억` : `${asset.toLocaleString()}만`}원
-                &nbsp;|&nbsp; {data.label} 평균 {(data.avg/10000).toFixed(1)}억원
+              <div className="text-3xl sm:text-5xl font-black">{percentile >= 50 ? `상위 ${100 - percentile}%` : `하위 ${percentile}%`}</div>
+              <div className="text-xs sm:text-sm opacity-80 mt-2 flex flex-wrap justify-center gap-x-1">
+                <span>내 순자산 {asset >= 10000 ? `${(asset/10000).toFixed(1)}억` : `${asset.toLocaleString()}만`}원</span>
+                <span>| {data.label} 평균 {(data.avg/10000).toFixed(1)}억원</span>
               </div>
             </div>
             <div className="p-5 space-y-4">
@@ -483,23 +483,23 @@ export default function RetirementTest() {
               <>
                 <div className="bg-gradient-to-r from-orange-500 to-amber-600 rounded-xl p-5 text-white text-center mb-3">
                   <div className="text-sm opacity-90 mb-1">지금부터 매월 저축해야 할 금액</div>
-                  <div className="flex items-center justify-center gap-4">
+                  <div className="flex items-center justify-center gap-2 sm:gap-4">
                     <div>
-                      <div className="text-2xl font-bold">{fund.monthlySave20.toLocaleString()}만원</div>
+                      <div className="text-xl sm:text-2xl font-bold">{fund.monthlySave20.toLocaleString()}만원</div>
                       <div className="text-[10px] opacity-75">20년 단순 저축</div>
                     </div>
                     <div className="text-lg opacity-50">→</div>
                     <div>
-                      <div className="text-2xl font-bold">{fund.monthlySaveInvest.toLocaleString()}만원</div>
+                      <div className="text-xl sm:text-2xl font-bold">{fund.monthlySaveInvest.toLocaleString()}만원</div>
                       <div className="text-[10px] opacity-75">연 5% 투자 시</div>
                     </div>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600 space-y-1">
+                <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600 space-y-1 overflow-hidden">
                   <div className="font-semibold text-gray-800 mb-2">절세 전략으로 부담 줄이기</div>
-                  <div>1. 연금저축 월 50만원 (연 600만원) → 세액공제 16.5% = <strong className="text-orange-600">연 99만원 절세</strong></div>
-                  <div>2. IRP 월 25만원 추가 (연 300만원) → 합산 <strong className="text-orange-600">연 148.5만원 절세</strong></div>
-                  <div>3. 퇴직연금 DC형 → TDF 전환으로 수익률 연 2~3%p 개선 가능</div>
+                  <div>1. 연금저축 월 50만원 → 세액공제 <strong className="text-orange-600">연 99만원</strong></div>
+                  <div>2. IRP 월 25만원 추가 → 합산 <strong className="text-orange-600">연 148.5만원 절세</strong></div>
+                  <div>3. 퇴직연금 DC형 → TDF 전환으로 수익률 개선</div>
                 </div>
               </>
             )}
@@ -564,13 +564,13 @@ export default function RetirementTest() {
                     <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold shrink-0">{t.icon}</div>
                     {i < timeline.length - 1 && <div className="w-0.5 flex-1 bg-orange-200 my-1" />}
                   </div>
-                  <div className="pb-4 flex-1">
-                    <div className="flex items-center gap-2">
+                  <div className="pb-4 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-gray-900">{t.age}세</span>
                       <span className="text-sm text-orange-600 font-semibold">{t.label}</span>
                     </div>
                     <div className="text-lg font-bold text-orange-700 mt-0.5">월 {t.amount}만원</div>
-                    <p className="text-xs text-gray-500 mt-0.5">{t.desc}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 break-words">{t.desc}</p>
                   </div>
                 </div>
               ))}

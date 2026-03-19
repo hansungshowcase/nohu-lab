@@ -99,7 +99,7 @@ export default function ProgramPage() {
   return (
     <div className={isSharedLink ? "max-w-2xl mx-auto px-2 sm:px-4 py-3 sm:py-6" : "max-w-4xl mx-auto px-4 py-6 sm:py-8"}>
       {!isSharedLink && (
-        <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8 ml-12 lg:ml-0">
+        <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
           <button
             onClick={() => router.push('/dashboard')}
             className="p-3 -ml-1 min-h-11 min-w-11 flex items-center justify-center hover:bg-orange-50 rounded-lg transition"

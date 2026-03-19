@@ -623,10 +623,10 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
                 return (
                   <div key={s.label} className={`rounded-xl p-4 ${ib ? 'bg-white border-2 border-orange-300 shadow-sm' : 'bg-white/60 border border-gray-100'}`}>
                     <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-wrap">
                         {ib && <span className="text-sm">🏆</span>}
-                        <span className={`text-[14px] font-bold ${ib ? 'text-orange-700' : 'text-gray-700'}`}>{s.label}</span>
-                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${s.type === 'early' ? 'bg-blue-100 text-blue-700' : s.type === 'deferred' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>{s.pct}</span>
+                        <span className={`text-[13px] sm:text-[14px] font-bold truncate ${ib ? 'text-orange-700' : 'text-gray-700'}`}>{s.label}</span>
+                        <span className={`text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full font-semibold shrink-0 ${s.type === 'early' ? 'bg-blue-100 text-blue-700' : s.type === 'deferred' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>{s.pct}</span>
                       </div>
                     </div>
                     <div className="flex items-baseline justify-between mb-2">
@@ -848,9 +848,9 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
                 { l: '적용 계수', v: `${getCoeff(by + na)} (${by + na >= 2026 ? '43%' : `${Math.round(getCoeff(by + na) / 3 * 100)}%`})` },
                 { l: '예상 월 연금', v: fm(base), bold: true },
               ].map(r => (
-                <div key={r.l} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
-                  <span className="text-[12px] text-gray-500">{r.l}</span>
-                  <span className={`text-[13px] ${r.bold ? 'font-bold text-orange-600' : 'font-semibold text-gray-800'}`}>{r.v}</span>
+                <div key={r.l} className="flex items-start justify-between gap-2 py-1.5 border-b border-gray-50 last:border-0">
+                  <span className="text-[12px] text-gray-500 shrink-0">{r.l}</span>
+                  <span className={`text-[12px] sm:text-[13px] text-right ${r.bold ? 'font-bold text-orange-600' : 'font-semibold text-gray-800'}`}>{r.v}</span>
                 </div>
               ))}
             </div>

@@ -228,7 +228,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           <span className="w-11 h-11 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center text-xl transition-all duration-200 group-hover:scale-110">
             {copyDone ? '✅' : '🔗'}
           </span>
-          <span className="text-blue-700">{copyDone ? '복사됨!' : '링크 복사'}</span>
+          <span className="text-blue-700 text-xs sm:text-sm">{copyDone ? '복사됨!' : '링크 복사'}</span>
         </button>
         <button
           onClick={handleSaveImage}
@@ -238,7 +238,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           <span className="w-11 h-11 rounded-full bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center text-xl transition-all duration-200 group-hover:scale-110">
             {saving ? '⏳' : saveSuccess ? '✅' : '📷'}
           </span>
-          <span className="text-purple-700">{saving ? '저장 중...' : saveSuccess ? '완료!' : '이미지 저장'}</span>
+          <span className="text-purple-700 text-xs sm:text-sm">{saving ? '저장 중...' : saveSuccess ? '완료!' : '이미지 저장'}</span>
         </button>
         <button
           onClick={handleKakao}
@@ -247,7 +247,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           <span className="w-11 h-11 rounded-full bg-[#FEE500]/50 group-hover:bg-[#FEE500]/80 flex items-center justify-center transition-all duration-200 group-hover:scale-110">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
           </span>
-          <span className="text-[#3C1E1E]">{kakaoCopied ? '복사 완료!' : '카카오톡 공유'}</span>
+          <span className="text-[#3C1E1E] text-xs sm:text-sm">{kakaoCopied ? '복사 완료!' : '카카오톡'}</span>
         </button>
       </div>
     </div>
