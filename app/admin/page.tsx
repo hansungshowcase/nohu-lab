@@ -397,13 +397,13 @@ function AdminContent() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setAddMode('single')}
-                  className={`px-3 py-1.5 rounded-lg text-sm ${addMode === 'single' ? 'bg-orange-600 text-white' : 'bg-orange-50 text-gray-700'}`}
+                  className={`px-4 py-2.5 min-h-[44px] rounded-lg text-sm ${addMode === 'single' ? 'bg-orange-600 text-white' : 'bg-orange-50 text-gray-700'}`}
                 >
                   개별 등록
                 </button>
                 <button
                   onClick={() => setAddMode('bulk')}
-                  className={`px-3 py-1.5 rounded-lg text-sm ${addMode === 'bulk' ? 'bg-orange-600 text-white' : 'bg-orange-50 text-gray-700'}`}
+                  className={`px-4 py-2.5 min-h-[44px] rounded-lg text-sm ${addMode === 'bulk' ? 'bg-orange-600 text-white' : 'bg-orange-50 text-gray-700'}`}
                 >
                   일괄 등록
                 </button>
@@ -426,7 +426,7 @@ function AdminContent() {
                     <select
                       value={newMember.tier}
                       onChange={(e) => setNewMember({ ...newMember, tier: parseInt(e.target.value) })}
-                      className="px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
+                      className="px-3 py-2 min-h-[44px] rounded-lg border border-orange-200 bg-white text-gray-900"
                     >
                       {[1, 2, 3, 4].map((t) => (
                         <option key={t} value={t}>{TIER_MAP[t].name}</option>
@@ -435,7 +435,7 @@ function AdminContent() {
                   </div>
                   <button
                     onClick={handleAddMember}
-                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium"
+                    className="px-4 py-2 min-h-[44px] bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium"
                   >
                     등록
                   </button>
@@ -459,7 +459,7 @@ function AdminContent() {
                       <select
                         value={newMember.tier}
                         onChange={(e) => setNewMember({ ...newMember, tier: parseInt(e.target.value) })}
-                        className="px-3 py-2 rounded-lg border border-orange-200 bg-white text-gray-900"
+                        className="px-3 py-2 min-h-[44px] rounded-lg border border-orange-200 bg-white text-gray-900"
                       >
                         {[1, 2, 3, 4].map((t) => (
                           <option key={t} value={t}>{TIER_MAP[t].name}</option>
@@ -468,7 +468,7 @@ function AdminContent() {
                     </div>
                     <button
                       onClick={handleBulkAdd}
-                      className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium mt-auto"
+                      className="px-4 py-2 min-h-[44px] bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium mt-auto"
                     >
                       일괄 등록 ({bulkInput.split('\n').filter((n) => n.trim()).length}명)
                     </button>
@@ -765,7 +765,7 @@ function AdminContent() {
                 <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
                   <button
                     onClick={() => setSelectedRoom(null)}
-                    className="md:hidden p-1 hover:bg-gray-200 rounded-lg"
+                    className="md:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-200 rounded-lg"
                   >
                     <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />

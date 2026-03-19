@@ -212,7 +212,7 @@ export default function LoginPage() {
                   <div className="w-4 h-4 spinner shrink-0" style={{ borderTopColor: '#d97706' }} />
                   <span>카페 회원 여부를 확인하고 있습니다... ({verifySeconds}초)</span>
                 </div>
-                <p className="text-[12px] text-amber-500 mt-1.5 ml-6">확장프로그램이 카페에서 검색 중입니다. 최대 60초 소요됩니다.</p>
+                <p className="text-[13px] text-amber-500 mt-1.5 ml-6">확장프로그램이 카페에서 검색 중입니다. 최대 60초 소요됩니다.</p>
               </div>
             )}
 
@@ -220,7 +220,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleRetry}
-                className="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-[13px] font-medium rounded-xl border border-amber-200 transition-all"
+                className="w-full py-2.5 min-h-[44px] bg-amber-50 hover:bg-amber-100 text-amber-700 text-[13px] font-medium rounded-xl border border-amber-200 transition-all"
               >
                 🔄 다시 확인하기
               </button>
@@ -287,13 +287,13 @@ export default function LoginPage() {
               href="https://cafe.naver.com/eovhskfktmak"
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full py-3 border border-gray-200 text-gray-600 font-medium text-[13px] rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-center"
+              className="block w-full py-3 min-h-[44px] border border-gray-200 text-gray-600 font-medium text-[13px] rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-center"
             >
               카페 회원가입
             </a>
             <a
               href="/admin/login"
-              className="inline-block text-[12px] text-gray-300 hover:text-gray-500 transition-colors mt-1"
+              className="inline-block text-[13px] text-gray-300 hover:text-gray-500 transition-colors mt-1 py-2"
             >
               관리자 로그인
             </a>
