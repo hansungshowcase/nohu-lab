@@ -168,7 +168,7 @@ export default function RetirementTest() {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
-          <div className="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-8 text-center">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-5 sm:p-8 text-center">
             <div className="text-5xl mb-4">🏦</div>
             <h2 className="text-2xl font-bold">나의 노후 준비 점수는?</h2>
             <p className="text-orange-100 mt-2 text-sm">

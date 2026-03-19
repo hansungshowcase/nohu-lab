@@ -9,13 +9,13 @@ export default function ErrorPage({
 }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4">
-      <div className="text-6xl mb-4">😵</div>
+      <div className="text-5xl sm:text-6xl mb-4">😵</div>
       <h1 className="text-xl font-bold text-gray-900 mb-2">오류가 발생했습니다</h1>
       <p className="text-gray-500 mb-4 text-center">잠시 후 다시 시도해주세요.</p>
-      <p className="text-[11px] text-red-400 mb-6 text-center max-w-sm break-all">{error?.message}</p>
+      <p className="text-xs text-red-400 mb-6 text-center max-w-sm break-all">{error?.message}</p>
       <button
         onClick={reset}
-        className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition"
+        className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-medium transition"
       >
         다시 시도
       </button>
