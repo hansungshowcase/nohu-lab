@@ -83,20 +83,21 @@ export default function HashtagRecommender() {
           카테고리 힌트:
         </span>
         {KEYWORDS.map((k) => (
-          <span
+          <button
             key={k}
+            type="button"
             onClick={() => setText((prev) => prev + ' ' + k)}
-            className="text-xs bg-orange-50 text-gray-600 px-2 py-1 rounded cursor-pointer hover:bg-orange-100 transition"
+            className="text-sm bg-orange-50 text-gray-600 px-3 py-2 min-h-[44px] rounded-lg cursor-pointer hover:bg-orange-100 transition"
           >
             {k}
-          </span>
+          </button>
         ))}
       </div>
 
       <button
         onClick={recommend}
         disabled={!text.trim()}
-        className="px-6 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white rounded-lg transition"
+        className="px-6 py-3 min-h-[44px] bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white rounded-lg transition"
       >
         해시태그 추천받기
       </button>
@@ -115,7 +116,7 @@ export default function HashtagRecommender() {
           </div>
           <button
             onClick={copyAll}
-            className="px-4 py-2 text-sm bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
+            className="px-4 py-3 min-h-[44px] text-sm bg-orange-100 text-gray-700 rounded-lg hover:bg-orange-200 transition"
           >
             {copied ? '✅ 복사됨!' : '전체 복사'}
           </button>

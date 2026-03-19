@@ -39,7 +39,7 @@ function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pil
         <div className="border-t border-gray-100" />
         <div className={`${elBgs[branchEl]} p-1.5 sm:p-2 text-center`}>
           <div className={`text-xl sm:text-2xl font-black ${elColors[branchEl]}`}>{BRANCHES_HANJA[pillar.branch]}</div>
-          <div className="text-xs text-gray-500 truncate">{ELEMENTS[branchEl]}</div>
+          <div className="text-xs text-gray-500">{ELEMENTS[branchEl]}</div>
         </div>
       </div>
     </div>
@@ -376,15 +376,15 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           <div className="mt-3 grid grid-cols-3 gap-1.5 sm:gap-2 text-center">
             <div className="bg-white rounded-lg p-2 sm:p-2.5 border border-orange-100 min-w-0">
               <p className="text-[10px] sm:text-xs text-gray-500">행운 색</p>
-              <p className="text-xs sm:text-base font-bold text-gray-800 truncate">{profile.luckyColor}</p>
+              <p className="text-xs sm:text-base font-bold text-gray-800 break-keep">{profile.luckyColor}</p>
             </div>
             <div className="bg-white rounded-lg p-2 sm:p-2.5 border border-orange-100 min-w-0">
               <p className="text-[10px] sm:text-xs text-gray-500">행운 방향</p>
-              <p className="text-xs sm:text-base font-bold text-gray-800 truncate">{profile.luckyDirection}</p>
+              <p className="text-xs sm:text-base font-bold text-gray-800 break-keep">{profile.luckyDirection}</p>
             </div>
             <div className="bg-white rounded-lg p-2 sm:p-2.5 border border-orange-100 min-w-0">
               <p className="text-[10px] sm:text-xs text-gray-500">행운 숫자</p>
-              <p className="text-xs sm:text-base font-bold text-gray-800 truncate">{profile.luckyNumber}</p>
+              <p className="text-xs sm:text-base font-bold text-gray-800 break-keep">{profile.luckyNumber}</p>
             </div>
           </div>
         </div>
