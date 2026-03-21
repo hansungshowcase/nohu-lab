@@ -32,7 +32,6 @@ export default function Sidebar({ user }: { user: User | null }) {
       label: cat,
       icon: cat === '재무·투자' ? '💰' : cat === '심리·건강' ? '🧠' : cat === '운세·풀이' ? '🔮' : cat === '유틸리티' ? '🔧' : '📁',
     })),
-    { href: '/admin', label: '관리자 패널', icon: '⚙️' },
   ]
 
   const sidebarContent = (

@@ -10,8 +10,6 @@ import { getCrossInsights, getDeepAdvice, getRetirementFundCalc } from './retire
 
 type Phase = 'intro' | 'quiz' | 'analyzing' | 'result'
 
-const FREE_LIMIT = 2
-const STORAGE_KEY = 'retirement-test-count'
 const CAFE_URL = 'https://cafe.naver.com/eovhskfktmak'
 
 // 연령대별 평균 순자산 (통계청 2025 가계금융복지조사, 만원)
@@ -38,63 +36,19 @@ function getAssetPercentile(age: number, asset: number): number {
   return 5
 }
 
-function getTestCount(): number {
-  if (typeof window === 'undefined') return 0
-  try {
-    return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10)
-  } catch {
-    return 0
-  }
-}
-
-function incrementTestCount(): void {
-  if (typeof window === 'undefined') return
-  try {
-    const current = getTestCount()
-    localStorage.setItem(STORAGE_KEY, String(current + 1))
-  } catch {
-    // 시크릿 모드/인앱 브라우저에서 localStorage 접근 불가 시 무시
-  }
-}
-
 export default function RetirementTest() {
   const [phase, setPhase] = useState<Phase>('intro')
   const [currentQ, setCurrentQ] = useState(0)
   const [answers, setAnswers] = useState<Record<number, number>>({})
-  const [showLimitModal, setShowLimitModal] = useState(false)
-  const [testCount, setTestCount] = useState(0)
-  const [isMember, setIsMember] = useState(false)
   const [userAge, setUserAge] = useState('')
   const [userIncome, setUserIncome] = useState('')
   const [userAsset, setUserAsset] = useState('')
 
-
-  useEffect(() => {
-    setTestCount(getTestCount())
-    const controller = new AbortController()
-    fetch('/api/auth/me', { signal: controller.signal })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((user) => {
-        if (user && user.tier >= 1) setIsMember(true)
-      })
-      .catch((err) => {
-        if (err.name !== 'AbortError') setIsMember(false)
-      })
-    return () => controller.abort()
-  }, [])
-
   const handleStart = useCallback(() => {
-    if (!isMember) {
-      const count = getTestCount()
-      if (count >= FREE_LIMIT) {
-        setShowLimitModal(true)
-        return
-      }
-    }
     setPhase('quiz')
     setCurrentQ(0)
     setAnswers({})
-  }, [isMember])
+  }, [])
 
   const handleAnswer = useCallback((questionId: number, score: number) => {
     setAnswers((prev) => {
@@ -109,12 +63,8 @@ export default function RetirementTest() {
   }, [currentQ])
 
   const handleAnalysisComplete = useCallback(() => {
-    if (!isMember) {
-      incrementTestCount()
-      setTestCount(getTestCount())
-    }
     setPhase('result')
-  }, [isMember])
+  }, [])
 
   const handlePrev = useCallback(() => {
     if (currentQ > 0) {
@@ -122,49 +72,8 @@ export default function RetirementTest() {
     }
   }, [currentQ])
 
-  // Limit modal
-  const limitModal = showLimitModal ? (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
-        <div className="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-6 text-center">
-          <div className="text-4xl mb-3">🔒</div>
-          <h3 className="text-lg font-bold">무료 체험이 끝났어요!</h3>
-        </div>
-        <div className="p-6 space-y-4">
-          <p className="text-center text-gray-700 text-sm leading-relaxed">
-            무료 테스트 <strong>{FREE_LIMIT}회</strong>를 모두 사용하셨습니다.
-          </p>
-          <div className="bg-orange-50 rounded-xl p-4 text-center">
-            <p className="text-orange-800 font-bold text-base mb-1">
-              카페 회원가입하고 무제한으로 이용하세요!
-            </p>
-            <p className="text-orange-600 text-xs">
-              가입 즉시 무제한 테스트 + 상세 리포트 다운로드
-            </p>
-          </div>
-          <a
-            href={CAFE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full py-3.5 bg-orange-600 hover:bg-orange-700 text-white text-center text-base font-bold rounded-xl transition"
-          >
-            카페 회원가입 하러가기
-          </a>
-          <button
-            onClick={() => setShowLimitModal(false)}
-            className="w-full min-h-[44px] py-2.5 text-sm text-gray-400 hover:text-gray-600 transition"
-          >
-            닫기
-          </button>
-        </div>
-      </div>
-    </div>
-  ) : null
-
   // Intro screen
   if (phase === 'intro') {
-    const remaining = Math.max(0, FREE_LIMIT - testCount)
-
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
@@ -228,21 +137,13 @@ export default function RetirementTest() {
 
             <div className="text-center text-sm text-gray-500 space-y-1">
               <p>소요 시간: 약 2분</p>
-              <p>총 20문항 · {isMember ? '회원 무제한 이용' : `비회원 ${FREE_LIMIT}회 무료`}</p>
+              <p>총 20문항</p>
             </div>
-            {isMember ? (
-              <div className="text-center text-xs text-orange-600 font-medium">
-                회원님은 무제한 이용 가능합니다
-              </div>
-            ) : remaining > 0 ? (
-              <div className="text-center text-xs text-orange-600 font-medium">
-                무료 테스트 {remaining}회 남음
-              </div>
-            ) : (
-              <div className="text-center text-xs text-orange-500 font-medium">
-                무료 체험이 종료되었습니다
-              </div>
-            )}
+            <div className="text-center">
+              <a href={CAFE_URL} target="_blank" rel="noopener noreferrer" className="text-[13px] text-orange-600 font-medium hover:text-orange-700 transition">
+                노후연구소 회원 가입 →
+              </a>
+            </div>
             <button
               onClick={handleStart}
               className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-lg font-bold rounded-xl transition"
@@ -665,7 +566,6 @@ export default function RetirementTest() {
         </button>
       </div>
 
-      {limitModal}
     </div>
   )
 }

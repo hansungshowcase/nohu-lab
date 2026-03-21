@@ -11,18 +11,7 @@ type Phase = 'intro' | 'quiz' | 'analyzing' | 'result'
 
 const DISCLAIMER = '본 검사는 선별 목적의 자가 참고용으로, 의학적 진단을 대체하지 않습니다. 정확한 진단 및 치료를 위해 정신건강의학과 전문의 상담을 권장합니다.'
 const KAKAO_KEY = '3913fde247b12ce25084eb42a9b17ed9'
-const FREE_LIMIT = 2
-const STORAGE_KEY = 'mental-health-count'
 const CAFE_URL = 'https://cafe.naver.com/eovhskfktmak'
-
-function getTestCount(): number {
-  if (typeof window === 'undefined') return 0
-  try { return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0 } catch { return 0 }
-}
-function incrementTestCount(): void {
-  if (typeof window === 'undefined') return
-  try { localStorage.setItem(STORAGE_KEY, String(getTestCount() + 1)) } catch {}
-}
 
 interface KakaoWindow extends Window {
   Kakao?: { isInitialized: () => boolean; init: (k: string) => void; Share: { sendDefault: (o: Record<string, unknown>) => void } }
@@ -80,8 +69,6 @@ export default function MentalHealth() {
   const [currentQIdx, setCurrentQIdx] = useState(0)
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [isTransitioning, setIsTransitioning] = useState(false)
-  const [isMember, setIsMember] = useState(false)
-  const [showLimitModal, setShowLimitModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -99,15 +86,6 @@ export default function MentalHealth() {
     return null
   })
 
-  useEffect(() => {
-    const c = new AbortController()
-    fetch('/api/auth/me', { signal: c.signal })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((u) => { if (u && u.tier >= 1) setIsMember(true) })
-      .catch((e) => { if (e.name !== 'AbortError') setIsMember(false) })
-    return () => c.abort()
-  }, [])
-
   useEffect(() => () => { if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current) }, [])
 
   const activeScales = SCALES
@@ -122,7 +100,6 @@ export default function MentalHealth() {
   const answerKey = currentScale && currentQuestion ? `${currentScale.id}-${currentQuestion.id}` : ''
 
   function startQuiz() {
-    if (!isMember && getTestCount() >= FREE_LIMIT) { setShowLimitModal(true); return }
     setPhase('quiz'); setCurrentScaleIdx(0); setCurrentQIdx(0); setAnswers({}); setIsTransitioning(false); transitionLock.current = false
   }
 
@@ -131,7 +108,7 @@ export default function MentalHealth() {
     if (!currentScale) return
     if (currentQIdx < currentScale.questions.length - 1) setCurrentQIdx((p) => p + 1)
     else if (currentScaleIdx < activeScales.length - 1) { setCurrentScaleIdx((p) => p + 1); setCurrentQIdx(0) }
-    else { if (!isMember) incrementTestCount(); setPhase('analyzing') }
+    else { setPhase('analyzing') }
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [currentQIdx, currentScale, currentScaleIdx, activeScales, isMember])
 
@@ -394,19 +371,12 @@ export default function MentalHealth() {
       <div className="bg-amber-50/70 border border-amber-200/60 rounded-xl p-3">
         <p className="text-[12px] sm:text-[13px] text-amber-700 leading-relaxed">{DISCLAIMER}</p>
       </div>
-      {!isMember && <p className="text-center text-[12px] text-gray-400">비회원 무료 {Math.max(0, FREE_LIMIT - getTestCount())}회 남음</p>}
+      <div className="text-center">
+        <a href={CAFE_URL} target="_blank" rel="noopener noreferrer" className="text-[13px] text-orange-600 font-medium hover:text-orange-700 transition">
+          노후연구소 회원 가입 →
+        </a>
+      </div>
       <button onClick={startQuiz} className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] text-[15px] transition-all">검사 시작하기</button>
-      {showLimitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6" onClick={() => setShowLimitModal(false)}>
-          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="text-5xl">🔒</div>
-            <h3 className="text-lg font-bold text-gray-900">무료 체험이 끝났습니다</h3>
-            <p className="text-[14px] text-gray-500">카페 가입 후 무제한으로 이용하세요!</p>
-            <a href={CAFE_URL} target="_blank" rel="noopener noreferrer" className="inline-block w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 text-white font-semibold text-[15px] rounded-xl shadow-md transition-all">카페 가입하러 가기</a>
-            <button onClick={() => setShowLimitModal(false)} className="text-[13px] text-gray-400 py-3 px-4 min-h-[44px]">닫기</button>
-          </div>
-        </div>
-      )}
     </div>
   )
 

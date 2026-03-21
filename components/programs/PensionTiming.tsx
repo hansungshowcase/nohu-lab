@@ -239,8 +239,6 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
 
   function handleCalc() {
     if (age < 25 || age > 75 || !validIncome || !base) return
-    if (isGuest && usage >= MF) { setBlocked(true); return }
-    if (isGuest) setUsage(addU())
     setAnim(true); setStep(0)
     if (ivRef.current) clearInterval(ivRef.current)
     let s = 0
@@ -479,15 +477,6 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
     setKakaoMsg('링크가 복사되었습니다!\n카카오톡에서 붙여넣기 하세요'); setTimeout(() => setKakaoMsg(''), 4000)
   }
 
-  // ── 차단 ──
-  if (blocked) return (
-    <div className="max-w-md mx-auto px-4"><div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-6 sm:p-8 text-center">
-      <div className="text-5xl mb-4">🔒</div><h3 className="text-lg font-bold text-gray-900 mb-2">무료 체험이 끝났습니다</h3>
-      <p className="text-sm text-gray-600 mb-6">비회원 2회 무료 · 회원가입하면 무제한!</p>
-      <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="inline-block px-6 py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold text-sm rounded-xl shadow-md transition-all">회원가입하고 무제한 이용하세요</a>
-    </div></div>
-  )
-
   // ── 분석 중 ──
   if (anim) return (
     <div className="max-w-md mx-auto px-4"><div className="bg-white rounded-2xl border border-orange-100 p-6 sm:p-8">
@@ -509,10 +498,11 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   // ── 프로그램 설명 ──
   if (!started) return (
     <div className="max-w-md mx-auto px-4 space-y-5">
-      {isGuest && (<div className="bg-amber-50 rounded-xl border border-amber-100 px-4 py-2.5 flex items-center justify-between">
-        <span className="text-[13px] text-amber-700">무료 체험 <strong>{Math.max(0, MF - usage)}회</strong> 남음</span>
-        <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="text-[12px] text-orange-500 font-semibold hover:text-orange-600 transition">회원가입 →</a>
-      </div>)}
+      <div className="text-center mb-3">
+        <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="text-[13px] text-orange-600 font-medium hover:text-orange-700 transition">
+          노후연구소 회원 가입 →
+        </a>
+      </div>
       <div className="bg-white rounded-2xl border border-orange-100 p-5 sm:p-7">
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl mb-4 shadow-lg shadow-orange-500/20 text-3xl">⏰</div>
@@ -543,11 +533,6 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   // ── 입력 + 결과 ──
   return (
     <div className="max-w-md mx-auto px-4 space-y-5 pb-[env(safe-area-inset-bottom)]">
-      {isGuest && (<div className="bg-amber-50 rounded-xl border border-amber-100 px-4 py-3 flex items-center justify-between">
-        <span className="text-[13px] text-amber-700">무료 체험 <strong>{Math.max(0, MF - usage)}회</strong> 남음</span>
-        <a href="https://cafe.naver.com/eovhskfktmak" target="_blank" rel="noopener noreferrer" className="text-[13px] text-orange-500 font-semibold hover:text-orange-600 transition py-1">회원가입 →</a>
-      </div>)}
-
       <div className="bg-white rounded-2xl border border-orange-100 p-5 sm:p-6 space-y-5">
         <div className="text-center">
           <h2 className="text-[18px] sm:text-lg font-bold text-gray-900">2가지만 입력하세요</h2>
