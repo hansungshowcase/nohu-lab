@@ -33,6 +33,16 @@ export const programRegistry: Program[] = [
     isActive: true,
     badge: 'NEW',
   },
+  {
+    id: 'supplement-recommend',
+    name: '맞춤 영양제 추천',
+    description: '나이·생활습관·건강 고민을 분석하여 맞춤 영양제를 추천합니다',
+    minTier: 0,
+    icon: '💊',
+    category: '심리·건강',
+    isActive: true,
+    badge: 'NEW',
+  },
   // ── 운세·풀이 섹터 ──
   {
     id: 'saju-reading',

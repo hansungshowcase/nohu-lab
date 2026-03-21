@@ -15,6 +15,7 @@ const programComponents: Record<string, React.LazyExoticComponent<React.Componen
   'saju-reading': lazy(() => import('@/components/programs/SajuReading')),
   'pension-timing': lazy(() => import('@/components/programs/PensionTiming')),
   'mental-health': lazy(() => import('@/components/programs/MentalHealth')),
+  'supplement-recommend': lazy(() => import('@/components/programs/supplement/SupplementRecommender')),
 }
 
 interface User {
@@ -30,7 +31,8 @@ export default function ProgramPage() {
   const [user, setUser] = useState<User | null>(null)
   const programId = params.programId as string
   // 공유 링크 접속 여부 감지 (URL에 y, m, d 파라미터가 있으면 공유 링크)
-  const isSharedLink = programId === 'saju-reading' && searchParams.has('y') && searchParams.has('m') && searchParams.has('d')
+  const isSharedLink = (programId === 'saju-reading' && searchParams.has('y') && searchParams.has('m') && searchParams.has('d'))
+    || (programId === 'supplement-recommend' && searchParams.has('g') && searchParams.has('age'))
   const program = getProgramById(programId)
 
   useEffect(() => {
