@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import TierBadge from './TierBadge'
 import { getAllCategories } from '@/app/programs/registry'
 
 interface User {
@@ -23,14 +22,8 @@ export default function Sidebar({ user }: { user: User | null }) {
   }, [pathname])
   const categories = getAllCategories()
 
-  if (!user) return null
-
-  async function handleLogout() {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-    } catch { /* 네트워크 오류 무시 */ }
-    router.push('/')
-  }
+  // user 없어도 기본값으로 메뉴 표시
+  const displayUser = user || { memberId: 'guest', nickname: '방문자', tier: 4 as const }
 
   const navItems = [
     { href: '/dashboard', label: '대시보드', icon: '🏠' },
@@ -39,10 +32,7 @@ export default function Sidebar({ user }: { user: User | null }) {
       label: cat,
       icon: cat === '재무·투자' ? '💰' : cat === '심리·건강' ? '🧠' : cat === '운세·풀이' ? '🔮' : cat === '유틸리티' ? '🔧' : '📁',
     })),
-    { href: '/dashboard/tier-guide', label: '등급 안내', icon: '🏆' },
-    ...(user.tier === 4
-      ? [{ href: '/admin', label: '관리자 패널', icon: '⚙️' }]
-      : []),
+    { href: '/admin', label: '관리자 패널', icon: '⚙️' },
   ]
 
   const sidebarContent = (
@@ -69,15 +59,12 @@ export default function Sidebar({ user }: { user: User | null }) {
         <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/70 border border-amber-200/30 shadow-sm shadow-amber-100/40">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center ring-2 ring-amber-300/30">
             <span className="text-amber-800 font-bold text-sm">
-              {user.nickname.charAt(0)}
+              {displayUser.nickname.charAt(0)}
             </span>
           </div>
           <div className="min-w-0">
             <div className="font-semibold text-[13px] text-amber-950 truncate">
-              {user.nickname}
-            </div>
-            <div className="mt-0.5">
-              <TierBadge tier={user.tier} />
+              {displayUser.nickname}
             </div>
           </div>
         </div>
@@ -117,19 +104,7 @@ export default function Sidebar({ user }: { user: User | null }) {
         })}
       </nav>
 
-      {/* Logout */}
-      <div className="mx-4 mb-4 mt-2">
-        <div className="h-px bg-gradient-to-r from-transparent via-amber-300/20 to-transparent mb-3" />
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3.5 py-3 min-h-[44px] text-[13px] text-amber-700/40 hover:text-red-600 hover:bg-red-50/60 rounded-xl transition-all duration-200"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-          </svg>
-          로그아웃
-        </button>
-      </div>
+      <div className="mx-4 mb-4 mt-2" />
     </div>
   )
 

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useRef, useMemo } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
 import TierBadge from '@/components/TierBadge'
 import ProgramCard from '@/components/ProgramCard'
 import { programRegistry, getAllCategories } from '@/app/programs/registry'
@@ -14,8 +13,6 @@ interface User {
 }
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [category, setCategory] = useState('전체')
   const categories = useMemo(() => ['전체', ...getAllCategories()], [])
@@ -48,8 +45,8 @@ export default function DashboardPage() {
       .then(setUser)
       .catch((err) => {
         if (err.name === 'AbortError') return
-        if (err.message === 'unauthorized') router.push('/')
-        else setUser({ memberId: '', nickname: '오류', tier: 0 } as User)
+        // 인증 실패 시에도 기본 사용자로 처리 (리다이렉트 없음)
+        setUser({ memberId: 'guest', nickname: '방문자', tier: 4 })
       })
     return () => controller.abort()
   }, [])
