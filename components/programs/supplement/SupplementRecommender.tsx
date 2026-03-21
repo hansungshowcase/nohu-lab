@@ -59,7 +59,7 @@ export default function SupplementRecommender() {
         const timer = setTimeout(() => {
           setResults(recs)
           setPhase('result')
-        }, 2500)
+        }, 5000)
         return () => clearTimeout(timer)
       }
     }
@@ -80,7 +80,7 @@ export default function SupplementRecommender() {
       setTimeout(() => {
         setResults(recs)
         setPhase('result')
-      }, 3000)
+      }, 7500)
     }
   }, [step, answers])
 
@@ -196,7 +196,7 @@ export default function SupplementRecommender() {
 
   // ── Phase: Analyzing ──
   if (phase === 'analyzing') {
-    return <AnalyzingScreen />
+    return <AnalyzingScreen answers={answers} />
   }
 
   // ── Phase: Result ──
@@ -453,50 +453,148 @@ function Step4Questions({ answers, setAnswers }: { answers: Answers; setAnswers:
 }
 
 // ══════════════════════════════════════════
-// Analyzing Screen
+// Analyzing Screen (약사 분석 시뮬레이션)
 // ══════════════════════════════════════════
-function AnalyzingScreen() {
+function AnalyzingScreen({ answers }: { answers: Answers }) {
+  const [currentStep, setCurrentStep] = useState(0)
   const [progress, setProgress] = useState(0)
-  const [statusText, setStatusText] = useState('입력 정보 분석 중...')
+
+  const ageLabel = answers.age === '60' ? '60대 이상' : `${answers.age}대`
+  const genderLabel = answers.gender === 'm' ? '남성' : '여성'
+  const concernCount = answers.concerns.length
+
+  // 분석 단계 (사용자 입력 기반 동적 생성)
+  const analysisSteps = [
+    { icon: '👤', label: `${ageLabel} ${genderLabel} 기본 정보 확인`, detail: '연령대별 영양소 필요량 기준 적용' },
+    { icon: '🔬', label: '생활습관 위험 요인 분석', detail: `수면·운동·음주·흡연·햇빛 5개 항목 교차 평가` },
+    { icon: '🩺', label: `건강 고민 ${concernCount}개 항목 정밀 분석`, detail: '증상별 근거 기반 영양소 매칭' },
+    { icon: '💊', label: '복용 약물 상호작용 검토', detail: '약물-영양소 간 흡수 간섭·부작용 체크' },
+    { icon: '🧬', label: '복합 위험인자 교차 분석', detail: '생활습관×건강고민×연령 시너지 효과 계산' },
+    { icon: '⚖️', label: '영양소 우선순위 산정', detail: '필수·권장·선택 등급 분류' },
+    { icon: '⏰', label: '최적 복용 시간표 설계', detail: '흡수율 극대화를 위한 시간대 배분' },
+    { icon: '🔗', label: '영양소 조합 시너지 평가', detail: '흡수 촉진·방해 조합 최종 검증' },
+    { icon: '📋', label: '맞춤 처방전 작성 완료', detail: '최종 결과를 정리하고 있습니다' },
+  ]
 
   useEffect(() => {
-    const steps = [
-      { at: 30, text: '영양 균형 평가 중...' },
-      { at: 65, text: '맞춤 처방 작성 중...' },
-      { at: 90, text: '복용 시간표 생성 중...' },
-    ]
+    // 단계별 딜레이 (앞부분은 빠르게, 중간에 느리게, 마지막 빠르게)
+    const stepDelays = [600, 700, 900, 800, 1000, 700, 800, 600, 400]
+    let elapsed = 0
+    const timers: ReturnType<typeof setTimeout>[] = []
 
-    const interval = setInterval(() => {
+    for (let i = 0; i < analysisSteps.length; i++) {
+      elapsed += stepDelays[i] || 700
+      timers.push(setTimeout(() => setCurrentStep(i + 1), elapsed))
+    }
+
+    // 프로그레스 바 (부드럽게)
+    const totalDuration = stepDelays.reduce((a, b) => a + b, 0)
+    const progressInterval = setInterval(() => {
       setProgress((p) => {
-        const next = Math.min(p + 2, 100)
-        for (const s of steps) {
-          if (p < s.at && next >= s.at) setStatusText(s.text)
-        }
-        return next
+        if (p >= 100) { clearInterval(progressInterval); return 100 }
+        return Math.min(p + (100 / (totalDuration / 80)), 100)
       })
-    }, 60)
+    }, 80)
 
-    return () => clearInterval(interval)
+    return () => {
+      timers.forEach(clearTimeout)
+      clearInterval(progressInterval)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
-    <div className="max-w-lg mx-auto text-center py-12 space-y-6 animate-fade-in">
-      <div className="w-20 h-20 mx-auto relative">
-        <div className="absolute inset-0 border-4 border-orange-200 rounded-full" />
-        <div className="absolute inset-0 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
-        <div className="absolute inset-0 flex items-center justify-center text-3xl">💊</div>
+    <div className="max-w-lg mx-auto space-y-6 animate-fade-in">
+      {/* 약사 아바타 + 상태 */}
+      <div className="text-center pt-4 pb-2">
+        <div className="w-16 h-16 mx-auto bg-orange-100 rounded-full flex items-center justify-center text-3xl mb-3 relative">
+          👨‍⚕️
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white flex items-center justify-center">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+          </div>
+        </div>
+        <p className="text-base font-bold text-gray-900">약사가 분석 중입니다</p>
+        <p className="text-xs text-gray-500 mt-1">입력하신 정보를 기반으로 맞춤 처방을 작성하고 있어요</p>
       </div>
 
-      <div className="space-y-3">
-        <p className="text-gray-700 font-medium">{statusText}</p>
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden max-w-xs mx-auto">
+      {/* 프로그레스 바 */}
+      <div className="px-2">
+        <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-orange-500 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
+            className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-300 ease-out"
+            style={{ width: `${Math.min(progress, 100)}%` }}
           />
         </div>
-        <p className="text-xs text-gray-400">{progress}%</p>
+        <div className="flex justify-between mt-1">
+          <span className="text-[10px] text-gray-400">분석 진행 중</span>
+          <span className="text-[10px] text-orange-500 font-medium">{Math.min(Math.round(progress), 100)}%</span>
+        </div>
       </div>
+
+      {/* 분석 단계 체크리스트 */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+          <p className="text-xs font-semibold text-gray-600">📊 분석 항목 ({Math.min(currentStep, analysisSteps.length)}/{analysisSteps.length})</p>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {analysisSteps.map((step, i) => {
+            const isDone = currentStep > i
+            const isActive = currentStep === i + 1 && currentStep <= analysisSteps.length
+            const isPending = currentStep <= i
+
+            return (
+              <div
+                key={i}
+                className={`flex items-center gap-3 px-4 py-3 transition-all duration-500 ${
+                  isDone ? 'bg-white' : isActive ? 'bg-orange-50' : 'bg-white opacity-40'
+                }`}
+              >
+                {/* 상태 아이콘 */}
+                <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                  {isDone ? (
+                    <div className="w-7 h-7 bg-green-100 rounded-full flex items-center justify-center animate-fade-in">
+                      <span className="text-green-600 text-sm font-bold">✓</span>
+                    </div>
+                  ) : isActive ? (
+                    <div className="w-7 h-7 bg-orange-100 rounded-full flex items-center justify-center">
+                      <div className="w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center">
+                      <span className="text-gray-400 text-xs">{step.icon}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 텍스트 */}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${isDone ? 'text-gray-800' : isActive ? 'text-orange-700' : 'text-gray-400'}`}>
+                    {isPending ? step.label : `${step.icon} ${step.label}`}
+                  </p>
+                  {(isDone || isActive) && (
+                    <p className={`text-[11px] mt-0.5 ${isDone ? 'text-gray-400' : 'text-orange-500'}`}>
+                      {step.detail}
+                    </p>
+                  )}
+                </div>
+
+                {/* 시간 */}
+                {isDone && (
+                  <span className="text-[10px] text-green-500 flex-shrink-0">완료</span>
+                )}
+                {isActive && (
+                  <span className="text-[10px] text-orange-500 flex-shrink-0 animate-pulse">분석 중</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* 하단 안내 */}
+      <p className="text-center text-[11px] text-gray-400 pb-2">
+        건강기능식품 데이터베이스와 약학 근거를 기반으로 분석합니다
+      </p>
     </div>
   )
 }
