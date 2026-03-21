@@ -175,7 +175,10 @@ export default function MentalHealth() {
             imageUrl: `${window.location.origin}/api/og`,
             link: { mobileWebUrl: url, webUrl: url },
           },
-          buttons: [{ title: '결과 보기', link: { mobileWebUrl: url, webUrl: url } }],
+          buttons: [
+            { title: '결과 보기', link: { mobileWebUrl: url, webUrl: url } },
+            { title: '☕ 카페 가입하기', link: { mobileWebUrl: CAFE_URL, webUrl: CAFE_URL } },
+          ],
         })
         return
       } catch { /* fallback below */ }

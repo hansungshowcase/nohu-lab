@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Sidebar from './Sidebar'
 import ChatWidget from './ChatWidget'
+import CafeFloatingCard from './CafeFloatingCard'
 
 interface User {
   memberId: string
@@ -92,6 +93,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <ChatWidget user={user} />
+      <CafeFloatingCard />
     </div>
   )
 }

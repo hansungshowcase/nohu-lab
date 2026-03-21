@@ -168,17 +168,17 @@ export default function ShareButtons({
         },
         buttons: [
           {
-            title: '나도 테스트하기',
-            link: {
-              mobileWebUrl: 'https://retireplan.kr/programs/retirement-test',
-              webUrl: 'https://retireplan.kr/programs/retirement-test',
-            },
-          },
-          {
             title: '결과 보기',
             link: {
               mobileWebUrl: shareUrl,
               webUrl: shareUrl,
+            },
+          },
+          {
+            title: '☕ 카페 가입하기',
+            link: {
+              mobileWebUrl: 'https://cafe.naver.com/eovhskfktmak',
+              webUrl: 'https://cafe.naver.com/eovhskfktmak',
             },
           },
         ],

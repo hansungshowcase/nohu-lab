@@ -184,7 +184,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
           },
           buttons: [
             { title: '결과 보기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } },
-            { title: '나도 해보기', link: { mobileWebUrl: 'https://retireplan.kr/programs/saju-reading', webUrl: 'https://retireplan.kr/programs/saju-reading' } },
+            { title: '☕ 카페 가입하기', link: { mobileWebUrl: 'https://cafe.naver.com/eovhskfktmak', webUrl: 'https://cafe.naver.com/eovhskfktmak' } },
           ],
         })
         return

@@ -99,18 +99,50 @@ export default function DashboardPage() {
 
       {/* Programs Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-        {filtered.map((program, i) => (
-          <div
-            key={program.id}
-            className="animate-slide-up"
-            style={{ animationDelay: `${150 + i * 50}ms` }}
-          >
-            <ProgramCard
-              program={program}
-              userTier={user.tier}
-            />
-          </div>
-        ))}
+        {filtered.map((program, i) => {
+          const items = [
+            <div
+              key={program.id}
+              className="animate-slide-up"
+              style={{ animationDelay: `${150 + i * 50}ms` }}
+            >
+              <ProgramCard
+                program={program}
+                userTier={user.tier}
+              />
+            </div>
+          ]
+
+          {/* 3번째 프로그램 뒤에 카페 홍보 카드 삽입 */}
+          if (i === 2) {
+            items.push(
+              <a
+                key="cafe-promo"
+                href="https://cafe.naver.com/eovhskfktmak"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="animate-slide-up block rounded-2xl overflow-hidden bg-gradient-to-br from-orange-500 to-amber-500 p-5 sm:p-6 text-white shadow-lg shadow-orange-500/15 hover:shadow-xl hover:shadow-orange-500/25 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                style={{ animationDelay: `${150 + 3 * 50}ms` }}
+              >
+                <div className="flex flex-col h-full justify-between gap-4">
+                  <div>
+                    <span className="text-2xl">☕</span>
+                    <h3 className="text-[16px] sm:text-[18px] font-bold mt-2">노후연구소 네이버 카페</h3>
+                    <p className="text-[13px] sm:text-[14px] text-white/80 mt-1 leading-relaxed">
+                      가입하면 아메리카노 100% 지급!<br />
+                      함께 노후를 준비해요
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[13px] sm:text-[14px] font-bold bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2.5 w-fit hover:bg-white/30 transition">
+                    카페 가입하기 →
+                  </span>
+                </div>
+              </a>
+            )
+          }
+
+          return items
+        })}
       </div>
 
       {filtered.length === 0 && (
