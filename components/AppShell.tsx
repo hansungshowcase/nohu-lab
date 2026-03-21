@@ -68,7 +68,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             href="https://cafe.naver.com/eovhskfktmak?iframe_url_utf8=%2FArticleRead.nhn%253Fclubid%3D20898041%2526articleid%3D2281%2526referrerAllArticles%3Dtrue"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-2.5 flex items-center justify-between gap-2 animate-banner-slide-down cursor-pointer hover:from-orange-600 hover:to-amber-600 transition-all"
+            className="bg-gradient-to-r from-orange-500 to-amber-500 text-white pl-[60px] pr-3 lg:px-3 py-2.5 flex items-center justify-between gap-2 animate-banner-slide-down cursor-pointer hover:from-orange-600 hover:to-amber-600 transition-all"
           >
             <div className="flex items-center gap-1.5 text-[12px] sm:text-[13px] font-medium flex-1 min-w-0">
               <span className="text-sm shrink-0 animate-banner-icon-bounce">☕</span>
