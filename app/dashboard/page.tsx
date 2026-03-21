@@ -1,10 +1,8 @@
 'use client'
 
 import { useEffect, useState, useRef, useMemo } from 'react'
-import TierBadge from '@/components/TierBadge'
 import ProgramCard from '@/components/ProgramCard'
 import { programRegistry, getAllCategories } from '@/app/programs/registry'
-import { TIER_MAP } from '@/lib/types'
 
 interface User {
   memberId: string
@@ -70,23 +68,16 @@ export default function DashboardPage() {
     return 0
   })
 
-  const tierInfo = TIER_MAP[user.tier]
-
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Header */}
       <div className="mb-8 sm:mb-10 animate-fade-in">
-        <div className="flex items-center gap-3 mb-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight break-words">
-            {user.nickname}님
-          </h1>
-        </div>
-        <div className="flex items-center gap-3 mt-2">
-          <TierBadge tier={user.tier} />
-          <span className="text-[13px] text-gray-400 font-medium">
-            {tierInfo?.description}
-          </span>
-        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight break-words">
+          {user.nickname}님, 환영합니다
+        </h1>
+        <p className="text-[13px] text-gray-400 font-medium mt-1">
+          원하시는 프로그램을 선택해 주세요
+        </p>
       </div>
 
       {/* Categories */}
