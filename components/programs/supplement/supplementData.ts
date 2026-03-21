@@ -7,9 +7,11 @@ export interface Supplement {
   icon: string
   color: string
   benefits: string[]
+  description: string
   dosage: string
   timing: ('morning' | 'lunch' | 'evening' | 'bedtime')[]
   timingNote: string
+  buyTip: string
   caution?: string
 }
 
@@ -21,9 +23,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '☀️',
     color: '#F59E0B',
     benefits: ['뼈·치아 건강', '면역력 강화', '우울감 완화'],
+    description: '한국인의 약 80%가 부족한 영양소입니다. 실내 생활이 많거나 자외선 차단제를 바르면 체내 합성이 어렵습니다. 뼈 건강뿐 아니라 면역력과 기분 조절에도 중요한 역할을 합니다.',
     dosage: '1,000~2,000 IU (1정)',
     timing: ['morning'],
     timingNote: '식후 복용 (지용성)',
+    buyTip: 'D3(콜레칼시페롤) 형태 선택, 오일 캡슐이 흡수율 높음',
   },
   'omega3': {
     id: 'omega3',
@@ -32,9 +36,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '🐟',
     color: '#3B82F6',
     benefits: ['혈관 건강', '눈 건조 개선', '뇌 기능 지원'],
+    description: '혈중 중성지방을 낮추고 혈관을 깨끗하게 유지합니다. DHA는 뇌와 망막의 주요 구성 성분으로 눈 건강과 인지 기능에 도움을 줍니다.',
     dosage: 'EPA+DHA 1,000mg (1~2캡슐)',
     timing: ['morning', 'evening'],
     timingNote: '식후 복용 (지용성)',
+    buyTip: 'rTG 형태가 흡수율 최고, EPA+DHA 합산 함량 확인',
     caution: '혈액희석제 복용 시 의사 상담 필요',
   },
   'magnesium': {
@@ -44,9 +50,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '🌙',
     color: '#8B5CF6',
     benefits: ['수면 질 개선', '근육 이완', '스트레스 완화'],
+    description: '300가지 이상의 효소 반응에 관여하는 필수 미네랄입니다. 근육 경련, 눈떨림, 수면 장애가 있다면 마그네슘 부족을 의심해볼 수 있습니다.',
     dosage: '300~400mg (1정)',
     timing: ['bedtime'],
     timingNote: '취침 30분 전',
+    buyTip: '글리시네이트 또는 비스글리시네이트 형태 추천 (위장 부담 적음)',
   },
   'vitamin-b': {
     id: 'vitamin-b',
@@ -55,9 +63,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '⚡',
     color: '#EF4444',
     benefits: ['에너지 대사', '만성 피로 개선', '신경 기능'],
+    description: '8가지 비타민B가 함께 작용하여 음식을 에너지로 바꾸는 과정을 돕습니다. 스트레스·음주·카페인이 많으면 B군 소모가 빨라집니다.',
     dosage: 'B군 복합제 1정',
     timing: ['morning'],
     timingNote: '아침 식후 (저녁 복용 시 수면 방해 가능)',
+    buyTip: '활성형(메틸코발라민, 엽산메틸) 포함 제품 권장',
   },
   'vitamin-c': {
     id: 'vitamin-c',
@@ -66,9 +76,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '🍊',
     color: '#F97316',
     benefits: ['면역력 강화', '피부 건강', '항산화'],
+    description: '강력한 항산화제로 면역 세포를 활성화하고 콜라겐 합성을 촉진합니다. 수용성이라 체내에 저장되지 않으므로 매일 보충이 필요합니다.',
     dosage: '500~1,000mg (1~2정)',
     timing: ['morning', 'evening'],
     timingNote: '식후 복용',
+    buyTip: '위가 약하면 에스터-C(완충형) 선택, 나누어 복용이 효과적',
   },
   'probiotics': {
     id: 'probiotics',
@@ -77,9 +89,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '🦠',
     color: '#10B981',
     benefits: ['장 건강', '소화 개선', '면역력 지원'],
+    description: '장내 유익균을 보충하여 소화 흡수를 돕고 면역력의 70%를 담당하는 장 환경을 개선합니다. 항생제 복용 후 특히 중요합니다.',
     dosage: '100억 CFU 이상 (1캡슐)',
     timing: ['morning'],
     timingNote: '아침 공복 또는 식전',
+    buyTip: '보장균수 100억 이상, 장까지 도달하는 코팅 캡슐 선택',
   },
   'lutein': {
     id: 'lutein',
@@ -88,9 +102,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '👁️',
     color: '#06B6D4',
     benefits: ['눈 건강', '황반변성 예방', '블루라이트 차단'],
+    description: '눈의 황반부를 구성하는 핵심 성분으로, 나이가 들수록 체내 함량이 줄어듭니다. 스마트폰·PC 사용이 많은 현대인에게 특히 필요합니다.',
     dosage: '20mg (1캡슐)',
     timing: ['morning'],
     timingNote: '식후 복용 (지용성)',
+    buyTip: '루테인 20mg + 지아잔틴 4mg 복합 제품 권장',
   },
   'zinc': {
     id: 'zinc',
@@ -99,9 +115,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '🛡️',
     color: '#6366F1',
     benefits: ['면역력 강화', '피부·모발 건강', '상처 회복'],
+    description: '면역 세포 생성과 피부 재생에 필수적인 미네랄입니다. 탈모, 손톱 갈라짐, 입안 염증이 잦다면 아연 부족 신호일 수 있습니다.',
     dosage: '15~30mg (1정)',
     timing: ['evening'],
     timingNote: '식후 복용',
+    buyTip: '아연 피콜리네이트 또는 비스글리시네이트 형태가 흡수율 높음',
   },
   'iron': {
     id: 'iron',
@@ -110,9 +128,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '🩸',
     color: '#DC2626',
     benefits: ['빈혈 예방', '피로 개선', '산소 운반'],
+    description: '혈액 속 헤모글로빈의 핵심 성분으로 산소를 온몸에 전달합니다. 여성은 월경으로 철분 손실이 많아 보충이 특히 중요합니다.',
     dosage: '12~18mg (1정)',
     timing: ['morning'],
     timingNote: '공복 복용 권장 (비타민C와 함께)',
+    buyTip: '비스글리시네이트 철분이 위장 자극 적음, 비타민C와 함께 복용',
     caution: '칼슘·유제품과 2시간 간격',
   },
   'calcium': {
@@ -120,11 +140,13 @@ export const supplements: Record<string, Supplement> = {
     name: '칼슘',
     nameEn: 'Calcium',
     icon: '🦴',
-    color: '#F5F5F4',
+    color: '#78716C',
     benefits: ['뼈·골다공증 예방', '치아 건강', '근육 기능'],
+    description: '뼈와 치아의 99%를 구성하는 미네랄입니다. 30대 이후 골밀도가 매년 감소하므로 꾸준한 보충이 중요합니다. 비타민D와 함께 복용하면 흡수율이 높아집니다.',
     dosage: '500~600mg (1~2정)',
     timing: ['evening'],
     timingNote: '식후 복용 (비타민D와 함께)',
+    buyTip: '구연산칼슘이 탄산칼슘보다 흡수율 높음, 1회 500mg 이하로 나눠 복용',
     caution: '철분과 2시간 간격',
   },
   'coq10': {
@@ -134,9 +156,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '❤️',
     color: '#E11D48',
     benefits: ['심장 건강', '세포 에너지 생성', '항산화'],
+    description: '모든 세포의 에너지 공장(미토콘드리아)에서 필수적인 성분입니다. 40대부터 체내 생산이 급격히 줄어들어 보충이 필요합니다. 심장 건강과 항노화에 도움을 줍니다.',
     dosage: '100~200mg (1캡슐)',
     timing: ['morning'],
     timingNote: '식후 복용 (지용성)',
+    buyTip: '환원형(유비퀴놀)이 산화형(유비퀴논)보다 흡수율 높음',
   },
   'collagen': {
     id: 'collagen',
@@ -145,9 +169,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '✨',
     color: '#EC4899',
     benefits: ['피부 탄력', '관절 건강', '모발·손톱 강화'],
+    description: '피부, 뼈, 관절의 구조를 이루는 단백질입니다. 25세 이후 매년 1%씩 감소하여 주름, 관절 불편감의 원인이 됩니다. 저분자 펩타이드 형태가 흡수에 유리합니다.',
     dosage: '2,000~5,000mg (1포)',
     timing: ['bedtime'],
     timingNote: '취침 전 공복',
+    buyTip: '저분자 피쉬콜라겐 펩타이드(1,000Da 이하) 권장',
   },
   'milk-thistle': {
     id: 'milk-thistle',
@@ -156,9 +182,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '🍀',
     color: '#22C55E',
     benefits: ['간 해독', '간 세포 보호', '피로 회복'],
+    description: '실리마린 성분이 간 세포막을 보호하고 해독 기능을 돕습니다. 음주가 잦거나 약물 복용이 많은 분에게 특히 권장됩니다.',
     dosage: '실리마린 130mg (1정)',
     timing: ['morning', 'evening'],
     timingNote: '식후 복용',
+    buyTip: '실리마린 함량 130mg 이상 건강기능식품 인증 제품 선택',
   },
   'glucosamine': {
     id: 'glucosamine',
@@ -167,9 +195,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '🦿',
     color: '#0EA5E9',
     benefits: ['관절 연골 보호', '관절 통증 완화', '관절 유연성'],
+    description: '관절 연골의 구성 성분을 직접 보충합니다. 계단 오르내리기, 무릎 통증이 있다면 조기에 복용을 시작하는 것이 좋습니다. 효과를 느끼려면 최소 8주 이상 꾸준히 복용하세요.',
     dosage: '1,500mg (2~3정)',
     timing: ['morning', 'lunch'],
     timingNote: '식후 나누어 복용',
+    buyTip: '글루코사민 황산염 1,500mg + MSM 복합 제품 권장',
   },
   'rclub': {
     id: 'rclub',
@@ -178,9 +208,11 @@ export const supplements: Record<string, Supplement> = {
     icon: '🔴',
     color: '#B91C1C',
     benefits: ['콜레스테롤 관리', '혈관 건강'],
+    description: '천연 모나콜린K 성분이 LDL 콜레스테롤 수치를 낮추는 데 도움을 줍니다. 건강검진에서 콜레스테롤 수치가 높게 나왔다면 고려해볼 수 있습니다.',
     dosage: '모나콜린K 4mg (1정)',
     timing: ['evening'],
     timingNote: '저녁 식후',
+    buyTip: '모나콜린K 함량 표기 제품, 건강기능식품 인증 확인',
     caution: '스타틴 계열 약물과 병용 주의',
   },
 }
@@ -500,6 +532,88 @@ export function getSchedule(recs: RecommendedSupplement[]): Record<TimeSlot, Sup
     }
   }
   return schedule
+}
+
+// ── 약사 총평 생성 ──
+export function getPharmacistComment(answers: Answers, recs: RecommendedSupplement[]): string {
+  const parts: string[] = []
+  const age = answers.age
+  const essentials = recs.filter(r => r.priority === 'essential')
+
+  // 연령대별 코멘트
+  if (age === '20' || age === '30') {
+    parts.push(`${age}대는 아직 젊은 나이지만, 불규칙한 생활습관이 쌓이면 30~40대에 건강 문제로 나타날 수 있습니다.`)
+  } else if (age === '40') {
+    parts.push('40대는 체내 영양소 합성 능력이 떨어지기 시작하는 시기입니다. 지금부터 기본 영양소를 챙기면 50~60대 건강이 크게 달라집니다.')
+  } else if (age === '50') {
+    parts.push('50대는 호르몬 변화와 함께 뼈·관절·심혈관 건강에 특별한 관심이 필요한 시기입니다.')
+  } else {
+    parts.push('60대 이상은 영양소 흡수력이 저하되므로 흡수율 높은 형태의 영양제를 선택하는 것이 중요합니다.')
+  }
+
+  // 필수 영양제가 있으면 강조
+  if (essentials.length > 0) {
+    const names = essentials.map(r => r.supplement.name).join(', ')
+    parts.push(`특히 ${names}은(는) 현재 상태에서 가장 시급하게 보충이 필요한 영양소입니다.`)
+  }
+
+  // 생활습관 코멘트
+  if (answers.sleep === '1') {
+    parts.push('수면 시간이 5시간 이하로 매우 부족합니다. 영양제와 함께 수면 습관 개선도 병행하시길 권합니다.')
+  }
+  if (answers.alcohol === '4') {
+    parts.push('잦은 음주는 간뿐 아니라 비타민B·아연·마그네슘 등 다양한 영양소를 고갈시킵니다.')
+  }
+  if (answers.smoking === '3') {
+    parts.push('흡연은 비타민C를 일반인의 2배 이상 소모시키므로 적극적인 보충이 필요합니다.')
+  }
+
+  // 마무리
+  parts.push('영양제는 건강한 식습관을 보완하는 것이지 대체하는 것이 아닙니다. 균형 잡힌 식사를 기본으로 하되, 부족한 부분을 영양제로 채워주세요.')
+
+  return parts.join(' ')
+}
+
+// ── 복용 시 주의사항 생성 ──
+export function getCautions(answers: Answers, recs: RecommendedSupplement[]): string[] {
+  const cautions: string[] = []
+
+  // 공통 주의사항
+  cautions.push('영양제를 처음 시작할 때는 한 가지씩 추가하며 2주간 반응을 관찰하세요.')
+  cautions.push('이상 반응(소화불량, 두드러기, 어지러움 등)이 나타나면 즉시 복용을 중단하세요.')
+
+  // 약물 상호작용
+  if (answers.medications.includes('blood-thinner')) {
+    cautions.push('혈액희석제를 복용 중이시므로 오메가3, 비타민E, 은행잎추출물은 반드시 담당 의사와 상의 후 복용하세요.')
+  }
+  if (answers.medications.includes('bp-med')) {
+    cautions.push('혈압약 복용 중이시므로 칼륨, 마그네슘 보충제는 의사와 상의가 필요합니다.')
+  }
+  if (answers.medications.includes('diabetes-med')) {
+    cautions.push('당뇨약 복용 중이시므로 크롬, 알파리포산, 홍국 등은 혈당에 영향을 줄 수 있어 의사 상담이 필요합니다.')
+  }
+
+  // 임신
+  if (answers.pregnant === 'y') {
+    cautions.push('임신·수유 중에는 비타민A(레티놀) 고용량, 홍국, 일부 허브 성분을 피해야 합니다. 반드시 산부인과 의사와 상의하세요.')
+  }
+
+  // 과량 복용 주의
+  const ids = recs.map(r => r.supplement.id)
+  if (ids.includes('iron')) {
+    cautions.push('철분은 과량 복용 시 위장 장애, 변비가 생길 수 있습니다. 권장량을 초과하지 마세요.')
+  }
+  if (ids.includes('zinc')) {
+    cautions.push('아연은 하루 40mg을 초과하면 구리 흡수를 방해할 수 있으므로 장기 복용 시 주의하세요.')
+  }
+  if (ids.includes('vitamin-d')) {
+    cautions.push('비타민D는 지용성이라 과량 축적될 수 있습니다. 하루 4,000 IU를 초과하지 마세요.')
+  }
+
+  // 건강기능식품 주의
+  cautions.push('영양제는 건강기능식품 인증(건기식 마크) 표시가 있는 제품을 선택하세요.')
+
+  return cautions
 }
 
 // ── 건강 고민 옵션 ──

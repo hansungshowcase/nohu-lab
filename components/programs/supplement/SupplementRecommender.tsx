@@ -11,6 +11,8 @@ import {
   getRecommendations,
   getCombinationTips,
   getSchedule,
+  getPharmacistComment,
+  getCautions,
   timeSlotLabels,
   concernOptions,
   medicationOptions,
@@ -515,14 +517,24 @@ function ResultScreen({
 }) {
   const ageLabel = answers.age === '60' ? '60대 이상' : `${answers.age}대`
   const genderLabel = answers.gender === 'm' ? '남성' : '여성'
-  const topConcerns = answers.concerns.slice(0, 3).map((c) => {
+  const topConcerns = answers.concerns.map((c) => {
     const found = concernOptions.find((o) => o.id === c)
-    return found?.label || c
-  })
+    return found ? { label: found.label, icon: found.icon } : null
+  }).filter(Boolean) as { label: string; icon: string }[]
   const profileSummary = `${ageLabel} ${genderLabel}`
 
   const schedule = getSchedule(results)
   const tips = getCombinationTips(results, answers)
+  const pharmacistComment = getPharmacistComment(answers, results)
+  const cautions = getCautions(answers, results)
+
+  const goodTips = tips.filter(t => t.type === 'good')
+  const cautionTips = tips.filter(t => t.type === 'caution')
+  const warningTips = tips.filter(t => t.type === 'warning')
+
+  const sleepLabel = { '1': '5시간 이하', '2': '6~7시간', '3': '7~8시간', '4': '8시간 이상' }[answers.sleep]
+  const exerciseLabel = { '1': '거의 안 함', '2': '주 1~2회', '3': '주 3~4회', '4': '거의 매일' }[answers.exercise]
+  const alcoholLabel = { '1': '안 마심', '2': '월 1~2회', '3': '주 1~2회', '4': '주 3회+' }[answers.alcohol]
 
   const priorityLabel = (p: RecommendedSupplement['priority']) =>
     p === 'essential' ? '필수' : p === 'recommended' ? '권장' : '선택'
@@ -534,101 +546,187 @@ function ResultScreen({
       ? 'bg-orange-100 text-orange-700 border-orange-200'
       : 'bg-gray-100 text-gray-600 border-gray-200'
 
+  const [expandedCard, setExpandedCard] = useState<string | null>(null)
+
   return (
     <div className="max-w-lg mx-auto space-y-5 animate-fade-in">
-      {/* 처방전 헤더 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 text-center">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <span className="text-xl font-bold text-orange-600">℞</span>
-          <h2 className="text-lg font-bold text-gray-900">맞춤 영양제 처방전</h2>
+      {/* ── 처방전 헤더 ── */}
+      <div className="bg-white rounded-2xl shadow-sm border-2 border-orange-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-3 flex items-center gap-2">
+          <span className="text-2xl font-bold text-white">℞</span>
+          <h2 className="text-lg font-bold text-white">맞춤 영양제 처방전</h2>
         </div>
-        <div className="bg-orange-50 rounded-xl p-3 space-y-1">
-          <p className="text-sm text-gray-700">
-            <span className="font-semibold">{profileSummary}</span>
-            {answers.pregnant === 'y' && <span className="ml-1 text-pink-600">(임신·수유 중)</span>}
-          </p>
+        <div className="p-5 space-y-3">
+          {/* 프로필 요약 */}
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center text-2xl flex-shrink-0">
+              {answers.gender === 'm' ? '🙋‍♂️' : '🙋‍♀️'}
+            </div>
+            <div>
+              <p className="font-bold text-gray-900 text-lg">
+                {profileSummary}
+                {answers.pregnant === 'y' && <span className="ml-1 text-sm text-pink-600">(임신·수유 중)</span>}
+              </p>
+              <p className="text-xs text-gray-500">
+                수면 {sleepLabel} · 운동 {exerciseLabel} · 음주 {alcoholLabel}
+              </p>
+            </div>
+          </div>
+
+          {/* 건강 고민 태그 */}
           {topConcerns.length > 0 && (
-            <p className="text-xs text-gray-500">
-              주요 고민: {topConcerns.join(', ')}
-            </p>
+            <div>
+              <p className="text-xs text-gray-500 mb-1.5">주요 건강 고민</p>
+              <div className="flex flex-wrap gap-1.5">
+                {topConcerns.map((c) => (
+                  <span key={c.label} className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-50 border border-orange-200 rounded-full text-xs text-orange-700 font-medium">
+                    {c.icon} {c.label}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>
 
-      {/* 추천 영양제 카드 */}
-      <div className="space-y-3">
-        <h3 className="text-base font-bold text-gray-900 px-1">💊 추천 영양제 ({results.length}가지)</h3>
-        {results.map((rec, i) => (
-          <div
-            key={rec.supplement.id}
-            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 animate-slide-up"
-            style={{ animationDelay: `${i * 100}ms` }}
-          >
-            <div className="flex items-start gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                style={{ backgroundColor: `${rec.supplement.color}15` }}
-              >
-                {rec.supplement.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="font-bold text-gray-900">{rec.supplement.name}</h4>
-                  <span className="text-xs text-gray-400">{rec.supplement.nameEn}</span>
-                </div>
-                <span className={`inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded-full border ${priorityColor(rec.priority)}`}>
-                  {priorityLabel(rec.priority)}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-3 space-y-2">
-              <div className="space-y-1">
-                {rec.reasons.map((reason, j) => (
-                  <p key={j} className="text-sm text-gray-600 flex items-start gap-1.5">
-                    <span className="text-orange-400 mt-0.5 flex-shrink-0">•</span>
-                    <span>{reason}</span>
-                  </p>
-                ))}
-              </div>
-
-              <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 border-t border-gray-50 text-xs text-gray-500">
-                <span>💊 {rec.supplement.dosage}</span>
-                <span>⏰ {rec.supplement.timingNote}</span>
-              </div>
-
-              {rec.supplement.caution && (
-                <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-                  ⚠️ {rec.supplement.caution}
-                </p>
-              )}
-            </div>
+      {/* ── 약사의 한마디 ── */}
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200 p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl flex-shrink-0 shadow-sm">
+            👨‍⚕️
           </div>
-        ))}
+          <div>
+            <p className="text-sm font-bold text-amber-800 mb-1">약사의 한마디</p>
+            <p className="text-sm text-amber-900 leading-relaxed">{pharmacistComment}</p>
+          </div>
+        </div>
       </div>
 
-      {/* 복용 시간표 */}
+      {/* ── 추천 영양제 카드 ── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-base font-bold text-gray-900">💊 추천 영양제 ({results.length}가지)</h3>
+          <p className="text-xs text-gray-400">카드를 눌러 상세 정보 확인</p>
+        </div>
+        {results.map((rec, i) => {
+          const isExpanded = expandedCard === rec.supplement.id
+          return (
+            <div
+              key={rec.supplement.id}
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-slide-up"
+              style={{ animationDelay: `${i * 100}ms` }}
+            >
+              {/* 카드 헤더 (항상 표시) */}
+              <button
+                onClick={() => setExpandedCard(isExpanded ? null : rec.supplement.id)}
+                className="w-full p-4 text-left"
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl flex-shrink-0"
+                    style={{ backgroundColor: `${rec.supplement.color}15` }}
+                  >
+                    {rec.supplement.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-bold text-gray-900 text-base">{rec.supplement.name}</h4>
+                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${priorityColor(rec.priority)}`}>
+                        {priorityLabel(rec.priority)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-0.5">{rec.supplement.nameEn}</p>
+                    {/* 효능 태그 */}
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {rec.supplement.benefits.map((b) => (
+                        <span key={b} className="px-2 py-0.5 bg-gray-100 rounded text-[11px] text-gray-600">
+                          {b}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-gray-400 flex-shrink-0 mt-1">
+                    {isExpanded ? '▲' : '▼'}
+                  </div>
+                </div>
+
+                {/* 추천 이유 (항상 표시) */}
+                <div className="mt-3 space-y-1">
+                  {rec.reasons.map((reason, j) => (
+                    <p key={j} className="text-sm text-gray-600 flex items-start gap-1.5">
+                      <span className="text-orange-400 mt-0.5 flex-shrink-0">•</span>
+                      <span>{reason}</span>
+                    </p>
+                  ))}
+                </div>
+              </button>
+
+              {/* 상세 정보 (펼쳤을 때) */}
+              {isExpanded && (
+                <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3 animate-fade-in">
+                  {/* 설명 */}
+                  <div className="bg-blue-50 rounded-xl p-3">
+                    <p className="text-xs font-semibold text-blue-700 mb-1">📖 상세 설명</p>
+                    <p className="text-sm text-blue-900 leading-relaxed">{rec.supplement.description}</p>
+                  </div>
+
+                  {/* 복용법 */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-[10px] text-gray-500 mb-1">권장 복용량</p>
+                      <p className="text-sm font-semibold text-gray-800">💊 {rec.supplement.dosage}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-[10px] text-gray-500 mb-1">복용 시간</p>
+                      <p className="text-sm font-semibold text-gray-800">⏰ {rec.supplement.timingNote}</p>
+                    </div>
+                  </div>
+
+                  {/* 구매 팁 */}
+                  <div className="bg-green-50 rounded-xl p-3">
+                    <p className="text-xs font-semibold text-green-700 mb-1">🛒 구매 팁</p>
+                    <p className="text-sm text-green-800">{rec.supplement.buyTip}</p>
+                  </div>
+
+                  {/* 주의사항 */}
+                  {rec.supplement.caution && (
+                    <div className="bg-amber-50 rounded-xl p-3">
+                      <p className="text-xs font-semibold text-amber-700 mb-1">⚠️ 주의사항</p>
+                      <p className="text-sm text-amber-800">{rec.supplement.caution}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── 복용 시간표 ── */}
       <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-4">
-        <h3 className="text-base font-bold text-gray-900 mb-3">⏰ 복용 시간표</h3>
+        <h3 className="text-base font-bold text-gray-900 mb-1">⏰ 하루 복용 시간표</h3>
+        <p className="text-xs text-gray-400 mb-3">시간대별로 나누어 복용하면 흡수율이 높아집니다</p>
         <div className="space-y-2">
           {(Object.keys(timeSlotLabels) as TimeSlot[]).map((slot) => {
             const items = schedule[slot]
             if (items.length === 0) return null
             const info = timeSlotLabels[slot]
             return (
-              <div key={slot} className="flex items-start gap-3 p-2.5 bg-gray-50 rounded-xl">
-                <div className="w-10 text-center flex-shrink-0">
-                  <div className="text-lg">{info.icon}</div>
-                  <div className="text-[10px] text-gray-500 mt-0.5">{info.label}</div>
+              <div key={slot} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <div className="w-12 text-center flex-shrink-0">
+                  <div className="text-xl">{info.icon}</div>
+                  <div className="text-[10px] font-medium text-gray-500 mt-0.5">{info.label}</div>
                 </div>
+                <div className="w-px h-8 bg-gray-200 flex-shrink-0" />
                 <div className="flex flex-wrap gap-1.5 flex-1">
                   {items.map((supp) => (
                     <span
                       key={supp.id}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium shadow-sm"
                       style={{
-                        backgroundColor: `${supp.color}15`,
-                        color: supp.color === '#F5F5F4' ? '#57534e' : supp.color,
+                        backgroundColor: `${supp.color}18`,
+                        color: supp.color === '#78716C' ? '#57534e' : supp.color,
+                        border: `1px solid ${supp.color}30`,
                       }}
                     >
                       {supp.icon} {supp.name}
@@ -641,30 +739,66 @@ function ResultScreen({
         </div>
       </div>
 
-      {/* 조합 가이드 */}
+      {/* ── 조합 가이드 ── */}
       {tips.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-4">
-          <h3 className="text-base font-bold text-gray-900 mb-3">🔬 조합 가이드</h3>
-          <div className="space-y-2">
-            {tips.map((tip, i) => (
-              <div
-                key={i}
-                className={`p-3 rounded-xl text-sm ${
-                  tip.type === 'good'
-                    ? 'bg-green-50 text-green-800'
-                    : tip.type === 'caution'
-                    ? 'bg-amber-50 text-amber-800'
-                    : 'bg-red-50 text-red-800'
-                }`}
-              >
-                {tip.icon} {tip.text}
+        <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-4 space-y-3">
+          <h3 className="text-base font-bold text-gray-900">🔬 영양제 조합 가이드</h3>
+
+          {goodTips.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-green-700 mb-1.5">함께 먹으면 좋은 조합</p>
+              <div className="space-y-1.5">
+                {goodTips.map((tip, i) => (
+                  <div key={i} className="p-3 rounded-xl text-sm bg-green-50 text-green-800 border border-green-100">
+                    {tip.icon} {tip.text}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+
+          {cautionTips.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-amber-700 mb-1.5">시간 간격이 필요한 조합</p>
+              <div className="space-y-1.5">
+                {cautionTips.map((tip, i) => (
+                  <div key={i} className="p-3 rounded-xl text-sm bg-amber-50 text-amber-800 border border-amber-100">
+                    {tip.icon} {tip.text}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {warningTips.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-red-700 mb-1.5">약물 상호작용 주의</p>
+              <div className="space-y-1.5">
+                {warningTips.map((tip, i) => (
+                  <div key={i} className="p-3 rounded-xl text-sm bg-red-50 text-red-800 border border-red-100">
+                    {tip.icon} {tip.text}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* 공유 버튼 */}
+      {/* ── 복용 시 주의사항 ── */}
+      <div className="bg-white rounded-2xl shadow-sm border border-red-100 p-4">
+        <h3 className="text-base font-bold text-gray-900 mb-3">🚨 복용 시 주의사항</h3>
+        <div className="space-y-2">
+          {cautions.map((c, i) => (
+            <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
+              <span className="text-red-400 mt-0.5 flex-shrink-0 text-xs">●</span>
+              <span className="leading-relaxed">{c}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 공유 버튼 ── */}
       <SupplementShareButtons
         shareUrl={shareUrl}
         profileSummary={profileSummary}
