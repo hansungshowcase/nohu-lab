@@ -103,6 +103,18 @@ function generateReadingTitle(cards: SelectedCard[], score: number): { title: st
   return { title: '깊은 성찰이 필요한 때', emoji: '🌊' }
 }
 
+// ── 한국어 조사 처리 ──
+
+function hasJongseong(str: string): boolean {
+  const last = str.charCodeAt(str.length - 1)
+  if (last < 0xAC00 || last > 0xD7A3) return false
+  return (last - 0xAC00) % 28 !== 0
+}
+
+function josa(name: string, particles: [string, string]): string {
+  return hasJongseong(name) ? particles[0] : particles[1]
+}
+
 // ── 위치별 해석 생성 ──
 
 function generatePositionReading(sc: SelectedCard): string {
@@ -113,7 +125,7 @@ function generatePositionReading(sc: SelectedCard): string {
   const prefix = frame?.prefix || ''
   const suffix = frame?.suffix || ''
 
-  return `${prefix} ${direction}의 ${sc.card.name} 카드가 이 자리에 나타났습니다. ${interp.meaning} ${suffix}`
+  return `${prefix} ${direction}의 "${sc.card.name}" 카드가 이 자리에 나타났습니다. ${interp.meaning} ${suffix}`
 }
 
 // ── 내러티브 생성 (카드들을 연결하는 이야기) ──
@@ -122,19 +134,31 @@ function generateNarrative(cards: SelectedCard[], spread: SpreadType, question: 
   if (cards.length === 1) {
     const c = cards[0]
     const interp = c.isReversed ? c.card.reversed : c.card.upright
-    const qText = question ? `"${question}"라는 질문에 대해, ` : ''
-    return `${qText}${c.card.name}(${c.isReversed ? '역방향' : '정방향'}) 카드가 오늘의 메시지로 나타났습니다. ${c.card.archetype}의 에너지가 당신의 하루를 감싸고 있습니다. ${interp.advice} ${c.card.symbolism.split('.')[0]}을 떠올리며 하루를 보내보세요.`
+    const dir = c.isReversed ? '역방향' : '정방향'
+    const qText = question ? `"${question}"이라는 질문에 대해 카드가 답합니다.\n\n` : ''
+    return `${qText}오늘 당신에게 나타난 카드는 ${dir}의 "${c.card.name}"입니다.\n\n${interp.meaning}\n\n카드가 전하는 조언입니다. ${interp.advice}`
   }
 
-  const qText = question ? `"${question}"에 대한 카드의 이야기입니다.\n\n` : ''
+  const qText = question ? `"${question}"에 대해 카드가 이야기합니다.\n\n` : ''
 
   if (spread.id === 'three-card') {
     const [past, present, future] = cards
     const pastI = past.isReversed ? past.card.reversed : past.card.upright
     const presentI = present.isReversed ? present.card.reversed : present.card.upright
     const futureI = future.isReversed ? future.card.reversed : future.card.upright
+    const pastDir = past.isReversed ? '역방향' : '정방향'
+    const presentDir = present.isReversed ? '역방향' : '정방향'
+    const futureDir = future.isReversed ? '역방향' : '정방향'
 
-    return `${qText}당신의 과거에는 ${past.card.name}(${past.isReversed ? '역' : '정'})의 에너지가 있었습니다. ${past.card.archetype}의 경험을 통해 ${pastI.advice.split('.')[0]}는 교훈을 얻었습니다.\n\n현재, ${present.card.name}(${present.isReversed ? '역' : '정'})이 당신의 삶에 작용하고 있습니다. ${presentI.meaning.split('.')[0]}. 이 에너지를 인식하고 현명하게 활용하세요.\n\n미래에는 ${future.card.name}(${future.isReversed ? '역' : '정'})의 기운이 다가옵니다. ${futureI.advice} 과거의 ${past.card.name}에서 배운 것을 현재의 ${present.card.name}에 적용하면, ${future.card.name}이 가져올 미래를 더 밝게 만들 수 있습니다.`
+    const pastSection = `[과거] ${pastDir}의 "${past.card.name}"\n${pastI.meaning.split('.').slice(0, 2).join('.')}.\n→ 교훈: ${pastI.advice.split('.')[0]}.`
+
+    const presentSection = `[현재] ${presentDir}의 "${present.card.name}"\n${presentI.meaning.split('.').slice(0, 2).join('.')}.\n→ 지금 필요한 것: ${presentI.advice.split('.')[0]}.`
+
+    const futureSection = `[미래] ${futureDir}의 "${future.card.name}"\n${futureI.meaning.split('.').slice(0, 2).join('.')}.\n→ 조언: ${futureI.advice.split('.')[0]}.`
+
+    const conclusion = `\n과거의 "${past.card.name}"에서 배운 교훈${josa(past.card.name, ['을', '를'])} 현재에 적용하고, 다가올 "${future.card.name}"의 에너지에 대비하세요.`
+
+    return `${qText}${pastSection}\n\n${presentSection}\n\n${futureSection}\n${conclusion}`
   }
 
   if (spread.id === 'relationship') {
@@ -142,8 +166,17 @@ function generateNarrative(cards: SelectedCard[], spread: SpreadType, question: 
     const selfI = self.isReversed ? self.card.reversed : self.card.upright
     const otherI = other.isReversed ? other.card.reversed : other.card.upright
     const dirI = direction.isReversed ? direction.card.reversed : direction.card.upright
+    const selfDir = self.isReversed ? '역방향' : '정방향'
+    const otherDir = other.isReversed ? '역방향' : '정방향'
+    const dirDir = direction.isReversed ? '역방향' : '정방향'
 
-    return `${qText}당신은 현재 ${self.card.name}(${self.isReversed ? '역' : '정'})의 에너지를 갖고 있습니다. ${selfI.love}\n\n상대방에게는 ${other.card.name}(${other.isReversed ? '역' : '정'})의 에너지가 보입니다. ${otherI.love}\n\n두 사람의 관계는 ${direction.card.name}(${direction.isReversed ? '역' : '정'})을 향해 흘러가고 있습니다. ${dirI.love} ${dirI.advice}`
+    const selfSection = `[나] ${selfDir}의 "${self.card.name}"\n${selfI.love}`
+
+    const otherSection = `[상대] ${otherDir}의 "${other.card.name}"\n${otherI.love}`
+
+    const dirSection = `[관계의 방향] ${dirDir}의 "${direction.card.name}"\n${dirI.love}\n\n→ 조언: ${dirI.advice}`
+
+    return `${qText}${selfSection}\n\n${otherSection}\n\n${dirSection}`
   }
 
   return ''
@@ -237,29 +270,28 @@ function generateOverallMessage(cards: SelectedCard[], spread: SpreadType, quest
 
   let tone: string
   if (uprightCount === cards.length) {
-    tone = '모든 카드가 정방향으로 나타나 강한 긍정의 흐름이 감지됩니다. 우주가 당신의 현재 방향을 적극 지지하고 있습니다.'
+    tone = '모든 카드가 정방향입니다. 지금 가고 있는 방향이 맞습니다. 자신감을 갖고 나아가세요.'
   } else if (reversedCount === cards.length) {
-    tone = '모든 카드가 역방향입니다. 이는 지금 외부 행동보다 내면 성찰이 시급하다는 강력한 메시지입니다. 잠시 멈추고 자신을 돌아보세요.'
+    tone = '모든 카드가 역방향입니다. 지금은 행동보다 멈춰서 생각할 때입니다. 서두르지 마세요.'
   } else if (uprightCount > reversedCount) {
-    tone = '전반적으로 긍정적인 에너지가 흐르고 있지만, 일부 주의가 필요한 영역이 있습니다.'
+    tone = '전체적으로 좋은 흐름이지만, 일부 조심할 부분이 있습니다.'
   } else {
-    tone = '내면의 성찰과 변화가 필요한 시기이지만, 밝은 가능성도 함께 존재합니다.'
+    tone = '돌아봐야 할 것들이 있지만, 긍정적인 가능성도 함께 보입니다.'
   }
-
-  const cardNames = cards.map(c => c.card.name).join(', ')
 
   let spreadAdvice: string
   if (spread.id === 'one-card') {
-    spreadAdvice = `오늘의 카드 "${cards[0].card.name}"이 전하는 핵심 메시지를 하루 동안 의식하며 생활해보세요. 작은 선택의 순간마다 이 카드의 지혜를 떠올리면 더 나은 하루를 만들 수 있습니다.`
+    const name = cards[0].card.name
+    spreadAdvice = `오늘 하루, "${name}" 카드의 메시지를 기억하세요. 선택의 순간마다 이 카드를 떠올리면 도움이 됩니다.`
   } else if (spread.id === 'three-card') {
-    spreadAdvice = `${cardNames}의 흐름은 과거의 교훈을 현재에 적용하고, 미래를 능동적으로 준비하라는 메시지입니다. 시간의 강물은 멈추지 않으니, 과거에 얽매이지 말고 현재에 충실하세요.`
+    spreadAdvice = `과거에서 교훈을 얻고, 현재에 집중하며, 미래를 준비하세요. 세 카드가 하나의 흐름으로 연결되어 있습니다.`
   } else {
-    spreadAdvice = `${cardNames}의 조합은 관계에서 서로를 이해하고 존중하는 것이 가장 중요하다는 메시지입니다. 자신을 먼저 알아야 상대도 이해할 수 있습니다.`
+    spreadAdvice = `관계에서 가장 중요한 것은 서로를 있는 그대로 이해하는 것입니다. 나 자신을 먼저 알아야 상대도 이해할 수 있습니다.`
   }
 
-  const questionNote = question ? `\n\n"${question}"이라는 질문에 대해 카드가 전하는 핵심은: ${tone}` : ''
+  const questionNote = question ? `\n\n"${question}"에 대한 답: ${tone}` : ''
 
-  return `${tone}\n\n${spreadAdvice}${questionNote}\n\n에너지 점수 ${score}점 — 현재 당신의 에너지 흐름을 잘 읽고, 카드의 조언을 일상에 적용해보세요.`
+  return `${tone}\n\n${spreadAdvice}${questionNote}`
 }
 
 // ── 액션 아이템 생성 ──
