@@ -5,13 +5,10 @@ import { TarotResult, encodeResultToUrl } from './tarotEngine'
 
 interface Props {
   result: TarotResult
-  cardRef: React.RefObject<HTMLDivElement | null>
 }
 
-export default function TarotShareButtons({ result, cardRef }: Props) {
+export default function TarotShareButtons({ result }: Props) {
   const [copyDone, setCopyDone] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
   const [kakaoCopied, setKakaoCopied] = useState(false)
 
   const getShareUrl = useCallback(() => {
@@ -21,7 +18,7 @@ export default function TarotShareButtons({ result, cardRef }: Props) {
 
   const getShareText = useCallback(() => {
     const cardNames = result.cards.map((sc) => `${sc.card.emoji} ${sc.card.name}${sc.isReversed ? '(역)' : ''}`).join(' ')
-    return `${cardNames}\n\n내 타로 리딩 결과 보기:\n${getShareUrl()}`
+    return `${cardNames}\n\n내 타로 결과 보기:\n${getShareUrl()}`
   }, [result, getShareUrl])
 
   const handleCopyLink = async () => {
@@ -42,114 +39,6 @@ export default function TarotShareButtons({ result, cardRef }: Props) {
     setTimeout(() => setCopyDone(false), 2000)
   }
 
-  const handleSaveImage = async () => {
-    if (!cardRef.current || saving) return
-    setSaving(true)
-    try {
-      const node = cardRef.current
-      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
-      const scale = isMobile ? 1.5 : 2
-
-      let blob: Blob
-
-      try {
-        const { domToBlob } = await import('modern-screenshot')
-        blob = await domToBlob(node, {
-          scale,
-          backgroundColor: '#ffffff',
-          quality: 0.95,
-          type: 'image/png',
-          filter: (el: Node) => !(el instanceof HTMLElement && el.classList?.contains('no-print')),
-        })
-      } catch {
-        const html2canvas = (await import('html2canvas')).default
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const canvas = await html2canvas(node, { scale, backgroundColor: '#ffffff', useCORS: true, logging: false } as any)
-        blob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png', 0.95)
-        })
-      }
-
-      if (isMobile) {
-        const isKakao = /KAKAOTALK/i.test(navigator.userAgent)
-
-        if (!isKakao && navigator.share && navigator.canShare) {
-          try {
-            const file = new File([blob], 'tarot-result.png', { type: 'image/png' })
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({ files: [file], title: '타로 리딩 결과' })
-              setSaving(false)
-              setSaveSuccess(true)
-              setTimeout(() => setSaveSuccess(false), 2000)
-              return
-            }
-          } catch (err) {
-            if (err instanceof Error && err.name === 'AbortError') {
-              setSaving(false)
-              return
-            }
-          }
-        }
-
-        const blobUrl = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = blobUrl
-        a.download = 'tarot-result.png'
-        a.style.display = 'none'
-        document.body.appendChild(a)
-        a.click()
-        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(blobUrl) }, 1000)
-
-        if (isKakao) {
-          setTimeout(() => {
-            alert('이미지가 다운로드되지 않으면,\n오른쪽 상단 ⋯ 메뉴에서\n"다른 브라우저로 열기"를 눌러주세요.')
-          }, 500)
-        }
-
-        setSaving(false)
-        setSaveSuccess(true)
-        setTimeout(() => setSaveSuccess(false), 2000)
-        return
-      }
-
-      const w = window as typeof window & { showSaveFilePicker?: (opts: Record<string, unknown>) => Promise<FileSystemFileHandle> }
-      if (w.showSaveFilePicker) {
-        try {
-          const handle = await w.showSaveFilePicker({
-            suggestedName: 'tarot-result.png',
-            types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }],
-          })
-          const writable = await handle.createWritable()
-          await writable.write(blob)
-          await writable.close()
-          setSaveSuccess(true)
-          setTimeout(() => setSaveSuccess(false), 2000)
-          setSaving(false)
-          return
-        } catch (err) {
-          if (err instanceof Error && err.name === 'AbortError') {
-            setSaving(false)
-            return
-          }
-        }
-      }
-
-      const blobUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = 'tarot-result.png'
-      link.style.display = 'none'
-      document.body.appendChild(link)
-      link.click()
-      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 1000)
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 2000)
-    } catch {
-      alert('이미지 저장에 실패했습니다. 스크린샷을 이용해주세요.')
-    }
-    setSaving(false)
-  }
-
   const handleKakao = async () => {
     const shareUrl = getShareUrl()
     const cardNames = result.cards.map((sc) => `${sc.card.emoji} ${sc.card.name}`).join(' ')
@@ -163,14 +52,14 @@ export default function TarotShareButtons({ result, cardRef }: Props) {
         w.Kakao.Share.sendDefault({
           objectType: 'feed',
           content: {
-            title: `${result.spread.icon} 타로 카드 리딩 결과`,
+            title: `${result.spread.icon} 운명의 타로 결과`,
             description: cardNames,
             imageUrl: `https://retireplan.kr/api/og`,
             link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
           },
           buttons: [
             { title: '결과 보기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } },
-            { title: '나도 타로 보기', link: { mobileWebUrl: `${window.location.origin}/programs/tarot-reading`, webUrl: `${window.location.origin}/programs/tarot-reading` } },
+            { title: '나도 해보기', link: { mobileWebUrl: `${window.location.origin}/programs/tarot-reading`, webUrl: `${window.location.origin}/programs/tarot-reading` } },
           ],
         })
         return
@@ -203,7 +92,7 @@ export default function TarotShareButtons({ result, cardRef }: Props) {
         <p className="text-sm text-gray-400 mt-0.5">친구와 타로 결과를 비교하면 더 재밌어요</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
         <button
           onClick={handleCopyLink}
           className="group relative py-4 bg-gradient-to-b from-blue-50 to-blue-100/50 border border-blue-200 hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -212,16 +101,6 @@ export default function TarotShareButtons({ result, cardRef }: Props) {
             {copyDone ? '✅' : '🔗'}
           </span>
           <span className="text-blue-700 text-xs sm:text-sm">{copyDone ? '복사됨!' : '링크 복사'}</span>
-        </button>
-        <button
-          onClick={handleSaveImage}
-          disabled={saving}
-          className="group relative py-4 bg-gradient-to-b from-purple-50 to-purple-100/50 border border-purple-200 hover:border-purple-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:hover:translate-y-0 focus:outline-none focus:ring-2 focus:ring-purple-300"
-        >
-          <span className="w-11 h-11 rounded-full bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center text-xl transition-all duration-200 group-hover:scale-110">
-            {saving ? '⏳' : saveSuccess ? '✅' : '📷'}
-          </span>
-          <span className="text-purple-700 text-xs sm:text-sm">{saving ? '저장 중...' : saveSuccess ? '완료!' : '이미지 저장'}</span>
         </button>
         <button
           onClick={handleKakao}

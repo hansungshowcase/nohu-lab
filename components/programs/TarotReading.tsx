@@ -71,17 +71,21 @@ function TarotReadingInner() {
       <div className="max-w-2xl mx-auto space-y-5 sm:space-y-6 animate-fadeIn">
         {/* 히어로 */}
         <div className="text-center space-y-3 py-4">
-          <div className="text-5xl sm:text-6xl mb-2">🔮</div>
-          <h2 className="text-2xl sm:text-3xl font-black text-gray-900">타로 카드 리딩</h2>
+          <div className="relative inline-block">
+            <div className="text-5xl sm:text-6xl mb-3 relative z-10">🔮</div>
+            <div className="absolute inset-0 -m-4 bg-purple-300/20 rounded-full blur-2xl" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">운명의 타로</h2>
+          <p className="text-[10px] sm:text-xs text-purple-400 font-semibold tracking-[0.3em] uppercase mt-1">TAROT OF DESTINY</p>
           <p className="text-gray-500 text-sm sm:text-base leading-relaxed">
-            마음을 가라앉히고, 직감이 이끄는 대로<br />
-            카드를 선택해보세요
+            22장의 메이저 아르카나가 전하는<br />
+            당신만을 위한 운명의 메시지
           </p>
         </div>
 
         {/* 스프레드 선택 */}
         <div>
-          <h3 className="text-sm font-bold text-gray-700 mb-3">스프레드 선택</h3>
+          <h3 className="text-sm font-bold text-gray-700 mb-3">리딩 방식 선택</h3>
           <div className="grid grid-cols-1 gap-2.5">
             {SPREAD_TYPES.map((spread) => (
               <button
@@ -126,7 +130,7 @@ function TarotReadingInner() {
           onClick={handleStartReading}
           className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl text-base sm:text-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg shadow-purple-200 hover:shadow-xl active:scale-[0.98]"
         >
-          카드 뽑기 시작 ✨
+          운명의 카드 펼치기 ✨
         </button>
       </div>
     )
@@ -149,7 +153,7 @@ function TarotReadingInner() {
         <TarotResultCard ref={cardRef} result={result} />
 
         <div className="no-print space-y-4 px-1">
-          <TarotShareButtons result={result} cardRef={cardRef} />
+          <TarotShareButtons result={result} />
 
           <div className="grid grid-cols-2 gap-2.5">
             <button

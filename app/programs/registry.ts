@@ -56,10 +56,10 @@ export const programRegistry: Program[] = [
   },
   {
     id: 'tarot-reading',
-    name: '타로 카드 리딩',
-    description: '타로 카드를 직접 뽑아 전문가 수준의 해석을 받아보세요',
+    name: '운명의 타로',
+    description: '22장의 메이저 아르카나가 전하는 당신만을 위한 운명의 메시지',
     minTier: 0,
-    icon: '🔮',
+    icon: '🃏',
     category: '운세·풀이',
     isActive: true,
     badge: 'NEW',

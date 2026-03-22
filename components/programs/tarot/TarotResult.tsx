@@ -3,6 +3,22 @@
 import { forwardRef } from 'react'
 import { TarotResult as TarotResultType } from './tarotEngine'
 
+const ROMAN = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI']
+
+const ELEMENT_STYLES: Record<string, React.CSSProperties> = {
+  '바람': { background: 'linear-gradient(170deg, #f0f9ff 0%, #dbeafe 100%)' },
+  '물': { background: 'linear-gradient(170deg, #eef2ff 0%, #e0e7ff 100%)' },
+  '불': { background: 'linear-gradient(170deg, #fff7ed 0%, #ffedd5 100%)' },
+  '땅': { background: 'linear-gradient(170deg, #fefce8 0%, #fef9c3 100%)' },
+}
+
+const ELEMENT_RITUALS: Record<string, string> = {
+  '바람': '조용한 곳에서 5분간 깊은 호흡을 하며, 들숨에 새로운 에너지를 받아들이고 날숨에 불필요한 걱정을 내보내세요. 바람의 원소가 당신의 생각을 맑게 정화합니다.',
+  '물': '잠들기 전 따뜻한 차를 마시며 오늘 받은 카드의 의미를 떠올려보세요. 물의 원소가 당신의 감정을 부드럽게 어루만지며 내면의 지혜를 깨웁니다.',
+  '불': '좋아하는 향초를 켜고 5분간 촛불을 바라보며 마음속 목표를 선명하게 그려보세요. 불의 원소가 당신의 열정과 의지에 힘을 불어넣습니다.',
+  '땅': '맨발로 흙이나 잔디를 밟으며 10분간 걸어보세요. 불가능하다면 두 발을 바닥에 단단히 딛고 자신의 뿌리를 느껴보세요. 땅의 원소가 안정과 풍요를 가져다줍니다.',
+}
+
 interface Props {
   result: TarotResultType
 }
@@ -48,21 +64,28 @@ const TarotResultCard = forwardRef<HTMLDivElement, Props>(function TarotResultCa
         {/* ── 선택된 카드 요약 ── */}
         <div>
           <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-1.5">
-            <span className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-xs">🃏</span>
-            선택된 카드
+            <span className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[10px]">✦</span>
+            운명이 선택한 카드
           </h3>
-          <div className={`grid ${result.cards.length === 1 ? 'grid-cols-1 max-w-[220px] mx-auto' : 'grid-cols-3'} gap-3`}>
+          <div className={`grid ${result.cards.length === 1 ? 'grid-cols-1 max-w-[200px] mx-auto' : 'grid-cols-3'} gap-3`}>
             {result.cards.map((sc, i) => (
-              <div key={i} className="relative bg-gradient-to-br from-purple-50 via-white to-indigo-50 rounded-xl p-3 sm:p-4 text-center border-2 border-purple-200 shadow-sm">
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-purple-600 text-white text-[9px] sm:text-[10px] font-bold rounded-full">
+              <div key={i} className="relative rounded-xl p-3 sm:p-4 text-center shadow-md"
+                style={{ ...ELEMENT_STYLES[sc.card.element], border: '2px solid #c9a84c' }}>
+                <div className="absolute inset-[4px] rounded-lg pointer-events-none" style={{ border: '1px solid rgba(201, 168, 76, 0.25)' }} />
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-purple-700 text-white text-[9px] sm:text-[10px] font-bold rounded-full z-10 shadow-sm">
                   {sc.position}
                 </div>
-                <div className={`text-4xl sm:text-5xl my-2 ${sc.isReversed ? 'rotate-180 inline-block' : ''}`}>
-                  {sc.card.emoji}
+                <div className="text-[10px] font-bold tracking-[0.2em] mt-1" style={{ color: '#8b7332', fontFamily: 'serif' }}>
+                  {ROMAN[sc.card.number]}
+                </div>
+                <div className={`my-2 ${sc.isReversed ? 'rotate-180 inline-block' : ''}`}>
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto rounded-full flex items-center justify-center" style={{ background: 'rgba(201, 168, 76, 0.08)', border: '1px solid rgba(201, 168, 76, 0.2)' }}>
+                    <span className="text-3xl sm:text-4xl">{sc.card.emoji}</span>
+                  </div>
                 </div>
                 <div className="text-sm sm:text-base font-black text-gray-900">{sc.card.name}</div>
-                <div className="text-[10px] text-gray-400 mb-1">{sc.card.nameEn}</div>
-                <div className={`inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${sc.isReversed ? 'bg-red-50 text-red-500 border border-red-200' : 'bg-purple-50 text-purple-600 border border-purple-200'}`}>
+                <div className="text-[9px] italic mb-1.5" style={{ color: '#8b7332' }}>{sc.card.nameEn}</div>
+                <div className={`inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${sc.isReversed ? 'bg-red-50 text-red-500 border border-red-200' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}`}>
                   {sc.isReversed ? '↓ 역방향' : '↑ 정방향'}
                 </div>
               </div>
@@ -249,6 +272,30 @@ const TarotResultCard = forwardRef<HTMLDivElement, Props>(function TarotResultCa
             <span className="text-[9px] text-gray-400">{result.energyLabel}</span>
             <span className="text-[9px] text-gray-400">강한 긍정</span>
           </div>
+        </div>
+
+        {/* ── 성찰 질문 ── */}
+        <div className="bg-gradient-to-br from-purple-50/50 to-indigo-50/50 rounded-xl p-4 border border-purple-100">
+          <h3 className="text-sm font-bold text-purple-700 mb-3 flex items-center gap-1.5">💭 오늘의 성찰 질문</h3>
+          <div className="space-y-2.5">
+            {result.cards.map((sc, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
+                <span className="text-purple-400 mt-0.5 shrink-0">{sc.card.emoji}</span>
+                <p>
+                  {sc.isReversed
+                    ? `"${sc.card.name}" 카드가 역방향으로 나왔습니다. '${sc.card.keywords[0]}'의 에너지가 막혀 있거나 과도하게 표현되고 있지 않은지 돌아보세요. 무엇이 그 흐름을 방해하고 있나요?`
+                    : `"${sc.card.name}" 카드의 핵심 키워드는 '${sc.card.keywords[0]}'입니다. 이것이 당신의 현재 상황에 어떤 메시지를 전하고 있다고 느끼시나요?`
+                  }
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── 추천 명상 ── */}
+        <div className="bg-gradient-to-r from-amber-50/50 to-orange-50/50 rounded-xl p-4 border border-amber-200">
+          <h3 className="text-sm font-bold text-amber-700 mb-2 flex items-center gap-1.5">🕯️ 오늘의 추천 명상</h3>
+          <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">{ELEMENT_RITUALS[result.dominantElement] || ELEMENT_RITUALS['땅']}</p>
         </div>
 
         {/* ── 면책 문구 ── */}
