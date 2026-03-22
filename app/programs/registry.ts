@@ -54,16 +54,6 @@ export const programRegistry: Program[] = [
     isActive: true,
     badge: 'NEW',
   },
-  {
-    id: 'tarot-reading',
-    name: '운명의 타로',
-    description: '22장의 메이저 아르카나가 전하는 당신만을 위한 운명의 메시지',
-    minTier: 0,
-    icon: '🃏',
-    category: '운세·풀이',
-    isActive: true,
-    badge: 'NEW',
-  },
   // ── 유틸리티 섹터 ──
   {
     id: 'text-counter',
