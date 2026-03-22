@@ -17,6 +17,7 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
   'text-converter': 'retireplan.kr 텍스트 변환기: 대소문자, 한영 자판, 텍스트 뒤집기, 공백 제거 등 7가지 변환. 무료.',
   'mental-health': 'retireplan.kr 심리 자가진단: PHQ-9(우울), GAD-7(불안), PSS-10(스트레스), RSES(자존감), ISI(수면) 5개 공인 척도. 무료.',
   'supplement-recommend': 'retireplan.kr 맞춤 영양제 추천: 나이·성별·생활습관·건강고민 분석으로 약사가 추천하는 영양제 조합·복용법·시간표 제공. 무료.',
+  'event-money': 'retireplan.kr 경조사비 계산기: 결혼식·장례식·돌잔치·집들이·개업·출산 등 행사별, 관계별 적정 경조사비 금액을 2026년 최신 기준으로 추천. 무료.',
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

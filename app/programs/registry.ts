@@ -54,6 +54,17 @@ export const programRegistry: Program[] = [
     isActive: true,
     badge: 'NEW',
   },
+  // ── 생활·실용 섹터 ──
+  {
+    id: 'event-money',
+    name: '경조사비 계산기',
+    description: '결혼·장례·돌잔치 등 상황별 적정 경조사비를 알려드립니다',
+    minTier: 0,
+    icon: '💸',
+    category: '생활·실용',
+    isActive: true,
+    badge: 'NEW',
+  },
   // ── 유틸리티 섹터 ──
   {
     id: 'text-counter',
