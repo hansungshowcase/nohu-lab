@@ -54,6 +54,16 @@ export const programRegistry: Program[] = [
     isActive: true,
     badge: 'NEW',
   },
+  {
+    id: 'tarot-reading',
+    name: '타로 카드 리딩',
+    description: '타로 카드를 직접 뽑아 전문가 수준의 해석을 받아보세요',
+    minTier: 0,
+    icon: '🔮',
+    category: '운세·풀이',
+    isActive: true,
+    badge: 'NEW',
+  },
   // ── 유틸리티 섹터 ──
   {
     id: 'text-counter',
