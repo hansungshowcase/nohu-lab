@@ -48,7 +48,7 @@ async function updateKrPrices(githubToken: string) {
     const stocks = JSON.parse(Buffer.from(fileData.content, 'base64').toString('utf8'))
 
     let updated = 0
-    for (let i = 0; i < Math.min(stocks.length, 200); i += 20) {
+    for (let i = 0; i < Math.min(stocks.length, 100); i += 20) {
       const batch = stocks.slice(i, i + 20)
       const results = await Promise.allSettled(
         batch.map((s: { ticker: string }) =>
@@ -160,8 +160,10 @@ async function accumulateUsDividends(githubToken: string) {
         if (existingMap.has(q.symbol)) {
           // 기존 종목 시세 업데이트
           const existing = existingMap.get(q.symbol) as Record<string, unknown>
-          existing.priceUsd = q.regularMarketPrice || existing.priceUsd
-          existing.price = Math.round(((q.regularMarketPrice as number) || 0) * 1400)
+          if (q.regularMarketPrice && (q.regularMarketPrice as number) > 0) {
+            existing.priceUsd = q.regularMarketPrice
+            existing.price = Math.round((q.regularMarketPrice as number) * 1400)
+          }
           existing.yieldPct = Math.round(((q.dividendYield as number) || 0) * 100) / 100
           existing.sector = q.sector || existing.sector
           existing.industry = q.industry || existing.industry
@@ -182,8 +184,12 @@ async function accumulateUsDividends(githubToken: string) {
       }
     } catch { /* silent */ }
 
-    // 4. 결과 저장
-    const allStocks = Array.from(existingMap.values()) as Array<{ yieldPct: number }>
+    // 4. 데이터 무결성 검증
+    const allStocks = Array.from(existingMap.values()) as Array<{ yieldPct: number; priceUsd: number }>
+    const validUs = allStocks.filter((s) => s.yieldPct > 0)
+    if (validUs.length < beforeCount * 0.5) {
+      return { ok: false, error: 'Too many lost', before: beforeCount, valid: validUs.length }
+    }
     allStocks.sort((a, b) => b.yieldPct - a.yieldPct)
 
     const newContent = Buffer.from(JSON.stringify(allStocks)).toString('base64')
