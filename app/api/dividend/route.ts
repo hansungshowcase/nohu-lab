@@ -182,16 +182,13 @@ async function fetchKrDividends() {
     apiStocks = getKrHardcodedStocks()
   }
 
-  // 3단계: 네이버 실시간 시세 + 배당수익률 계산
-  const liveStocks = await updateNaverPrices(apiStocks)
-
   return NextResponse.json({
     market: 'kr',
-    total: liveStocks.length,
-    count: liveStocks.length,
+    total: apiStocks.length,
+    count: apiStocks.length,
     updatedAt: new Date().toISOString(),
     source,
-    stocks: liveStocks.sort((a, b) => b.yieldPct - a.yieldPct),
+    stocks: apiStocks.sort((a, b) => b.yieldPct - a.yieldPct),
   }, {
     headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=900' },
   })
@@ -216,7 +213,7 @@ async function updateNaverPrices(stocks: KrStock[]): Promise<KrStock[]> {
   const updated = stocks.map(s => ({ ...s }))
   const targets = updated.filter(s => /^\d{6}$/.test(s.ticker))
 
-  for (let i = 0; i < targets.length && i < 100; i += 20) {
+  for (let i = 0; i < targets.length; i += 20) {
     const batch = targets.slice(i, i + 20)
     await Promise.allSettled(
       batch.map(async (s) => {
