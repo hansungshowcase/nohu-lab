@@ -52,7 +52,18 @@ export async function GET() {
       }
     }
 
-    // 3. GitHub에 커밋
+    // 3. 데이터 무결성 검증 - 종목 수가 줄어들면 커밋하지 않음
+    const validStocks = krStocks.filter((s: { price: number; yieldPct: number }) => s.price > 0 && s.yieldPct > 0)
+    if (validStocks.length < krStocks.length * 0.5) {
+      return NextResponse.json({
+        success: false,
+        error: 'Too many stocks lost price data, skipping commit',
+        original: krStocks.length,
+        valid: validStocks.length,
+      })
+    }
+
+    // 4. GitHub에 커밋
     const newContent = Buffer.from(JSON.stringify(krStocks)).toString('base64')
     const commitRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${KR_FILE}`, {
       method: 'PUT',
