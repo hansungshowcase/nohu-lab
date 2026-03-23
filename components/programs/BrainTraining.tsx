@@ -328,13 +328,16 @@ export default function BrainTraining() {
 function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: number) => void }) {
   const diff = useMemo(() => getMemoryDifficulty(level), [level])
   const [cards, setCards] = useState<MemoryCard[]>(() => generateMemoryBoard(diff.pairs))
-  const [selected, setSelected] = useState<number[]>([])
-  const [mistakes, setMistakes] = useState(0)
   const [matchedCount, setMatchedCount] = useState(0)
   const [previewing, setPreviewing] = useState(true)
-  const [locked, setLocked] = useState(false)
+  const [displayMistakes, setDisplayMistakes] = useState(0)
+  const lockedRef = useRef(false)
+  const selectedRef = useRef<number[]>([])
+  const mistakesRef = useRef(0)
   const startTime = useRef(0)
   const completedRef = useRef(false)
+  const cardsRef = useRef(cards)
+  cardsRef.current = cards
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -348,44 +351,57 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
     if (matchedCount === diff.pairs && !completedRef.current) {
       completedRef.current = true
       const timeMs = Date.now() - startTime.current
-      const score = scoreMemory(mistakes, timeMs, diff.pairs)
+      const score = scoreMemory(mistakesRef.current, timeMs, diff.pairs)
       setTimeout(() => onComplete(score), 500)
     }
-  }, [matchedCount, diff.pairs, mistakes, onComplete])
+  }, [matchedCount, diff.pairs, onComplete])
 
   function handleFlip(id: number) {
-    if (locked || previewing) return
-    const card = cards[id]
+    if (lockedRef.current || previewing) return
+    const currentCards = cardsRef.current
+    const card = currentCards[id]
     if (!card || card.flipped || card.matched) return
 
-    const newCards = cards.map((c) => c.id === id ? { ...c, flipped: true } : c)
-    setCards(newCards)
-    const newSelected = [...selected, id]
-    setSelected(newSelected)
+    // 이미 선택된 카드면 무시
+    if (selectedRef.current.includes(id)) return
 
-    if (newSelected.length === 2) {
-      setLocked(true)
-      const [firstId, secondId] = newSelected
+    const newCards = currentCards.map((c) => c.id === id ? { ...c, flipped: true } : c)
+    setCards(newCards)
+    cardsRef.current = newCards
+    selectedRef.current = [...selectedRef.current, id]
+
+    if (selectedRef.current.length === 2) {
+      lockedRef.current = true
+      const [firstId, secondId] = selectedRef.current
       const firstCard = newCards.find((c) => c.id === firstId)!
       const secondCard = newCards.find((c) => c.id === secondId)!
 
       if (firstCard.emoji === secondCard.emoji) {
         setTimeout(() => {
-          setCards((prev) => prev.map((c) =>
-            c.id === firstId || c.id === secondId ? { ...c, matched: true } : c
-          ))
+          setCards((prev) => {
+            const updated = prev.map((c) =>
+              c.id === firstId || c.id === secondId ? { ...c, matched: true } : c
+            )
+            cardsRef.current = updated
+            return updated
+          })
           setMatchedCount((p) => p + 1)
-          setSelected([])
-          setLocked(false)
+          selectedRef.current = []
+          lockedRef.current = false
         }, 400)
       } else {
-        setMistakes((p) => p + 1)
+        mistakesRef.current += 1
+        setDisplayMistakes(mistakesRef.current)
         setTimeout(() => {
-          setCards((prev) => prev.map((c) =>
-            c.id === firstId || c.id === secondId ? { ...c, flipped: false } : c
-          ))
-          setSelected([])
-          setLocked(false)
+          setCards((prev) => {
+            const updated = prev.map((c) =>
+              c.id === firstId || c.id === secondId ? { ...c, flipped: false } : c
+            )
+            cardsRef.current = updated
+            return updated
+          })
+          selectedRef.current = []
+          lockedRef.current = false
         }, 700)
       }
     }
@@ -429,7 +445,7 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
 
       <div className="flex justify-between text-sm text-gray-500 px-1">
         <span>✅ {matchedCount}/{diff.pairs} 매칭</span>
-        <span>❌ {mistakes}회 실수</span>
+        <span>❌ {displayMistakes}회 실수</span>
       </div>
     </div>
   )
