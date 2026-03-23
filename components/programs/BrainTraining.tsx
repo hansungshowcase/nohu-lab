@@ -39,7 +39,6 @@ export default function BrainTraining() {
 
   const level = useMemo(() => getAutoLevel(getLastScore()), [])
   const [result, setResult] = useState<BrainResult | null>(null)
-  const [saving, setSaving] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
   const [historyData, setHistoryData] = useState(() => getHistory())
 
@@ -117,50 +116,6 @@ export default function BrainTraining() {
   function getResultUrl() {
     if (!result) return ''
     return `${window.location.origin}/programs/brain-training?m=${result.memoryScore}&c=${result.mathScore}&r=${result.reactionScore}&a=${parseInt(realAge, 10) || 50}`
-  }
-
-  async function saveImage() {
-    if (!resultRef.current || saving) return
-    setSaving(true)
-    try {
-      let dataUrl = ''
-      const node = resultRef.current
-      try {
-        const { toPng } = await import('html-to-image')
-        dataUrl = await toPng(node, {
-          quality: 0.95, pixelRatio: 2, backgroundColor: '#ffffff', cacheBust: true,
-          width: node.scrollWidth, height: node.scrollHeight,
-          style: { overflow: 'visible', maxHeight: 'none' },
-          filter: (el: HTMLElement) => !el.classList?.contains('no-print'),
-        })
-      } catch {
-        try {
-          const html2canvas = (await import('html2canvas')).default
-          const canvas = await html2canvas(node, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false })
-          dataUrl = canvas.toDataURL('image/png', 0.95)
-        } catch { throw new Error('캡처 실패') }
-      }
-      if (!dataUrl || !dataUrl.startsWith('data:image')) throw new Error('이미지 생성 실패')
-      const res = await fetch(dataUrl)
-      const blob = await res.blob()
-      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
-      if (isMobile && navigator.share) {
-        try {
-          const file = new File([blob], 'brain-age-result.png', { type: 'image/png' })
-          await navigator.share({ files: [file], title: '뇌나이 측정 결과' })
-          return
-        } catch (e) { if ((e as Error).name === 'AbortError') return }
-      }
-      const blobUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = `brain-age-${new Date().toISOString().split('T')[0]}.png`
-      link.style.display = 'none'
-      document.body.appendChild(link)
-      link.click()
-      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 3000)
-    } catch { alert('이미지 저장에 실패했습니다.\n스크린샷(전원+볼륨↓)을 이용해주세요.') }
-    setSaving(false)
   }
 
   async function shareKakao() {
@@ -306,10 +261,6 @@ export default function BrainTraining() {
           className="w-full py-3.5 bg-[#FEE500] hover:bg-[#F5DC00] text-[#3C1E1E] font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all min-h-[44px]">
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
           카카오톡으로 공유하기
-        </button>
-        <button onClick={saveImage} disabled={saving}
-          className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all disabled:opacity-50 min-h-[44px]">
-          {saving ? '저장 중...' : '📷 결과 이미지 저장'}
         </button>
         <button
           onClick={() => { setPhase('intro'); setResult(null); setPlayedToday(hasPlayedToday()) }}
