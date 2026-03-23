@@ -327,86 +327,84 @@ export default function BrainTraining() {
    ════════════════════════════════════════════ */
 function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: number) => void }) {
   const diff = useMemo(() => getMemoryDifficulty(level), [level])
-  const [cards, setCards] = useState<MemoryCard[]>(() => generateMemoryBoard(diff.pairs))
-  const [matchedCount, setMatchedCount] = useState(0)
   const [previewing, setPreviewing] = useState(true)
   const [displayMistakes, setDisplayMistakes] = useState(0)
-  const lockedRef = useRef(false)
-  const selectedRef = useRef<number[]>([])
-  const mistakesRef = useRef(0)
-  const startTime = useRef(0)
-  const completedRef = useRef(false)
-  const cardsRef = useRef(cards)
-  cardsRef.current = cards
+  const [matchedCount, setMatchedCount] = useState(0)
+  const [, forceRender] = useState(0)
+
+  // 모든 게임 상태를 단일 ref로 관리 (React 리렌더 타이밍 무관하게 동작)
+  const gameRef = useRef({
+    cards: generateMemoryBoard(diff.pairs),
+    selected: [] as number[],
+    locked: false,
+    mistakes: 0,
+    matched: 0,
+    startTime: 0,
+    completed: false,
+  })
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setPreviewing(false)
-      startTime.current = Date.now()
+      gameRef.current.startTime = Date.now()
     }, diff.previewMs)
     return () => clearTimeout(timer)
   }, [diff.previewMs])
 
-  useEffect(() => {
-    if (matchedCount === diff.pairs && !completedRef.current) {
-      completedRef.current = true
-      const timeMs = Date.now() - startTime.current
-      const score = scoreMemory(mistakesRef.current, timeMs, diff.pairs)
-      setTimeout(() => onComplete(score), 500)
-    }
-  }, [matchedCount, diff.pairs, onComplete])
-
   function handleFlip(id: number) {
-    if (lockedRef.current || previewing) return
-    const currentCards = cardsRef.current
-    const card = currentCards.find((c) => c.id === id)
-    if (!card || card.matched) return
-    // 이미 선택된 카드면 무시
-    if (selectedRef.current.includes(id)) return
-    // 이미 뒤집혀 있는 카드면 무시
-    if (card.flipped) return
+    const g = gameRef.current
+    if (g.locked || previewing || g.completed) return
 
-    const newCards = currentCards.map((c) => c.id === id ? { ...c, flipped: true } : c)
-    setCards(newCards)
-    cardsRef.current = newCards
-    selectedRef.current = [...selectedRef.current, id]
+    const card = g.cards.find((c) => c.id === id)
+    if (!card || card.matched || card.flipped) return
 
-    if (selectedRef.current.length === 2) {
-      lockedRef.current = true
-      const [firstId, secondId] = selectedRef.current
-      const firstCard = newCards.find((c) => c.id === firstId)!
-      const secondCard = newCards.find((c) => c.id === secondId)!
+    // 카드 뒤집기
+    card.flipped = true
+    g.selected.push(id)
+    forceRender((n) => n + 1)
 
-      if (firstCard.emoji === secondCard.emoji) {
+    if (g.selected.length === 2) {
+      g.locked = true
+      const first = g.cards.find((c) => c.id === g.selected[0])!
+      const second = g.cards.find((c) => c.id === g.selected[1])!
+
+      if (first.emoji === second.emoji) {
+        // 매칭 성공
         setTimeout(() => {
-          setCards((prev) => {
-            const updated = prev.map((c) =>
-              c.id === firstId || c.id === secondId ? { ...c, matched: true, flipped: false } : c
-            )
-            cardsRef.current = updated
-            return updated
-          })
-          setMatchedCount((p) => p + 1)
-          selectedRef.current = []
-          lockedRef.current = false
+          first.matched = true
+          second.matched = true
+          first.flipped = false
+          second.flipped = false
+          g.matched += 1
+          g.selected = []
+          g.locked = false
+          setMatchedCount(g.matched)
+          forceRender((n) => n + 1)
+
+          // 게임 완료 체크
+          if (g.matched === diff.pairs && !g.completed) {
+            g.completed = true
+            const timeMs = Date.now() - g.startTime
+            const score = scoreMemory(g.mistakes, timeMs, diff.pairs)
+            setTimeout(() => onComplete(score), 500)
+          }
         }, 400)
       } else {
-        mistakesRef.current += 1
-        setDisplayMistakes(mistakesRef.current)
+        // 매칭 실패
+        g.mistakes += 1
+        setDisplayMistakes(g.mistakes)
         setTimeout(() => {
-          setCards((prev) => {
-            const updated = prev.map((c) =>
-              c.id === firstId || c.id === secondId ? { ...c, flipped: false } : c
-            )
-            cardsRef.current = updated
-            return updated
-          })
-          selectedRef.current = []
-          lockedRef.current = false
+          first.flipped = false
+          second.flipped = false
+          g.selected = []
+          g.locked = false
+          forceRender((n) => n + 1)
         }, 700)
       }
     }
   }
+
+  const cards = gameRef.current.cards
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 animate-fade-in">
@@ -430,7 +428,6 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
           <button
             key={card.id}
             onClick={() => handleFlip(card.id)}
-            disabled={previewing || card.matched}
             className={`aspect-square rounded-xl text-2xl sm:text-3xl font-bold flex items-center justify-center transition-all duration-300 min-h-[44px] ${
               card.matched
                 ? 'bg-green-100 border-2 border-green-300 scale-95 opacity-60'
