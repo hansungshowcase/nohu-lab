@@ -398,8 +398,8 @@ export default function DividendCalc() {
           </div>
 
           {/* 투자금 입력 */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100">
-            <label className="block text-sm font-bold text-gray-700 mb-2">투자 금액</label>
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 space-y-4">
+            <label className="block text-sm font-bold text-gray-700">투자 금액</label>
             <div className="relative">
               <input
                 type="text"
@@ -414,7 +414,7 @@ export default function DividendCalc() {
             {investAmount > 0 && (
               <p className="text-xs text-gray-400 text-right mt-1">{investAmount.toLocaleString()}원</p>
             )}
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2">
               {[100, 500, 1000, 3000, 5000].map((v) => (
                 <button key={v} onClick={() => setInvestInput(v.toLocaleString())}
                   className="flex-1 py-2 text-xs font-semibold bg-gray-50 hover:bg-emerald-50 text-gray-600 rounded-lg min-h-[36px]">
