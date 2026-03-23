@@ -24,7 +24,7 @@ interface KakaoWindow extends Window {
 
 const KAKAO_KEY = '3913fde247b12ce25084eb42a9b17ed9'
 
-type Phase = 'intro' | 'memory' | 'math' | 'reaction' | 'analyzing' | 'result'
+type Phase = 'intro' | 'memory' | 'memory-done' | 'math' | 'math-done' | 'reaction' | 'analyzing' | 'result'
 
 export default function BrainTraining() {
   const [phase, setPhase] = useState<Phase>('intro')
@@ -78,12 +78,12 @@ export default function BrainTraining() {
 
   const handleMemoryComplete = useCallback((score: number) => {
     memoryScoreRef.current = score
-    setPhase('math')
+    setPhase('memory-done')
   }, [])
 
   const handleMathComplete = useCallback((score: number) => {
     mathScoreRef.current = score
-    setPhase('reaction')
+    setPhase('math-done')
   }, [])
 
   const handleReactionComplete = useCallback((score: number) => {
@@ -290,7 +290,9 @@ export default function BrainTraining() {
 
   // ── 게임 페이즈 ──
   if (phase === 'memory') return <MemoryGame level={level} onComplete={handleMemoryComplete} />
+  if (phase === 'memory-done') return <GameCompleteScreen icon="🃏" name="기억력" score={memoryScoreRef.current} step={1} onNext={() => setPhase('math')} />
   if (phase === 'math') return <MathGame level={level} onComplete={handleMathComplete} />
+  if (phase === 'math-done') return <GameCompleteScreen icon="➕" name="계산력" score={mathScoreRef.current} step={2} onNext={() => setPhase('reaction')} />
   if (phase === 'reaction') return <ReactionGame level={level} onComplete={handleReactionComplete} />
   if (phase === 'analyzing') return <AnalyzingPhase onComplete={handleAnalysisComplete} />
 
@@ -672,6 +674,44 @@ function GameHeader({ title, subtitle, step }: { title: string; subtitle: string
       </div>
       <h2 className="text-xl font-black text-gray-900">{title}</h2>
       <p className="text-sm text-gray-500">{subtitle}</p>
+    </div>
+  )
+}
+
+function GameCompleteScreen({ icon, name, score, step, onNext }: { icon: string; name: string; score: number; step: number; onNext: () => void }) {
+  const label = score >= 90 ? '완벽!' : score >= 70 ? '훌륭해요!' : score >= 50 ? '좋아요!' : score >= 30 ? '괜찮아요' : '다음에 더 잘할 수 있어요'
+  const emoji = score >= 90 ? '🌟' : score >= 70 ? '✨' : score >= 50 ? '👍' : score >= 30 ? '💪' : '🤗'
+  const nextGame = step === 1 ? '계산력 테스트' : '반응속도 테스트'
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-5 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-8 text-center">
+        <div className="text-5xl mb-3">{icon}</div>
+        <p className="text-sm text-gray-500 font-medium mb-1">{name} 테스트 완료</p>
+        <div className="flex items-baseline justify-center gap-1 mb-2">
+          <span className="text-5xl font-black text-gray-900">{score}</span>
+          <span className="text-lg text-gray-400">/100</span>
+        </div>
+        <p className="text-lg font-bold text-orange-600">{emoji} {label}</p>
+
+        <div className="mt-6 w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full transition-all duration-1000"
+            style={{ width: `${score}%` }}
+          />
+        </div>
+
+        <button
+          onClick={onNext}
+          className="mt-6 w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-xl text-lg min-h-[44px] active:scale-[0.98] transition-all shadow-lg shadow-orange-200 animate-subtle-pulse"
+        >
+          다음: {nextGame} →
+        </button>
+
+        <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-400">
+          <GameHeader title="" subtitle="" step={step + 1} />
+        </div>
+      </div>
     </div>
   )
 }
