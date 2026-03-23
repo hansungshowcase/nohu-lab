@@ -429,7 +429,7 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
           <button
             key={card.id}
             onClick={() => handleFlip(card.id)}
-            disabled={locked || previewing || card.matched}
+            disabled={previewing || card.matched}
             className={`aspect-square rounded-xl text-2xl sm:text-3xl font-bold flex items-center justify-center transition-all duration-300 min-h-[44px] ${
               card.matched
                 ? 'bg-green-100 border-2 border-green-300 scale-95 opacity-60'
