@@ -24,90 +24,24 @@ export async function GET(request: Request) {
 // 미국 배당주 - Yahoo Finance (전체 실시간)
 // ══════════════════════════════════════
 
-// 미국 배당주 전체 로드 (250개씩 병렬)
+// 미국 배당주 - JSON 파일에서 로드 (로컬에서 Yahoo 16개 스크리너 조합으로 수집)
 async function fetchAllUsDividends() {
-  // 1차: 첫 페이지로 total 파악
-  const first = await fetchUsPage(0, 250)
-  if (!first) {
+  try {
+    const usData = (await import('@/components/programs/dividend/usDividendData.json')).default as Array<{
+      ticker: string; name: string; price: number; priceUsd: number; sector: string; industry: string
+      yieldPct: number; dividendRate: number; frequency: string; marketCap: number
+    }>
+    return NextResponse.json({
+      market: 'us', total: usData.length, count: usData.length,
+      updatedAt: new Date().toISOString(), source: 'yahoo',
+      stocks: usData.sort((a, b) => b.yieldPct - a.yieldPct),
+    }, { headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=900' } })
+  } catch {
     return NextResponse.json({
       market: 'us', total: usHardcoded.length, count: usHardcoded.length,
       updatedAt: new Date().toISOString(), source: 'hardcoded', stocks: usHardcoded,
     }, { headers: { 'Cache-Control': 'public, s-maxage=300' } })
   }
-
-  const allStocks: Record<string, unknown>[] = [...first.stocks]
-  const total = first.total
-
-  // 2차: 나머지 페이지 병렬 호출
-  if (total > 250) {
-    const pages: number[] = []
-    for (let offset = 250; offset < total; offset += 250) {
-      pages.push(offset)
-    }
-    const results = await Promise.allSettled(
-      pages.map((offset) => fetchUsPage(offset, 250))
-    )
-    for (const r of results) {
-      if (r.status === 'fulfilled' && r.value) {
-        allStocks.push(...r.value.stocks)
-      }
-    }
-  }
-
-  // 중복 제거 (ticker 기준)
-  const seen = new Set<string>()
-  const uniqueStocks = allStocks.filter((s) => {
-    const ticker = (s as { ticker: string }).ticker
-    if (seen.has(ticker)) return false
-    seen.add(ticker)
-    return true
-  })
-
-  if (uniqueStocks.length === 0) {
-    // 전체 실패 시 폴백
-    return NextResponse.json({
-      market: 'us', total: usHardcoded.length, count: usHardcoded.length,
-      updatedAt: new Date().toISOString(), source: 'hardcoded', stocks: usHardcoded,
-    }, { headers: { 'Cache-Control': 'public, s-maxage=300' } })
-  }
-
-  return NextResponse.json({
-    market: 'us', total, count: uniqueStocks.length,
-    updatedAt: new Date().toISOString(), source: 'yahoo',
-    stocks: uniqueStocks,
-  }, { headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=300' } })
-}
-
-async function fetchUsPage(offset: number, limit: number): Promise<{ total: number; stocks: Record<string, unknown>[] } | null> {
-  const res = await fetch(
-    `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=high_dividend_yield&count=${limit}&offset=${offset}`,
-    {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-      signal: AbortSignal.timeout(8000),
-    }
-  )
-
-  if (!res.ok) return null
-
-  const data = await res.json()
-  const result = data?.finance?.result?.[0]
-  if (!result || !result.quotes) return null
-
-  const stocks = (result.quotes as Record<string, unknown>[]).map((q) => ({
-    ticker: q.symbol || '',
-    name: (q.longName || q.shortName || '') as string,
-    price: Math.round(((q.regularMarketPrice as number) || 0) * 1400),
-    priceUsd: (q.regularMarketPrice as number) || 0,
-    sector: (q.sector || guessSectorFromName((q.longName || q.shortName || '') as string)) as string,
-    industry: (q.industry || '') as string,
-    yieldPct: Math.round(((q.dividendYield as number) || 0) * 100) / 100,
-    dividendRate: (q.dividendRate as number) || (q.trailingAnnualDividendRate as number) || 0,
-    frequency: guessUsFrequency((q.dividendRate as number) || 0, (q.trailingAnnualDividendRate as number) || 0, (q.symbol as string) || ''),
-    marketCap: (q.marketCap as number) || 0,
-    change: (q.regularMarketChangePercent as number) || 0,
-  })).filter((s: { yieldPct: number }) => s.yieldPct > 0)
-
-  return { total: result.total || 0, stocks }
 }
 
 // 미국 주식 배당 주기 추정
