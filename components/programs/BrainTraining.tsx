@@ -405,45 +405,70 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
   }
 
   const cards = gameRef.current.cards
+  const progressPct = diff.pairs > 0 ? (matchedCount / diff.pairs) * 100 : 0
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4 animate-fade-in">
+    <div className="max-w-2xl mx-auto space-y-4 animate-fade-in no-select">
       <GameHeader
         title="🃏 기억력 테스트"
         subtitle={previewing ? '카드 위치를 기억하세요!' : '같은 그림 카드를 찾아 짝을 맞추세요'}
         step={1}
       />
 
+      {/* 프리뷰 카운트다운 */}
       {previewing && (
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 rounded-full">
-            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-            <span className="text-sm font-bold text-orange-700">카드를 기억하세요...</span>
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-100 to-amber-100 rounded-full shadow-sm">
+            <div className="w-2.5 h-2.5 bg-orange-500 rounded-full animate-ping" />
+            <span className="text-sm font-bold text-orange-700">카드 위치를 기억하세요!</span>
           </div>
         </div>
       )}
 
-      <div className="grid gap-2 sm:gap-3" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-        {cards.map((card) => (
-          <button
-            key={card.id}
-            onClick={() => handleFlip(card.id)}
-            className={`aspect-square rounded-xl text-2xl sm:text-3xl font-bold flex items-center justify-center transition-all duration-300 min-h-[44px] ${
-              card.matched
-                ? 'bg-green-100 border-2 border-green-300 scale-95 opacity-60'
-                : card.flipped || previewing
-                  ? 'bg-white border-2 border-orange-300 shadow-md scale-105'
-                  : 'bg-gradient-to-br from-orange-400 to-amber-500 text-white shadow-sm hover:shadow-md active:scale-95'
-            }`}
-          >
-            {card.flipped || card.matched || previewing ? card.emoji : '?'}
-          </button>
-        ))}
-      </div>
+      {/* 진행률 */}
+      {!previewing && (
+        <div className="space-y-1">
+          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
+          </div>
+          <div className="flex justify-between text-xs text-gray-400 font-medium px-0.5">
+            <span>✅ {matchedCount}/{diff.pairs}</span>
+            <span>❌ {displayMistakes}</span>
+          </div>
+        </div>
+      )}
 
-      <div className="flex justify-between text-sm text-gray-500 px-1">
-        <span>✅ {matchedCount}/{diff.pairs} 매칭</span>
-        <span>❌ {displayMistakes}회 실수</span>
+      {/* 카드 그리드 - 3D 뒤집기 */}
+      <div className="grid gap-2.5 sm:gap-3" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        {cards.map((card) => {
+          const isRevealed = card.flipped || card.matched || previewing
+          return (
+            <div key={card.id} className="brain-card aspect-square">
+              <div className={`brain-card-inner ${isRevealed ? 'revealed' : ''} ${card.matched ? 'matched' : ''}`}>
+                {/* 뒷면 (물음표) */}
+                <div
+                  className="brain-card-face bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 shadow-md cursor-pointer btn-ripple select-none"
+                  onClick={() => handleFlip(card.id)}
+                  style={{ minHeight: 44 }}
+                >
+                  <span className="text-2xl sm:text-3xl font-black text-white/90 drop-shadow-sm">?</span>
+                </div>
+                {/* 앞면 (이모지) */}
+                <div
+                  className={`brain-card-face brain-card-back shadow-md ${
+                    card.matched
+                      ? 'bg-gradient-to-br from-green-50 to-emerald-100 border-2 border-green-300'
+                      : 'bg-white border-2 border-orange-200'
+                  }`}
+                  onClick={() => handleFlip(card.id)}
+                  style={{ minHeight: 44 }}
+                >
+                  <span className="text-2xl sm:text-3xl">{card.emoji}</span>
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -459,6 +484,7 @@ function MathGame({ level, onComplete }: { level: number; onComplete: (score: nu
   const [current, setCurrent] = useState(0)
   const correctRef = useRef(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [lastResult, setLastResult] = useState<'correct' | 'wrong' | null>(null)
   const responseTimes = useRef<number[]>([])
   const questionStart = useRef(Date.now())
 
@@ -473,11 +499,12 @@ function MathGame({ level, onComplete }: { level: number; onComplete: (score: nu
     const elapsed = Date.now() - questionStart.current
     responseTimes.current.push(elapsed)
 
-    if (selected === problems[current].answer) {
-      correctRef.current += 1
-    }
+    const isCorrect = selected === problems[current].answer
+    if (isCorrect) correctRef.current += 1
+    setLastResult(isCorrect ? 'correct' : 'wrong')
 
     setTimeout(() => {
+      setLastResult(null)
       if (current < TOTAL - 1) {
         setCurrent((p) => p + 1)
         setIsTransitioning(false)
@@ -486,42 +513,47 @@ function MathGame({ level, onComplete }: { level: number; onComplete: (score: nu
         const score = scoreMath(correctRef.current, TOTAL, avgTime)
         onComplete(score)
       }
-    }, 300)
+    }, 400)
   }
 
   const progress = ((current + 1) / TOTAL) * 100
   const q = problems[current]
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 animate-fade-in">
+    <div className={`max-w-2xl mx-auto space-y-5 animate-fade-in no-select ${lastResult === 'correct' ? 'animate-correct-flash' : lastResult === 'wrong' ? 'animate-wrong-flash' : ''}`}>
       <GameHeader title="➕ 계산력 테스트" subtitle="정답을 골라주세요" step={2} />
 
+      {/* 진행률 바 + 정답 카운터 */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span className="font-medium text-orange-600">문제 {current + 1}</span>
-          <span>{current + 1} / {TOTAL}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-green-500 font-bold">{correctRef.current}✓</span>
+            <span>{current + 1} / {TOTAL}</span>
+          </div>
         </div>
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+        <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-400 rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 sm:p-8">
-        <div className="text-center mb-6">
-          <p className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">{q.question}</p>
-          <p className="text-lg text-gray-400 mt-1">= ?</p>
+      {/* 문제 카드 */}
+      <div className="bg-white rounded-2xl shadow-lg border border-orange-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-6 sm:p-8 text-center">
+          <p className="text-5xl sm:text-6xl font-black text-gray-900 tracking-tight animate-fade-in" key={current}>{q.question}</p>
+          <p className="text-xl text-orange-400 mt-2 font-bold">= ?</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 p-4 sm:p-5">
           {q.options.map((opt, i) => (
             <button
-              key={i}
+              key={`${current}-${i}`}
               onClick={() => handleAnswer(opt)}
               disabled={isTransitioning}
-              className={`py-4 rounded-xl text-xl font-bold min-h-[44px] transition-all active:scale-95 ${
+              className={`py-5 rounded-2xl text-2xl font-black min-h-[56px] transition-all btn-ripple ${
                 isTransitioning
-                  ? 'bg-gray-100 text-gray-400 pointer-events-none'
-                  : 'bg-orange-50 text-gray-800 border-2 border-orange-200 hover:bg-orange-100 hover:border-orange-400'
+                  ? 'bg-gray-100 text-gray-300 pointer-events-none scale-95'
+                  : 'bg-white text-gray-800 border-2 border-gray-200 shadow-sm hover:border-orange-400 hover:shadow-md active:scale-[0.92] active:shadow-none'
               }`}
             >
               {opt}
@@ -626,38 +658,54 @@ function ReactionGame({ level, onComplete }: { level: number; onComplete: (score
   const progress = ((current + 1) / TOTAL) * 100
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 animate-fade-in">
+    <div className="max-w-2xl mx-auto space-y-5 animate-fade-in no-select">
       <GameHeader title="⚡ 반응속도 테스트" subtitle="초록색 원이 나타나면 터치! 빨간색은 참기!" step={3} />
 
-      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+      {/* 진행률 */}
+      <div className="space-y-1.5">
+        <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-400 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+        </div>
+        <div className="flex justify-between items-center text-xs text-gray-400 px-0.5">
+          <div className="flex gap-3">
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-green-500 inline-block shadow-sm shadow-green-200" /> 터치</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-lg bg-red-500 inline-block shadow-sm shadow-red-200" /> 참기</span>
+          </div>
+          <span>{current + 1} / {TOTAL}</span>
+        </div>
       </div>
 
-      <div className="flex justify-center gap-4 text-xs text-gray-500">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block" /> 터치</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500 inline-block" /> 참기</span>
-      </div>
-
+      {/* 타겟 영역 */}
       <button
         onClick={handleTap}
-        className="w-full aspect-[4/3] rounded-2xl border-2 border-gray-200 flex flex-col items-center justify-center gap-3 transition-all active:scale-[0.98] bg-gray-50 hover:bg-gray-100 relative overflow-hidden"
+        className="w-full aspect-[4/3] rounded-3xl flex flex-col items-center justify-center gap-3 transition-all active:scale-[0.97] relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 border border-gray-200 shadow-inner"
       >
+        {/* 배경 패턴 */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
         {showTarget && targets[current] ? (
-          <div className={`w-28 h-28 sm:w-36 sm:h-36 flex items-center justify-center text-white text-4xl font-black animate-fade-in ${
-            targets[current].type === 'go' ? 'rounded-full bg-green-500 shadow-lg shadow-green-200' : 'rounded-2xl bg-red-500 shadow-lg shadow-red-200'
-          }`}>
-            {targets[current].type === 'go' ? '터치!' : '참기'}
+          <div className={`animate-target-appear ${
+            targets[current].type === 'go'
+              ? 'w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 shadow-2xl shadow-green-300/50'
+              : 'w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-br from-red-400 to-rose-600 shadow-2xl shadow-red-300/50'
+          } flex items-center justify-center text-white`}>
+            <div className="text-center">
+              <p className="text-4xl sm:text-5xl font-black drop-shadow-md">{targets[current].type === 'go' ? '👆' : '✋'}</p>
+              <p className="text-sm sm:text-base font-bold mt-1 opacity-90">{targets[current].type === 'go' ? '터치!' : '참기!'}</p>
+            </div>
           </div>
         ) : (
-          <div className="text-gray-300">
-            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-4 border-dashed border-gray-200 flex items-center justify-center">
-              <span className="text-lg text-gray-400 font-medium">준비...</span>
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-dashed border-gray-200 flex items-center justify-center">
+              <div className="w-3 h-3 bg-gray-300 rounded-full animate-pulse" />
             </div>
+            <span className="text-sm text-gray-400 font-medium">화면에 집중하세요...</span>
           </div>
         )}
 
+        {/* 피드백 토스트 */}
         {feedback && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-white rounded-full shadow-md text-sm font-bold text-gray-700 animate-fade-in">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg text-sm font-bold text-gray-800 animate-score-reveal border border-gray-100">
             {feedback}
           </div>
         )}
@@ -695,35 +743,35 @@ function GameHeader({ title, subtitle, step }: { title: string; subtitle: string
 function GameCompleteScreen({ icon, name, score, step, onNext }: { icon: string; name: string; score: number; step: number; onNext: () => void }) {
   const label = score >= 90 ? '완벽!' : score >= 70 ? '훌륭해요!' : score >= 50 ? '좋아요!' : score >= 30 ? '괜찮아요' : '다음에 더 잘할 수 있어요'
   const emoji = score >= 90 ? '🌟' : score >= 70 ? '✨' : score >= 50 ? '👍' : score >= 30 ? '💪' : '🤗'
-  const nextGame = step === 1 ? '계산력 테스트' : '반응속도 테스트'
+  const nextGame = step === 1 ? '➕ 계산력 테스트' : '⚡ 반응속도 테스트'
+  const gradientColor = score >= 70 ? 'from-emerald-400 to-green-500' : score >= 40 ? 'from-orange-400 to-amber-500' : 'from-rose-400 to-red-500'
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-8 text-center">
-        <div className="text-5xl mb-3">{icon}</div>
-        <p className="text-sm text-gray-500 font-medium mb-1">{name} 테스트 완료</p>
-        <div className="flex items-baseline justify-center gap-1 mb-2">
-          <span className="text-5xl font-black text-gray-900">{score}</span>
-          <span className="text-lg text-gray-400">/100</span>
-        </div>
-        <p className="text-lg font-bold text-orange-600">{emoji} {label}</p>
-
-        <div className="mt-6 w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-orange-400 to-amber-500 rounded-full transition-all duration-1000"
-            style={{ width: `${score}%` }}
-          />
+      <div className="bg-white rounded-2xl shadow-lg border border-orange-100 overflow-hidden">
+        {/* 점수 헤더 */}
+        <div className={`bg-gradient-to-br ${gradientColor} p-8 text-center text-white relative overflow-hidden`}>
+          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 70% 30%, white 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+          <div className="text-4xl mb-2">{icon}</div>
+          <p className="text-sm font-medium opacity-90">{name} 완료</p>
+          <div className="flex items-baseline justify-center gap-1 mt-2 animate-score-reveal">
+            <span className="text-6xl font-black tracking-tight">{score}</span>
+            <span className="text-xl font-bold opacity-70">/100</span>
+          </div>
+          <p className="mt-2 text-lg font-bold">{emoji} {label}</p>
         </div>
 
-        <button
-          onClick={onNext}
-          className="mt-6 w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-xl text-lg min-h-[44px] active:scale-[0.98] transition-all shadow-lg shadow-orange-200 animate-subtle-pulse"
-        >
-          다음: {nextGame} →
-        </button>
-
-        <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-400">
-          <GameHeader title="" subtitle="" step={step + 1} />
+        {/* 다음 게임 */}
+        <div className="p-5">
+          <div className="mb-3">
+            <GameHeader title="" subtitle="" step={step + 1} />
+          </div>
+          <button
+            onClick={onNext}
+            className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl text-lg min-h-[56px] active:scale-[0.95] transition-all shadow-lg shadow-orange-200/50 btn-ripple"
+          >
+            다음: {nextGame} →
+          </button>
         </div>
       </div>
     </div>
