@@ -41,7 +41,16 @@ async function fetchAllUsDividends() {
     }
   }
 
-  if (allStocks.length === 0) {
+  // 중복 제거 (ticker 기준)
+  const seen = new Set<string>()
+  const uniqueStocks = allStocks.filter((s) => {
+    const ticker = (s as { ticker: string }).ticker
+    if (seen.has(ticker)) return false
+    seen.add(ticker)
+    return true
+  })
+
+  if (uniqueStocks.length === 0) {
     // 전체 실패 시 폴백
     return NextResponse.json({
       market: 'us', total: usHardcoded.length, count: usHardcoded.length,
@@ -50,9 +59,9 @@ async function fetchAllUsDividends() {
   }
 
   return NextResponse.json({
-    market: 'us', total, count: allStocks.length,
+    market: 'us', total, count: uniqueStocks.length,
     updatedAt: new Date().toISOString(), source: 'yahoo',
-    stocks: allStocks,
+    stocks: uniqueStocks,
   }, { headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=300' } })
 }
 
