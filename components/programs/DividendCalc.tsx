@@ -27,20 +27,20 @@ type Category = 'stock' | 'etf'
 type SubMarket = 'kr' | 'us'
 
 export default function DividendCalc() {
-  // URL 파라미터로 공유된 결과 감지
-  const sharedData = useMemo(() => {
+  // URL 파라미터로 공유된 결과 감지 (useState lazy init으로 SSR 안전)
+  const [sharedData] = useState(() => {
     if (typeof window === 'undefined') return null
     const p = new URLSearchParams(window.location.search)
     const t = p.get('t'), n = p.get('n'), pr = p.get('p'), d = p.get('d'), y = p.get('y'), f = p.get('f'), inv = p.get('i'), m = p.get('m')
     if (t && n && pr && y) {
       return {
-        stock: { ticker: t, name: decodeURIComponent(n), price: +pr, dividendPerShare: +(d || 0), yieldPct: +y, frequency: f ? decodeURIComponent(f) : '연배당', sector: '기타' } as StockItem,
+        stock: { ticker: t, name: n, price: +pr, dividendPerShare: +(d || 0), yieldPct: +y, frequency: f || '연배당', sector: '기타' } as StockItem,
         investRaw: +(inv || 0),
         market: (m === 'us' ? 'us' : 'kr') as SubMarket,
       }
     }
     return null
-  }, [])
+  })
 
   const [category, setCategory] = useState<Category>('stock')
   const [subMarket, setSubMarket] = useState<SubMarket>(sharedData?.market || 'kr')
