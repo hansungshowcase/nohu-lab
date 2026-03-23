@@ -13,9 +13,7 @@ export async function GET(request: Request) {
     if (market === 'kr') {
       return await fetchKrDividends()
     } else {
-      const offset = parseInt(searchParams.get('offset') || '0', 10)
-      const limit = parseInt(searchParams.get('limit') || '250', 10)
-      return await fetchUsDividends(offset, Math.min(limit, 250))
+      return await fetchAllUsDividends()
     }
   } catch (e) {
     return NextResponse.json({ error: 'fetch failed', detail: String(e) }, { status: 500 })
@@ -26,61 +24,68 @@ export async function GET(request: Request) {
 // 미국 배당주 - Yahoo Finance (전체 실시간)
 // ══════════════════════════════════════
 
-async function fetchUsDividends(offset: number, limit: number) {
-  try {
-    const res = await fetch(
-      `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=high_dividend_yield&count=${limit}&offset=${offset}`,
-      {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-        signal: AbortSignal.timeout(10000),
-      }
-    )
+// 미국 배당주 전체 로드 (250개씩 반복)
+async function fetchAllUsDividends() {
+  const allStocks: Record<string, unknown>[] = []
+  let total = 0
 
-    if (!res.ok) throw new Error('Yahoo API failed')
-
-    const data = await res.json()
-    const result = data?.finance?.result?.[0]
-    if (!result) throw new Error('No result')
-
-    const stocks = (result.quotes || []).map((q: Record<string, unknown>) => ({
-      ticker: q.symbol || '',
-      name: (q.longName || q.shortName || '') as string,
-      price: Math.round(((q.regularMarketPrice as number) || 0) * 1400), // USD → KRW 환산 (약 1400원)
-      priceUsd: (q.regularMarketPrice as number) || 0,
-      sector: (q.sector || guessSectorFromName((q.longName || q.shortName || '') as string)) as string,
-      industry: (q.industry || '') as string,
-      yieldPct: Math.round(((q.dividendYield as number) || 0) * 100) / 100,
-      dividendRate: (q.dividendRate as number) || (q.trailingAnnualDividendRate as number) || 0,
-      frequency: guessUsFrequency((q.dividendRate as number) || 0, (q.trailingAnnualDividendRate as number) || 0, (q.symbol as string) || ''),
-      marketCap: (q.marketCap as number) || 0,
-      change: (q.regularMarketChangePercent as number) || 0,
-    })).filter((s: { yieldPct: number }) => s.yieldPct > 0)
-
-    return NextResponse.json({
-      market: 'us',
-      total: result.total || 0,
-      offset,
-      count: stocks.length,
-      updatedAt: new Date().toISOString(),
-      source: 'yahoo',
-      stocks,
-    }, {
-      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=150' },
-    })
-  } catch {
-    // Yahoo 실패 시 하드코딩 폴백
-    return NextResponse.json({
-      market: 'us',
-      total: usHardcoded.length,
-      offset: 0,
-      count: usHardcoded.length,
-      updatedAt: new Date().toISOString(),
-      source: 'hardcoded',
-      stocks: usHardcoded,
-    }, {
-      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=150' },
-    })
+  for (let offset = 0; offset < 2000; offset += 250) {
+    try {
+      const result = await fetchUsPage(offset, 250)
+      if (!result) break
+      total = result.total
+      allStocks.push(...result.stocks)
+      if (allStocks.length >= total) break
+    } catch {
+      break
+    }
   }
+
+  if (allStocks.length === 0) {
+    // 전체 실패 시 폴백
+    return NextResponse.json({
+      market: 'us', total: usHardcoded.length, count: usHardcoded.length,
+      updatedAt: new Date().toISOString(), source: 'hardcoded', stocks: usHardcoded,
+    }, { headers: { 'Cache-Control': 'public, s-maxage=300' } })
+  }
+
+  return NextResponse.json({
+    market: 'us', total, count: allStocks.length,
+    updatedAt: new Date().toISOString(), source: 'yahoo',
+    stocks: allStocks,
+  }, { headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=300' } })
+}
+
+async function fetchUsPage(offset: number, limit: number): Promise<{ total: number; stocks: Record<string, unknown>[] } | null> {
+  const res = await fetch(
+    `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=high_dividend_yield&count=${limit}&offset=${offset}`,
+    {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      signal: AbortSignal.timeout(8000),
+    }
+  )
+
+  if (!res.ok) return null
+
+  const data = await res.json()
+  const result = data?.finance?.result?.[0]
+  if (!result || !result.quotes) return null
+
+  const stocks = (result.quotes as Record<string, unknown>[]).map((q) => ({
+    ticker: q.symbol || '',
+    name: (q.longName || q.shortName || '') as string,
+    price: Math.round(((q.regularMarketPrice as number) || 0) * 1400),
+    priceUsd: (q.regularMarketPrice as number) || 0,
+    sector: (q.sector || guessSectorFromName((q.longName || q.shortName || '') as string)) as string,
+    industry: (q.industry || '') as string,
+    yieldPct: Math.round(((q.dividendYield as number) || 0) * 100) / 100,
+    dividendRate: (q.dividendRate as number) || (q.trailingAnnualDividendRate as number) || 0,
+    frequency: guessUsFrequency((q.dividendRate as number) || 0, (q.trailingAnnualDividendRate as number) || 0, (q.symbol as string) || ''),
+    marketCap: (q.marketCap as number) || 0,
+    change: (q.regularMarketChangePercent as number) || 0,
+  })).filter((s: { yieldPct: number }) => s.yieldPct > 0)
+
+  return { total: result.total || 0, stocks }
 }
 
 // 미국 주식 배당 주기 추정

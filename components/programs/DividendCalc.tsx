@@ -41,18 +41,14 @@ export default function DividendCalc() {
   const [searchQuery, setSearchQuery] = useState('')
   const [style, setStyle] = useState<'all' | 'high' | 'safe' | 'monthly' | 'growth'>('all')
 
-  const [usTotal, setUsTotal] = useState(0)
-  const [loadingMore, setLoadingMore] = useState(false)
-
   // 데이터 로드
   const fetchData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      // 국내 + 미국 1페이지 동시 로드
       const [krRes, usRes] = await Promise.allSettled([
         fetch('/api/dividend?market=kr'),
-        fetch('/api/dividend?market=us&offset=0&limit=250'),
+        fetch('/api/dividend?market=us'),
       ])
       if (krRes.status === 'fulfilled' && krRes.value.ok) {
         const data = await krRes.value.json()
@@ -63,27 +59,12 @@ export default function DividendCalc() {
       if (usRes.status === 'fulfilled' && usRes.value.ok) {
         const data = await usRes.value.json()
         setAllUs(data.stocks || [])
-        setUsTotal(data.total || 0)
       }
     } catch {
       setError('데이터를 불러오지 못했습니다.')
     }
     setLoading(false)
   }, [])
-
-  // 미국 배당주 더 불러오기
-  const loadMoreUs = useCallback(async () => {
-    if (loadingMore) return
-    setLoadingMore(true)
-    try {
-      const res = await fetch(`/api/dividend?market=us&offset=${allUs.length}&limit=250`)
-      if (res.ok) {
-        const data = await res.json()
-        setAllUs((prev) => [...prev, ...(data.stocks || [])])
-      }
-    } catch { /* silent */ }
-    setLoadingMore(false)
-  }, [allUs.length, loadingMore])
 
   useEffect(() => {
     fetchData()
@@ -247,23 +228,25 @@ export default function DividendCalc() {
       {/* 종목 선택 안 된 상태 */}
       {!selected && (
         <>
-          {/* 투자 성향 필터 */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          {/* 빠른 필터 */}
+          <div className="grid grid-cols-2 gap-2">
             {([
-              ['all', '전체', '📋'],
-              ['high', '고배당 (5%+)', '🔥'],
-              ['safe', '안정형 (2~5%)', '🛡️'],
-              ['monthly', '월배당', '📅'],
-              ['growth', '배당성장', '📈'],
-            ] as const).map(([id, label, icon]) => (
+              ['high', '💰 고수익 배당', '연 5% 이상', 'from-red-500 to-orange-500'],
+              ['monthly', '📅 매달 받는 배당', '월배당 종목만', 'from-blue-500 to-indigo-500'],
+              ['safe', '🛡️ 안정적 배당', '연 2~5% 우량주', 'from-emerald-500 to-green-500'],
+              ['growth', '📈 배당 늘리는 기업', '연속 배당 증가', 'from-purple-500 to-pink-500'],
+            ] as const).map(([id, label, sub, gradient]) => (
               <button
                 key={id}
-                onClick={() => setStyle(id)}
-                className={`px-3 py-2 rounded-lg text-[11px] font-bold whitespace-nowrap min-h-[38px] transition-all flex items-center gap-1 ${
-                  style === id ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-gray-500 border border-gray-200'
+                onClick={() => setStyle(style === id ? 'all' : id)}
+                className={`p-3 rounded-xl text-left min-h-[56px] transition-all active:scale-[0.97] ${
+                  style === id
+                    ? `bg-gradient-to-r ${gradient} text-white shadow-lg`
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
                 }`}
               >
-                {icon} {label}
+                <p className="text-xs font-bold">{label}</p>
+                <p className={`text-[10px] mt-0.5 ${style === id ? 'text-white/80' : 'text-gray-400'}`}>{sub}</p>
               </button>
             ))}
           </div>
@@ -332,15 +315,6 @@ export default function DividendCalc() {
               ))}
               {filtered.length > 50 && (
                 <p className="text-center text-xs text-gray-400 py-2">상위 50개 표시 · 검색으로 더 많은 종목을 찾아보세요</p>
-              )}
-              {subMarket === 'us' && allUs.length < usTotal && (
-                <button
-                  onClick={loadMoreUs}
-                  disabled={loadingMore}
-                  className="w-full py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold rounded-xl text-sm min-h-[44px] transition-all"
-                >
-                  {loadingMore ? '불러오는 중...' : `더 보기 (${allUs.length}/${usTotal}개 로드됨)`}
-                </button>
               )}
               {filtered.length === 0 && !loading && (
                 <p className="text-center text-sm text-gray-400 py-8">검색 결과가 없습니다</p>
