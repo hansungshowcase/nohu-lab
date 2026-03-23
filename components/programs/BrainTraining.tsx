@@ -449,9 +449,8 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
                 <div
                   className="brain-card-face bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-400 shadow-md cursor-pointer btn-ripple select-none"
                   onClick={() => handleFlip(card.id)}
-                  style={{ minHeight: 44 }}
                 >
-                  <span className="font-black text-white/90 drop-shadow-sm" style={{ fontSize: 'clamp(2rem, 8vw, 3.5rem)' }}>?</span>
+                  <span className="font-black text-white/90 drop-shadow-sm" style={{ fontSize: 'clamp(1.8rem, 7vw, 3rem)' }}>?</span>
                 </div>
                 {/* 앞면 (이모지) */}
                 <div
@@ -461,9 +460,8 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
                       : 'bg-white border-2 border-orange-200'
                   }`}
                   onClick={() => handleFlip(card.id)}
-                  style={{ minHeight: 44 }}
                 >
-                  <span style={{ fontSize: 'clamp(2rem, 8vw, 3.5rem)' }}>{card.emoji}</span>
+                  <span style={{ fontSize: 'clamp(1.8rem, 7vw, 3rem)' }}>{card.emoji}</span>
                 </div>
               </div>
             </div>
