@@ -24,20 +24,33 @@ export async function GET(request: Request) {
 // 미국 배당주 - Yahoo Finance (전체 실시간)
 // ══════════════════════════════════════
 
-// 미국 배당주 전체 로드 (250개씩 반복)
+// 미국 배당주 전체 로드 (250개씩 병렬)
 async function fetchAllUsDividends() {
-  const allStocks: Record<string, unknown>[] = []
-  let total = 0
+  // 1차: 첫 페이지로 total 파악
+  const first = await fetchUsPage(0, 250)
+  if (!first) {
+    return NextResponse.json({
+      market: 'us', total: usHardcoded.length, count: usHardcoded.length,
+      updatedAt: new Date().toISOString(), source: 'hardcoded', stocks: usHardcoded,
+    }, { headers: { 'Cache-Control': 'public, s-maxage=300' } })
+  }
 
-  for (let offset = 0; offset < 2000; offset += 250) {
-    try {
-      const result = await fetchUsPage(offset, 250)
-      if (!result) break
-      total = result.total
-      allStocks.push(...result.stocks)
-      if (allStocks.length >= total) break
-    } catch {
-      break
+  const allStocks: Record<string, unknown>[] = [...first.stocks]
+  const total = first.total
+
+  // 2차: 나머지 페이지 병렬 호출
+  if (total > 250) {
+    const pages: number[] = []
+    for (let offset = 250; offset < total; offset += 250) {
+      pages.push(offset)
+    }
+    const results = await Promise.allSettled(
+      pages.map((offset) => fetchUsPage(offset, 250))
+    )
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) {
+        allStocks.push(...r.value.stocks)
+      }
     }
   }
 
