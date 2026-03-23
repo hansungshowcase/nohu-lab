@@ -39,6 +39,7 @@ export default function DividendCalc() {
   const [investInput, setInvestInput] = useState('')
   const [accountType, setAccountType] = useState<'general' | 'isa'>('general')
   const [searchQuery, setSearchQuery] = useState('')
+  const [style, setStyle] = useState<'all' | 'high' | 'safe' | 'monthly' | 'growth'>('all')
 
   // 양쪽 데이터 동시 로드
   const fetchData = useCallback(async () => {
@@ -87,13 +88,20 @@ export default function DividendCalc() {
   // 필터링
   const filtered = useMemo(() => {
     let list = stocks
+    // 성향 필터
+    if (style === 'high') list = list.filter((s) => s.yieldPct >= 5)
+    else if (style === 'safe') list = list.filter((s) => s.yieldPct >= 2 && s.yieldPct <= 5)
+    else if (style === 'monthly') list = list.filter((s) => s.frequency?.includes('월'))
+    else if (style === 'growth') list = list.filter((s) => s.yieldPct >= 1 && s.yieldPct <= 4 && s.desc?.includes('연속'))
+    // 분야 필터
     if (sector !== '전체') list = list.filter((s) => s.sector === sector)
+    // 검색
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase()
       list = list.filter((s) => s.name.toLowerCase().includes(q) || s.ticker.toLowerCase().includes(q))
     }
     return list
-  }, [stocks, sector, searchQuery])
+  }, [stocks, sector, searchQuery, style])
 
   // 투자 시뮬레이션
   const investRaw = parseInt(investInput.replace(/,/g, ''), 10) || 0
@@ -220,6 +228,27 @@ export default function DividendCalc() {
       {/* 종목 선택 안 된 상태 */}
       {!selected && (
         <>
+          {/* 투자 성향 필터 */}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+            {([
+              ['all', '전체', '📋'],
+              ['high', '고배당 (5%+)', '🔥'],
+              ['safe', '안정형 (2~5%)', '🛡️'],
+              ['monthly', '월배당', '📅'],
+              ['growth', '배당성장', '📈'],
+            ] as const).map(([id, label, icon]) => (
+              <button
+                key={id}
+                onClick={() => setStyle(id)}
+                className={`px-3 py-2 rounded-lg text-[11px] font-bold whitespace-nowrap min-h-[38px] transition-all flex items-center gap-1 ${
+                  style === id ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-gray-500 border border-gray-200'
+                }`}
+              >
+                {icon} {label}
+              </button>
+            ))}
+          </div>
+
           {/* 검색 */}
           <input
             type="text"
