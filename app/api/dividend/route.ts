@@ -160,17 +160,17 @@ async function fetchKrDividends() {
   let apiStocks: KrStock[] = []
   try {
     const krData = (await import('@/components/programs/dividend/krDividendData.json')).default as Array<{
-      ticker: string; name: string; dividendPerShare: number; count: number; frequency: string
+      ticker: string; name: string; price: number; dividendPerShare: number; yieldPct: number; count?: number; frequency?: string
     }>
-    apiStocks = krData.map((s) => ({
+    apiStocks = krData.filter((s) => s.price > 0 && s.yieldPct > 0).map((s) => ({
       ticker: s.ticker,
       name: s.name,
-      price: 0,
+      price: s.price,
       sector: guessSector(s.name),
-      yieldPct: 0,
+      yieldPct: s.yieldPct,
       dividendPerShare: s.dividendPerShare,
       frequency: s.frequency || '연배당',
-      desc: s.count >= 2 ? `연 ${s.count}회 배당` : '',
+      desc: (s.count || 1) >= 2 ? `연 ${s.count}회 배당` : '',
     }))
   } catch {
     apiStocks = []
