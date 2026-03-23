@@ -175,22 +175,21 @@ async function fetchKrDividends() {
     source: apiStocks.length > 50 ? 'api+naver' : 'hardcoded+naver',
     stocks: liveStocks.sort((a, b) => b.yieldPct - a.yieldPct),
   }, {
-    headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=150' },
+    headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=900' },
   })
 }
 
 // 공공데이터포털 금융위원회 주식배당정보 → 최신 배당 기업 추출
 async function fetchDataGoKrDividends(): Promise<KrStock[]> {
   try {
-    // 69,771건 / 500건 = ~140페이지. 2024년 데이터는 100~140페이지에 분포
-    const pagesToFetch: number[] = []
-    for (let p = 100; p <= 140; p++) pagesToFetch.push(p)
+    // 69,771건 / 500건 = ~140페이지. 2024년 데이터 밀집 페이지만 호출 (속도 우선)
+    const pagesToFetch = [130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140]
 
     const results = await Promise.allSettled(
       pagesToFetch.map((page) =>
         fetch(
           `http://apis.data.go.kr/1160100/service/GetStocDiviInfoService/getDiviInfo?serviceKey=${DATA_GO_KR_KEY}&numOfRows=500&resultType=json&pageNo=${page}`,
-          { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(7000) }
+          { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(4000) }
         ).then((r) => r.json())
       )
     )
@@ -272,14 +271,14 @@ async function updateNaverPrices(stocks: KrStock[]): Promise<KrStock[]> {
   const updated = stocks.map(s => ({ ...s }))
   const targets = updated.filter(s => /^\d{6}$/.test(s.ticker))
 
-  for (let i = 0; i < targets.length && i < 200; i += 20) {
+  for (let i = 0; i < targets.length && i < 100; i += 20) {
     const batch = targets.slice(i, i + 20)
     await Promise.allSettled(
       batch.map(async (s) => {
         try {
           const res = await fetch(`https://m.stock.naver.com/api/stock/${s.ticker}/basic`, {
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0)' },
-            signal: AbortSignal.timeout(5000),
+            signal: AbortSignal.timeout(3000),
           })
           if (!res.ok) return
           const data = await res.json()
