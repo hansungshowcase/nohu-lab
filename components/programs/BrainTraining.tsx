@@ -451,7 +451,7 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
                   onClick={() => handleFlip(card.id)}
                   style={{ minHeight: 44 }}
                 >
-                  <span className="text-4xl sm:text-5xl font-black text-white/90 drop-shadow-sm">?</span>
+                  <span className="font-black text-white/90 drop-shadow-sm" style={{ fontSize: 'clamp(2rem, 8vw, 3.5rem)' }}>?</span>
                 </div>
                 {/* 앞면 (이모지) */}
                 <div
@@ -463,7 +463,7 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
                   onClick={() => handleFlip(card.id)}
                   style={{ minHeight: 44 }}
                 >
-                  <span className="text-4xl sm:text-5xl">{card.emoji}</span>
+                  <span style={{ fontSize: 'clamp(2rem, 8vw, 3.5rem)' }}>{card.emoji}</span>
                 </div>
               </div>
             </div>
