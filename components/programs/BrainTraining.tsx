@@ -360,10 +360,11 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
     if (lockedRef.current || previewing) return
     const currentCards = cardsRef.current
     const card = currentCards[id]
-    if (!card || card.flipped || card.matched) return
-
-    // 이미 선택된 카드면 무시
+    if (!card || card.matched) return
+    // 이미 뒤집혀 있고 현재 선택 중인 카드면 무시
     if (selectedRef.current.includes(id)) return
+    // 이미 뒤집혀 있는 카드(아직 비교 안 한)면 무시
+    if (card.flipped && !card.matched) return
 
     const newCards = currentCards.map((c) => c.id === id ? { ...c, flipped: true } : c)
     setCards(newCards)
@@ -380,7 +381,7 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
         setTimeout(() => {
           setCards((prev) => {
             const updated = prev.map((c) =>
-              c.id === firstId || c.id === secondId ? { ...c, matched: true } : c
+              c.id === firstId || c.id === secondId ? { ...c, matched: true, flipped: false } : c
             )
             cardsRef.current = updated
             return updated
