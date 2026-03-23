@@ -54,6 +54,16 @@ export const programRegistry: Program[] = [
     isActive: true,
     badge: 'NEW',
   },
+  {
+    id: 'brain-training',
+    name: '브레인 트레이닝',
+    description: '3가지 미니게임으로 측정하는 오늘의 뇌나이',
+    minTier: 0,
+    icon: '🧠',
+    category: '심리·건강',
+    isActive: true,
+    badge: 'NEW',
+  },
   // ── 생활·실용 섹터 ──
   {
     id: 'event-money',

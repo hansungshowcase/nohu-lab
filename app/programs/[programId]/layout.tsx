@@ -18,6 +18,7 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
   'mental-health': 'retireplan.kr 심리 자가진단: PHQ-9(우울), GAD-7(불안), PSS-10(스트레스), RSES(자존감), ISI(수면) 5개 공인 척도. 무료.',
   'supplement-recommend': 'retireplan.kr 맞춤 영양제 추천: 나이·성별·생활습관·건강고민 분석으로 약사가 추천하는 영양제 조합·복용법·시간표 제공. 무료.',
   'event-money': 'retireplan.kr 경조사비 계산기: 결혼식·장례식·돌잔치·집들이·개업·출산 등 행사별, 관계별 적정 경조사비 금액을 2026년 최신 기준으로 추천. 무료.',
+  'brain-training': 'retireplan.kr 브레인 트레이닝: 기억력·계산력·반응속도 3가지 미니게임으로 뇌나이 측정. 매일 도전, 또래 비교, 7일 추이 그래프. 무료.',
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
