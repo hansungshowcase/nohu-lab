@@ -182,13 +182,16 @@ async function fetchKrDividends() {
     apiStocks = getKrHardcodedStocks()
   }
 
+  // 상위 100개만 실시간 시세 업데이트 (Vercel 타임아웃 내)
+  const liveStocks = await updateNaverPrices(apiStocks)
+
   return NextResponse.json({
     market: 'kr',
-    total: apiStocks.length,
-    count: apiStocks.length,
+    total: liveStocks.length,
+    count: liveStocks.length,
     updatedAt: new Date().toISOString(),
     source,
-    stocks: apiStocks.sort((a, b) => b.yieldPct - a.yieldPct),
+    stocks: liveStocks.sort((a, b) => b.yieldPct - a.yieldPct),
   }, {
     headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=900' },
   })
@@ -213,7 +216,8 @@ async function updateNaverPrices(stocks: KrStock[]): Promise<KrStock[]> {
   const updated = stocks.map(s => ({ ...s }))
   const targets = updated.filter(s => /^\d{6}$/.test(s.ticker))
 
-  for (let i = 0; i < targets.length; i += 20) {
+  // 상위 100개만 실시간 시세 업데이트 (Vercel 타임아웃 방지)
+  for (let i = 0; i < Math.min(targets.length, 100); i += 20) {
     const batch = targets.slice(i, i + 20)
     await Promise.allSettled(
       batch.map(async (s) => {
