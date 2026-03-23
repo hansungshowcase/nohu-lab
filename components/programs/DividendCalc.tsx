@@ -396,7 +396,7 @@ export default function DividendCalc() {
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">만원</span>
             </div>
             {investAmount > 0 && (
-              <p className="text-xs text-gray-400 text-right mt-1">{(investAmount * 10000).toLocaleString()}원</p>
+              <p className="text-xs text-gray-400 text-right mt-1">{investAmount.toLocaleString()}원</p>
             )}
             <div className="flex gap-2 mt-2">
               {[100, 500, 1000, 3000, 5000].map((v) => (
