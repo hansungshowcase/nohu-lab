@@ -27,16 +27,31 @@ type Category = 'stock' | 'etf'
 type SubMarket = 'kr' | 'us'
 
 export default function DividendCalc() {
+  // URL 파라미터로 공유된 결과 감지
+  const sharedData = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    const p = new URLSearchParams(window.location.search)
+    const t = p.get('t'), n = p.get('n'), pr = p.get('p'), d = p.get('d'), y = p.get('y'), f = p.get('f'), inv = p.get('i'), m = p.get('m')
+    if (t && n && pr && y) {
+      return {
+        stock: { ticker: t, name: decodeURIComponent(n), price: +pr, dividendPerShare: +(d || 0), yieldPct: +y, frequency: f ? decodeURIComponent(f) : '연배당', sector: '기타' } as StockItem,
+        investRaw: +(inv || 0),
+        market: (m === 'us' ? 'us' : 'kr') as SubMarket,
+      }
+    }
+    return null
+  }, [])
+
   const [category, setCategory] = useState<Category>('stock')
-  const [subMarket, setSubMarket] = useState<SubMarket>('kr')
+  const [subMarket, setSubMarket] = useState<SubMarket>(sharedData?.market || 'kr')
   const [sector, setSector] = useState('전체')
   const [allKr, setAllKr] = useState<StockItem[]>([])
   const [allUs, setAllUs] = useState<StockItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [updatedAt, setUpdatedAt] = useState<string | null>(null)
-  const [selected, setSelected] = useState<StockItem | null>(null)
-  const [investInput, setInvestInput] = useState('')
+  const [selected, setSelected] = useState<StockItem | null>(sharedData?.stock || null)
+  const [investInput, setInvestInput] = useState(sharedData?.investRaw ? sharedData.investRaw.toLocaleString() : '')
   const [accountType, setAccountType] = useState<'general' | 'isa'>('general')
   const [searchQuery, setSearchQuery] = useState('')
   const [style, setStyle] = useState<'all' | 'high' | 'safe' | 'monthly' | 'growth'>('all')
@@ -148,7 +163,8 @@ export default function DividendCalc() {
 
   async function shareKakao() {
     if (!selected || !result) return
-    const url = `${window.location.origin}/programs/dividend-calc`
+    const params = `t=${encodeURIComponent(selected.ticker)}&n=${encodeURIComponent(selected.name)}&p=${selected.price}&d=${selected.dividendPerShare || Math.round(selected.price * selected.yieldPct / 100)}&y=${selected.yieldPct}&f=${encodeURIComponent(selected.frequency || '연배당')}&i=${investRaw}&m=${subMarket}`
+    const url = `${window.location.origin}/programs/dividend-calc?${params}`
     const w = window as KakaoWindow
     if (!w.Kakao) {
       for (let i = 0; i < 15; i++) { await new Promise((r) => setTimeout(r, 200)); if ((window as KakaoWindow).Kakao) break }

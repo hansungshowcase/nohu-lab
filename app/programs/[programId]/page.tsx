@@ -38,6 +38,7 @@ export default function ProgramPage() {
   const isSharedLink = (programId === 'saju-reading' && searchParams.has('y') && searchParams.has('m') && searchParams.has('d'))
     || (programId === 'supplement-recommend' && searchParams.has('g') && searchParams.has('age'))
     || (programId === 'event-money' && searchParams.has('e') && searchParams.has('r'))
+    || (programId === 'dividend-calc' && searchParams.has('t') && searchParams.has('y'))
   const program = getProgramById(programId)
 
   useEffect(() => {
