@@ -156,27 +156,124 @@ type KrStock = {
 }
 
 async function fetchKrDividends() {
-  const stocks = getKrHardcodedStocks()
-  const liveStocks = await updateNaverPrices(stocks)
+  // 1단계: 공공데이터포털에서 최신 배당 데이터 가져오기
+  let apiStocks = await fetchDataGoKrDividends()
+
+  // 2단계: API 실패 시 하드코딩 폴백
+  if (apiStocks.length < 10) {
+    apiStocks = getKrHardcodedStocks()
+  }
+
+  // 3단계: 네이버 실시간 시세 + 배당수익률 계산
+  const liveStocks = await updateNaverPrices(apiStocks)
 
   return NextResponse.json({
     market: 'kr',
     total: liveStocks.length,
     count: liveStocks.length,
     updatedAt: new Date().toISOString(),
-    source: 'hardcoded+naver',
+    source: apiStocks.length > 50 ? 'api+naver' : 'hardcoded+naver',
     stocks: liveStocks.sort((a, b) => b.yieldPct - a.yieldPct),
   }, {
     headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=150' },
   })
 }
 
+// 공공데이터포털 금융위원회 주식배당정보 → 최신 배당 기업 추출
+async function fetchDataGoKrDividends(): Promise<KrStock[]> {
+  try {
+    // 69,771건 / 500건 = ~140페이지. 2024년 데이터는 100~140페이지에 분포
+    const pagesToFetch: number[] = []
+    for (let p = 100; p <= 140; p++) pagesToFetch.push(p)
+
+    const results = await Promise.allSettled(
+      pagesToFetch.map((page) =>
+        fetch(
+          `http://apis.data.go.kr/1160100/service/GetStocDiviInfoService/getDiviInfo?serviceKey=${DATA_GO_KR_KEY}&numOfRows=500&resultType=json&pageNo=${page}`,
+          { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(7000) }
+        ).then((r) => r.json())
+      )
+    )
+
+    // 2024년 이후 + 배당금 > 0 필터
+    const companyMap = new Map<string, KrStock>()
+
+    for (const r of results) {
+      if (r.status !== 'fulfilled') continue
+      const items = r.value?.response?.body?.items?.item
+      if (!Array.isArray(items)) continue
+
+      for (const item of items) {
+        const baseDt = item.dvdnBasDt || ''
+        if (baseDt < '20240101') continue
+
+        const dps = parseInt(item.stckGenrDvdnAmt || '0', 10)
+        if (dps <= 0) continue
+
+        const isin = item.isinCd || ''
+        const ticker = isin.slice(4, 10)
+        if (!ticker || ticker.length < 6) continue
+        if (item.scrsItmsKcdNm && item.scrsItmsKcdNm !== '보통주') continue
+
+        const name = item.stckIssuCmpyNm || ''
+
+        // 배당 주기 판별: 같은 기업이 여러 번 나오면 분기/반기 배당
+        if (companyMap.has(ticker)) {
+          const existing = companyMap.get(ticker)!
+          existing.dividendPerShare += dps
+          const count = parseInt(existing.desc.split(':')[1] || '1', 10) + 1
+          existing.desc = 'count:' + count
+          if (count >= 4) existing.frequency = '분기배당'
+          else if (count >= 2) existing.frequency = '반기배당'
+        } else {
+          companyMap.set(ticker, {
+            ticker,
+            name,
+            price: 0,
+            sector: guessSector(name),
+            yieldPct: 0,
+            dividendPerShare: dps,
+            frequency: '연배당',
+            desc: 'count:1',
+          })
+        }
+      }
+    }
+
+    // desc 정리
+    const stocks = Array.from(companyMap.values())
+    stocks.forEach((s) => {
+      const count = parseInt(s.desc.split(':')[1] || '1', 10)
+      s.desc = count >= 4 ? '연 ' + count + '회 배당' : count >= 2 ? '연 ' + count + '회 배당' : ''
+    })
+
+    return stocks
+  } catch {
+    return []
+  }
+}
+
+function guessSector(name: string): string {
+  if (name.includes('금융') || name.includes('은행') || name.includes('보험') || name.includes('증권') || name.includes('캐피탈')) return '금융'
+  if (name.includes('통신') || name.includes('텔레콤') || name.includes('SK텔')) return '통신'
+  if (name.includes('전력') || name.includes('가스') || name.includes('에너지') || name.includes('Oil') || name.includes('석유')) return '에너지'
+  if (name.includes('건설')) return '건설'
+  if (name.includes('리츠') || name.includes('인프라')) return '리츠'
+  if (name.includes('KODEX') || name.includes('TIGER') || name.includes('ACE') || name.includes('SOL') || name.includes('PLUS') || name.includes('RISE')) return 'ETF'
+  if (name.includes('전자') || name.includes('하이닉') || name.includes('네이버') || name.includes('카카오')) return 'IT'
+  if (name.includes('화학') || name.includes('철강') || name.includes('아연')) return '소재'
+  if (name.includes('자동차') || name.includes('기아') || name.includes('현대차')) return '자동차'
+  if (name.includes('제약') || name.includes('바이오') || name.includes('약품')) return '제약'
+  if (name.includes('식품') || name.includes('음료')) return '식품'
+  return '기타'
+}
+
 async function updateNaverPrices(stocks: KrStock[]): Promise<KrStock[]> {
   const updated = stocks.map(s => ({ ...s }))
   const targets = updated.filter(s => /^\d{6}$/.test(s.ticker))
 
-  for (let i = 0; i < targets.length && i < 60; i += 10) {
-    const batch = targets.slice(i, i + 10)
+  for (let i = 0; i < targets.length && i < 200; i += 20) {
+    const batch = targets.slice(i, i + 20)
     await Promise.allSettled(
       batch.map(async (s) => {
         try {
