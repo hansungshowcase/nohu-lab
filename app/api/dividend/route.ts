@@ -188,7 +188,7 @@ async function fetchDataGoKrDividends(): Promise<KrStock[]> {
     const results = await Promise.allSettled(
       pagesToFetch.map((page) =>
         fetch(
-          `http://apis.data.go.kr/1160100/service/GetStocDiviInfoService/getDiviInfo?serviceKey=${DATA_GO_KR_KEY}&numOfRows=500&resultType=json&pageNo=${page}`,
+          `https://apis.data.go.kr/1160100/service/GetStocDiviInfoService/getDiviInfo?serviceKey=${DATA_GO_KR_KEY}&numOfRows=500&resultType=json&pageNo=${page}`,
           { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(4000) }
         ).then((r) => r.json())
       )
