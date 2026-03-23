@@ -41,7 +41,7 @@ export function scoreMemory(mistakes: number, timeMs: number, pairs: number): nu
   const perfectTime = pairs * 1500          // 최적 시간 추정
   const timeScore = Math.max(0, 100 - ((timeMs - perfectTime) / perfectTime) * 40)
   const mistakeScore = Math.max(0, 100 - mistakes * 12)
-  return Math.round(timeScore * 0.5 + mistakeScore * 0.5)
+  return Math.round(Math.min(100, Math.max(0, timeScore * 0.5 + mistakeScore * 0.5)))
 }
 
 /* ── 2. 암산 속도 ── */
