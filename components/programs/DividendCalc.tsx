@@ -41,14 +41,18 @@ export default function DividendCalc() {
   const [searchQuery, setSearchQuery] = useState('')
   const [style, setStyle] = useState<'all' | 'high' | 'safe' | 'monthly' | 'growth'>('all')
 
-  // 양쪽 데이터 동시 로드
+  const [usTotal, setUsTotal] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  // 데이터 로드
   const fetchData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
+      // 국내 + 미국 1페이지 동시 로드
       const [krRes, usRes] = await Promise.allSettled([
         fetch('/api/dividend?market=kr'),
-        fetch('/api/dividend?market=us'),
+        fetch('/api/dividend?market=us&offset=0&limit=250'),
       ])
       if (krRes.status === 'fulfilled' && krRes.value.ok) {
         const data = await krRes.value.json()
@@ -59,12 +63,27 @@ export default function DividendCalc() {
       if (usRes.status === 'fulfilled' && usRes.value.ok) {
         const data = await usRes.value.json()
         setAllUs(data.stocks || [])
+        setUsTotal(data.total || 0)
       }
     } catch {
       setError('데이터를 불러오지 못했습니다.')
     }
     setLoading(false)
   }, [])
+
+  // 미국 배당주 더 불러오기
+  const loadMoreUs = useCallback(async () => {
+    if (loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await fetch(`/api/dividend?market=us&offset=${allUs.length}&limit=250`)
+      if (res.ok) {
+        const data = await res.json()
+        setAllUs((prev) => [...prev, ...(data.stocks || [])])
+      }
+    } catch { /* silent */ }
+    setLoadingMore(false)
+  }, [allUs.length, loadingMore])
 
   useEffect(() => {
     fetchData()
@@ -312,7 +331,16 @@ export default function DividendCalc() {
                 </button>
               ))}
               {filtered.length > 50 && (
-                <p className="text-center text-xs text-gray-400 py-2">검색으로 더 많은 종목을 찾아보세요</p>
+                <p className="text-center text-xs text-gray-400 py-2">상위 50개 표시 · 검색으로 더 많은 종목을 찾아보세요</p>
+              )}
+              {subMarket === 'us' && allUs.length < usTotal && (
+                <button
+                  onClick={loadMoreUs}
+                  disabled={loadingMore}
+                  className="w-full py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold rounded-xl text-sm min-h-[44px] transition-all"
+                >
+                  {loadingMore ? '불러오는 중...' : `더 보기 (${allUs.length}/${usTotal}개 로드됨)`}
+                </button>
               )}
               {filtered.length === 0 && !loading && (
                 <p className="text-center text-sm text-gray-400 py-8">검색 결과가 없습니다</p>
