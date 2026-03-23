@@ -19,6 +19,7 @@ const programComponents: Record<string, React.LazyExoticComponent<React.Componen
   'supplement-recommend': lazy(() => import('@/components/programs/supplement/SupplementRecommender')),
   'event-money': lazy(() => import('@/components/programs/EventMoneyCalc')),
   'brain-training': lazy(() => import('@/components/programs/BrainTraining')),
+  'dividend-calc': lazy(() => import('@/components/programs/DividendCalc')),
 }
 
 interface User {

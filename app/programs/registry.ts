@@ -22,6 +22,16 @@ export const programRegistry: Program[] = [
     isActive: true,
     badge: 'NEW',
   },
+  {
+    id: 'dividend-calc',
+    name: '배당주 계산기',
+    description: '분야별 배당주 정보와 투자금별 배당금·세금을 한눈에',
+    minTier: 0,
+    icon: '💰',
+    category: '재무·투자',
+    isActive: true,
+    badge: 'NEW',
+  },
   // ── 심리·건강 섹터 ──
   {
     id: 'mental-health',
