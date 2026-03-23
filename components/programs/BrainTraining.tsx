@@ -6,7 +6,7 @@ import {
   generateMathProblems, scoreMath,
   generateReactionTargets, scoreReaction,
   calculateBrainAge, getAutoLevel,
-  type MemoryCard, type MathProblem, type ReactionTarget, type BrainResult,
+  type MemoryCard, type BrainResult,
 } from './brain-training/games'
 import {
   hasPlayedToday, markPlayedToday, updateStreak,
@@ -33,19 +33,15 @@ export default function BrainTraining() {
   const [playedToday, setPlayedToday] = useState(false)
   const [streak, setStreak] = useState(0)
 
-  // 게임별 점수
-  const [memoryScore, setMemoryScore] = useState(0)
-  const [mathScore, setMathScore] = useState(0)
-  const [reactionScore, setReactionScore] = useState(0)
+  const memoryScoreRef = useRef(0)
+  const mathScoreRef = useRef(0)
+  const reactionScoreRef = useRef(0)
 
-  // 난이도
   const level = useMemo(() => getAutoLevel(getLastScore()), [])
-
-  // 결과
   const [result, setResult] = useState<BrainResult | null>(null)
   const [saving, setSaving] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
-  const history = useMemo(() => getHistory(), [result])
+  const [historyData, setHistoryData] = useState(() => getHistory())
 
   // URL 파라미터 공유 결과
   const [sharedResult] = useState<BrainResult | null>(() => {
@@ -58,7 +54,6 @@ export default function BrainTraining() {
     return null
   })
 
-  // 인증 체크
   useEffect(() => {
     setPlayedToday(hasPlayedToday())
     setStreak(getStreak())
@@ -82,26 +77,28 @@ export default function BrainTraining() {
   }, [realAge, isMember, playedToday])
 
   const handleMemoryComplete = useCallback((score: number) => {
-    setMemoryScore(score)
+    memoryScoreRef.current = score
     setPhase('math')
   }, [])
 
   const handleMathComplete = useCallback((score: number) => {
-    setMathScore(score)
+    mathScoreRef.current = score
     setPhase('reaction')
   }, [])
 
   const handleReactionComplete = useCallback((score: number) => {
-    setReactionScore(score)
+    reactionScoreRef.current = score
     setPhase('analyzing')
   }, [])
 
   const handleAnalysisComplete = useCallback(() => {
     const age = parseInt(realAge, 10) || 50
-    const r = calculateBrainAge(memoryScore, mathScore, reactionScore, age)
+    const ms = memoryScoreRef.current
+    const cs = mathScoreRef.current
+    const rs = reactionScoreRef.current
+    const r = calculateBrainAge(ms, cs, rs, age)
     setResult(r)
 
-    // 기록 저장
     if (!isMember) markPlayedToday()
     updateStreak()
     saveRecord({
@@ -112,12 +109,14 @@ export default function BrainTraining() {
       totalScore: r.totalScore,
     })
     setStreak(getStreak())
+    setHistoryData(getHistory())
     setPlayedToday(true)
     setPhase('result')
-  }, [realAge, memoryScore, mathScore, reactionScore, isMember])
+  }, [realAge, isMember])
 
   function getResultUrl() {
-    return `${window.location.origin}/programs/brain-training?m=${memoryScore}&c=${mathScore}&r=${reactionScore}&a=${parseInt(realAge, 10) || 50}`
+    if (!result) return ''
+    return `${window.location.origin}/programs/brain-training?m=${result.memoryScore}&c=${result.mathScore}&r=${result.reactionScore}&a=${parseInt(realAge, 10) || 50}`
   }
 
   async function saveImage() {
@@ -232,7 +231,6 @@ export default function BrainTraining() {
           </div>
 
           <div className="p-6 space-y-5">
-            {/* 게임 소개 */}
             <div className="grid grid-cols-3 gap-3">
               {[
                 { icon: '🃏', name: '기억력', desc: '카드 짝 맞추기' },
@@ -247,7 +245,6 @@ export default function BrainTraining() {
               ))}
             </div>
 
-            {/* 나이 입력 */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">나이를 입력하세요</label>
               <input
@@ -260,7 +257,6 @@ export default function BrainTraining() {
               />
             </div>
 
-            {/* 연속 기록 */}
             {streak > 0 && (
               <div className="flex items-center justify-center gap-2 py-2 bg-orange-50 rounded-xl">
                 <span className="text-lg">🔥</span>
@@ -268,23 +264,17 @@ export default function BrainTraining() {
               </div>
             )}
 
-            {/* 이용 안내 */}
             {isMember ? (
-              <p className="text-center text-xs text-orange-600 font-medium">
-                회원님은 무제한 이용 가능합니다
-              </p>
+              <p className="text-center text-xs text-orange-600 font-medium">회원님은 무제한 이용 가능합니다</p>
             ) : playedToday ? (
               <p className="text-center text-xs text-orange-500 font-medium">
                 오늘의 무료 측정을 이미 사용했습니다<br />
                 <span className="text-gray-400">내일 다시 도전하거나, 회원가입하면 무제한!</span>
               </p>
             ) : (
-              <p className="text-center text-xs text-gray-500">
-                비회원은 하루 1회 무료 · 회원은 무제한
-              </p>
+              <p className="text-center text-xs text-gray-500">비회원은 하루 1회 무료 · 회원은 무제한</p>
             )}
 
-            {/* 시작 버튼 */}
             <button
               onClick={handleStart}
               disabled={!realAge || parseInt(realAge, 10) < 10 || (!isMember && playedToday)}
@@ -299,54 +289,29 @@ export default function BrainTraining() {
   }
 
   // ── 게임 페이즈 ──
-  if (phase === 'memory') {
-    return <MemoryGame level={level} onComplete={handleMemoryComplete} />
-  }
-  if (phase === 'math') {
-    return <MathGame level={level} onComplete={handleMathComplete} />
-  }
-  if (phase === 'reaction') {
-    return <ReactionGame level={level} onComplete={handleReactionComplete} />
-  }
-
-  // ── 분석 중 ──
-  if (phase === 'analyzing') {
-    return <AnalyzingPhase onComplete={handleAnalysisComplete} />
-  }
+  if (phase === 'memory') return <MemoryGame level={level} onComplete={handleMemoryComplete} />
+  if (phase === 'math') return <MathGame level={level} onComplete={handleMathComplete} />
+  if (phase === 'reaction') return <ReactionGame level={level} onComplete={handleReactionComplete} />
+  if (phase === 'analyzing') return <AnalyzingPhase onComplete={handleAnalysisComplete} />
 
   // ── 결과 ──
   if (!result) return null
   return (
     <div className="max-w-2xl mx-auto space-y-5 animate-fade-in">
-      <ResultCard ref={resultRef} result={result} realAge={parseInt(realAge, 10) || 50} streak={streak} history={history} />
-
-      {/* 공유 버튼 */}
+      <ResultCard ref={resultRef} result={result} realAge={parseInt(realAge, 10) || 50} streak={streak} history={historyData} />
       <div className="space-y-3 no-print animate-slide-up" style={{ animationDelay: '200ms' }}>
-        <button
-          onClick={shareKakao}
-          className="w-full py-3.5 bg-[#FEE500] hover:bg-[#F5DC00] text-[#3C1E1E] font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all min-h-[44px]"
-        >
+        <button onClick={shareKakao}
+          className="w-full py-3.5 bg-[#FEE500] hover:bg-[#F5DC00] text-[#3C1E1E] font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all min-h-[44px]">
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
           카카오톡으로 공유하기
         </button>
-        <button
-          onClick={saveImage}
-          disabled={saving}
-          className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all disabled:opacity-50 min-h-[44px]"
-        >
+        <button onClick={saveImage} disabled={saving}
+          className="w-full py-3.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] flex items-center justify-center gap-2 transition-all disabled:opacity-50 min-h-[44px]">
           {saving ? '저장 중...' : '📷 결과 이미지 저장'}
         </button>
         <button
-          onClick={() => {
-            setPhase('intro')
-            setResult(null)
-            setMemoryScore(0)
-            setMathScore(0)
-            setReactionScore(0)
-            setPlayedToday(hasPlayedToday())
-          }}
-          className="w-full py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] min-h-[44px] transition-all"
-        >
+          onClick={() => { setPhase('intro'); setResult(null); setPlayedToday(hasPlayedToday()) }}
+          className="w-full py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold rounded-xl active:scale-[0.98] text-[14px] sm:text-[15px] min-h-[44px] transition-all">
           🔄 다시 측정하기
         </button>
       </div>
@@ -361,14 +326,14 @@ export default function BrainTraining() {
 function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: number) => void }) {
   const diff = useMemo(() => getMemoryDifficulty(level), [level])
   const [cards, setCards] = useState<MemoryCard[]>(() => generateMemoryBoard(diff.pairs))
-  const [flipped, setFlipped] = useState<number[]>([])
+  const [selected, setSelected] = useState<number[]>([])
   const [mistakes, setMistakes] = useState(0)
   const [matchedCount, setMatchedCount] = useState(0)
   const [previewing, setPreviewing] = useState(true)
   const [locked, setLocked] = useState(false)
-  const startTime = useRef(Date.now())
+  const startTime = useRef(0)
+  const completedRef = useRef(false)
 
-  // 프리뷰: 모든 카드를 잠시 보여줌
   useEffect(() => {
     const timer = setTimeout(() => {
       setPreviewing(false)
@@ -377,9 +342,9 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
     return () => clearTimeout(timer)
   }, [diff.previewMs])
 
-  // 완료 체크
   useEffect(() => {
-    if (matchedCount === diff.pairs) {
+    if (matchedCount === diff.pairs && !completedRef.current) {
+      completedRef.current = true
       const timeMs = Date.now() - startTime.current
       const score = scoreMemory(mistakes, timeMs, diff.pairs)
       setTimeout(() => onComplete(score), 500)
@@ -389,40 +354,40 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
   function handleFlip(id: number) {
     if (locked || previewing) return
     const card = cards[id]
-    if (card.flipped || card.matched) return
+    if (!card || card.flipped || card.matched) return
 
-    const newFlipped = [...flipped, id]
-    setCards((prev) => prev.map((c) => c.id === id ? { ...c, flipped: true } : c))
-    setFlipped(newFlipped)
+    const newCards = cards.map((c) => c.id === id ? { ...c, flipped: true } : c)
+    setCards(newCards)
+    const newSelected = [...selected, id]
+    setSelected(newSelected)
 
-    if (newFlipped.length === 2) {
+    if (newSelected.length === 2) {
       setLocked(true)
-      const [first, second] = newFlipped
-      if (cards[first].emoji === cards[second].emoji) {
-        // 매칭 성공
+      const [firstId, secondId] = newSelected
+      const firstCard = newCards.find((c) => c.id === firstId)!
+      const secondCard = newCards.find((c) => c.id === secondId)!
+
+      if (firstCard.emoji === secondCard.emoji) {
         setTimeout(() => {
           setCards((prev) => prev.map((c) =>
-            c.id === first || c.id === second ? { ...c, matched: true } : c
+            c.id === firstId || c.id === secondId ? { ...c, matched: true } : c
           ))
           setMatchedCount((p) => p + 1)
-          setFlipped([])
+          setSelected([])
           setLocked(false)
         }, 400)
       } else {
-        // 매칭 실패
         setMistakes((p) => p + 1)
         setTimeout(() => {
           setCards((prev) => prev.map((c) =>
-            c.id === first || c.id === second ? { ...c, flipped: false } : c
+            c.id === firstId || c.id === secondId ? { ...c, flipped: false } : c
           ))
-          setFlipped([])
+          setSelected([])
           setLocked(false)
         }, 700)
       }
     }
   }
-
-  const cols = diff.pairs <= 4 ? 4 : 4
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 animate-fade-in">
@@ -441,7 +406,7 @@ function MemoryGame({ level, onComplete }: { level: number; onComplete: (score: 
         </div>
       )}
 
-      <div className={`grid grid-cols-${cols} gap-2 sm:gap-3`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+      <div className="grid gap-2 sm:gap-3" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
         {cards.map((card) => (
           <button
             key={card.id}
@@ -476,7 +441,7 @@ function MathGame({ level, onComplete }: { level: number; onComplete: (score: nu
   const TOTAL = 10
   const problems = useMemo(() => generateMathProblems(level, TOTAL), [level])
   const [current, setCurrent] = useState(0)
-  const [correct, setCorrect] = useState(0)
+  const correctRef = useRef(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const responseTimes = useRef<number[]>([])
   const questionStart = useRef(Date.now())
@@ -493,7 +458,7 @@ function MathGame({ level, onComplete }: { level: number; onComplete: (score: nu
     responseTimes.current.push(elapsed)
 
     if (selected === problems[current].answer) {
-      setCorrect((p) => p + 1)
+      correctRef.current += 1
     }
 
     setTimeout(() => {
@@ -502,8 +467,7 @@ function MathGame({ level, onComplete }: { level: number; onComplete: (score: nu
         setIsTransitioning(false)
       } else {
         const avgTime = responseTimes.current.reduce((a, b) => a + b, 0) / responseTimes.current.length
-        const finalCorrect = selected === problems[current].answer ? correct + 1 : correct
-        const score = scoreMath(finalCorrect, TOTAL, avgTime)
+        const score = scoreMath(correctRef.current, TOTAL, avgTime)
         onComplete(score)
       }
     }, 300)
@@ -561,67 +525,70 @@ function ReactionGame({ level, onComplete }: { level: number; onComplete: (score
   const TOTAL = 10
   const targets = useMemo(() => generateReactionTargets(level, TOTAL), [level])
   const [current, setCurrent] = useState(0)
-  const [gameState, setGameState] = useState<'waiting' | 'showing' | 'done'>('waiting')
   const [showTarget, setShowTarget] = useState(false)
-  const [falsePositives, setFalsePositives] = useState(0)
-  const [misses, setMisses] = useState(0)
+  const [feedback, setFeedback] = useState<string | null>(null)
+  const falsePositivesRef = useRef(0)
+  const missesRef = useRef(0)
   const reactionTimes = useRef<number[]>([])
   const targetShownAt = useRef(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const missTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [feedback, setFeedback] = useState<string | null>(null)
+  const doneRef = useRef(false)
+
+  const finishGame = useCallback(() => {
+    if (doneRef.current) return
+    doneRef.current = true
+    const avgReaction = reactionTimes.current.length > 0
+      ? reactionTimes.current.reduce((a, b) => a + b, 0) / reactionTimes.current.length
+      : 1500
+    const score = scoreReaction(avgReaction, falsePositivesRef.current, missesRef.current, TOTAL)
+    onComplete(score)
+  }, [onComplete])
+
+  const goNext = useCallback(() => {
+    if (current >= TOTAL - 1) {
+      finishGame()
+      return
+    }
+    setCurrent((p) => p + 1)
+  }, [current, finishGame])
 
   useEffect(() => {
-    if (current >= TOTAL) return
-    setGameState('waiting')
+    if (doneRef.current || current >= TOTAL) return
     setShowTarget(false)
     setFeedback(null)
 
+    const target = targets[current]
     timerRef.current = setTimeout(() => {
       setShowTarget(true)
-      setGameState('showing')
       targetShownAt.current = Date.now()
 
-      // 놓침 타이머 (2초 안에 반응 안 하면 miss)
-      if (targets[current].type === 'go') {
+      if (target.type === 'go') {
         missTimerRef.current = setTimeout(() => {
-          setMisses((p) => p + 1)
+          missesRef.current += 1
           setFeedback('⏰ 시간 초과!')
-          setTimeout(() => nextTarget(), 500)
+          setTimeout(() => goNext(), 500)
         }, 2000)
       } else {
-        // nogo는 2초 기다리면 성공
         missTimerRef.current = setTimeout(() => {
           setFeedback('✅ 정확!')
-          setTimeout(() => nextTarget(), 300)
+          setTimeout(() => goNext(), 300)
         }, 2000)
       }
-    }, targets[current].delay)
+    }, target.delay)
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
       if (missTimerRef.current) clearTimeout(missTimerRef.current)
     }
-  }, [current])
-
-  function nextTarget() {
-    if (current >= TOTAL - 1) {
-      const avgReaction = reactionTimes.current.length > 0
-        ? reactionTimes.current.reduce((a, b) => a + b, 0) / reactionTimes.current.length
-        : 1500
-      const score = scoreReaction(avgReaction, falsePositives, misses, TOTAL)
-      onComplete(score)
-      return
-    }
-    setCurrent((p) => p + 1)
-  }
+  }, [current, targets, goNext])
 
   function handleTap() {
+    if (doneRef.current) return
     if (missTimerRef.current) clearTimeout(missTimerRef.current)
 
-    if (!showTarget || gameState === 'waiting') {
-      // 너무 일찍 탭
-      setFalsePositives((p) => p + 1)
+    if (!showTarget) {
+      falsePositivesRef.current += 1
       setFeedback('⚠️ 너무 빨라요!')
       setTimeout(() => setFeedback(null), 500)
       return
@@ -632,12 +599,11 @@ function ReactionGame({ level, onComplete }: { level: number; onComplete: (score
       const reactionTime = Date.now() - targetShownAt.current
       reactionTimes.current.push(reactionTime)
       setFeedback(`⚡ ${reactionTime}ms`)
-      setTimeout(() => nextTarget(), 400)
+      setTimeout(() => goNext(), 400)
     } else {
-      // nogo 인데 탭함 = 오탐
-      setFalsePositives((p) => p + 1)
+      falsePositivesRef.current += 1
       setFeedback('❌ 참아야 해요!')
-      setTimeout(() => nextTarget(), 500)
+      setTimeout(() => goNext(), 500)
     }
   }
 
@@ -661,11 +627,9 @@ function ReactionGame({ level, onComplete }: { level: number; onComplete: (score
         className="w-full aspect-[4/3] rounded-2xl border-2 border-gray-200 flex flex-col items-center justify-center gap-3 transition-all active:scale-[0.98] bg-gray-50 hover:bg-gray-100 relative overflow-hidden"
       >
         {showTarget && targets[current] ? (
-          <div
-            className={`w-28 h-28 sm:w-36 sm:h-36 flex items-center justify-center text-white text-4xl font-black animate-fade-in ${
-              targets[current].type === 'go' ? 'rounded-full bg-green-500 shadow-lg shadow-green-200' : 'rounded-2xl bg-red-500 shadow-lg shadow-red-200'
-            }`}
-          >
+          <div className={`w-28 h-28 sm:w-36 sm:h-36 flex items-center justify-center text-white text-4xl font-black animate-fade-in ${
+            targets[current].type === 'go' ? 'rounded-full bg-green-500 shadow-lg shadow-green-200' : 'rounded-2xl bg-red-500 shadow-lg shadow-red-200'
+          }`}>
             {targets[current].type === 'go' ? '터치!' : '참기'}
           </div>
         ) : (
@@ -716,13 +680,13 @@ function AnalyzingPhase({ onComplete }: { onComplete: () => void }) {
   const [currentStep, setCurrentStep] = useState(0)
   const [progress, setProgress] = useState(0)
 
-  const steps = [
+  const steps = useMemo(() => [
     { icon: '🃏', label: '기억력 데이터 분석 중...' },
     { icon: '➕', label: '계산력 점수 산출 중...' },
     { icon: '⚡', label: '반응속도 평가 중...' },
     { icon: '🧠', label: '뇌나이 종합 계산 중...' },
     { icon: '📊', label: '또래 비교 리포트 생성 중...' },
-  ]
+  ], [])
 
   useEffect(() => {
     const progressTimer = setInterval(() => {
@@ -740,7 +704,7 @@ function AnalyzingPhase({ onComplete }: { onComplete: () => void }) {
       clearInterval(stepTimer)
       clearTimeout(completeTimer)
     }
-  }, [onComplete])
+  }, [onComplete, steps.length])
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
