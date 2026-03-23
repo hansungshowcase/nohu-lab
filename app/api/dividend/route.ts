@@ -156,10 +156,28 @@ type KrStock = {
 }
 
 async function fetchKrDividends() {
-  // 1단계: 공공데이터포털에서 최신 배당 데이터 가져오기
-  let apiStocks = await fetchDataGoKrDividends()
+  // 1단계: JSON 파일에서 배당 데이터 로드 (GitHub Actions가 매일 갱신)
+  let apiStocks: KrStock[] = []
+  try {
+    const krData = (await import('@/components/programs/dividend/krDividendData.json')).default as Array<{
+      ticker: string; name: string; dividendPerShare: number; count: number; frequency: string
+    }>
+    apiStocks = krData.map((s) => ({
+      ticker: s.ticker,
+      name: s.name,
+      price: 0,
+      sector: guessSector(s.name),
+      yieldPct: 0,
+      dividendPerShare: s.dividendPerShare,
+      frequency: s.frequency || '연배당',
+      desc: s.count >= 2 ? `연 ${s.count}회 배당` : '',
+    }))
+  } catch {
+    apiStocks = []
+  }
 
-  // 2단계: API 실패 시 하드코딩 폴백
+  // 2단계: JSON 파일 없으면 하드코딩 폴백
+  const source = apiStocks.length >= 50 ? 'api+naver' : 'hardcoded+naver'
   if (apiStocks.length < 10) {
     apiStocks = getKrHardcodedStocks()
   }
@@ -172,84 +190,11 @@ async function fetchKrDividends() {
     total: liveStocks.length,
     count: liveStocks.length,
     updatedAt: new Date().toISOString(),
-    source: apiStocks.length > 50 ? 'api+naver' : 'hardcoded+naver',
+    source,
     stocks: liveStocks.sort((a, b) => b.yieldPct - a.yieldPct),
   }, {
     headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=900' },
   })
-}
-
-// 공공데이터포털 금융위원회 주식배당정보 → 최신 배당 기업 추출
-async function fetchDataGoKrDividends(): Promise<KrStock[]> {
-  try {
-    // 69,771건 / 500건 = ~140페이지. 2024년 데이터 밀집 페이지만 호출 (속도 우선)
-    const pagesToFetch = [130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140]
-
-    const results = await Promise.allSettled(
-      pagesToFetch.map((page) =>
-        fetch(
-          `https://apis.data.go.kr/1160100/service/GetStocDiviInfoService/getDiviInfo?serviceKey=${DATA_GO_KR_KEY}&numOfRows=500&resultType=json&pageNo=${page}`,
-          { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(4000) }
-        ).then((r) => r.json())
-      )
-    )
-
-    // 2024년 이후 + 배당금 > 0 필터
-    const companyMap = new Map<string, KrStock>()
-
-    for (const r of results) {
-      if (r.status !== 'fulfilled') continue
-      const items = r.value?.response?.body?.items?.item
-      if (!Array.isArray(items)) continue
-
-      for (const item of items) {
-        const baseDt = item.dvdnBasDt || ''
-        if (baseDt < '20240101') continue
-
-        const dps = parseInt(item.stckGenrDvdnAmt || '0', 10)
-        if (dps <= 0) continue
-
-        const isin = item.isinCd || ''
-        const ticker = isin.slice(4, 10)
-        if (!ticker || ticker.length < 6) continue
-        if (item.scrsItmsKcdNm && item.scrsItmsKcdNm !== '보통주') continue
-
-        const name = item.stckIssuCmpyNm || ''
-
-        // 배당 주기 판별: 같은 기업이 여러 번 나오면 분기/반기 배당
-        if (companyMap.has(ticker)) {
-          const existing = companyMap.get(ticker)!
-          existing.dividendPerShare += dps
-          const count = parseInt(existing.desc.split(':')[1] || '1', 10) + 1
-          existing.desc = 'count:' + count
-          if (count >= 4) existing.frequency = '분기배당'
-          else if (count >= 2) existing.frequency = '반기배당'
-        } else {
-          companyMap.set(ticker, {
-            ticker,
-            name,
-            price: 0,
-            sector: guessSector(name),
-            yieldPct: 0,
-            dividendPerShare: dps,
-            frequency: '연배당',
-            desc: 'count:1',
-          })
-        }
-      }
-    }
-
-    // desc 정리
-    const stocks = Array.from(companyMap.values())
-    stocks.forEach((s) => {
-      const count = parseInt(s.desc.split(':')[1] || '1', 10)
-      s.desc = count >= 4 ? '연 ' + count + '회 배당' : count >= 2 ? '연 ' + count + '회 배당' : ''
-    })
-
-    return stocks
-  } catch {
-    return []
-  }
 }
 
 function guessSector(name: string): string {
