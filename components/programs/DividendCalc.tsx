@@ -40,6 +40,7 @@ export default function DividendCalc() {
   const [accountType, setAccountType] = useState<'general' | 'isa'>('general')
   const [searchQuery, setSearchQuery] = useState('')
   const [style, setStyle] = useState<'all' | 'high' | 'safe' | 'monthly' | 'growth'>('all')
+  const [sortBy, setSortBy] = useState<'yield' | 'name' | 'price'>('yield')
 
   // 데이터 로드
   const fetchData = useCallback(async () => {
@@ -100,8 +101,12 @@ export default function DividendCalc() {
       const q = searchQuery.trim().toLowerCase()
       list = list.filter((s) => s.name.toLowerCase().includes(q) || s.ticker.toLowerCase().includes(q))
     }
+    // 정렬
+    if (sortBy === 'name') list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+    else if (sortBy === 'price') list = [...list].sort((a, b) => b.price - a.price)
+    else list = [...list].sort((a, b) => b.yieldPct - a.yieldPct)
     return list
-  }, [stocks, sector, searchQuery, style])
+  }, [stocks, sector, searchQuery, style, sortBy])
 
   // 투자 시뮬레이션
   const investRaw = parseInt(investInput.replace(/,/g, ''), 10) || 0
@@ -259,6 +264,25 @@ export default function DividendCalc() {
             placeholder="종목명 또는 티커로 검색..."
             className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 min-h-[44px]"
           />
+
+          {/* 정렬 */}
+          <div className="flex gap-1.5">
+            {([
+              ['yield', '배당률순', '📉'],
+              ['name', '이름순', '🔤'],
+              ['price', '주가순', '💲'],
+            ] as const).map(([id, label, icon]) => (
+              <button
+                key={id}
+                onClick={() => setSortBy(id)}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold min-h-[32px] transition-all ${
+                  sortBy === id ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {icon} {label}
+              </button>
+            ))}
+          </div>
 
           {/* 분야 필터 */}
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
