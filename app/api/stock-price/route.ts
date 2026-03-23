@@ -32,11 +32,11 @@ export async function GET(request: Request) {
       }
     }
 
-    // 국내 주식
+    // 국내 주식 (네이버 모바일 API)
     const res = await fetch(
-      `https://api.stock.naver.com/stock/${ticker}/basic`,
+      `https://m.stock.naver.com/api/stock/${ticker}/basic`,
       {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0)' },
         next: { revalidate: 300 },
       }
     )
@@ -49,9 +49,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       ticker,
-      price: parseInt(data.closePrice || data.stockEndPrice || '0', 10),
+      price: parseInt((data.closePrice || '0').replace(/,/g, ''), 10),
       name: data.stockName || ticker,
-      change: parseInt(data.compareToPreviousClosePrice || '0', 10),
+      change: parseInt((data.compareToPreviousClosePrice || '0').replace(/,/g, ''), 10),
       changePct: parseFloat(data.fluctuationsRatio || '0'),
     })
   } catch {

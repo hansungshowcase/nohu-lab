@@ -4,15 +4,6 @@ import { NextResponse } from 'next/server'
 // GET /api/dividend?market=kr  → 국내 전체 배당주
 // GET /api/dividend?market=us  → 미국 주요 배당 ETF/주식
 
-interface KrxStock {
-  ISU_SRT_CD: string   // 종목코드
-  ISU_ABBRV: string    // 종목명
-  TDD_CLSPRC: string   // 종가
-  SECT_TP_NM: string   // 업종
-  DVD_RATE: string     // 배당수익률
-  DVD_PRC: string      // 주당 배당금
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const market = searchParams.get('market') || 'kr'
@@ -29,191 +20,118 @@ export async function GET(request: Request) {
 }
 
 async function fetchKrxDividends() {
-  // Step 1: KRX OTP 발급
-  const otpRes = await fetch('http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'Mozilla/5.0',
-      'Referer': 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd?menuId=MDC02020401',
-    },
-    body: new URLSearchParams({
-      locale: 'ko_KR',
-      mktId: 'ALL',
-      trdDd: getLatestTradingDate(),
-      money: '1',
-      csvxls_is498No: '',
-      name: 'fileDown',
-      url: 'dbms/MDC/STAT/standard/MDCSTAT03501',
-    }),
-  })
-
-  if (!otpRes.ok) {
-    // KRX가 안되면 네이버 증권 배당 스크리너 사용
-    return await fetchNaverDividends()
-  }
-
-  const otp = await otpRes.text()
-
-  // Step 2: OTP로 데이터 요청
-  const dataRes = await fetch('http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'Mozilla/5.0',
-    },
-    body: new URLSearchParams({ code: otp }),
-  })
-
-  if (!dataRes.ok) {
-    return await fetchNaverDividends()
-  }
-
-  const csvText = await dataRes.text()
-  const stocks = parseKrxCsv(csvText)
-
-  // 국내 배당 ETF 추가
-  const krEtfs = [
-    { ticker: '279530', name: 'KODEX 고배당', price: 12000, sector: 'ETF', yieldPct: 4.5, dividendPerShare: 540, frequency: '분기배당', desc: '국내 고배당주 30종목 ETF' },
-    { ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', price: 12500, sector: 'ETF', yieldPct: 6.0, dividendPerShare: 750, frequency: '월배당', desc: '은행 고배당 10종목, 월배당' },
+  // 국내 배당주 데이터 (2026년 기준, 주요 고배당주 + ETF)
+  const krStocks = [
+    // ── 금융 ──
+    { ticker: '086790', name: '하나금융지주', price: 68000, sector: '금융', yieldPct: 6.8, dividendPerShare: 4600, frequency: '분기배당', desc: '4대 금융지주, 분기배당' },
+    { ticker: '105560', name: 'KB금융', price: 95000, sector: '금융', yieldPct: 5.3, dividendPerShare: 5000, frequency: '분기배당', desc: '국내 최대 금융지주' },
+    { ticker: '055550', name: '신한지주', price: 58000, sector: '금융', yieldPct: 5.2, dividendPerShare: 3000, frequency: '분기배당', desc: '4대 금융지주' },
+    { ticker: '316140', name: '우리금융지주', price: 17000, sector: '금융', yieldPct: 6.4, dividendPerShare: 1080, frequency: '분기배당', desc: '높은 배당수익률' },
+    { ticker: '000810', name: '삼성화재', price: 390000, sector: '금융', yieldPct: 4.1, dividendPerShare: 16000, frequency: '반기배당', desc: '국내 1위 손해보험' },
+    { ticker: '005830', name: 'DB손해보험', price: 115000, sector: '금융', yieldPct: 4.8, dividendPerShare: 5500, frequency: '연배당', desc: '높은 배당성향' },
+    { ticker: '024110', name: '기업은행', price: 15000, sector: '금융', yieldPct: 7.3, dividendPerShare: 1095, frequency: '분기배당', desc: '중소기업 전문은행' },
+    { ticker: '138930', name: 'BNK금융지주', price: 9500, sector: '금융', yieldPct: 6.5, dividendPerShare: 620, frequency: '분기배당', desc: '부산·경남 금융지주' },
+    { ticker: '139130', name: 'DGB금융지주', price: 10000, sector: '금융', yieldPct: 6.0, dividendPerShare: 600, frequency: '분기배당', desc: '대구·경북 금융지주' },
+    { ticker: '175330', name: 'JB금융지주', price: 14000, sector: '금융', yieldPct: 6.2, dividendPerShare: 870, frequency: '분기배당', desc: '전북·광주 금융지주' },
+    { ticker: '003540', name: '대신증권', price: 18000, sector: '금융', yieldPct: 5.6, dividendPerShare: 1000, frequency: '연배당', desc: '증권사 고배당' },
+    { ticker: '030610', name: '교보증권', price: 9000, sector: '금융', yieldPct: 5.0, dividendPerShare: 450, frequency: '연배당', desc: '교보그룹 증권사' },
+    // ── 통신 ──
+    { ticker: '017670', name: 'SK텔레콤', price: 60000, sector: '통신', yieldPct: 5.9, dividendPerShare: 3540, frequency: '분기배당', desc: '국내 통신 1위' },
+    { ticker: '030200', name: 'KT', price: 44000, sector: '통신', yieldPct: 4.5, dividendPerShare: 2000, frequency: '반기배당', desc: '유무선 통신 1위' },
+    { ticker: '032640', name: 'LG유플러스', price: 12000, sector: '통신', yieldPct: 5.4, dividendPerShare: 650, frequency: '연배당', desc: '3위 통신사' },
+    // ── 에너지 ──
+    { ticker: '010950', name: 'S-Oil', price: 65000, sector: '에너지', yieldPct: 6.9, dividendPerShare: 4500, frequency: '분기배당', desc: '아람코 자회사 정유' },
+    { ticker: '015760', name: '한국전력', price: 23000, sector: '에너지', yieldPct: 4.3, dividendPerShare: 1000, frequency: '연배당', desc: '국내 유일 전력공급' },
+    { ticker: '078930', name: 'GS', price: 48000, sector: '에너지', yieldPct: 5.0, dividendPerShare: 2400, frequency: '반기배당', desc: 'GS그룹 지주' },
+    { ticker: '267250', name: 'HD현대', price: 75000, sector: '에너지', yieldPct: 4.0, dividendPerShare: 3000, frequency: '반기배당', desc: 'HD현대그룹 지주' },
+    // ── IT·전자 ──
+    { ticker: '005930', name: '삼성전자', price: 72000, sector: 'IT·전자', yieldPct: 2.0, dividendPerShare: 1444, frequency: '분기배당', desc: '세계 1위 반도체' },
+    { ticker: '000660', name: 'SK하이닉스', price: 200000, sector: 'IT·전자', yieldPct: 1.1, dividendPerShare: 2200, frequency: '분기배당', desc: '메모리 반도체 2위' },
+    { ticker: '035420', name: 'NAVER', price: 220000, sector: 'IT·전자', yieldPct: 0.5, dividendPerShare: 1100, frequency: '연배당', desc: '국내 1위 포털' },
+    // ── 소재·산업 ──
+    { ticker: '005490', name: 'POSCO홀딩스', price: 310000, sector: '소재', yieldPct: 3.9, dividendPerShare: 12000, frequency: '반기배당', desc: '세계적 철강기업' },
+    { ticker: '005380', name: '현대차', price: 230000, sector: '자동차', yieldPct: 4.3, dividendPerShare: 10000, frequency: '반기배당', desc: '글로벌 자동차 3위' },
+    { ticker: '000270', name: '기아', price: 130000, sector: '자동차', yieldPct: 4.6, dividendPerShare: 6000, frequency: '반기배당', desc: '글로벌 자동차 7위' },
+    { ticker: '010130', name: '고려아연', price: 800000, sector: '소재', yieldPct: 2.5, dividendPerShare: 20000, frequency: '연배당', desc: '세계 1위 아연 제련' },
+    { ticker: '051910', name: 'LG화학', price: 280000, sector: '소재', yieldPct: 2.5, dividendPerShare: 7000, frequency: '연배당', desc: '화학·2차전지 소재' },
+    // ── 유통·소비재 ──
+    { ticker: '004170', name: '신세계', price: 180000, sector: '유통', yieldPct: 3.3, dividendPerShare: 6000, frequency: '반기배당', desc: '백화점·이마트 지주' },
+    { ticker: '069960', name: '현대백화점', price: 55000, sector: '유통', yieldPct: 3.6, dividendPerShare: 2000, frequency: '반기배당', desc: '프리미엄 백화점' },
+    { ticker: '033780', name: 'KT&G', price: 110000, sector: '필수소비재', yieldPct: 5.5, dividendPerShare: 6000, frequency: '분기배당', desc: '담배·인삼 대표기업' },
+    { ticker: '271560', name: '오리온', price: 110000, sector: '식품', yieldPct: 2.5, dividendPerShare: 2750, frequency: '연배당', desc: '글로벌 제과기업' },
+    // ── 건설·부동산 ──
+    { ticker: '000720', name: '현대건설', price: 35000, sector: '건설', yieldPct: 3.4, dividendPerShare: 1200, frequency: '연배당', desc: '국내 1위 건설사' },
+    { ticker: '293940', name: '신한알파리츠', price: 6500, sector: '리츠', yieldPct: 6.0, dividendPerShare: 390, frequency: '반기배당', desc: '오피스·물류 리츠' },
+    // ── 제약 ──
+    { ticker: '128940', name: '한미약품', price: 350000, sector: '제약', yieldPct: 1.1, dividendPerShare: 3850, frequency: '연배당', desc: '국내 대표 제약사' },
+    // ── 국내 ETF ──
+    { ticker: '279530', name: 'KODEX 고배당', price: 12000, sector: 'ETF', yieldPct: 4.5, dividendPerShare: 540, frequency: '분기배당', desc: '국내 고배당주 30종목' },
+    { ticker: '466940', name: 'TIGER 은행고배당플러스TOP10', price: 12500, sector: 'ETF', yieldPct: 6.0, dividendPerShare: 750, frequency: '월배당', desc: '은행 고배당 10종목' },
     { ticker: '458250', name: 'KODEX 주주환원고배당주', price: 11000, sector: 'ETF', yieldPct: 5.0, dividendPerShare: 550, frequency: '월배당', desc: '주주환원 우수 고배당주' },
-    { ticker: '161510', name: 'TIGER 코스피고배당', price: 12500, sector: 'ETF', yieldPct: 4.2, dividendPerShare: 525, frequency: '분기배당', desc: '코스피 고배당 지수 추종' },
-    { ticker: '329200', name: 'TIGER 미국배당다우존스', price: 13000, sector: 'ETF', yieldPct: 3.5, dividendPerShare: 455, frequency: '월배당', desc: 'SCHD 추종 국내 상장 ETF' },
-    { ticker: '446720', name: 'ACE 미국배당다우존스', price: 12800, sector: 'ETF', yieldPct: 3.4, dividendPerShare: 435, frequency: '월배당', desc: 'SCHD 추종, ACE 브랜드' },
-    { ticker: '456600', name: 'KODEX 미국배당프리미엄액티브', price: 10500, sector: 'ETF', yieldPct: 7.5, dividendPerShare: 788, frequency: '월배당', desc: '미국 배당+커버드콜 전략' },
+    { ticker: '161510', name: 'TIGER 코스피고배당', price: 12500, sector: 'ETF', yieldPct: 4.2, dividendPerShare: 525, frequency: '분기배당', desc: '코스피 고배당 지수' },
+    { ticker: '329200', name: 'TIGER 미국배당다우존스', price: 13000, sector: 'ETF', yieldPct: 3.5, dividendPerShare: 455, frequency: '월배당', desc: 'SCHD 추종 국내 상장' },
+    { ticker: '446720', name: 'ACE 미국배당다우존스', price: 12800, sector: 'ETF', yieldPct: 3.4, dividendPerShare: 435, frequency: '월배당', desc: 'SCHD 추종' },
+    { ticker: '456600', name: 'KODEX 미국배당프리미엄액티브', price: 10500, sector: 'ETF', yieldPct: 7.5, dividendPerShare: 788, frequency: '월배당', desc: '미국 배당+커버드콜' },
     { ticker: '441800', name: 'TIGER 미국나스닥100커버드콜', price: 11000, sector: 'ETF', yieldPct: 8.5, dividendPerShare: 935, frequency: '월배당', desc: 'JEPQ 추종 국내 상장' },
-    { ticker: '088980', name: '맥쿼리인프라', price: 13000, sector: 'ETF', yieldPct: 6.0, dividendPerShare: 780, frequency: '반기배당', desc: '인프라 펀드, 도로·터널 수익' },
-    { ticker: '395400', name: 'SK리츠', price: 4200, sector: 'ETF', yieldPct: 6.0, dividendPerShare: 252, frequency: '분기배당', desc: 'SK 오피스빌딩 리츠' },
+    { ticker: '088980', name: '맥쿼리인프라', price: 13000, sector: 'ETF', yieldPct: 6.0, dividendPerShare: 780, frequency: '반기배당', desc: '인프라 펀드' },
+    { ticker: '395400', name: 'SK리츠', price: 4200, sector: 'ETF', yieldPct: 6.0, dividendPerShare: 252, frequency: '분기배당', desc: 'SK 오피스 리츠' },
+    { ticker: '357120', name: 'KODEX 배당성장', price: 11500, sector: 'ETF', yieldPct: 3.0, dividendPerShare: 345, frequency: '분기배당', desc: '배당 성장 우량주' },
+    { ticker: '211900', name: 'KODEX 200TR', price: 14000, sector: 'ETF', yieldPct: 0, dividendPerShare: 0, frequency: '분배없음', desc: '배당 재투자 ETF (복리)' },
   ]
 
-  const allStocks = [...stocks, ...krEtfs]
+  // 실시간 시세 업데이트 시도 (네이버 증권)
+  const liveStocks = await updateLivePrices(krStocks)
 
   return NextResponse.json({
     market: 'kr',
-    count: allStocks.length,
+    count: liveStocks.length,
     updatedAt: new Date().toISOString(),
-    stocks: allStocks,
+    stocks: liveStocks.sort((a, b) => b.yieldPct - a.yieldPct),
   }, {
-    headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=300' },
+    headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=150' },
   })
 }
 
-function getLatestTradingDate(): string {
-  const now = new Date(Date.now() + 9 * 60 * 60 * 1000) // KST
-  const day = now.getDay()
-  // 주말이면 금요일로
-  if (day === 0) now.setDate(now.getDate() - 2)
-  else if (day === 6) now.setDate(now.getDate() - 1)
-  // 장 시작 전이면 전날
-  const hour = now.getHours()
-  if (hour < 9) now.setDate(now.getDate() - 1)
-  return now.toISOString().slice(0, 10).replace(/-/g, '')
-}
+// 네이버 증권 모바일 API에서 실시간 시세 업데이트
+type KrStock = { ticker: string; name: string; price: number; sector: string; yieldPct: number; dividendPerShare: number; frequency: string; desc: string }
 
-function parseKrxCsv(csv: string) {
-  const lines = csv.split('\n').filter(l => l.trim())
-  if (lines.length < 2) return []
-
-  const stocks: Array<{
-    ticker: string
-    name: string
-    price: number
-    sector: string
-    yieldPct: number
-    dividendPerShare: number
-  }> = []
-
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(c => c.replace(/"/g, '').trim())
-    if (cols.length < 6) continue
-
-    const yieldPct = parseFloat(cols[4] || '0')
-    const price = parseInt(cols[2]?.replace(/,/g, '') || '0', 10)
-    const dps = parseInt(cols[5]?.replace(/,/g, '') || '0', 10)
-
-    if (yieldPct <= 0 || price <= 0) continue
-
-    stocks.push({
-      ticker: cols[0],
-      name: cols[1],
-      price,
-      sector: mapKrxSector(cols[3]),
-      yieldPct: Math.round(yieldPct * 10) / 10,
-      dividendPerShare: dps || Math.round(price * yieldPct / 100),
-    })
-  }
-
-  return stocks.sort((a, b) => b.yieldPct - a.yieldPct)
-}
-
-function mapKrxSector(sector: string): string {
-  if (!sector) return '기타'
-  if (sector.includes('은행') || sector.includes('금융') || sector.includes('보험') || sector.includes('증권')) return '금융'
-  if (sector.includes('통신')) return '통신'
-  if (sector.includes('전기') || sector.includes('가스') || sector.includes('에너지')) return '에너지'
-  if (sector.includes('건설')) return '건설'
-  if (sector.includes('철강') || sector.includes('화학')) return '소재'
-  if (sector.includes('운수') || sector.includes('운송')) return '운송'
-  if (sector.includes('유통') || sector.includes('소매')) return '유통'
-  if (sector.includes('음식') || sector.includes('식품')) return '식품'
-  if (sector.includes('의약') || sector.includes('제약') || sector.includes('바이오')) return '제약·바이오'
-  if (sector.includes('전자') || sector.includes('IT') || sector.includes('반도체')) return 'IT·전자'
-  if (sector.includes('자동차') || sector.includes('기계')) return '자동차·기계'
-  if (sector.includes('서비스')) return '서비스'
-  return '기타'
-}
-
-// 네이버 증권 배당 스크리너 (KRX 실패 시 폴백)
-async function fetchNaverDividends() {
-  const sectors = [
-    { code: 'KOSPI', name: '코스피' },
-  ]
-
-  const stocks: Array<{
-    ticker: string
-    name: string
-    price: number
-    sector: string
-    yieldPct: number
-    dividendPerShare: number
-  }> = []
-
+async function updateLivePrices(stocks: KrStock[]): Promise<KrStock[]> {
+  const updated = stocks.map(s => ({ ...s }))
   try {
-    // 네이버 증권 배당 상위 종목
-    const res = await fetch('https://api.stock.naver.com/stock/exchange/KOSPI/marketValue?page=1&pageSize=100', {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-    })
-    if (res.ok) {
-      const data = await res.json()
-      if (data.stocks) {
-        for (const s of data.stocks) {
-          if (s.dividendYield && parseFloat(s.dividendYield) > 0) {
-            stocks.push({
-              ticker: s.stockCode || s.itemCode,
-              name: s.stockName,
-              price: parseInt(s.closePrice || '0', 10),
-              sector: s.sectorName || '기타',
-              yieldPct: Math.round(parseFloat(s.dividendYield) * 10) / 10,
-              dividendPerShare: parseInt(s.dividend || '0', 10),
-            })
+    const targets = updated.filter(s => s.dividendPerShare > 0 && /^\d+$/.test(s.ticker))
+    // 배치 처리 (10개씩)
+    for (let i = 0; i < targets.length; i += 10) {
+      const batch = targets.slice(i, i + 10)
+      const results = await Promise.allSettled(
+        batch.map(async (s) => {
+          const res = await fetch(`https://m.stock.naver.com/api/stock/${s.ticker}/basic`, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0)' },
+          })
+          if (!res.ok) return null
+          const data = await res.json()
+          const priceStr = data.closePrice || ''
+          const price = parseInt(priceStr.replace(/,/g, ''), 10)
+          if (price > 0) return { ticker: s.ticker, price }
+          return null
+        })
+      )
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value) {
+          const idx = updated.findIndex(u => u.ticker === r.value!.ticker)
+          if (idx >= 0) {
+            updated[idx].price = r.value.price
+            if (updated[idx].dividendPerShare > 0) {
+              updated[idx].yieldPct = Math.round((updated[idx].dividendPerShare / r.value.price) * 1000) / 10
+            }
           }
         }
       }
     }
-  } catch { /* silent */ }
-
-  return NextResponse.json({
-    market: 'kr',
-    count: stocks.length,
-    updatedAt: new Date().toISOString(),
-    stocks: stocks.sort((a, b) => b.yieldPct - a.yieldPct),
-    source: 'naver',
-  }, {
-    headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=300' },
-  })
+  } catch { /* 실패 시 기본값 사용 */ }
+  return updated
 }
 
-// 미국 배당주 (하드코딩 + 실시간 가격)
+// 미국 배당주
 async function fetchUsDividends() {
   // 미국 주요 배당주/ETF (배당 정보는 비교적 안정적이므로 하드코딩)
   const usStocks = [
