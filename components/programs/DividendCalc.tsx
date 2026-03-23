@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { calculateTax } from './dividend/dividendData'
 
 interface KakaoWindow extends Window {
@@ -27,11 +28,12 @@ type Category = 'stock' | 'etf'
 type SubMarket = 'kr' | 'us'
 
 export default function DividendCalc() {
-  // URL 파라미터로 공유된 결과 감지 (useState lazy init으로 SSR 안전)
-  const [sharedData] = useState(() => {
-    if (typeof window === 'undefined') return null
-    const p = new URLSearchParams(window.location.search)
-    const t = p.get('t'), n = p.get('n'), pr = p.get('p'), d = p.get('d'), y = p.get('y'), f = p.get('f'), inv = p.get('i'), m = p.get('m')
+  // URL 파라미터로 공유된 결과 감지
+  const searchParams = useSearchParams()
+  const sharedData = useMemo(() => {
+    const t = searchParams.get('t'), n = searchParams.get('n'), pr = searchParams.get('p')
+    const d = searchParams.get('d'), y = searchParams.get('y'), f = searchParams.get('f')
+    const inv = searchParams.get('i'), m = searchParams.get('m')
     if (t && n && pr && y) {
       return {
         stock: { ticker: t, name: n, price: +pr, dividendPerShare: +(d || 0), yieldPct: +y, frequency: f || '연배당', sector: '기타' } as StockItem,
@@ -40,18 +42,27 @@ export default function DividendCalc() {
       }
     }
     return null
-  })
+  }, [searchParams])
 
   const [category, setCategory] = useState<Category>('stock')
-  const [subMarket, setSubMarket] = useState<SubMarket>(sharedData?.market || 'kr')
+  const [subMarket, setSubMarket] = useState<SubMarket>('kr')
   const [sector, setSector] = useState('전체')
   const [allKr, setAllKr] = useState<StockItem[]>([])
   const [allUs, setAllUs] = useState<StockItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [updatedAt, setUpdatedAt] = useState<string | null>(null)
-  const [selected, setSelected] = useState<StockItem | null>(sharedData?.stock || null)
-  const [investInput, setInvestInput] = useState(sharedData?.investRaw ? sharedData.investRaw.toLocaleString() : '')
+  const [selected, setSelected] = useState<StockItem | null>(null)
+  const [investInput, setInvestInput] = useState('')
+
+  // 공유 링크 접속 시 결과 자동 표시
+  useEffect(() => {
+    if (sharedData) {
+      setSelected(sharedData.stock)
+      setSubMarket(sharedData.market)
+      if (sharedData.investRaw > 0) setInvestInput(sharedData.investRaw.toLocaleString())
+    }
+  }, [sharedData])
   const [accountType, setAccountType] = useState<'general' | 'isa'>('general')
   const [searchQuery, setSearchQuery] = useState('')
   const [style, setStyle] = useState<'all' | 'high' | 'safe' | 'monthly' | 'growth'>('all')
