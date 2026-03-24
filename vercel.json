@@ -1,0 +1,17 @@
+{
+  "regions": ["icn1"],
+  "functions": {
+    "app/api/dividend/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/dividend/refresh/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/dividend/refresh",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}

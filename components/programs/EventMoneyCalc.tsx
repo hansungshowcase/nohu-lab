@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 
 // ── 행사 유형 ──
 const EVENT_TYPES = [
@@ -125,11 +125,31 @@ function getTips(event: EventId, relation: RelationId): string[] {
 
 // ── 메인 컴포넌트 ──
 export default function EventMoneyCalc() {
-  const [step, setStep] = useState(1)
-  const [event, setEvent] = useState<EventId | null>(null)
-  const [relation, setRelation] = useState<RelationId | null>(null)
-  const [attendance, setAttendance] = useState<Attendance>('attend')
-  const [funeralType, setFuneralType] = useState<FuneralType>('parent')
+  // URL 파라미터로 공유된 결과 감지
+  const sharedData = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    const p = new URLSearchParams(window.location.search)
+    const e = p.get('e'), r = p.get('r'), a = p.get('a'), f = p.get('f')
+    if (e && r) {
+      const validEvent = EVENT_TYPES.find(ev => ev.id === e)
+      const validRelation = RELATIONS.find(rel => rel.id === r)
+      if (validEvent && validRelation) {
+        return {
+          event: e as EventId,
+          relation: r as RelationId,
+          attendance: (a === 'absent' ? 'absent' : 'attend') as Attendance,
+          funeralType: (f === 'grandparent' ? 'grandparent' : 'parent') as FuneralType,
+        }
+      }
+    }
+    return null
+  }, [])
+
+  const [step, setStep] = useState(sharedData ? 5 : 1)
+  const [event, setEvent] = useState<EventId | null>(sharedData?.event ?? null)
+  const [relation, setRelation] = useState<RelationId | null>(sharedData?.relation ?? null)
+  const [attendance, setAttendance] = useState<Attendance>(sharedData?.attendance ?? 'attend')
+  const [funeralType, setFuneralType] = useState<FuneralType>(sharedData?.funeralType ?? 'parent')
   // 분석 애니메이션
   const [analyzing, setAnalyzing] = useState(false)
   const [analyzeStep, setAnalyzeStep] = useState(0)
@@ -201,7 +221,7 @@ export default function EventMoneyCalc() {
   const handleKakao = useCallback(() => {
     if (!selectedEvent || !relation || !amount) return
     const relName = RELATIONS.find(r => r.id === relation)?.name || ''
-    const shareUrl = `${window.location.origin}/programs/event-money`
+    const shareUrl = `${window.location.origin}/programs/event-money?e=${event}&r=${relation}&a=${attendance}${event === 'funeral' ? '&f=' + funeralType : ''}`
     const w = window as typeof window & { Kakao?: { isInitialized: () => boolean; init: (key: string) => void; Share: { sendDefault: (opts: Record<string, unknown>) => void } } }
 
     if (w.Kakao) {
@@ -248,7 +268,7 @@ export default function EventMoneyCalc() {
   const handleCopyLink = useCallback(() => {
     if (!selectedEvent || !amount) return
     const relName = RELATIONS.find(r => r.id === relation)?.name || ''
-    const shareUrl = `${window.location.origin}/programs/event-money`
+    const shareUrl = `${window.location.origin}/programs/event-money?e=${event}&r=${relation}&a=${attendance}${event === 'funeral' ? '&f=' + funeralType : ''}`
     const text = `${selectedEvent.icon} ${selectedEvent.name} 경조사비: ${amount.typical}만원 (${relName} 기준)\n\n나도 계산해보기: ${shareUrl}`
     try { navigator.clipboard.writeText(text) } catch {
       const ta = document.createElement('textarea')
