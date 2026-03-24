@@ -235,9 +235,14 @@ export default function RetirementTest() {
   const scoreParams = categories
     .map((c) => `${c.key[0]}=${c.score}`)
     .join('&')
+  const userParams = [
+    userAge && `age=${userAge}`,
+    userIncome && `inc=${userIncome}`,
+    userAsset && `ast=${userAsset}`,
+  ].filter(Boolean).join('&')
   const shareUrl =
     typeof window !== 'undefined'
-      ? `${window.location.origin}/programs/retirement-test/result/${result.code}?s=${total}&${scoreParams}`
+      ? `${window.location.origin}/programs/retirement-test/result/${result.code}?s=${total}&${scoreParams}${userParams ? `&${userParams}` : ''}`
       : ''
 
   return (
@@ -488,13 +493,19 @@ export default function RetirementTest() {
       {/* 나의 노후 준비 로드맵 */}
       {userAge && (() => {
         const age = parseInt(userAge) || 40
-        const roadmap = [
+        const allSteps = [
           { age: Math.max(age, 30), title: '지금 즉시', items: ['연금저축 계좌 개설 (월 50만원 자동이체)', 'IRP 추가 개설 (월 25만원)', '퇴직연금 TDF로 전환 신청'], color: '#dc2626' },
           { age: Math.max(age + 5, 40), title: `${Math.max(age + 5, 40)}세`, items: ['비상자금 6개월치 확보', '보장성 보험 점검 (실손+암)', '부채 상환 계획 수립'], color: '#ea580c' },
           { age: Math.max(age + 10, 50), title: `${Math.max(age + 10, 50)}세`, items: ['은퇴 후 주거 계획 확정', '퇴직 후 소득원 준비 (부업/자격증)', '건강검진 정밀화 (매년)'], color: '#ca8a04' },
           { age: 55, title: '55세', items: ['개인연금 수령 개시', '퇴직연금 연금 전환 준비', '은퇴 3년치 생활비 별도 확보'], color: '#2563eb' },
           { age: 65, title: '65세', items: ['국민연금 수령 (또는 연기 결정)', '건강보험 피부양자 자격 관리', '자산 인출 순서 최적화'], color: '#16a34a' },
-        ].filter(r => r.age >= age)
+        ]
+        const seen = new Set<number>()
+        const roadmap = allSteps.filter(r => r.age >= age).filter(r => {
+          if (seen.has(r.age)) return false
+          seen.add(r.age)
+          return true
+        }).sort((a, b) => a.age - b.age)
 
         return (
           <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 animate-slide-up" style={{ animationDelay: '600ms' }}>
