@@ -4,11 +4,11 @@ export const runtime = 'edge'
 
 const resultData: Record<string, { grade: string; color: string; bgColor: string; estimatedFund: string; description: string; advices: string[] }> = {
   S: { grade: '노후 마스터', color: '#ea580c', bgColor: '#fff7ed', estimatedFund: '이미 80%+ 확보', description: '당신은 이미 노후 준비의 달인! 체계적인 계획과 꾸준한 실천으로 든든한 미래를 만들어가고 있습니다.', advices: ['현재 포트폴리오의 리밸런싱을 정기적으로 점검하세요', '상속·증여 등 자산 이전 계획도 함께 세워보세요', '주변 사람들에게 노후 준비 노하우를 공유해주세요'] },
-  A: { grade: '든든한 준비생', color: '#2563eb', bgColor: '#eff6ff', estimatedFund: '약 3~4억', description: '꾸준히 준비해온 당신! 대부분의 영역에서 잘 준비하고 있지만, 몇 가지 보완하면 더 완벽해집니다.', advices: ['부족한 카테고리를 집중적으로 보강하세요', '연금 수령 시기와 방법을 미리 계획해보세요', '건강관리와 취미활동도 잊지 마세요'] },
-  B: { grade: '슬슬 눈뜬 사람', color: '#ca8a04', bgColor: '#fefce8', estimatedFund: '약 4~5억', description: '노후 준비에 눈을 뜨기 시작했네요! 지금부터 본격적으로 시작하면 충분히 따라잡을 수 있습니다.', advices: ['매월 자동이체로 저축 습관을 만들어보세요', '개인연금(IRP/연금저축) 가입을 적극 검토하세요', '구체적인 은퇴 생활비 계획을 세워보세요'] },
-  C: { grade: '아직은 꿈나라', color: '#ea580c', bgColor: '#fff7ed', estimatedFund: '약 5~6억', description: '아직 노후 준비가 많이 부족해요. 하지만 걱정하지 마세요, 지금 시작해도 늦지 않습니다!', advices: ['국민연금 예상 수령액부터 확인해보세요', '소액이라도 매월 저축을 시작하세요', '노후 관련 무료 교육 프로그램에 참여해보세요'] },
-  D: { grade: '노후? 그게 뭔데?', color: '#dc2626', bgColor: '#fef2f2', estimatedFund: '약 6~7억', description: '솔직히 노후 준비를 거의 안 하고 있네요. 지금이 바로 시작할 때입니다!', advices: ['먼저 현재 재정 상태를 정확히 파악하세요', '불필요한 지출을 줄이고 저축부터 시작하세요', '금융 기초 지식을 쌓는 것부터 시작하세요'] },
-  F: { grade: '올해부터 시작!', color: '#9333ea', bgColor: '#faf5ff', estimatedFund: '약 7억+', description: '거의 모든 영역에서 준비가 안 되어 있어요. 하지만 이 테스트를 한 것 자체가 첫 걸음입니다!', advices: ['오늘 당장 통장을 하나 만들어 자동이체를 설정하세요', '국민연금공단에서 내 연금 예상액을 확인하세요', '가까운 은행의 무료 재무상담을 받아보세요'] },
+  A: { grade: '든든한 준비생', color: '#2563eb', bgColor: '#eff6ff', estimatedFund: '추가 약 1~2억 필요', description: '꾸준히 준비해온 당신! 대부분의 영역에서 잘 준비하고 있지만, 몇 가지 보완하면 더 완벽해집니다.', advices: ['부족한 카테고리를 집중적으로 보강하세요', '연금 수령 시기와 방법을 미리 계획해보세요', '건강관리와 취미활동도 잊지 마세요'] },
+  B: { grade: '슬슬 눈뜬 사람', color: '#ca8a04', bgColor: '#fefce8', estimatedFund: '추가 약 2~3억 필요', description: '노후 준비에 눈을 뜨기 시작했네요! 지금부터 본격적으로 시작하면 충분히 따라잡을 수 있습니다.', advices: ['매월 자동이체로 저축 습관을 만들어보세요', '개인연금(IRP/연금저축) 가입을 적극 검토하세요', '구체적인 은퇴 생활비 계획을 세워보세요'] },
+  C: { grade: '아직은 꿈나라', color: '#ea580c', bgColor: '#fff7ed', estimatedFund: '추가 약 3~4억 필요', description: '아직 노후 준비가 많이 부족해요. 하지만 걱정하지 마세요, 지금 시작해도 늦지 않습니다!', advices: ['국민연금 예상 수령액부터 확인해보세요', '소액이라도 매월 저축을 시작하세요', '노후 관련 무료 교육 프로그램에 참여해보세요'] },
+  D: { grade: '노후? 그게 뭔데?', color: '#dc2626', bgColor: '#fef2f2', estimatedFund: '추가 약 4~5억 필요', description: '솔직히 노후 준비를 거의 안 하고 있네요. 지금이 바로 시작할 때입니다!', advices: ['먼저 현재 재정 상태를 정확히 파악하세요', '불필요한 지출을 줄이고 저축부터 시작하세요', '금융 기초 지식을 쌓는 것부터 시작하세요'] },
+  F: { grade: '올해부터 시작!', color: '#9333ea', bgColor: '#faf5ff', estimatedFund: '추가 약 5억+ 필요', description: '거의 모든 영역에서 준비가 안 되어 있어요. 하지만 이 테스트를 한 것 자체가 첫 걸음입니다!', advices: ['오늘 당장 통장을 하나 만들어 자동이체를 설정하세요', '국민연금공단에서 내 연금 예상액을 확인하세요', '가까운 은행의 무료 재무상담을 받아보세요'] },
 }
 
 const catMeta = [
@@ -114,7 +114,7 @@ export async function GET(request: Request) {
             <span style={{ fontSize: '15px', color: '#4b5563', lineHeight: '1.7' }}>{result.description}</span>
             <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
               <span style={{ padding: '5px 14px', borderRadius: '8px', backgroundColor: result.bgColor, fontSize: '13px' }}>
-                필요 노후자금: <span style={{ fontWeight: 800, color: result.color }}>{result.estimatedFund}</span>
+                추가 필요자금: <span style={{ fontWeight: 800, color: result.color }}>{result.estimatedFund}</span>
               </span>
               <span style={{ padding: '5px 14px', borderRadius: '8px', backgroundColor: '#fff7ed', fontSize: '13px' }}>
                 강점: <span style={{ fontWeight: 800, color: '#ea580c' }}>{strongest.label}</span>

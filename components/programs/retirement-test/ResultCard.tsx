@@ -101,7 +101,7 @@ const ResultCard = forwardRef<HTMLDivElement, ResultCardProps>(
           className="mx-6 rounded-xl p-4 text-center mb-4"
           style={{ backgroundColor: result.bgColor }}
         >
-          <div className="text-xs text-gray-500 mb-1">예상 필요 노후자금</div>
+          <div className="text-xs text-gray-500 mb-1">추가 필요 노후자금</div>
           <div
             className="text-2xl font-bold"
             style={{ color: result.color }}
@@ -109,7 +109,7 @@ const ResultCard = forwardRef<HTMLDivElement, ResultCardProps>(
             {result.estimatedFund}
           </div>
           <div className="text-xs text-gray-400 mt-1">
-            은퇴 후 25년, 월 200만원 기준
+            은퇴 후 25년, 부부 기준 연금 제외 부족분
           </div>
         </div>
 

@@ -38,7 +38,7 @@ export const resultTypes: ResultType[] = [
     icon: '🐜',
     color: '#2563eb',
     bgColor: '#eff6ff',
-    estimatedFund: '약 3~4억',
+    estimatedFund: '추가 약 1~2억 필요',
     description: '꾸준히 준비해온 당신! 대부분의 영역에서 잘 준비하고 있지만, 몇 가지 보완하면 더 완벽해집니다.',
     advices: [
       '부족한 카테고리를 집중적으로 보강하세요',
@@ -54,7 +54,7 @@ export const resultTypes: ResultType[] = [
     icon: '🐣',
     color: '#ca8a04',
     bgColor: '#fefce8',
-    estimatedFund: '약 4~5억',
+    estimatedFund: '추가 약 2~3억 필요',
     description: '노후 준비에 눈을 뜨기 시작했네요! 지금부터 본격적으로 시작하면 충분히 따라잡을 수 있습니다.',
     advices: [
       '매월 자동이체로 저축 습관을 만들어보세요',
@@ -70,7 +70,7 @@ export const resultTypes: ResultType[] = [
     icon: '😴',
     color: '#ea580c',
     bgColor: '#fff7ed',
-    estimatedFund: '약 5~6억',
+    estimatedFund: '추가 약 3~4억 필요',
     description: '아직 노후 준비가 많이 부족해요. 하지만 걱정하지 마세요, 지금 시작해도 늦지 않습니다!',
     advices: [
       '국민연금 예상 수령액부터 확인해보세요',
@@ -86,7 +86,7 @@ export const resultTypes: ResultType[] = [
     icon: '🙈',
     color: '#dc2626',
     bgColor: '#fef2f2',
-    estimatedFund: '약 6~7억',
+    estimatedFund: '추가 약 4~5억 필요',
     description: '솔직히 노후 준비를 거의 안 하고 있네요. 지금이 바로 시작할 때입니다!',
     advices: [
       '먼저 현재 재정 상태를 정확히 파악하세요',
@@ -102,7 +102,7 @@ export const resultTypes: ResultType[] = [
     icon: '🔥',
     color: '#9333ea',
     bgColor: '#faf5ff',
-    estimatedFund: '약 7억+',
+    estimatedFund: '추가 약 5억+ 필요',
     description: '거의 모든 영역에서 준비가 안 되어 있어요. 하지만 이 테스트를 한 것 자체가 첫 걸음입니다!',
     advices: [
       '오늘 당장 통장을 하나 만들어 자동이체를 설정하세요',

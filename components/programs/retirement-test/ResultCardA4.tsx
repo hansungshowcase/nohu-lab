@@ -275,8 +275,9 @@ export function getRiskAssessment(categories: CategoryScore[], answers: Record<n
   const f = categories.find(c => c.key === 'finance')!
 
   const longevityRisk = f.score <= 8 ? '높음' : f.score <= 14 ? '중간' : '낮음'
-  const inflationScore = (answers[15] || 1) + (answers[11] || 1)
-  const inflationRisk = inflationScore <= 3 ? '높음' : inflationScore <= 5 ? '중간' : '낮음'
+  // 인플레이션 리스크: Q15(금융자산 분산) 가중치 2배 + Q11(금융 지식)
+  const inflationScore = (answers[15] || 1) * 2 + (answers[11] || 1)
+  const inflationRisk = inflationScore <= 5 ? '높음' : inflationScore <= 8 ? '중간' : '낮음'
   const healthScore = (answers[4] || 1) + (answers[5] || 1) + (answers[13] || 1)
   const healthRisk = healthScore <= 5 ? '높음' : healthScore <= 8 ? '중간' : '낮음'
 
@@ -298,7 +299,7 @@ export function getRiskAssessment(categories: CategoryScore[], answers: Record<n
       color: inflationRisk === '높음' ? '#dc2626' : inflationRisk === '중간' ? '#ca8a04' : '#ea580c',
       icon: 'I',
       detail: inflationRisk === '높음'
-        ? '자산이 예금·부동산에 편중되어 물가상승에 취약합니다. 연 3% 인플레이션 시 20년 후 구매력이 45%로 줄어듭니다.'
+        ? '자산이 예금·부동산에 편중되어 물가상승에 취약합니다. 연 3% 인플레이션 시 20년 후 구매력이 55%로 줄어듭니다.'
         : inflationRisk === '중간'
         ? '일부 방어가 되어 있지만 의료비 인플레이션(연 6%)에 대한 추가 대비가 필요합니다.'
         : '다양한 자산 분산으로 인플레이션 방어가 잘 되어 있습니다.',
@@ -446,10 +447,14 @@ export function getRetirementFundCalc(total: number, answers: Record<number, num
   const totalNeeded = monthly * 12 * years
   const totalNeededMin = monthlyMin * 12 * years
   const q2 = answers[2] || 1
-  // 국민연금 + 개인연금 예상 (월, 만원)
+  const q16 = answers[16] || 1
+  // 국민연금 예상 (월, 만원) - Q2 기반
   const nps = q2 >= 3 ? 133 : q2 >= 2 ? 100 : 67
-  const personalPension = q2 >= 3 ? 60 : q2 >= 2 ? 30 : 0
-  const pensionTotal = nps + personalPension
+  // 퇴직연금 예상 (월, 만원) - Q16 기반 (퇴직연금 관리 수준)
+  const retirePension = q16 >= 3 ? 50 : q16 >= 2 ? 30 : 0
+  // 개인연금 예상 (월, 만원) - Q2 기반 (체계적 구성 여부)
+  const personalPension = q2 >= 4 ? 40 : q2 >= 3 ? 25 : q2 >= 2 ? 10 : 0
+  const pensionTotal = nps + retirePension + personalPension
   const pensionEstimate = pensionTotal * 12 * years
   const gap = Math.max(0, totalNeeded - pensionEstimate)
   const gapMin = Math.max(0, totalNeededMin - pensionEstimate)
@@ -490,9 +495,11 @@ function getMonthlyBreakdown(total: number): { item: string; amount: string; not
 }
 
 // ── 시나리오 분석 ──
-export function getScenarios(total: number, categories: CategoryScore[]): { label: string; color: string; monthly: string; desc: string }[] {
+export function getScenarios(total: number, categories: CategoryScore[], answers?: Record<number, number>): { label: string; color: string; monthly: string; desc: string }[] {
   const f = categories.find(c => c.key === 'finance')!
-  const base = total >= 61 ? 300 : total >= 37 ? 240 : 200
+  // Q8(생활비 계획) 기반 기본 생활비, answers 없으면 total 기반 폴백
+  const q8 = answers ? (answers[8] || 1) : 0
+  const base = q8 >= 3 ? 336 : q8 >= 2 ? 298 : q8 >= 1 && answers ? 217 : (total >= 61 ? 300 : total >= 37 ? 240 : 200)
   const optimistic = Math.round(base * (1 + f.score / 30))
   const baseline = base
   const pessimistic = Math.round(base * (1 - Math.max(20 - f.score, 4) / 30))
@@ -527,13 +534,13 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
   function ResultCardA4({ total, maxTotal, result, categories, answers }, ref) {
     const percentage = Math.round((total / maxTotal) * 100)
     const circumference = 2 * Math.PI * 54
+    const ans = answers || {}
     const crossInsights = getCrossInsights(categories)
-    const scenarios = getScenarios(total, categories)
+    const scenarios = getScenarios(total, categories, ans)
     const resources = getResources(categories)
     const monthlyBreakdown = getMonthlyBreakdown(total)
     const weakest = [...categories].sort((a, b) => a.score - b.score)[0]
     const strongest = [...categories].sort((a, b) => b.score - a.score)[0]
-    const ans = answers || {}
     const pensionTiers = getPensionAnalysis(ans)
     const risks = getRiskAssessment(categories, ans)
     const crevasse = getCrevasseAnalysis(ans)
@@ -624,7 +631,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
               <p style={s({ fontSize: '11.5px', color: '#4b5563', lineHeight: '1.6', margin: '0' })}>{result.description}</p>
               <div style={s({ display: 'flex', gap: '10px', marginTop: '8px', flexWrap: 'wrap' })}>
                 <div style={s({ padding: '4px 12px', borderRadius: '6px', backgroundColor: result.bgColor, fontSize: '10px' })}>
-                  필요 노후자금 <strong style={{ color: result.color }}>{result.estimatedFund}</strong>
+                  추가 필요자금 <strong style={{ color: result.color }}>{result.estimatedFund}</strong>
                 </div>
                 <div style={s({ padding: '4px 12px', borderRadius: '6px', backgroundColor: '#fff7ed', fontSize: '10px' })}>
                   강점 <strong style={{ color: '#ea580c' }}>{strongest.label}</strong>

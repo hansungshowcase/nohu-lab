@@ -21,19 +21,22 @@ const AGE_ASSET_DATA: Record<string, { avg: number; median: number; label: strin
 }
 
 function getAssetPercentile(age: number, asset: number): number {
-  // 순자산 분포 근사 (로그정규분포 기반, 통계청 데이터)
+  // 순자산 분포 근사 (로그정규분포 CDF 기반, 통계청 데이터)
   const group = age < 40 ? '30' : age < 50 ? '40' : age < 60 ? '50' : '60'
   const data = AGE_ASSET_DATA[group]
   if (!data) return 50
-  const ratio = asset / data.avg
-  if (ratio >= 3) return 95
-  if (ratio >= 2) return 90
-  if (ratio >= 1.5) return 80
-  if (ratio >= 1) return 60
-  if (ratio >= 0.7) return 45
-  if (ratio >= 0.5) return 30
-  if (ratio >= 0.3) return 15
-  return 5
+  if (asset <= 0) return 3
+  // 로그정규분포 파라미터: median = exp(μ), avg = exp(μ + σ²/2)
+  const mu = Math.log(data.median)
+  const sigma2 = 2 * (Math.log(data.avg) - Math.log(data.median))
+  const sigma = Math.sqrt(sigma2)
+  // 표준정규분포 CDF 근사 (Abramowitz & Stegun)
+  const z = (Math.log(asset) - mu) / sigma
+  const t = 1 / (1 + 0.2316419 * Math.abs(z))
+  const d = 0.3989422802 * Math.exp(-z * z / 2)
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.8212560 + t * 1.3302744))))
+  const cdf = z > 0 ? 1 - p : p
+  return Math.max(3, Math.min(97, Math.round(cdf * 100)))
 }
 
 export default function RetirementTest() {
@@ -266,15 +269,19 @@ export default function RetirementTest() {
         const data = AGE_ASSET_DATA[group]
         const retireAge = 65
         const yearsLeft = Math.max(0, retireAge - age)
-        const monthlyNeed = 298 // 부부 적정 생활비
+        // Q8 기반 부부 적정 생활비 (만원, 국민연금연구원 2024 기준)
+        const q8 = answers[8] || 1
+        const monthlyNeed = q8 >= 3 ? 336 : q8 >= 2 ? 298 : 217
         const retireYears = 25
         const totalNeed = monthlyNeed * 12 * retireYears
-        const currentGap = Math.max(0, totalNeed - asset)
+        // 국민연금 예상 월 수령액 (소득대체율 30% = 평균 가입기간 ~25년 반영)
+        const pensionExpected = income > 0 ? Math.round(income * 0.30) : 67
+        const pensionTotal25 = pensionExpected * 12 * retireYears // 25년간 연금 총액
+        const currentGap = Math.max(0, totalNeed - asset - pensionTotal25)
         const monthlySaveSimple = yearsLeft > 0 ? Math.round(currentGap / yearsLeft / 12) : 0
         const r5 = 0.05 / 12
         const n5 = yearsLeft * 12
         const monthlySaveInvest = yearsLeft > 0 && n5 > 0 ? Math.round(currentGap / ((Math.pow(1 + r5, n5) - 1) / r5)) : 0
-        const pensionExpected = income > 0 ? Math.round(income * 0.43 * 0.6) : 67 // 소득대체율 43% x 수급률
 
         return (
           <div className="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden animate-slide-up" style={{ animationDelay: '150ms' }}>
