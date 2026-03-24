@@ -528,12 +528,30 @@ export default function RetirementTest() {
       <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-5 text-white animate-slide-up" style={{ animationDelay: '700ms' }}>
         <h3 className="text-lg font-bold mb-4">이번 달 바로 실행할 3가지</h3>
         <div className="space-y-3">
-          {[
-            { check: total < 49, text: '국민연금공단(1355)에 전화해서 내 예상 수령액 확인하기', sub: '5분이면 됩니다. nps.or.kr에서도 조회 가능' },
-            { check: answers[2] <= 2, text: '연금저축 계좌 개설하고 월 50만원 자동이체 설정하기', sub: '연 99만원 세액공제. 증권사 앱에서 10분 완료' },
-            { check: answers[16] <= 2, text: '퇴직연금 운용현황 확인하고 TDF로 전환 검토하기', sub: '회사 HR팀에 DB/DC 여부, 적립금 확인 요청' },
-            { check: true, text: '배우자와 30분 은퇴 후 생활에 대해 대화하기', sub: '월 생활비, 살고 싶은 곳, 하고 싶은 일 이야기' },
-          ].filter(a => a.check).slice(0, 3).map((action, i) => (
+          {(total >= 61
+            ? [
+                { text: '연금 예상 수령액 재확인하고 연기연금(연 7.2% 증액) 검토하기', sub: 'nps.or.kr에서 조회. 5년 연기 시 최대 36% 증액 가능' },
+                { text: '보유 금융상품 수수료 점검하고 포트폴리오 리밸런싱하기', sub: '연 0.5% 수수료 차이가 20년간 수백만원 차이. TDF/ETF 전환 검토' },
+                { text: '상속·증여 계획 검토하고 세무사 상담 예약하기', sub: '10년 단위 증여 한도(5천만~5억) 활용하면 절세 효과 큼' },
+              ]
+            : total >= 49
+            ? [
+                { text: '국민연금공단(1355)에서 내 예상 수령액 확인하기', sub: '5분이면 됩니다. nps.or.kr에서도 조회 가능' },
+                { text: '연금저축 계좌 개설하고 월 50만원 자동이체 설정하기', sub: '연 99만원 세액공제. 증권사 앱에서 10분 완료' },
+                { text: '퇴직연금 운용현황 확인하고 TDF로 전환 검토하기', sub: '회사 HR팀에 DB/DC 여부, 적립금 확인 요청' },
+              ]
+            : total >= 37
+            ? [
+                { text: '국민연금공단(1355)에 전화해서 내 예상 수령액 확인하기', sub: '5분이면 됩니다. nps.or.kr에서도 조회 가능' },
+                { text: '이번 주 안에 연금저축 계좌 개설하기 (월 10만원부터)', sub: '소액이라도 시작이 중요. 증권사 앱에서 10분 완료' },
+                { text: '월 지출 내역 1주일간 기록하고 불필요한 지출 줄이기', sub: '커피·구독·외식 등 월 20만원 절약 → 연 240만원 투자 가능' },
+              ]
+            : [
+                { text: '국민연금공단(☎1355)에 전화해서 가입 이력 확인하기', sub: '추납(추후납부) 가능 여부도 함께 확인. 5분이면 됩니다' },
+                { text: '통장 쪼개기: 생활비/저축/비상금 통장 3개 만들기', sub: '저축 통장에 월급일 자동이체 설정. 소액이라도 시작하세요' },
+                { text: '불필요한 구독 서비스 3개 해지하고 그 돈 저축하기', sub: '월 3만원 절약 → 연 36만원. 연금저축으로 넣으면 절세 효과까지' },
+              ]
+          ).map((action, i) => (
             <div key={i} className="bg-white/15 backdrop-blur rounded-xl p-3">
               <div className="flex gap-2 items-start">
                 <div className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</div>

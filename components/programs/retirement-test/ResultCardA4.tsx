@@ -152,7 +152,7 @@ const questionDiagnosis: Record<number, { title: string; scores: Record<number, 
   10: {
     title: '노후 준비 관심도',
     scores: {
-      1: '노후 준비를 미루면 "시간의 복리" 효과를 잃습니다. 30세에 월 30만원 투자 시 60세에 약 2.5억(연 7%)이지만, 40세에 시작하면 약 1.2억. 10년 차이가 2배 이상의 자산 차이를 만듭니다.',
+      1: '노후 준비를 미루면 "시간의 복리" 효과를 잃습니다. 30세에 월 30만원 투자 시 60세에 약 3.7억(연 7%)이지만, 40세에 시작하면 약 1.6억. 10년 차이가 2배 이상의 자산 차이를 만듭니다.',
       2: '관심이 있다면 실천으로 옮길 때입니다. 이번 주에 딱 하나만: 국민연금공단 홈페이지에서 내 예상 수령액 확인하기(5분이면 충분합니다).',
       3: '콘텐츠 학습은 좋지만 정보 과잉으로 실행이 지연될 수 있습니다. 학습:실행 비율을 3:7로 유지하세요. 매달 1가지를 반드시 실행에 옮기세요.',
       4: '적극적인 학습과 실천은 최고의 노후 보험입니다. 가족(배우자, 부모) 단위의 노후 계획도 함께 세워보세요. 부부 합산 연금 전략이 개인보다 훨씬 효율적입니다.',
@@ -495,7 +495,7 @@ export function getScenarios(total: number, categories: CategoryScore[]): { labe
   const base = total >= 61 ? 300 : total >= 37 ? 240 : 200
   const optimistic = Math.round(base * (1 + f.score / 30))
   const baseline = base
-  const pessimistic = Math.round(base * (1 - (16 - Math.min(f.score, 16)) / 30))
+  const pessimistic = Math.round(base * (1 - Math.max(20 - f.score, 4) / 30))
   return [
     { label: '낙관', color: '#ea580c', monthly: `월 ${optimistic}만원`, desc: '현재 습관 유지 + 연금 최적화 + 추가 소득원 확보 + 건강 유지' },
     { label: '기본', color: '#ca8a04', monthly: `월 ${baseline}만원`, desc: '현재 준비 수준 유지, 추가 대응 없음' },
@@ -942,7 +942,7 @@ const ResultCardA4 = forwardRef<HTMLDivElement, ResultCardA4Props>(
             ))}
             <div style={s({ display: 'grid', gridTemplateColumns: '2fr 1.5fr 3fr', padding: '6px 12px', backgroundColor: '#fff7ed', borderTop: '1px solid #e5e7eb' })}>
               <span style={s({ fontSize: '10px', fontWeight: 800, color: '#111827' })}>합계</span>
-              <span style={s({ fontSize: '10px', fontWeight: 800, color: '#ea580c', textAlign: 'right' })}>{total >= 61 ? '200~300만원' : '150~250만원'}</span>
+              <span style={s({ fontSize: '10px', fontWeight: 800, color: '#ea580c', textAlign: 'right' })}>{total >= 49 ? '200~300만원' : '150~250만원'}</span>
               <span style={s({ fontSize: '8.5px', color: '#6b7280', textAlign: 'right' })}>개인 패턴에 따라 ±30% 변동</span>
             </div>
           </div>
