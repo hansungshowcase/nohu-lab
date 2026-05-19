@@ -178,6 +178,10 @@ function getJohuPlain(result: SajuResult): string {
   return `태어난 계절 흐름은 ${seasonText} 쪽입니다. 크게 한쪽으로 치우치기보다 환경에 따라 컨디션 차이가 나는 편입니다. ${neededElement} 기운을 보완하면 판단이 안정됩니다. 실제 생활에서는 생활 리듬, 공간 정리, 꾸준한 운동처럼 기본 루틴을 잡는 것이 좋습니다.`
 }
 
+function asDirectionParticle(label: string): string {
+  return label.endsWith('리') ? `${label}로` : `${label}으로`
+}
+
 function getAnnualTrigger(result: SajuResult): string {
   const y = result.yearAnalysis
   const signals: string[] = []
@@ -220,7 +224,7 @@ function getPremiumDiagnosis(result: SajuResult, currentDaeun: SajuResult['daeun
     },
     {
       label: '버티는 힘',
-      text: `버티는 힘은 ${root ? root.label : '보통'}으로 봅니다. ${rootDetail || '환경을 잘 고르면 안정적으로 힘을 쓰는 구조입니다.'} 그래서 혼자 버티는 승부보다 안정적인 직장, 검증된 파트너, 일정한 생활 루틴, 장기 계약처럼 기반을 만들어두는 것이 중요합니다.`,
+      text: `버티는 힘은 ${asDirectionParticle(root ? root.label : '보통')} 봅니다. ${rootDetail || '환경을 잘 고르면 안정적으로 힘을 쓰는 구조입니다.'} 그래서 혼자 버티는 승부보다 안정적인 직장, 검증된 파트너, 일정한 생활 루틴, 장기 계약처럼 기반을 만들어두는 것이 중요합니다.`,
     },
     {
       label: '지금 10년 운',
