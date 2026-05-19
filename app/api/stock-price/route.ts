@@ -12,9 +12,10 @@ export async function GET(request: Request) {
 
   try {
     // 미국 주식/ETF인 경우
-    if (/^[A-Z]+$/.test(ticker)) {
+    if (/^[A-Z][A-Z0-9.-]*$/.test(ticker)) {
+      const yahooTicker = ticker.replace(/\./g, '-')
       const res = await fetch(
-        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=1d&interval=1d`,
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooTicker)}?range=1d&interval=1d`,
         {
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0)' },
           next: { revalidate: 300 }, // 5분 캐시

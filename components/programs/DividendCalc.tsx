@@ -138,12 +138,36 @@ export default function DividendCalc() {
     return list
   }, [stocks, sector, searchQuery, style, sortBy])
 
+  async function selectStock(stock: StockItem) {
+    setSelected(stock)
+    if (stock.price > 0) return
+
+    try {
+      const res = await fetch(`/api/stock-price?ticker=${encodeURIComponent(stock.ticker)}`)
+      if (!res.ok) return
+      const data = await res.json()
+      const price = Number(data.price || 0)
+      if (price <= 0) return
+
+      const nextStock = {
+        ...stock,
+        price: subMarket === 'us' ? Math.round(price * 1400) : price,
+      }
+      setSelected((current) => current?.ticker === stock.ticker ? nextStock : current)
+      const update = (list: StockItem[]) => list.map((item) => item.ticker === stock.ticker ? nextStock : item)
+      if (subMarket === 'kr') setAllKr(update)
+      else setAllUs(update)
+    } catch {
+      // Price lookup is best-effort; the stock still remains selectable.
+    }
+  }
+
   // 투자 시뮬레이션
   const investRaw = parseInt(investInput.replace(/,/g, ''), 10) || 0
   const investAmount = investRaw * 10000 // 만원 단위 입력
 
   const result = useMemo(() => {
-    if (!selected || investAmount <= 0) return null
+    if (!selected || investAmount <= 0 || selected.price <= 0) return null
     const shares = Math.floor(investAmount / selected.price)
     const actualInvest = shares * selected.price
     const dps = selected.dividendPerShare || Math.round(selected.price * selected.yieldPct / 100)
@@ -352,7 +376,7 @@ export default function DividendCalc() {
               {filtered.map((stock) => (
                 <button
                   key={stock.ticker}
-                  onClick={() => setSelected(stock)}
+                  onClick={() => selectStock(stock)}
                   className="w-full bg-white rounded-2xl p-4 border border-gray-100 hover:border-emerald-300 hover:shadow-md transition-all text-left active:scale-[0.98]"
                 >
                   <div className="flex items-center justify-between mb-1.5">
