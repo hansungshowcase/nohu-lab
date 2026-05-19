@@ -393,23 +393,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
         return
       }
 
-      // PC: File System Access API (Chrome/Edge)
-      const ww = window as typeof window & { showSaveFilePicker?: (opts: Record<string, unknown>) => Promise<FileSystemFileHandle> }
-      if (ww.showSaveFilePicker) {
-        try {
-          const handle = await ww.showSaveFilePicker({ suggestedName: `연금분석_${age}세.png`, types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }] })
-          const writable = await handle.createWritable()
-          await writable.write(blob)
-          await writable.close()
-          setSaveOk(true); setTimeout(() => setSaveOk(false), 2000)
-          setSaving(false)
-          return
-        } catch (err) {
-          if (err instanceof Error && err.name === 'AbortError') { setSaving(false); return }
-        }
-      }
-
-      // PC Fallback: <a download>
+      // PC 저장
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl

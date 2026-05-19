@@ -38,32 +38,12 @@ const defaultAnswers: Answers = {
 export default function SupplementRecommender() {
   const searchParams = useSearchParams()
   const isSharedLink = searchParams.has('g') && searchParams.has('age')
+  const sharedAnswers = isSharedLink ? decodeAnswers(searchParams) : null
 
-  const [phase, setPhase] = useState<Phase>(isSharedLink ? 'analyzing' : 'intro')
+  const [phase, setPhase] = useState<Phase>(sharedAnswers ? 'result' : 'intro')
   const [step, setStep] = useState<Step>(1)
-  const [answers, setAnswers] = useState<Answers>(() => {
-    if (isSharedLink) {
-      return decodeAnswers(searchParams) || defaultAnswers
-    }
-    return defaultAnswers
-  })
-  const [results, setResults] = useState<RecommendedSupplement[]>([])
-
-  // 공유 링크 접속 시 바로 분석
-  useEffect(() => {
-    if (isSharedLink && phase === 'analyzing') {
-      const decoded = decodeAnswers(searchParams)
-      if (decoded) {
-        setAnswers(decoded)
-        const recs = getRecommendations(decoded)
-        const timer = setTimeout(() => {
-          setResults(recs)
-          setPhase('result')
-        }, 5000)
-        return () => clearTimeout(timer)
-      }
-    }
-  }, [isSharedLink, phase, searchParams])
+  const [answers, setAnswers] = useState<Answers>(() => sharedAnswers || defaultAnswers)
+  const [results, setResults] = useState<RecommendedSupplement[]>(() => sharedAnswers ? getRecommendations(sharedAnswers) : [])
 
   const handleStart = useCallback(() => {
     setPhase('questions')

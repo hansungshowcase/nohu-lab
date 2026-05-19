@@ -122,30 +122,7 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         return
       }
 
-      // PC: File System Access API (Chrome/Edge)
-      const w = window as typeof window & { showSaveFilePicker?: (opts: Record<string, unknown>) => Promise<FileSystemFileHandle> }
-      if (w.showSaveFilePicker) {
-        try {
-          const handle = await w.showSaveFilePicker({
-            suggestedName: 'saju-result.png',
-            types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }],
-          })
-          const writable = await handle.createWritable()
-          await writable.write(blob)
-          await writable.close()
-          setSaveSuccess(true)
-          setTimeout(() => setSaveSuccess(false), 2000)
-          setSaving(false)
-          return
-        } catch (err) {
-          if (err instanceof Error && err.name === 'AbortError') {
-            setSaving(false)
-            return
-          }
-        }
-      }
-
-      // PC Fallback: <a download>
+      // PC 저장
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
