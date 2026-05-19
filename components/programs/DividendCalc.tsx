@@ -349,7 +349,7 @@ export default function DividendCalc() {
           {!loading && !error && (
             <div className="space-y-2">
               <p className="text-xs text-gray-400 font-medium px-1">{filtered.length}개 종목</p>
-              {filtered.slice(0, 50).map((stock) => (
+              {filtered.map((stock) => (
                 <button
                   key={stock.ticker}
                   onClick={() => setSelected(stock)}
@@ -368,9 +368,6 @@ export default function DividendCalc() {
                   </div>
                 </button>
               ))}
-              {filtered.length > 50 && (
-                <p className="text-center text-xs text-gray-400 py-2">상위 50개 표시 · 검색으로 더 많은 종목을 찾아보세요</p>
-              )}
               {filtered.length === 0 && !loading && (
                 <p className="text-center text-sm text-gray-400 py-8">검색 결과가 없습니다</p>
               )}
