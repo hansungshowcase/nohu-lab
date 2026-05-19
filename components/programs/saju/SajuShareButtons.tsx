@@ -170,6 +170,16 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
 
   return (
     <div className="space-y-4">
+      <style>{`
+        @keyframes kakao-share-pulse {
+          0%, 100% { transform: translateY(0) scale(1); box-shadow: 0 10px 24px rgba(254, 229, 0, 0.28); }
+          50% { transform: translateY(-2px) scale(1.025); box-shadow: 0 16px 34px rgba(254, 229, 0, 0.55); }
+        }
+        @keyframes kakao-share-ring {
+          0% { transform: scale(0.94); opacity: 0.65; }
+          70%, 100% { transform: scale(1.32); opacity: 0; }
+        }
+      `}</style>
       {/* 공유 헤더 */}
       <div className="text-center">
         <p className="text-base sm:text-lg font-bold text-gray-800">결과를 공유해보세요</p>
@@ -199,12 +209,15 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
         </button>
         <button
           onClick={handleKakao}
-          className="group relative py-4 bg-gradient-to-b from-[#FEE500]/40 to-[#FEE500]/60 border border-[#F5DC00] hover:border-[#EDCF00] hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          className="group relative py-4 bg-gradient-to-b from-[#FEE500] to-[#FFD600] border-2 border-[#3C1E1E]/20 hover:border-[#3C1E1E]/35 active:translate-y-0 active:scale-[0.97] rounded-2xl text-sm sm:text-base font-black transition-all duration-200 flex flex-col items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-yellow-400 overflow-hidden"
+          style={{ animation: 'kakao-share-pulse 2.2s ease-in-out infinite' }}
         >
-          <span className="w-11 h-11 rounded-full bg-[#FEE500]/50 group-hover:bg-[#FEE500]/80 flex items-center justify-center transition-all duration-200 group-hover:scale-110">
+          <span className="absolute right-2 top-2 rounded-full bg-[#3C1E1E] text-[#FEE500] text-[10px] px-1.5 py-0.5 font-black leading-none">추천</span>
+          <span className="absolute w-12 h-12 rounded-full border-2 border-[#3C1E1E]/25" style={{ animation: 'kakao-share-ring 2.2s ease-out infinite' }} />
+          <span className="relative w-11 h-11 rounded-full bg-white/75 group-hover:bg-white flex items-center justify-center transition-all duration-200 group-hover:scale-110 shadow-sm">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.72 1.804 5.103 4.508 6.445-.148.544-.954 3.503-.985 3.724 0 0-.02.166.088.23.108.063.235.03.235.03.31-.043 3.59-2.354 4.155-2.76A12.58 12.58 0 0012 18.382c5.523 0 10-3.463 10-7.691C22 6.463 17.523 3 12 3"/></svg>
           </span>
-          <span className="text-[#3C1E1E] text-xs sm:text-sm">{kakaoCopied ? '복사 완료!' : '카카오톡'}</span>
+          <span className="relative text-[#3C1E1E] text-xs sm:text-sm">{kakaoCopied ? '복사 완료!' : '카카오톡 공유'}</span>
         </button>
       </div>
     </div>

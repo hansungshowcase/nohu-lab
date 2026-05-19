@@ -41,6 +41,28 @@ function getPlainProfile(dayMaster: number) {
   return DAY_MASTER_PLAIN[dayMaster] || DAY_MASTER_PLAIN[0]
 }
 
+function getCoreProfileReading(result: SajuResult): string {
+  const profile = getPlainProfile(result.dayMaster)
+  const strength = result.isDayMasterStrong
+    ? '자기 판단으로 방향을 정하고 밀고 갈 때 성과가 빠르게 나는 편입니다.'
+    : '혼자 밀어붙이기보다 좋은 환경, 믿을 만한 사람, 자격과 경험의 도움을 받을수록 안정됩니다.'
+
+  const readings = [
+    `먼저 보이는 중심 성향은 '${profile.label}'입니다. 큰 방향을 보면 책임감과 주도성이 강하고, 한 번 정한 기준은 쉽게 바꾸지 않습니다. ${strength}`,
+    `먼저 보이는 중심 성향은 '${profile.label}'입니다. 부드럽게 맞춰주는 듯 보여도 생활력과 지속력이 강하고, 시간이 갈수록 실속을 만드는 타입입니다. ${strength}`,
+    `먼저 보이는 중심 성향은 '${profile.label}'입니다. 표현이 밝고 추진 속도가 빠르며, 사람 앞에서 에너지가 살아나는 타입입니다. ${strength}`,
+    `먼저 보이는 중심 성향은 '${profile.label}'입니다. 조용해 보여도 눈치와 직감이 빠르고, 분위기와 사람 마음을 읽는 감각이 좋습니다. ${strength}`,
+    `먼저 보이는 중심 성향은 '${profile.label}'입니다. 쉽게 흔들리지 않고 책임을 지려는 기질이 강해, 주변에서 믿고 맡기는 일이 생기기 쉽습니다. ${strength}`,
+    `먼저 보이는 중심 성향은 '${profile.label}'입니다. 현실 감각이 좋고 사람을 챙기는 힘이 있어, 관계와 생활 기반을 차분히 쌓아가는 타입입니다. ${strength}`,
+    `먼저 보이는 중심 성향은 '${profile.label}'입니다. 결단이 빠르고 승부욕이 있어, 해야 한다고 판단하면 행동으로 밀어붙이는 힘이 큽니다. ${strength}`,
+    `먼저 보이는 중심 성향은 '${profile.label}'입니다. 기준이 높고 완성도를 중요하게 보며, 대충 넘어가기보다 정확하게 다듬어야 마음이 놓이는 타입입니다. ${strength}`,
+    `먼저 보이는 중심 성향은 '${profile.label}'입니다. 생각의 폭이 넓고 흐름을 읽는 감각이 좋아, 한곳에 갇히기보다 판을 크게 보는 타입입니다. ${strength}`,
+    `먼저 보이는 중심 성향은 '${profile.label}'입니다. 관찰력과 판단이 빠르고, 겉으로 드러내기 전까지 속으로 계산을 끝내는 타입입니다. ${strength}`,
+  ]
+
+  return readings[result.dayMaster] || readings[0]
+}
+
 /* ── 사주 기둥 박스 ── */
 function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pillar; tenGod?: string; isMe?: boolean }) {
   const stemEl = STEM_ELEMENT[pillar.stem]
@@ -155,15 +177,28 @@ function getPillarPlainName(pillar: string): string {
 
 function getGyeokPlain(result: SajuResult, topTenGod: string): string {
   const name = result.gyeokguk.name
-  if (name.includes('식신')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 재능을 꾸준히 꺼내 먹고사는 구조입니다. 말, 글, 기술, 콘텐츠, 요리, 교육처럼 내가 만든 결과물이 신뢰를 얻을 때 돈이 붙습니다. 여기에 '${topTenGod}' 기운이 두드러지므로 재능을 감으로만 쓰지 말고 가격, 계약, 반복 수익 구조까지 잡아야 합니다.`
-  if (name.includes('상관')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 남과 다른 표현력, 기획력, 문제를 비트는 감각으로 길이 열리는 구조입니다. 단, 말이 세지거나 규칙을 무시하면 손해가 나므로 결과물은 자유롭게 만들되 계약과 조직 질서는 지켜야 합니다. '${topTenGod}' 기운을 어떻게 다루느냐가 돈과 평판의 핵심입니다.`
-  if (name.includes('정재')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 성실하게 모으고 관리해서 재산을 만드는 구조입니다. 월급, 고정 수입, 부동산, 장기 저축처럼 안정적인 흐름이 맞습니다. '${topTenGod}' 기운이 강하므로 돈은 크게 한 번 치기보다 잃지 않는 시스템을 만드는 쪽이 좋습니다.`
-  if (name.includes('편재')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 시장 감각, 거래 감각, 사람을 움직이는 감각으로 돈이 열리는 구조입니다. 사업, 영업, 투자, 유통에 재능이 있지만 속도가 빠른 만큼 지출도 커질 수 있습니다. '${topTenGod}' 기운을 잘 쓰려면 판을 키우기 전에 현금흐름부터 잡아야 합니다.`
-  if (name.includes('정관')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 신뢰, 직함, 규칙, 사회적 평가로 올라가는 구조입니다. 공공기관, 대기업, 전문직, 관리직처럼 책임이 분명한 자리에 강합니다. '${topTenGod}' 기운을 잘 쓰려면 평판 관리와 꾸준한 실적이 핵심입니다.`
-  if (name.includes('편관') || name.includes('칠살')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 압박, 경쟁, 위기 대응 속에서 실력이 드러나는 구조입니다. 남들이 피하는 문제를 해결하거나 책임이 큰 자리에서 성과가 납니다. 다만 무리하면 스트레스가 몸으로 오기 쉬우니 '${topTenGod}' 기운은 승부욕보다 전략과 규칙으로 써야 합니다.`
-  if (name.includes('정인') || name.includes('편인')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 공부, 자격, 문서, 전문성, 윗사람 도움으로 길이 열리는 구조입니다. 당장 큰돈보다 실력을 쌓아 몸값을 올리는 쪽이 맞습니다. '${topTenGod}' 기운을 잘 쓰려면 배운 것을 결과물로 바꾸는 실행이 필요합니다.`
-  if (name.includes('비견') || name.includes('겁재')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 독립심, 경쟁심, 자기 힘으로 버티는 힘이 강한 구조입니다. 동업과 인간관계에서 기회도 오지만 돈이 새기 쉬우니 기준과 경계선이 중요합니다. '${topTenGod}' 기운은 사람을 넓히기보다 내 편과 아닌 사람을 가르는 데 써야 합니다.`
-  return `격국은 ${name}으로 봅니다. ${result.gyeokguk.description} 그래서 직업과 돈은 '${topTenGod}' 성향을 어떻게 현실적으로 쓰느냐가 핵심입니다.`
+  const topRole = getTenGodPlainRole(topTenGod)
+  if (name.includes('식신')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 타고난 재능을 꾸준히 꺼내 사람들에게 신뢰를 얻는 구조입니다. 말, 글, 기술, 콘텐츠, 요리, 교육, 상담처럼 내가 만든 결과물이 분명할 때 길이 열립니다. ${topRole}`
+  if (name.includes('상관')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 남과 다른 표현력, 기획력, 문제를 비트는 감각으로 길이 열리는 구조입니다. 단, 말이 세지거나 규칙을 무시하면 손해가 나므로 결과물은 자유롭게 만들되 계약과 조직 질서는 지켜야 합니다. ${topRole}`
+  if (name.includes('정재')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 성실하게 모으고 관리해서 재산을 만드는 구조입니다. 월급, 고정 수입, 부동산, 장기 저축처럼 안정적인 흐름이 맞습니다. ${topRole}`
+  if (name.includes('편재')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 시장 감각, 거래 감각, 사람을 움직이는 감각으로 돈이 열리는 구조입니다. 사업, 영업, 투자, 유통에 재능이 있지만 속도가 빠른 만큼 지출도 커질 수 있습니다. ${topRole}`
+  if (name.includes('정관')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 신뢰, 직함, 규칙, 사회적 평가로 올라가는 구조입니다. 공공기관, 대기업, 전문직, 관리직처럼 책임이 분명한 자리에 강합니다. ${topRole}`
+  if (name.includes('편관') || name.includes('칠살')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 압박, 경쟁, 위기 대응 속에서 실력이 드러나는 구조입니다. 남들이 피하는 문제를 해결하거나 책임이 큰 자리에서 성과가 납니다. 다만 무리하면 스트레스가 몸으로 오기 쉬우니 승부욕보다 전략과 규칙이 먼저입니다. ${topRole}`
+  if (name.includes('정인') || name.includes('편인')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 공부, 자격, 문서, 전문성, 윗사람 도움으로 길이 열리는 구조입니다. 당장 큰돈보다 실력을 쌓아 몸값을 올리는 쪽이 맞습니다. ${topRole}`
+  if (name.includes('비견') || name.includes('겁재')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 독립심, 경쟁심, 자기 힘으로 버티는 힘이 강한 구조입니다. 동업과 인간관계에서 기회도 오지만 돈이 새기 쉬우니 기준과 경계선이 중요합니다. ${topRole}`
+  return `격국은 ${name}으로 봅니다. ${result.gyeokguk.description} ${topRole}`
+}
+
+function getTenGodPlainRole(tenGod: string): string {
+  if (tenGod.includes('정관')) return '여기에 정관 흐름이 함께 보이면, 자유롭게만 움직이기보다 자격, 직함, 규칙, 공신력이 있는 자리에서 재능이 돈과 평판으로 바뀝니다.'
+  if (tenGod.includes('편관') || tenGod.includes('칠살')) return '여기에 편관 흐름이 함께 보이면, 경쟁이 있거나 책임이 큰 자리에서 실력이 빨리 드러납니다. 단, 압박을 혼자 떠안지 말고 역할과 기준을 분명히 해야 오래 갑니다.'
+  if (tenGod.includes('정재')) return '여기에 정재 흐름이 함께 보이면, 한 번에 크게 벌기보다 고정 수입, 계약, 예산 관리처럼 안정적인 구조를 만들 때 돈이 쌓입니다.'
+  if (tenGod.includes('편재')) return '여기에 편재 흐름이 함께 보이면, 사람을 만나고 판을 넓히는 과정에서 기회가 생깁니다. 다만 수입보다 지출이 먼저 커지지 않게 현금흐름을 잡아야 합니다.'
+  if (tenGod.includes('식신')) return '여기에 식신 흐름이 함께 보이면, 꾸준히 만든 결과물이 신뢰가 되고 그 신뢰가 수입으로 이어집니다. 급하게 승부보기보다 오래 팔릴 실력을 쌓는 쪽이 좋습니다.'
+  if (tenGod.includes('상관')) return '여기에 상관 흐름이 함께 보이면, 표현력과 기획력이 강해집니다. 다만 직설적인 말이나 과한 자신감이 손해가 되지 않게 결과물로 설득하는 방식이 좋습니다.'
+  if (tenGod.includes('정인') || tenGod.includes('편인')) return '여기에 인성 흐름이 함께 보이면, 공부, 자격, 문서, 전문성, 윗사람 도움을 통해 운이 열립니다. 배운 것을 실제 결과물로 바꾸는 실행이 중요합니다.'
+  if (tenGod.includes('비견') || tenGod.includes('겁재')) return '여기에 비겁 흐름이 함께 보이면, 독립심과 경쟁심이 강해집니다. 사람을 넓히기보다 내 편과 아닌 사람을 구분하고 돈의 경계선을 분명히 해야 합니다.'
+  return `여기에 ${tenGod} 흐름이 함께 보이므로, 타고난 장점을 실제 직업, 돈, 관계에서 어떻게 쓰는지가 핵심입니다.`
 }
 
 function getJohuPlain(result: SajuResult): string {
@@ -199,7 +234,6 @@ function getAnnualTrigger(result: SajuResult): string {
 }
 
 function getPremiumDiagnosis(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined) {
-  const profile = getPlainProfile(result.dayMaster)
   const topTenGod = getTopTenGod(result)
   const root = ROOT_STRENGTH_LABELS[result.tuganTonggeun.rootStrength]
   const rootDetail = root?.detail
@@ -212,7 +246,7 @@ function getPremiumDiagnosis(result: SajuResult, currentDaeun: SajuResult['daeun
   return [
     {
       label: '성향의 핵심',
-      text: `이 사주의 첫 판단은 '${profile.label}'입니다. 겉으로는 차분하거나 예민해 보여도, 실제로는 자기 기준이 분명하고 마음을 정하면 쉽게 흔들리지 않는 타입입니다. 그래서 아무 일이나 넓게 벌리는 것보다, 기준을 세우고 완성도를 높이는 방식에서 힘이 납니다.`,
+      text: getCoreProfileReading(result),
     },
     {
       label: '먹고사는 방식',
@@ -288,26 +322,6 @@ function getMonthlyWindows(result: SajuResult) {
     caution,
     advice: `좋은 달에는 새 제안, 계약, 발표, 시험, 투자 검토처럼 앞으로 나가는 일을 배치하세요. 주의 달에는 결정 자체보다 점검, 정리, 건강관리, 갈등 예방에 집중하는 편이 낫습니다.`,
   }
-}
-
-function buildConsultingPoints(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined): string[] {
-  const profile = DAY_MASTER_PROFILES[result.dayMaster]
-  const plain = getPlainProfile(result.dayMaster)
-  const topTenGod = getTopTenGod(result)
-  const topTenGodInfo = TEN_GOD_INTERPRETATIONS[topTenGod]
-  const currentDaeunText = currentDaeun
-    ? `${currentDaeun.startAge}~${currentDaeun.startAge + 9}세는 ${currentDaeun.tenGod}운이라, ${currentDaeun.tenGod.includes('재') ? '돈·사업·현실 성과' : currentDaeun.tenGod.includes('관') ? '직장·책임·명예' : currentDaeun.tenGod.includes('인') ? '공부·자격·귀인' : currentDaeun.tenGod.includes('식') || currentDaeun.tenGod.includes('상') ? '표현·기술·콘텐츠' : '사람·경쟁·독립'} 쪽 사건이 크게 움직입니다.`
-    : '현재 대운 정보가 약하므로 올해 운세와 월운을 우선 기준으로 보세요.'
-
-  return [
-    `타고난 중심 성향은 ${plain.label}입니다. ${result.isDayMasterStrong ? '스스로 결정하고 밀고 나갈 때 성과가 나는 편' : '좋은 사람, 좋은 환경, 자격과 경험의 도움을 받을수록 안정되는 편'}입니다.`,
-    `사주 구조상 ${topTenGod} 기운이 두드러집니다. ${topTenGodInfo ? topTenGodInfo.keyword + ' 성향이 강해 ' + topTenGodInfo.career : '이 기운이 직업과 인간관계의 핵심입니다.'}`,
-    currentDaeunText,
-    `보완하면 좋은 방향은 ${ELEMENTS[result.usefulGod]}(${ELEMENTS_HANJA[result.usefulGod]})입니다. 중요한 선택은 이 기운을 보충하는 쪽, 즉 색·공간·직업 방식·생활 리듬까지 맞출수록 결과가 좋아집니다.`,
-    result.hourPillar
-      ? `태어난 시간이 반영되어 말년운·자녀운·실행 방식까지 포함해 읽었습니다.`
-      : `태어난 시간을 모르면 시주가 빠져 말년운·자녀운·세부 직업운은 70~80% 수준으로 봐야 합니다. 시간을 알면 풀이 정확도가 크게 올라갑니다.`,
-  ]
 }
 
 function getRelationshipInsight(result: SajuResult): string {
@@ -388,7 +402,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
   // 현재 대운
   const currentDaeun = result.daeun.find(d => d.isCurrent)
-  const consultingPoints = buildConsultingPoints(result, currentDaeun)
   const topTenGod = getTopTenGod(result)
   const topTenGodInfo = TEN_GOD_INTERPRETATIONS[topTenGod]
   const rootLabel = ROOT_STRENGTH_LABELS[result.tuganTonggeun.rootStrength]
@@ -489,26 +502,13 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           </div>
         </div>
 
-        {/* ═══ 유료 상담식 핵심 진단 ═══ */}
-        <div className="bg-gradient-to-br from-gray-950 to-gray-800 rounded-2xl p-4 sm:p-5 text-white">
-          <h3 className="text-base sm:text-lg font-black mb-3">🔎 상담 핵심 진단</h3>
-          <div className="space-y-2.5">
-            {consultingPoints.map((point, i) => (
-              <div key={i} className="flex gap-2.5 items-start">
-                <span className="w-6 h-6 rounded-full bg-white/15 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-                <p className="text-sm sm:text-base leading-[1.8] text-gray-100">{point}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* ═══ 10만원 상담식 정밀 리딩 ═══ */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border-2 border-gray-900">
           <h3 className="text-base sm:text-lg font-black text-gray-900 mb-1 flex items-center gap-2">
             <span className="w-1.5 h-5 bg-gray-900 rounded-full" />
             정밀 상담 리딩
           </h3>
-          <p className="text-xs text-gray-500 mb-3">격국·조후·대운·세운·합충을 한 번에 묶어 본 핵심 판단입니다.</p>
+          <p className="text-xs text-gray-500 mb-3">타고난 성향, 먹고사는 방식, 계절 보완점, 현재 10년 운, 올해 변화를 쉬운 말로 묶어 본 핵심 판단입니다.</p>
           <div className="space-y-2.5">
             {premiumDiagnosis.map((point, i) => (
               <div key={i} className="rounded-xl bg-gray-50 border border-gray-100 p-3">
