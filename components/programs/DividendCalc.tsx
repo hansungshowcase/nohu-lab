@@ -122,7 +122,7 @@ export default function DividendCalc() {
     // 성향 필터
     if (style === 'high') list = list.filter((s) => s.yieldPct >= 5)
     else if (style === 'safe') list = list.filter((s) => s.yieldPct >= 2 && s.yieldPct <= 5)
-    else if (style === 'monthly') list = list.filter((s) => s.frequency?.includes('월'))
+    else if (style === 'monthly') list = list.filter((s) => s.frequency?.includes('월') || s.frequency?.includes('주'))
     else if (style === 'growth') list = list.filter((s) => s.yieldPct >= 1 && s.yieldPct <= 4 && s.desc?.includes('연속'))
     // 분야 필터
     if (sector !== '전체') list = list.filter((s) => s.sector === sector)
@@ -176,7 +176,8 @@ export default function DividendCalc() {
     const tax = calculateTax(grossAnnual, marketType, accountType)
     const freq = selected.frequency || '연배당'
     let paymentsPerYear = 1
-    if (freq.includes('월')) paymentsPerYear = 12
+    if (freq.includes('주')) paymentsPerYear = 52
+    else if (freq.includes('월')) paymentsPerYear = 12
     else if (freq.includes('분기')) paymentsPerYear = 4
     else if (freq.includes('반기')) paymentsPerYear = 2
     const perPayment = Math.round(tax.netDividend / paymentsPerYear)
@@ -197,7 +198,7 @@ export default function DividendCalc() {
   }
 
   const frequencyLabel: Record<string, string> = {
-    '월배당': '매월', '분기배당': '3개월마다', '반기배당': '6개월마다', '연배당': '연 1회',
+    '주배당': '매주', '월배당': '매월', '분기배당': '3개월마다', '반기배당': '6개월마다', '연배당': '연 1회',
   }
 
   async function shareKakao() {
@@ -292,7 +293,7 @@ export default function DividendCalc() {
           <div className="grid grid-cols-2 gap-2">
             {([
               ['high', '💰 고수익 배당', '연 5% 이상', 'from-red-500 to-orange-500'],
-              ['monthly', '📅 매달 받는 배당', '월배당 종목만', 'from-blue-500 to-indigo-500'],
+              ['monthly', '📅 자주 받는 배당', '월/주 배당 종목', 'from-blue-500 to-indigo-500'],
               ['safe', '🛡️ 안정적 배당', '연 2~5% 우량주', 'from-emerald-500 to-green-500'],
               ['growth', '📈 배당 늘리는 기업', '연속 배당 증가', 'from-purple-500 to-pink-500'],
             ] as const).map(([id, label, sub, gradient]) => (
@@ -509,7 +510,7 @@ export default function DividendCalc() {
               <div className="bg-white rounded-2xl p-5 border border-gray-100">
                 <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-3">배당 수령 일정</p>
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">{result.frequency.includes('월') ? '📅' : result.frequency.includes('분기') ? '📊' : '📆'}</span>
+                  <span className="text-2xl">{result.frequency.includes('주') || result.frequency.includes('월') ? '📅' : result.frequency.includes('분기') ? '📊' : '📆'}</span>
                   <div>
                     <p className="text-sm font-bold text-gray-900">{result.frequency} · {frequencyLabel[result.frequency] || '연 1회'}</p>
                     <p className="text-xs text-gray-500">1회당 약 {result.perPayment.toLocaleString()}원</p>
@@ -518,7 +519,7 @@ export default function DividendCalc() {
                 <div className="flex gap-1">
                   {Array.from({ length: 12 }).map((_, i) => {
                     let active = false
-                    if (result.frequency.includes('월')) active = true
+                    if (result.frequency.includes('주') || result.frequency.includes('월')) active = true
                     else if (result.frequency.includes('분기')) active = [2, 5, 8, 11].includes(i)
                     else if (result.frequency.includes('반기')) active = [5, 11].includes(i)
                     else active = i === 11
@@ -552,7 +553,9 @@ export default function DividendCalc() {
                       <span className="text-lg">📅</span>
                     </div>
                     <p className="text-[15px] sm:text-base leading-snug">
-                      {result.frequency.includes('월')
+                      {result.frequency.includes('주')
+                        ? <><strong className="text-amber-400">매주</strong> 약 <strong className="text-white text-xl">{formatMoney(result.perPayment)}원</strong>씩</>
+                        : result.frequency.includes('월')
                         ? <><strong className="text-amber-400">매달</strong> 약 <strong className="text-white text-xl">{formatMoney(result.perPayment)}원</strong>씩</>
                         : result.frequency.includes('분기')
                           ? <><strong className="text-amber-400">3개월마다</strong> 약 <strong className="text-white text-xl">{formatMoney(result.perPayment)}원</strong>씩</>

@@ -53,12 +53,19 @@ const ETF_KEYWORDS = [
 
 const US_MONTHLY_TICKERS = new Set([
   'O', 'ADC', 'STAG', 'EPR', 'LTC', 'LAND', 'GOOD', 'GAIN', 'GLAD', 'MAIN', 'HRZN', 'PFLT', 'PSEC', 'SCM',
-  'AGNC', 'NLY', 'DX', 'ARR', 'ORC',
-  'JEPI', 'JEPQ', 'JEPY', 'QQQY', 'QYLD', 'XYLD', 'RYLD', 'DJIA', 'DIVO', 'PAPI', 'GPIX', 'GPIQ', 'SPYI', 'QQQI', 'IWMI',
-  'FEPI', 'AIPI', 'YMAX', 'YMAG', 'ULTY', 'TSLY', 'NVDY', 'CONY', 'MSTY', 'AMZY', 'APLY', 'MSFO', 'NFLY', 'GOOY', 'AMDY', 'PYPY', 'FBY', 'AIYY', 'PLTY', 'KLIP',
+  'AGNC', 'DX', 'ARR', 'ORC',
+  'JEPI', 'JEPQ', 'QYLD', 'XYLD', 'RYLD', 'DJIA', 'DIVO', 'PAPI', 'GPIX', 'GPIQ', 'SPYI', 'QQQI', 'IWMI',
+  'FEPI', 'AIPI', 'KLIP',
   'PDI', 'PDO', 'PTY', 'PCN', 'PFN', 'PHK', 'PAXS', 'RCS', 'GOF', 'CLM', 'CRF', 'UTF', 'UTG', 'BST', 'BSTZ', 'BMEZ', 'BIGZ', 'BCAT', 'BUI', 'DNP', 'DSL', 'EIC', 'EVV', 'ECC', 'OXLC', 'OCCI', 'ACP', 'AOD',
-  'BND', 'BNDX', 'VCIT', 'VCLT', 'VCSH', 'MBB', 'EMB', 'GOVT', 'SHV', 'SGOV', 'BIL', 'TLT', 'IEF', 'SHY', 'TIP', 'VTIP', 'MUB', 'HYD', 'HYG', 'JNK', 'LQD', 'MINT', 'NEAR', 'ICSH', 'JPST', 'SHYG', 'ANGL', 'FALN', 'PFF', 'PGX', 'VRP',
+  'BND', 'BNDX', 'VCIT', 'VCLT', 'VCSH', 'MBB', 'EMB', 'GOVT', 'SHV', 'SGOV', 'BIL', 'TLT', 'IEF', 'SHY', 'TIP', 'MUB', 'HYD', 'HYG', 'JNK', 'LQD', 'MINT', 'NEAR', 'ICSH', 'JPST', 'SHYG', 'ANGL', 'FALN', 'PFF', 'PGX', 'VRP',
 ])
+
+const US_WEEKLY_TICKERS = new Set([
+  'JEPY', 'QQQY', 'YMAX', 'YMAG', 'ULTY', 'TSLY', 'NVDY', 'CONY', 'MSTY', 'AMZY',
+  'APLY', 'MSFO', 'NFLY', 'GOOY', 'AMDY', 'PYPY', 'FBY', 'AIYY', 'PLTY',
+])
+
+const US_QUARTERLY_TICKERS = new Set(['NLY', 'VTIP'])
 
 const US_REIT_TICKERS = new Set(['O', 'ADC', 'STAG', 'EPR', 'LTC', 'LAND', 'GOOD', 'AGNC', 'NLY', 'DX', 'ARR', 'ORC'])
 const US_BDC_TICKERS = new Set(['MAIN', 'PSEC', 'GAIN', 'GLAD', 'HRZN', 'PFLT', 'SCM'])
@@ -346,6 +353,8 @@ function guessKrSector(name: string): string {
 }
 
 function getUsFrequency(ticker: string, sourceFrequency: string | undefined, dividendRate: number): string {
+  if (US_WEEKLY_TICKERS.has(ticker)) return '주배당'
+  if (US_QUARTERLY_TICKERS.has(ticker)) return '분기배당'
   if (US_MONTHLY_TICKERS.has(ticker)) return '월배당'
   return sourceFrequency || (dividendRate > 0 ? '분기배당' : '배당없음')
 }
