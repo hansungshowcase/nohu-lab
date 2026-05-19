@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect, Suspense } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { calculateSaju, SajuResult, BRANCHES_ANIMAL } from './saju/sajuEngine'
 import SajuAnalyzingScreen from './saju/SajuAnalyzingScreen'
@@ -372,12 +373,12 @@ function SajuReadingInner() {
             <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-5 border border-orange-200 text-center">
               <p className="text-base font-bold text-orange-800 mb-1">내 사주도 궁금하다면?</p>
               <p className="text-sm text-gray-600 mb-4">무료로 바로 확인해보세요</p>
-              <a
+              <Link
                 href="/programs/saju-reading"
                 className="inline-block px-8 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-2xl text-sm font-bold shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.97]"
               >
                 나도 사주풀이 해보기
-              </a>
+              </Link>
             </div>
           )}
         </div>

@@ -24,6 +24,20 @@ export async function GET(request: Request) {
 // 미국 배당주 - Yahoo Finance (전체 실시간)
 // ══════════════════════════════════════
 
+// 미국 하드코딩 폴백
+const usHardcoded = [
+  { ticker: 'JEPI', name: 'JP모건 Equity Premium Income', price: 77000, priceUsd: 55, sector: 'ETF', industry: 'ETF', yieldPct: 7.2, dividendRate: 3.96, frequency: '월배당', marketCap: 0, change: 0 },
+  { ticker: 'JEPQ', name: 'JP모건 Nasdaq Equity Premium', price: 74000, priceUsd: 53, sector: 'ETF', industry: 'ETF', yieldPct: 9.1, dividendRate: 4.82, frequency: '월배당', marketCap: 0, change: 0 },
+  { ticker: 'SCHD', name: 'Schwab US Dividend Equity', price: 37000, priceUsd: 26.5, sector: 'ETF', industry: 'ETF', yieldPct: 3.5, dividendRate: 0.93, frequency: '분기배당', marketCap: 0, change: 0 },
+  { ticker: 'VYM', name: 'Vanguard High Dividend Yield', price: 56000, priceUsd: 40, sector: 'ETF', industry: 'ETF', yieldPct: 2.8, dividendRate: 1.12, frequency: '분기배당', marketCap: 0, change: 0 },
+  { ticker: 'QYLD', name: 'Global X NASDAQ 100 CC', price: 24000, priceUsd: 17, sector: 'ETF', industry: 'ETF', yieldPct: 11.5, dividendRate: 1.96, frequency: '월배당', marketCap: 0, change: 0 },
+  { ticker: 'O', name: '리얼티인컴', price: 80000, priceUsd: 57, sector: '리츠', industry: 'REIT', yieldPct: 5.5, dividendRate: 3.14, frequency: '월배당', marketCap: 0, change: 0 },
+  { ticker: 'KO', name: '코카콜라', price: 89000, priceUsd: 63.5, sector: '필수소비재', industry: 'Beverages', yieldPct: 3.0, dividendRate: 1.94, frequency: '분기배당', marketCap: 0, change: 0 },
+  { ticker: 'JNJ', name: '존슨앤존슨', price: 220000, priceUsd: 157, sector: '헬스케어', industry: 'Drug Manufacturers', yieldPct: 3.2, dividendRate: 5.04, frequency: '분기배당', marketCap: 0, change: 0 },
+  { ticker: 'MO', name: '알트리아', price: 78000, priceUsd: 55.7, sector: '필수소비재', industry: 'Tobacco', yieldPct: 7.8, dividendRate: 4.08, frequency: '분기배당', marketCap: 0, change: 0 },
+  { ticker: 'T', name: 'AT&T', price: 39000, priceUsd: 27.8, sector: '통신', industry: 'Telecom', yieldPct: 5.1, dividendRate: 1.11, frequency: '분기배당', marketCap: 0, change: 0 },
+]
+
 // 미국 배당주 - JSON 파일에서 로드 (로컬에서 Yahoo 16개 스크리너 조합으로 수집)
 async function fetchAllUsDividends() {
   try {
@@ -65,20 +79,6 @@ function guessSectorFromName(name: string): string {
   if (n.includes('consumer') || n.includes('food') || n.includes('beverage')) return '필수소비재'
   return '기타'
 }
-
-// 미국 하드코딩 폴백
-const usHardcoded = [
-  { ticker: 'JEPI', name: 'JP모건 Equity Premium Income', price: 77000, priceUsd: 55, sector: 'ETF', industry: 'ETF', yieldPct: 7.2, dividendRate: 3.96, frequency: '월배당', marketCap: 0, change: 0 },
-  { ticker: 'JEPQ', name: 'JP모건 Nasdaq Equity Premium', price: 74000, priceUsd: 53, sector: 'ETF', industry: 'ETF', yieldPct: 9.1, dividendRate: 4.82, frequency: '월배당', marketCap: 0, change: 0 },
-  { ticker: 'SCHD', name: 'Schwab US Dividend Equity', price: 37000, priceUsd: 26.5, sector: 'ETF', industry: 'ETF', yieldPct: 3.5, dividendRate: 0.93, frequency: '분기배당', marketCap: 0, change: 0 },
-  { ticker: 'VYM', name: 'Vanguard High Dividend Yield', price: 56000, priceUsd: 40, sector: 'ETF', industry: 'ETF', yieldPct: 2.8, dividendRate: 1.12, frequency: '분기배당', marketCap: 0, change: 0 },
-  { ticker: 'QYLD', name: 'Global X NASDAQ 100 CC', price: 24000, priceUsd: 17, sector: 'ETF', industry: 'ETF', yieldPct: 11.5, dividendRate: 1.96, frequency: '월배당', marketCap: 0, change: 0 },
-  { ticker: 'O', name: '리얼티인컴', price: 80000, priceUsd: 57, sector: '리츠', industry: 'REIT', yieldPct: 5.5, dividendRate: 3.14, frequency: '월배당', marketCap: 0, change: 0 },
-  { ticker: 'KO', name: '코카콜라', price: 89000, priceUsd: 63.5, sector: '필수소비재', industry: 'Beverages', yieldPct: 3.0, dividendRate: 1.94, frequency: '분기배당', marketCap: 0, change: 0 },
-  { ticker: 'JNJ', name: '존슨앤존슨', price: 220000, priceUsd: 157, sector: '헬스케어', industry: 'Drug Manufacturers', yieldPct: 3.2, dividendRate: 5.04, frequency: '분기배당', marketCap: 0, change: 0 },
-  { ticker: 'MO', name: '알트리아', price: 78000, priceUsd: 55.7, sector: '필수소비재', industry: 'Tobacco', yieldPct: 7.8, dividendRate: 4.08, frequency: '분기배당', marketCap: 0, change: 0 },
-  { ticker: 'T', name: 'AT&T', price: 39000, priceUsd: 27.8, sector: '통신', industry: 'Telecom', yieldPct: 5.1, dividendRate: 1.11, frequency: '분기배당', marketCap: 0, change: 0 },
-]
 
 // ══════════════════════════════════════
 // 국내 배당주 (하드코딩 + 네이버 실시간)

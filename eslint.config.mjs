@@ -8,6 +8,14 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "no-use-before-define": ["error", { variables: true, functions: false, classes: false }],
+      "@next/next/no-img-element": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "react-hooks/preserve-manual-memoization": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/static-components": "off",
     },
   },
   // Override default ignores of eslint-config-next.

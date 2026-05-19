@@ -337,7 +337,7 @@ export default function DividendCalc() {
           {error && (
             <div className="text-center py-8">
               <p className="text-sm text-red-500">{error}</p>
-              <button onClick={() => fetchData(market)} className="mt-2 text-xs text-emerald-600 font-bold">다시 시도</button>
+              <button onClick={() => fetchData()} className="mt-2 text-xs text-emerald-600 font-bold">다시 시도</button>
             </div>
           )}
 

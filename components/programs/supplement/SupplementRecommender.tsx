@@ -500,7 +500,6 @@ function AnalyzingScreen({ answers }: { answers: Answers }) {
       timers.forEach(clearTimeout)
       clearInterval(progressInterval)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

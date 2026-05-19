@@ -8,6 +8,13 @@ import {
 import { TIPS, getCrossInterpretation } from './mental-health/tips'
 
 type Phase = 'intro' | 'quiz' | 'analyzing' | 'result'
+type MentalHealthScores = {
+  depression: number
+  anxiety: number
+  stress: number
+  selfesteem: number
+  insomnia: number
+}
 
 const DISCLAIMER = '본 검사는 선별 목적의 자가 참고용으로, 의학적 진단을 대체하지 않습니다. 정확한 진단 및 치료를 위해 정신건강의학과 전문의 상담을 권장합니다.'
 const KAKAO_KEY = '3913fde247b12ce25084eb42a9b17ed9'
@@ -76,7 +83,7 @@ export default function MentalHealth() {
   const resultRef = useRef<HTMLDivElement>(null)
 
   // URL 파라미터로 공유된 결과 읽기
-  const [sharedScores] = useState<Record<string, number> | null>(() => {
+  const [sharedScores] = useState<MentalHealthScores | null>(() => {
     if (typeof window === 'undefined') return null
     const p = new URLSearchParams(window.location.search)
     const d = p.get('d'), a = p.get('a'), s = p.get('s'), se = p.get('se'), i = p.get('i')
@@ -110,7 +117,7 @@ export default function MentalHealth() {
     else if (currentScaleIdx < activeScales.length - 1) { setCurrentScaleIdx((p) => p + 1); setCurrentQIdx(0) }
     else { setPhase('analyzing') }
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [currentQIdx, currentScale, currentScaleIdx, activeScales, isMember])
+  }, [currentQIdx, currentScale, currentScaleIdx, activeScales])
 
   function handleAnswer(value: number) {
     if (transitionLock.current) return; transitionLock.current = true
@@ -135,11 +142,11 @@ export default function MentalHealth() {
     setPhase('intro'); setAnswers({}); setCurrentScaleIdx(0); setCurrentQIdx(0); setIsTransitioning(false)
   }
 
-  function getResultUrl(scores: { depression: number; anxiety: number; stress: number; selfesteem: number; insomnia: number }) {
+  function getResultUrl(scores: MentalHealthScores) {
     return `${window.location.origin}/programs/mental-health?d=${scores.depression}&a=${scores.anxiety}&s=${scores.stress}&se=${scores.selfesteem}&i=${scores.insomnia}`
   }
 
-  async function copyLink(scores: { depression: number; anxiety: number; stress: number; selfesteem: number; insomnia: number }) {
+  async function copyLink(scores: MentalHealthScores) {
     const url = getResultUrl(scores)
     try {
       await navigator.clipboard.writeText(url)
@@ -151,7 +158,7 @@ export default function MentalHealth() {
     setTimeout(() => setLinkCopied(false), 2000)
   }
 
-  async function shareKakao(overallLabel: string, summary: string, scores: { depression: number; anxiety: number; stress: number; selfesteem: number; insomnia: number }) {
+  async function shareKakao(overallLabel: string, summary: string, scores: MentalHealthScores) {
     const w = window as KakaoWindow
     const url = getResultUrl(scores)
 

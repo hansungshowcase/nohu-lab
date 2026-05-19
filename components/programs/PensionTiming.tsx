@@ -340,7 +340,6 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
       document.body.appendChild(wrap)
 
       const html2canvas = (await import('html2canvas')).default
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const canvas = await html2canvas(wrap, {
         scale: isMob ? 1.5 : 2,
         backgroundColor: '#ffffff',
@@ -348,7 +347,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
         logging: false,
         width: wrap.scrollWidth,
         height: wrap.scrollHeight,
-      } as any)
+      } as Parameters<typeof html2canvas>[1])
       document.body.removeChild(wrap)
 
       // canvas → blob
