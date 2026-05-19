@@ -66,7 +66,12 @@ export async function GET(request: Request) {
 async function fetchKrStocks() {
   const dividendRows = await loadKrDividendRows()
   const dividendMap = new Map(dividendRows.map((s) => [s.ticker, s]))
-  const listed = await fetchKrxListedStocks()
+  let listed = await fetchKrxListedStocks()
+  let universeSource = 'krx-kind+dividend-json'
+  if (listed.length < 100) {
+    listed = await fetchNaverListedStocks()
+    universeSource = 'naver-market+dividend-json'
+  }
 
   const base = listed.length > 0
     ? listed
@@ -95,7 +100,7 @@ async function fetchKrStocks() {
     dividendCount: merged.filter((s) => s.yieldPct > 0 || s.dividendPerShare > 0).length,
     universeCount: listed.length,
     updatedAt: new Date().toISOString(),
-    source: listed.length > 0 ? 'krx-kind+dividend-json' : 'dividend-json',
+    source: listed.length > 0 ? universeSource : 'dividend-json',
     stocks: sortStocks(merged),
   }, {
     headers: { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600' },
@@ -184,6 +189,46 @@ async function fetchKrxListedStocks(): Promise<ListedStock[]> {
     if (!/^[0-9A-Z]{6}$/.test(ticker) || !name || name === '회사명') continue
     listed.push({ ticker, name, sector: normalizeKrSector(industry || market, name), industry })
   }
+  return dedupeStocks(listed)
+}
+
+async function fetchNaverListedStocks(): Promise<ListedStock[]> {
+  const markets = [
+    { code: 'KOSPI', sector: '코스피' },
+    { code: 'KOSDAQ', sector: '코스닥' },
+    { code: 'etf/marketValue', sector: 'ETF', directUrl: true },
+  ]
+  const listed: ListedStock[] = []
+
+  for (const market of markets) {
+    for (let page = 1; page <= 50; page += 1) {
+      const url = market.directUrl
+        ? `https://m.stock.naver.com/api/stocks/${market.code}?page=${page}&pageSize=100`
+        : `https://m.stock.naver.com/api/stocks/marketValue/${market.code}?page=${page}&pageSize=100`
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0)' },
+        next: { revalidate: 21600 },
+      })
+      if (!res.ok) break
+      const data = await res.json()
+      const stocks = Array.isArray(data?.stocks) ? data.stocks : []
+      if (stocks.length === 0) break
+
+      for (const row of stocks) {
+        const ticker = String(row.itemCode || '').replace(/[^0-9A-Z]/gi, '').toUpperCase()
+        const name = String(row.stockName || '').trim()
+        if (!/^[0-9A-Z]{6}$/.test(ticker) || !name) continue
+        listed.push({
+          ticker,
+          name,
+          sector: row.stockEndType === 'etf' || market.sector === 'ETF' ? 'ETF' : normalizeKrSector(market.sector, name),
+        })
+      }
+
+      if (stocks.length < 100) break
+    }
+  }
+
   return dedupeStocks(listed)
 }
 
