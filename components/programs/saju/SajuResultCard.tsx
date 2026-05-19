@@ -138,36 +138,98 @@ function getElementTone(result: SajuResult): string {
 }
 
 function getDaeunTheme(tenGod: string): string {
-  if (tenGod.includes('재')) return '돈, 사업, 거래, 현실 성과를 크게 만지는 운입니다. 벌 기회가 늘지만 지출과 욕심도 같이 커지므로 계약서와 현금흐름을 먼저 봐야 합니다.'
-  if (tenGod.includes('관')) return '직장, 책임, 직함, 시험, 평판이 핵심입니다. 압박은 늘지만 규칙을 지키고 실력을 증명하면 지위가 올라갑니다.'
-  if (tenGod.includes('인')) return '공부, 자격, 문서, 윗사람 도움을 통해 운이 열립니다. 당장 돈보다 실력과 안전장치를 만드는 시기입니다.'
-  if (tenGod.includes('식') || tenGod.includes('상')) return '말, 글, 기술, 콘텐츠, 생산성이 살아납니다. 생각을 밖으로 꺼내야 기회가 생기지만 말실수와 과로는 조심해야 합니다.'
-  return '사람, 경쟁, 독립, 동업 문제가 두드러집니다. 내 힘을 키우는 운이지만 돈이 사람 때문에 새지 않도록 선을 분명히 해야 합니다.'
+  if (tenGod.includes('재')) return `현재 큰 흐름은 ${tenGod}운입니다. 쉽게 말해 돈, 사업, 거래, 성과를 직접 만지는 시기입니다. 벌 기회가 늘지만 지출과 욕심도 같이 커지므로 계약서, 세금, 현금흐름을 먼저 확인해야 합니다.`
+  if (tenGod.includes('관')) return `현재 큰 흐름은 ${tenGod}운입니다. 직장, 책임, 직함, 시험, 평판이 중요해지는 시기입니다. 부담은 늘지만 규칙을 지키고 실력을 증명하면 승진, 합격, 신뢰로 이어질 수 있습니다.`
+  if (tenGod.includes('인')) return `현재 큰 흐름은 ${tenGod}운입니다. 공부, 자격증, 문서, 윗사람 도움으로 운이 열립니다. 당장 돈을 크게 벌기보다 실력, 학력, 자격, 안전장치를 만드는 쪽이 훨씬 유리합니다.`
+  if (tenGod.includes('식') || tenGod.includes('상')) return `현재 큰 흐름은 ${tenGod}운입니다. 말, 글, 기술, 콘텐츠, 결과물을 밖으로 꺼내야 기회가 생깁니다. 다만 말실수, 과로, 즉흥적인 결정은 손해로 이어질 수 있습니다.`
+  return `현재 큰 흐름은 ${tenGod}운입니다. 사람, 경쟁, 독립, 동업 문제가 두드러지는 시기입니다. 내 힘을 키우기에는 좋지만 돈이 사람 때문에 새지 않도록 선을 분명히 해야 합니다.`
+}
+
+function getPillarPlainName(pillar: string): string {
+  if (pillar.includes('일')) return '나 자신, 배우자, 가까운 관계의 자리'
+  if (pillar.includes('월')) return '직장, 부모, 생활 기반의 자리'
+  if (pillar.includes('년')) return '윗사람, 외부 평판, 오래된 환경의 자리'
+  if (pillar.includes('시')) return '자녀, 말년, 실행 결과의 자리'
+  return '중요한 자리'
+}
+
+function getGyeokPlain(result: SajuResult, topTenGod: string): string {
+  const name = result.gyeokguk.name
+  if (name.includes('식신')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 재능을 꾸준히 꺼내 먹고사는 구조입니다. 말, 글, 기술, 콘텐츠, 요리, 교육처럼 내가 만든 결과물이 신뢰를 얻을 때 돈이 붙습니다. 여기에 '${topTenGod}' 기운이 두드러지므로 재능을 감으로만 쓰지 말고 가격, 계약, 반복 수익 구조까지 잡아야 합니다.`
+  if (name.includes('상관')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 남과 다른 표현력, 기획력, 문제를 비트는 감각으로 길이 열리는 구조입니다. 단, 말이 세지거나 규칙을 무시하면 손해가 나므로 결과물은 자유롭게 만들되 계약과 조직 질서는 지켜야 합니다. '${topTenGod}' 기운을 어떻게 다루느냐가 돈과 평판의 핵심입니다.`
+  if (name.includes('정재')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 성실하게 모으고 관리해서 재산을 만드는 구조입니다. 월급, 고정 수입, 부동산, 장기 저축처럼 안정적인 흐름이 맞습니다. '${topTenGod}' 기운이 강하므로 돈은 크게 한 번 치기보다 잃지 않는 시스템을 만드는 쪽이 좋습니다.`
+  if (name.includes('편재')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 시장 감각, 거래 감각, 사람을 움직이는 감각으로 돈이 열리는 구조입니다. 사업, 영업, 투자, 유통에 재능이 있지만 속도가 빠른 만큼 지출도 커질 수 있습니다. '${topTenGod}' 기운을 잘 쓰려면 판을 키우기 전에 현금흐름부터 잡아야 합니다.`
+  if (name.includes('정관')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 신뢰, 직함, 규칙, 사회적 평가로 올라가는 구조입니다. 공공기관, 대기업, 전문직, 관리직처럼 책임이 분명한 자리에 강합니다. '${topTenGod}' 기운을 잘 쓰려면 평판 관리와 꾸준한 실적이 핵심입니다.`
+  if (name.includes('편관') || name.includes('칠살')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 압박, 경쟁, 위기 대응 속에서 실력이 드러나는 구조입니다. 남들이 피하는 문제를 해결하거나 책임이 큰 자리에서 성과가 납니다. 다만 무리하면 스트레스가 몸으로 오기 쉬우니 '${topTenGod}' 기운은 승부욕보다 전략과 규칙으로 써야 합니다.`
+  if (name.includes('정인') || name.includes('편인')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 공부, 자격, 문서, 전문성, 윗사람 도움으로 길이 열리는 구조입니다. 당장 큰돈보다 실력을 쌓아 몸값을 올리는 쪽이 맞습니다. '${topTenGod}' 기운을 잘 쓰려면 배운 것을 결과물로 바꾸는 실행이 필요합니다.`
+  if (name.includes('비견') || name.includes('겁재')) return `격국은 ${name}으로 봅니다. 쉽게 말하면 독립심, 경쟁심, 자기 힘으로 버티는 힘이 강한 구조입니다. 동업과 인간관계에서 기회도 오지만 돈이 새기 쉬우니 기준과 경계선이 중요합니다. '${topTenGod}' 기운은 사람을 넓히기보다 내 편과 아닌 사람을 가르는 데 써야 합니다.`
+  return `격국은 ${name}으로 봅니다. ${result.gyeokguk.description} 그래서 직업과 돈은 '${topTenGod}' 성향을 어떻게 현실적으로 쓰느냐가 핵심입니다.`
+}
+
+function getJohuPlain(result: SajuResult): string {
+  const neededElement = `${ELEMENTS[result.johu.neededElement]}(${ELEMENTS_HANJA[result.johu.neededElement]})`
+  const seasonText = `${result.johu.season}·${result.johu.temperature}`
+  if (result.johu.temperature.includes('추') || result.johu.season.includes('겨울')) {
+    return `태어난 계절 흐름은 ${seasonText} 쪽입니다. 쉽게 말해 생각은 깊고 판단은 섬세하지만, 몸과 마음이 움츠러들거나 결정이 늦어질 수 있습니다. 그래서 ${neededElement} 기운을 보완해야 합니다. 실제 생활에서는 햇빛, 온기, 따뜻한 음식, 규칙적인 운동, 사람과의 적당한 교류를 늘리는 것이 좋습니다.`
+  }
+  if (result.johu.temperature.includes('더') || result.johu.season.includes('여름')) {
+    return `태어난 계절 흐름은 ${seasonText} 쪽입니다. 쉽게 말해 추진력은 강하지만 마음이 급해지고 과열되기 쉽습니다. 그래서 ${neededElement} 기운을 보완해야 합니다. 실제 생활에서는 수면, 휴식, 물가 산책, 차분한 일정 관리, 감정이 올라올 때 바로 결정하지 않는 습관이 중요합니다.`
+  }
+  return `태어난 계절 흐름은 ${seasonText} 쪽입니다. 크게 한쪽으로 치우치기보다 환경에 따라 컨디션 차이가 나는 편입니다. ${neededElement} 기운을 보완하면 판단이 안정됩니다. 실제 생활에서는 생활 리듬, 공간 정리, 꾸준한 운동처럼 기본 루틴을 잡는 것이 좋습니다.`
 }
 
 function getAnnualTrigger(result: SajuResult): string {
   const y = result.yearAnalysis
   const signals: string[] = []
-  if (y.hasCheonganHap) signals.push(`올해는 ${y.hapTarget || '사주 한 축'}과 합이 들어와 사람의 도움, 제안, 협업이 생기기 쉽습니다.`)
-  if (y.hasJijiHap) signals.push(`지지 합이 있어 관계가 붙고 일이 묶이는 흐름입니다. 혼자 처리하기보다 연결을 활용하세요.`)
-  if (y.hasJijiChung) signals.push(`${y.chungTarget || '중요한 자리'}에 충이 있어 이동, 갈등, 일정 변경, 관계 재정비가 생길 수 있습니다.`)
-  if (signals.length === 0) signals.push('올해는 큰 충돌보다 누적과 정리가 중요한 해입니다. 갑작스러운 승부보다 꾸준한 관리가 유리합니다.')
+  if (y.hasCheonganHap) {
+    const target = y.hapTarget || '사주 한 자리'
+    signals.push(`올해는 ${target}와 합이 들어옵니다. 합은 사람이 붙고 제안이 들어오고 일이 연결되는 신호입니다. 특히 ${getPillarPlainName(target)}에서 도움, 협업, 소개가 생기기 쉽습니다.`)
+  }
+  if (y.hasJijiHap) signals.push('관계가 서로 묶이는 흐름도 있습니다. 혼자 밀어붙이기보다 소개, 협업, 기존 인맥을 활용할수록 일이 빨리 풀립니다.')
+  if (y.hasJijiChung) {
+    const target = y.chungTarget || '중요한 자리'
+    signals.push(`${target}에 충이 있습니다. 충은 나쁜 뜻만이 아니라 흔들어서 바꾸는 힘입니다. ${getPillarPlainName(target)}에서 이사, 부서 이동, 일정 변경, 관계 정리, 생활 패턴 변화가 생길 수 있으니 미리 여지를 두는 편이 좋습니다.`)
+  }
+  if (signals.length === 0) signals.push('올해는 큰 충돌보다 누적과 정리가 중요한 해입니다. 갑작스러운 승부보다 꾸준한 관리, 정리, 준비가 유리합니다.')
   return signals.join(' ')
 }
 
-function getPremiumDiagnosis(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined): string[] {
+function getPremiumDiagnosis(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined) {
   const profile = getPlainProfile(result.dayMaster)
   const topTenGod = getTopTenGod(result)
   const root = ROOT_STRENGTH_LABELS[result.tuganTonggeun.rootStrength]
-  const current = currentDaeun ? getDaeunTheme(currentDaeun.tenGod) : '현재 대운을 특정하기 어려워 원국과 올해 흐름을 우선 기준으로 봅니다.'
+  const rootDetail = root?.detail
+    .replace('일간이', '내 중심 기운이')
+    .replace('지지에', '사주 안에서')
+    .replace('통근하고 있어', '받쳐지고 있어')
+    .replace('종격의 가능성이 있습니다.', '환경을 바꾸면 오히려 유연함이 장점이 될 수 있습니다.')
+  const current = currentDaeun ? getDaeunTheme(currentDaeun.tenGod) : '현재 대운을 특정하기 어려워 원래 사주와 올해 흐름을 우선 기준으로 봅니다.'
 
   return [
-    `이 사주의 첫 판단은 '${profile.label}'이라는 중심 성향입니다. 겉으로 보이는 성격보다 중요한 것은 선택의 기준이 분명하고, 한 번 마음을 정하면 쉽게 흔들리지 않는다는 점입니다.`,
-    `격국은 ${result.gyeokguk.name}으로 봅니다. ${result.gyeokguk.description} 그래서 직업과 돈은 '${topTenGod}' 성향을 어떻게 쓰느냐가 핵심입니다.`,
-    `태어난 계절 기준 조후는 ${result.johu.season}·${result.johu.temperature} 쪽으로 잡힙니다. ${result.johu.explanation}`,
-    `뿌리 판단은 ${root ? root.label : '보통'}입니다. ${root ? root.detail : '환경을 잘 고르면 안정적으로 힘을 쓰는 구조입니다.'}`,
-    current,
-    getAnnualTrigger(result),
+    {
+      label: '성향의 핵심',
+      text: `이 사주의 첫 판단은 '${profile.label}'입니다. 겉으로는 차분하거나 예민해 보여도, 실제로는 자기 기준이 분명하고 마음을 정하면 쉽게 흔들리지 않는 타입입니다. 그래서 아무 일이나 넓게 벌리는 것보다, 기준을 세우고 완성도를 높이는 방식에서 힘이 납니다.`,
+    },
+    {
+      label: '먹고사는 방식',
+      text: getGyeokPlain(result, topTenGod),
+    },
+    {
+      label: '계절 보완점',
+      text: getJohuPlain(result),
+    },
+    {
+      label: '버티는 힘',
+      text: `버티는 힘은 ${root ? root.label : '보통'}으로 봅니다. ${rootDetail || '환경을 잘 고르면 안정적으로 힘을 쓰는 구조입니다.'} 그래서 혼자 버티는 승부보다 안정적인 직장, 검증된 파트너, 일정한 생활 루틴, 장기 계약처럼 기반을 만들어두는 것이 중요합니다.`,
+    },
+    {
+      label: '지금 10년 운',
+      text: current,
+    },
+    {
+      label: '올해 사건 포인트',
+      text: getAnnualTrigger(result),
+    },
   ]
 }
 
@@ -446,8 +508,8 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
           <div className="space-y-2.5">
             {premiumDiagnosis.map((point, i) => (
               <div key={i} className="rounded-xl bg-gray-50 border border-gray-100 p-3">
-                <p className="text-xs font-black text-gray-400 mb-1">판단 {i + 1}</p>
-                <p className="text-sm sm:text-base text-gray-800 leading-[1.85]">{point}</p>
+                <p className="text-xs font-black text-gray-400 mb-1">판단 {i + 1} · {point.label}</p>
+                <p className="text-sm sm:text-base text-gray-800 leading-[1.85]">{point.text}</p>
               </div>
             ))}
           </div>
