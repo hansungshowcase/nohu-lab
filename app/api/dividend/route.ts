@@ -75,16 +75,17 @@ const US_BDC_TICKERS = new Set(['MAIN', 'PSEC', 'GAIN', 'GLAD', 'HRZN', 'PFLT', 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const market = searchParams.get('market') || 'kr'
+  const includeAll = searchParams.get('includeAll') === '1'
 
   try {
-    if (market === 'kr') return await fetchKrStocks()
-    return await fetchUsStocks()
+    if (market === 'kr') return await fetchKrStocks(includeAll)
+    return await fetchUsStocks(includeAll)
   } catch (e) {
     return NextResponse.json({ error: 'fetch failed', detail: String(e) }, { status: 500 })
   }
 }
 
-async function fetchKrStocks() {
+async function fetchKrStocks(includeAll: boolean) {
   const dividendRows = await loadKrDividendRows()
   const dividendMap = new Map(dividendRows.map((s) => [s.ticker, s]))
   const [krxListed, naverListed] = await Promise.all([
@@ -118,21 +119,24 @@ async function fetchKrStocks() {
     }
   })
 
+  const dividendStocks = merged.filter(isDividendStock)
+  const stocks = includeAll ? merged : dividendStocks
+
   return NextResponse.json({
     market: 'kr',
-    total: merged.length,
-    count: merged.length,
-    dividendCount: merged.filter((s) => s.yieldPct > 0 || s.dividendPerShare > 0).length,
+    total: stocks.length,
+    count: stocks.length,
+    dividendCount: dividendStocks.length,
     universeCount: listed.length,
     updatedAt: new Date().toISOString(),
     source: listed.length > 0 ? universeSource : 'dividend-json',
-    stocks: sortStocks(merged),
+    stocks: sortStocks(stocks),
   }, {
     headers: { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600' },
   })
 }
 
-async function fetchUsStocks() {
+async function fetchUsStocks(includeAll: boolean) {
   const dividendRows = await loadUsDividendRows()
   const dividendMap = new Map(dividendRows.map((s) => [s.ticker, s]))
   const listed = await fetchNasdaqListedStocks()
@@ -163,24 +167,30 @@ async function fetchUsStocks() {
   })
 
   const enriched = await enrichUsFrequentPayouts(merged)
+  const dividendStocks = enriched.filter(isDividendStock)
+  const stocks = includeAll ? enriched : dividendStocks
 
   return NextResponse.json({
     market: 'us',
-    total: enriched.length,
-    count: enriched.length,
-    dividendCount: enriched.filter((s) => s.yieldPct > 0 || (s.dividendRate || 0) > 0).length,
+    total: stocks.length,
+    count: stocks.length,
+    dividendCount: dividendStocks.length,
     universeCount: listed.length,
     updatedAt: new Date().toISOString(),
     source: listed.length > 0 ? 'nasdaqtrader+dividend-json+yahoo-events' : 'dividend-json+yahoo-events',
-    stocks: sortStocks(enriched),
+    stocks: sortStocks(stocks),
   }, {
     headers: { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600' },
   })
 }
 
+function isDividendStock(stock: DividendStock) {
+  return (stock.yieldPct || 0) > 0 || (stock.dividendPerShare || 0) > 0 || (stock.dividendRate || 0) > 0
+}
+
 async function enrichUsFrequentPayouts(stocks: DividendStock[]): Promise<DividendStock[]> {
   const candidates = stocks.filter((s) =>
-    (US_MONTHLY_TICKERS.has(s.ticker) || US_WEEKLY_TICKERS.has(s.ticker)) &&
+    (US_MONTHLY_TICKERS.has(s.ticker) || US_WEEKLY_TICKERS.has(s.ticker) || isDividendStock(s)) &&
     ((s.yieldPct || 0) <= 0 || (s.dividendRate || 0) <= 0 || (s.priceUsd || 0) <= 0)
   )
   if (candidates.length === 0) return stocks
