@@ -24,6 +24,23 @@ interface Props {
   result: SajuResult
 }
 
+const DAY_MASTER_PLAIN = [
+  { label: '원칙이 강한 리더형', match: '차분하게 균형을 잡아주는 사람', caution: '지나치게 날카롭거나 통제하려는 사람' },
+  { label: '부드럽지만 생활력이 강한 실속형', match: '따뜻하게 밀어주고 현실을 함께 챙기는 사람', caution: '기준이 너무 높고 차가운 사람' },
+  { label: '밝고 추진력 있는 표현형', match: '섬세하게 보완해주고 품격을 맞춰주는 사람', caution: '감정 기복이 크거나 너무 자유로운 사람' },
+  { label: '조용하지만 직감이 좋은 몰입형', match: '큰 그림을 잡아주고 안정감을 주는 사람', caution: '예민함을 더 자극하는 사람' },
+  { label: '믿음직하고 책임감 강한 관리자형', match: '따뜻하게 움직이게 해주는 사람', caution: '너무 급하고 자기주장이 강한 사람' },
+  { label: '꼼꼼하고 사람을 잘 챙기는 현실형', match: '기준이 분명하고 약속을 지키는 사람', caution: '우유부단하거나 감정적으로 흔드는 사람' },
+  { label: '결단력 있고 승부욕 강한 실행형', match: '유연하게 받아주면서 현실감 있는 사람', caution: '자존심 싸움을 크게 만드는 사람' },
+  { label: '섬세하고 기준이 높은 완성형', match: '밝고 따뜻하게 마음을 열어주는 사람', caution: '무례하거나 압박이 강한 사람' },
+  { label: '아이디어가 많고 활동 반경이 넓은 기획형', match: '깊이를 알아주고 감정적으로 안정된 사람', caution: '답답하게 묶어두는 사람' },
+  { label: '차분하고 눈치가 빠른 분석형', match: '중심을 잡아주고 꾸준히 지켜주는 사람', caution: '성급하고 감정 표현이 과한 사람' },
+] as const
+
+function getPlainProfile(dayMaster: number) {
+  return DAY_MASTER_PLAIN[dayMaster] || DAY_MASTER_PLAIN[0]
+}
+
 /* ── 사주 기둥 박스 ── */
 function PillarBox({ label, pillar, tenGod, isMe }: { label: string; pillar: Pillar; tenGod?: string; isMe?: boolean }) {
   const stemEl = STEM_ELEMENT[pillar.stem]
@@ -122,6 +139,7 @@ function getElementTone(result: SajuResult): string {
 
 function buildConsultingPoints(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined): string[] {
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
+  const plain = getPlainProfile(result.dayMaster)
   const topTenGod = getTopTenGod(result)
   const topTenGodInfo = TEN_GOD_INTERPRETATIONS[topTenGod]
   const currentDaeunText = currentDaeun
@@ -129,10 +147,10 @@ function buildConsultingPoints(result: SajuResult, currentDaeun: SajuResult['dae
     : '현재 대운 정보가 약하므로 올해 운세와 월운을 우선 기준으로 보세요.'
 
   return [
-    `타고난 기질은 ${profile.nature}의 ${STEMS[result.dayMaster]}일간입니다. ${result.isDayMasterStrong ? '자기 힘으로 밀어붙일 때 성과가 나는 명식' : '사람·환경·자격의 도움을 받을수록 안정되는 명식'}입니다.`,
+    `타고난 중심 성향은 ${plain.label}입니다. ${result.isDayMasterStrong ? '스스로 결정하고 밀고 나갈 때 성과가 나는 편' : '좋은 사람, 좋은 환경, 자격과 경험의 도움을 받을수록 안정되는 편'}입니다.`,
     `사주 구조상 ${topTenGod} 기운이 두드러집니다. ${topTenGodInfo ? topTenGodInfo.keyword + ' 성향이 강해 ' + topTenGodInfo.career : '이 기운이 직업과 인간관계의 핵심입니다.'}`,
     currentDaeunText,
-    `용신은 ${ELEMENTS[result.usefulGod]}(${ELEMENTS_HANJA[result.usefulGod]})입니다. 중요한 선택은 이 기운을 보충하는 방향, 즉 색·공간·직업 방식·생활 리듬까지 맞출수록 결과가 좋아집니다.`,
+    `보완하면 좋은 방향은 ${ELEMENTS[result.usefulGod]}(${ELEMENTS_HANJA[result.usefulGod]})입니다. 중요한 선택은 이 기운을 보충하는 쪽, 즉 색·공간·직업 방식·생활 리듬까지 맞출수록 결과가 좋아집니다.`,
     result.hourPillar
       ? `태어난 시간이 반영되어 말년운·자녀운·실행 방식까지 포함해 읽었습니다.`
       : `태어난 시간을 모르면 시주가 빠져 말년운·자녀운·세부 직업운은 70~80% 수준으로 봐야 합니다. 시간을 알면 풀이 정확도가 크게 올라갑니다.`,
@@ -141,9 +159,8 @@ function buildConsultingPoints(result: SajuResult, currentDaeun: SajuResult['dae
 
 function getRelationshipInsight(result: SajuResult): string {
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
-  const partnerElement = profile.bestMatch.map((m) => `${STEMS[m]}일간`).slice(0, 2).join(', ')
-  const cautionElement = profile.worstMatch.map((m) => `${STEMS[m]}일간`).slice(0, 2).join(', ')
-  return `연애는 ${profile.loveStyle} 잘 맞는 기운은 ${partnerElement || '나를 보완해주는 기운'}이며, ${cautionElement ? `${cautionElement} 계열과는 초반 끌림은 있어도 주도권 다툼을 조심해야 합니다.` : '상대의 오행보다 생활 리듬과 가치관을 더 봐야 합니다.'}`
+  const plain = getPlainProfile(result.dayMaster)
+  return `연애는 ${profile.loveStyle} 잘 맞는 사람은 ${plain.match}입니다. 반대로 ${plain.caution}과는 초반 끌림이 있어도 주도권 다툼을 조심해야 합니다.`
 }
 
 function getCareerInsight(result: SajuResult): string {
@@ -208,6 +225,7 @@ function getSinsalBadge(key: string) {
 /* ═══════════════════════════════════════════════ */
 const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
+  const plainProfile = getPlainProfile(result.dayMaster)
   const fortune = getYearFortune(result.dayMasterElement, new Date().getFullYear(), result.isDayMasterStrong, result.dayMaster)
   const viralSummary = getViralSummary(result.dayMaster, result.isDayMasterStrong)
   const strength = STRENGTH_INTERPRETATIONS[result.isDayMasterStrong ? 'strong' : 'weak']
@@ -301,9 +319,9 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               <span className="text-4xl sm:text-5xl flex-shrink-0">{profile.emoji}</span>
               <div className="min-w-0">
                 <p className="text-base sm:text-lg font-black text-orange-800 leading-tight">
-                  {STEMS_HANJA[result.dayMaster]}{STEMS[result.dayMaster]} · {profile.element}
+                  당신의 중심 성향 · {plainProfile.label}
                 </p>
-                <p className="text-xs sm:text-sm text-orange-600 mt-0.5">{profile.nature} · {strength.label}</p>
+                <p className="text-xs sm:text-sm text-orange-600 mt-0.5">상담 요약 · {strength.label}</p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {profile.personality.map(k => (
                     <span key={k} className="text-xs bg-orange-100 text-orange-700 px-2.5 py-0.5 rounded-full font-medium">#{k}</span>
@@ -359,7 +377,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
                 <p className="text-xs font-bold text-emerald-700 mb-1">통근/뿌리</p>
                 <p className="text-sm text-gray-800 leading-relaxed">
-                  {rootLabel ? `${rootLabel.label}: ${rootLabel.detail}` : '일간의 뿌리를 지지와 지장간으로 확인했습니다.'}
+                  {rootLabel ? `${rootLabel.label}: ${rootLabel.detail}` : '내 성향이 얼마나 안정적으로 받쳐지는지 사주 안의 기반을 확인했습니다.'}
                 </p>
               </div>
               <div className="bg-violet-50 rounded-xl p-3 border border-violet-100">
