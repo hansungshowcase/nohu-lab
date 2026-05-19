@@ -27,6 +27,10 @@ interface StockItem {
 type Category = 'stock' | 'etf'
 type SubMarket = 'kr' | 'us'
 
+function isEtfStock(stock: StockItem): boolean {
+  return stock.sector === 'ETF' || stock.sector.includes('ETF') || stock.sector.includes('펀드')
+}
+
 export default function DividendCalc() {
   // URL 파라미터로 공유된 결과 감지
   const searchParams = useSearchParams()
@@ -100,8 +104,8 @@ export default function DividendCalc() {
   // 현재 탭에 맞는 stocks 추출
   const stocks = useMemo(() => {
     const source = subMarket === 'kr' ? allKr : allUs
-    if (category === 'etf') return source.filter((s) => s.sector === 'ETF')
-    return source.filter((s) => s.sector !== 'ETF')
+    if (category === 'etf') return source.filter(isEtfStock)
+    return source.filter((s) => !isEtfStock(s))
   }, [category, subMarket, allKr, allUs])
 
   const market = subMarket // 세금 계산용
