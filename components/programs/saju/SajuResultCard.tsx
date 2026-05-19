@@ -3,7 +3,7 @@
 import { forwardRef } from 'react'
 import {
   SajuResult, STEMS, STEMS_HANJA, BRANCHES_HANJA,
-  ELEMENTS, ELEMENTS_HANJA, Pillar,
+  ELEMENTS, ELEMENTS_HANJA, Pillar, pillarToHanja,
   STEM_ELEMENT, BRANCH_ELEMENT, STEM_YINYANG,
 } from './sajuEngine'
 import {
@@ -11,7 +11,13 @@ import {
   getYearFortune, getViralSummary,
   getUsefulGodAdvice,
   getDaeunInterpretation,
-  WOLUN_RATING_LABELS,
+  SINSAL_INTERPRETATIONS,
+  TEN_GOD_INTERPRETATIONS,
+  HAPCHUNG_INTERPRETATIONS,
+  EXTRA_SINSAL_INTERPRETATIONS,
+  ROOT_STRENGTH_LABELS,
+  GONGMANG_SEVERITY_LABELS,
+  JONGGUK_INTERPRETATIONS,
 } from './sajuData'
 
 interface Props {
@@ -91,6 +97,112 @@ function ElementBar({ counts, total }: { counts: number[]; total: number }) {
   )
 }
 
+function getSeasonName(monthBranch: number): string {
+  if ([2, 3].includes(monthBranch)) return '봄 목기(木氣)'
+  if ([5, 6].includes(monthBranch)) return '여름 화기(火氣)'
+  if ([8, 9].includes(monthBranch)) return '가을 금기(金氣)'
+  if ([11, 0].includes(monthBranch)) return '겨울 수기(水氣)'
+  return '환절기 토기(土氣)'
+}
+
+function getTopTenGod(result: SajuResult): string {
+  const entries = Object.entries(result.yearAnalysis.tenGodCounts)
+    .filter(([name]) => name !== '일주')
+    .sort((a, b) => b[1] - a[1])
+  return entries[0]?.[0] || result.yearAnalysis.dominantTenGod || result.tenGods[1] || '비견'
+}
+
+function getElementTone(result: SajuResult): string {
+  const max = Math.max(...result.elementCounts)
+  const min = Math.min(...result.elementCounts)
+  const strong = result.elementCounts.findIndex((v) => v === max)
+  const weak = result.elementCounts.findIndex((v) => v === min)
+  return `${ELEMENTS[strong]}(${ELEMENTS_HANJA[strong]}) 기운이 가장 강하고 ${ELEMENTS[weak]}(${ELEMENTS_HANJA[weak]}) 기운이 가장 약합니다. 강한 기운은 장점이지만 과하면 고집·과로·편중으로 드러나고, 약한 기운은 보완해야 운이 부드럽게 풀립니다.`
+}
+
+function buildConsultingPoints(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined): string[] {
+  const profile = DAY_MASTER_PROFILES[result.dayMaster]
+  const topTenGod = getTopTenGod(result)
+  const topTenGodInfo = TEN_GOD_INTERPRETATIONS[topTenGod]
+  const currentDaeunText = currentDaeun
+    ? `${currentDaeun.startAge}~${currentDaeun.startAge + 9}세는 ${currentDaeun.tenGod}운이라, ${currentDaeun.tenGod.includes('재') ? '돈·사업·현실 성과' : currentDaeun.tenGod.includes('관') ? '직장·책임·명예' : currentDaeun.tenGod.includes('인') ? '공부·자격·귀인' : currentDaeun.tenGod.includes('식') || currentDaeun.tenGod.includes('상') ? '표현·기술·콘텐츠' : '사람·경쟁·독립'} 쪽 사건이 크게 움직입니다.`
+    : '현재 대운 정보가 약하므로 올해 운세와 월운을 우선 기준으로 보세요.'
+
+  return [
+    `타고난 기질은 ${profile.nature}의 ${STEMS[result.dayMaster]}일간입니다. ${result.isDayMasterStrong ? '자기 힘으로 밀어붙일 때 성과가 나는 명식' : '사람·환경·자격의 도움을 받을수록 안정되는 명식'}입니다.`,
+    `사주 구조상 ${topTenGod} 기운이 두드러집니다. ${topTenGodInfo ? topTenGodInfo.keyword + ' 성향이 강해 ' + topTenGodInfo.career : '이 기운이 직업과 인간관계의 핵심입니다.'}`,
+    currentDaeunText,
+    `용신은 ${ELEMENTS[result.usefulGod]}(${ELEMENTS_HANJA[result.usefulGod]})입니다. 중요한 선택은 이 기운을 보충하는 방향, 즉 색·공간·직업 방식·생활 리듬까지 맞출수록 결과가 좋아집니다.`,
+    result.hourPillar
+      ? `태어난 시간이 반영되어 말년운·자녀운·실행 방식까지 포함해 읽었습니다.`
+      : `태어난 시간을 모르면 시주가 빠져 말년운·자녀운·세부 직업운은 70~80% 수준으로 봐야 합니다. 시간을 알면 풀이 정확도가 크게 올라갑니다.`,
+  ]
+}
+
+function getRelationshipInsight(result: SajuResult): string {
+  const profile = DAY_MASTER_PROFILES[result.dayMaster]
+  const partnerElement = profile.bestMatch.map((m) => `${STEMS[m]}일간`).slice(0, 2).join(', ')
+  const cautionElement = profile.worstMatch.map((m) => `${STEMS[m]}일간`).slice(0, 2).join(', ')
+  return `연애는 ${profile.loveStyle} 잘 맞는 기운은 ${partnerElement || '나를 보완해주는 기운'}이며, ${cautionElement ? `${cautionElement} 계열과는 초반 끌림은 있어도 주도권 다툼을 조심해야 합니다.` : '상대의 오행보다 생활 리듬과 가치관을 더 봐야 합니다.'}`
+}
+
+function getCareerInsight(result: SajuResult): string {
+  const profile = DAY_MASTER_PROFILES[result.dayMaster]
+  const topTenGod = getTopTenGod(result)
+  const tenGodInfo = TEN_GOD_INTERPRETATIONS[topTenGod]
+  const root = ROOT_STRENGTH_LABELS[result.tuganTonggeun.rootStrength]
+  return `${profile.careerFit.join(' · ')} 계열이 기본 적성입니다. ${tenGodInfo ? tenGodInfo.career : ''} ${root ? `통근은 '${root.label}'이라 ${root.detail}` : ''}`
+}
+
+function getRiskInsight(result: SajuResult): string {
+  const warnings = result.yearAnalysis.healthRisk.map((h) => `${h.organ}: ${h.warning}`)
+  if (warnings.length > 0) return warnings.join(' / ')
+  return DAY_MASTER_PROFILES[result.dayMaster].healthTip
+}
+
+function clampScore(n: number): number {
+  return Math.max(35, Math.min(95, Math.round(n)))
+}
+
+function getTrendScores(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined) {
+  const c = result.yearAnalysis.tenGodCounts
+  const get = (name: string) => Number(c[name] || 0)
+  const hasHarmony = result.hapChung.hasHarmony ? 6 : 0
+  const hasClash = result.hapChung.hasClash ? -6 : 0
+  const rooted = result.tuganTonggeun.rootStrength === 'strong' ? 8 : result.tuganTonggeun.rootStrength === 'medium' ? 4 : result.tuganTonggeun.rootStrength === 'weak' ? -2 : -5
+  const current = currentDaeun?.tenGod || ''
+
+  const wealth = 50 + get('정재') * 7 + get('편재') * 8 + (current.includes('재') ? 10 : 0) + (result.isDayMasterStrong ? 5 : -3) + hasClash
+  const career = 50 + get('정관') * 8 + get('편관') * 7 + (current.includes('관') ? 10 : 0) + rooted + hasHarmony
+  const expression = 50 + get('식신') * 8 + get('상관') * 8 + (current.includes('식') || current.includes('상') ? 10 : 0) + (result.enhancedSinsal.hasMunchang ? 6 : 0)
+  const relationship = 50 + (result.hapChung.hasHarmony ? 10 : 0) + get('정재') * 3 + get('정관') * 3 + (result.enhancedSinsal.hasDohwa ? 8 : 0) + (result.enhancedSinsal.hasHongyeom ? 6 : 0) + hasClash
+  const study = 50 + get('정인') * 8 + get('편인') * 8 + (current.includes('인') ? 10 : 0) + (result.enhancedSinsal.hasMunchang ? 8 : 0) + (result.enhancedSinsal.hasHakdang ? 8 : 0)
+  const mobility = 50 + (result.enhancedSinsal.hasYeokma ? 15 : 0) + (result.enhancedSinsal.hasGyeokgak ? 8 : 0) + (result.hapChung.hasClash ? 8 : 0) + get('상관') * 3
+
+  return [
+    { label: '재물 축적', score: clampScore(wealth), desc: wealth >= 70 ? '돈이 움직이는 신호가 강합니다. 벌기보다 지키는 기준까지 세우면 좋습니다.' : '큰 한방보다 안정적 축적이 맞습니다. 소비 통제가 재물운을 올립니다.' },
+    { label: '직업 상승', score: clampScore(career), desc: career >= 70 ? '조직·직함·책임을 잡을수록 성과가 납니다.' : '무리한 승부보다 기술과 기반을 쌓는 흐름이 좋습니다.' },
+    { label: '표현/콘텐츠', score: clampScore(expression), desc: expression >= 70 ? '말·글·콘텐츠·기술 표현으로 기회가 열립니다.' : '아이디어는 있으나 실행 루틴을 만들어야 결과가 납니다.' },
+    { label: '인연 안정', score: clampScore(relationship), desc: relationship >= 70 ? '인연운이 살아 있으나 선을 지키는 것이 오래 가는 핵심입니다.' : '감정보다 생활 리듬과 신뢰를 먼저 맞춰야 합니다.' },
+    { label: '학습/자격', score: clampScore(study), desc: study >= 70 ? '공부·자격증·전문성 투자가 바로 운을 여는 구조입니다.' : '필요한 공부를 좁게 정해 반복해야 효율이 납니다.' },
+    { label: '이동/변화', score: clampScore(mobility), desc: mobility >= 70 ? '이사·이직·출장·해외 등 움직일수록 운이 트입니다.' : '큰 이동보다 현재 기반을 다지는 쪽이 안정적입니다.' },
+  ]
+}
+
+function getSinsalBadge(key: string) {
+  const extra = EXTRA_SINSAL_INTERPRETATIONS[key]
+  if (extra) return extra
+
+  const base = SINSAL_INTERPRETATIONS[key]
+  if (!base) return null
+
+  return {
+    emoji: base.emoji,
+    name: base.name,
+    isPositive: !['yangin', 'geobsal'].includes(key),
+  }
+}
+
 /* ═══════════════════════════════════════════════ */
 /* ── 메인 결과 카드 ── */
 /* ═══════════════════════════════════════════════ */
@@ -105,6 +217,31 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
 
   // 현재 대운
   const currentDaeun = result.daeun.find(d => d.isCurrent)
+  const consultingPoints = buildConsultingPoints(result, currentDaeun)
+  const topTenGod = getTopTenGod(result)
+  const topTenGodInfo = TEN_GOD_INTERPRETATIONS[topTenGod]
+  const rootLabel = ROOT_STRENGTH_LABELS[result.tuganTonggeun.rootStrength]
+  const gongmangLabel = GONGMANG_SEVERITY_LABELS[result.enhancedGongmang.severity]
+  const specialSinsal = [
+    result.enhancedSinsal.hasCheoneul && 'cheoneul',
+    result.enhancedSinsal.hasMunchang && 'munchang',
+    result.enhancedSinsal.hasYeokma && 'yeokma',
+    result.enhancedSinsal.hasDohwa && 'dohwa',
+    result.enhancedSinsal.hasHwagae && 'hwagae',
+    result.enhancedSinsal.hasBaekho && 'baekho',
+    result.enhancedSinsal.hasHongyeom && 'hongyeom',
+    result.enhancedSinsal.hasCheonui && 'cheonui',
+    result.enhancedSinsal.hasHakdang && 'hakdang',
+    result.enhancedSinsal.hasCheonduk && 'cheonduk',
+    result.enhancedSinsal.hasWolduk && 'wolduk',
+    result.enhancedSinsal.hasGwimungwan && 'gwimungwan',
+    result.enhancedSinsal.hasWonjin && 'wonjin',
+    result.enhancedSinsal.hasBokseong && 'bokseong',
+    result.enhancedSinsal.hasGeumyeo && 'geumyeo',
+    result.enhancedSinsal.hasTaeguk && 'taeguk',
+  ].filter((key): key is string => Boolean(key) && Boolean(getSinsalBadge(String(key)))).slice(0, 5)
+  const trendScores = getTrendScores(result, currentDaeun)
+  const visibleInteractions = result.hapChung.details.slice(0, 4)
 
   const pillars: { label: string; pillar: Pillar; tenGod?: string; isMe?: boolean }[] = [
     { label: '시주(時)', pillar: result.hourPillar || { stem: 0, branch: 0 }, tenGod: result.tenGods[3] || '' },
@@ -177,6 +314,153 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
             <p className="text-sm sm:text-base text-gray-800 leading-[1.9] font-medium">{profile.description}</p>
           </div>
         </div>
+
+        {/* ═══ 유료 상담식 핵심 진단 ═══ */}
+        <div className="bg-gradient-to-br from-gray-950 to-gray-800 rounded-2xl p-4 sm:p-5 text-white">
+          <h3 className="text-base sm:text-lg font-black mb-3">🔎 상담 핵심 진단</h3>
+          <div className="space-y-2.5">
+            {consultingPoints.map((point, i) => (
+              <div key={i} className="flex gap-2.5 items-start">
+                <span className="w-6 h-6 rounded-full bg-white/15 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                <p className="text-sm sm:text-base leading-[1.8] text-gray-100">{point}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ═══ 명리 근거 ═══ */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200">
+          <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-gray-700 rounded-full" />
+            왜 이렇게 풀이하나
+          </h3>
+          <div className="grid gap-2.5">
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-xs font-bold text-gray-500 mb-1">명식 구조</p>
+              <p className="text-sm text-gray-800 leading-relaxed">
+                년주 {pillarToHanja(result.yearPillar)} · 월주 {pillarToHanja(result.monthPillar)} · 일주 {pillarToHanja(result.dayPillar)}
+                {result.hourPillar ? ` · 시주 ${pillarToHanja(result.hourPillar)}` : ' · 시주 미입력'} 기준입니다.
+                월지는 {getSeasonName(result.monthPillar.branch)}라 계절 기운이 판단의 중심입니다.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="bg-orange-50 rounded-xl p-3 border border-orange-100">
+                <p className="text-xs font-bold text-orange-700 mb-1">신강/신약</p>
+                <p className="text-sm text-gray-800 leading-relaxed">
+                  점수 {result.dayMasterScore.toFixed(1)}점으로 {strength.label}입니다. {strength.advice}
+                </p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                <p className="text-xs font-bold text-blue-700 mb-1">십신 핵심</p>
+                <p className="text-sm text-gray-800 leading-relaxed">
+                  핵심 십신은 {topTenGod}입니다. {topTenGodInfo ? `${topTenGodInfo.keyword} 성향이 강하고, ${topTenGodInfo.personality}` : '이 기운이 성격과 선택 방식에 크게 작용합니다.'}
+                </p>
+              </div>
+              <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                <p className="text-xs font-bold text-emerald-700 mb-1">통근/뿌리</p>
+                <p className="text-sm text-gray-800 leading-relaxed">
+                  {rootLabel ? `${rootLabel.label}: ${rootLabel.detail}` : '일간의 뿌리를 지지와 지장간으로 확인했습니다.'}
+                </p>
+              </div>
+              <div className="bg-violet-50 rounded-xl p-3 border border-violet-100">
+                <p className="text-xs font-bold text-violet-700 mb-1">공망/빈자리</p>
+                <p className="text-sm text-gray-800 leading-relaxed">
+                  {gongmangLabel ? `${gongmangLabel.label}: ${gongmangLabel.detail}` : '공망 영향은 크지 않습니다.'}
+                </p>
+              </div>
+            </div>
+            <div className="bg-amber-50 rounded-xl p-3 border border-amber-100">
+              <p className="text-xs font-bold text-amber-700 mb-1">오행 판단</p>
+              <p className="text-sm text-gray-800 leading-relaxed">{getElementTone(result)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ 분야별 상담 포인트 ═══ */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div className="bg-blue-50 rounded-xl p-3.5 border border-blue-200">
+            <p className="text-sm font-black text-blue-800 mb-1">💼 직업 선택</p>
+            <p className="text-sm text-gray-800 leading-relaxed">{getCareerInsight(result)}</p>
+          </div>
+          <div className="bg-pink-50 rounded-xl p-3.5 border border-pink-200">
+            <p className="text-sm font-black text-pink-800 mb-1">❤️ 인연 패턴</p>
+            <p className="text-sm text-gray-800 leading-relaxed">{getRelationshipInsight(result)}</p>
+          </div>
+          <div className="bg-green-50 rounded-xl p-3.5 border border-green-200">
+            <p className="text-sm font-black text-green-800 mb-1">🏥 건강 포인트</p>
+            <p className="text-sm text-gray-800 leading-relaxed">{getRiskInsight(result)}</p>
+          </div>
+        </div>
+
+        {/* ═══ 경향 점수화 ═══ */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200">
+          <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-orange-400 rounded-full" />
+            명식 경향 점수
+          </h3>
+          <p className="text-xs text-gray-400 mb-3">오행·십신·대운·합충·신살 신호를 합산한 내부 가중 점수입니다.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {trendScores.map((item) => (
+              <div key={item.label} className="rounded-xl p-3 bg-gray-50 border border-gray-100">
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-sm font-bold text-gray-800">{item.label}</p>
+                  <p className={`text-sm font-black ${item.score >= 75 ? 'text-orange-600' : item.score >= 60 ? 'text-emerald-600' : 'text-gray-500'}`}>{item.score}</p>
+                </div>
+                <div className="h-2 bg-white rounded-full overflow-hidden mb-2 border border-gray-100">
+                  <div
+                    className={`h-full rounded-full ${item.score >= 75 ? 'bg-orange-500' : item.score >= 60 ? 'bg-emerald-500' : 'bg-gray-400'}`}
+                    style={{ width: `${item.score}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {(visibleInteractions.length > 0 || specialSinsal.length > 0 || result.jongguk) && (
+          <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200">
+            <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-slate-500 rounded-full" />
+              특수 신호
+            </h3>
+            {result.jongguk && (
+              <div className="mb-3 bg-white rounded-xl p-3 border border-slate-100">
+                <p className="text-sm font-black text-slate-800">
+                  {JONGGUK_INTERPRETATIONS[result.jongguk.type]?.emoji || '✨'} {result.jongguk.name}
+                </p>
+                <p className="text-sm text-gray-700 leading-relaxed mt-1">
+                  {JONGGUK_INTERPRETATIONS[result.jongguk.type]?.description || result.jongguk.description}
+                </p>
+              </div>
+            )}
+            {visibleInteractions.length > 0 && (
+              <div className="space-y-2 mb-3">
+                {visibleInteractions.map((d, i) => {
+                  const info = HAPCHUNG_INTERPRETATIONS[d.type]
+                  return (
+                    <div key={`${d.type}-${i}`} className="bg-white rounded-xl p-3 border border-slate-100">
+                      <p className="text-sm font-bold text-slate-800">{info?.emoji || '•'} {info?.name || d.type} · {d.description}</p>
+                      <p className="text-xs text-gray-600 leading-relaxed mt-1">{info?.detail || '명식 안의 관계 신호입니다.'}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            {specialSinsal.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {specialSinsal.map((key) => {
+                  const info = getSinsalBadge(key)
+                  return info ? (
+                    <span key={key} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${info.isPositive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                      {info.emoji} {info.name}
+                    </span>
+                  ) : null
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ═══ 2. 오행 밸런스 ═══ */}
         <div>
