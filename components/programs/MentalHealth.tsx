@@ -227,18 +227,9 @@ export default function MentalHealth() {
 
       if (!dataUrl || !dataUrl.startsWith('data:image')) throw new Error('이미지 생성 실패')
 
-      // Blob → 모바일/PC 분기 다운로드
+      // Blob → 파일 다운로드
       const res = await fetch(dataUrl)
       const blob = await res.blob()
-      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
-
-      if (isMobile && navigator.share) {
-        try {
-          const file = new File([blob], 'mental-health-result.png', { type: 'image/png' })
-          await navigator.share({ files: [file], title: '심리 자가진단 결과' })
-          return
-        } catch (e) { if ((e as Error).name === 'AbortError') return }
-      }
 
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')

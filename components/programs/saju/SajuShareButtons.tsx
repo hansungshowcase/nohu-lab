@@ -80,26 +80,6 @@ export default function SajuShareButtons({ result, cardRef }: Props) {
       if (isMobile) {
         const isKakao = /KAKAOTALK/i.test(navigator.userAgent)
 
-        // 1순위: Web Share API (일반 모바일 브라우저)
-        if (!isKakao && navigator.share && navigator.canShare) {
-          try {
-            const file = new File([blob], 'saju-result.png', { type: 'image/png' })
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({ files: [file], title: '사주풀이 결과' })
-              setSaving(false)
-              setSaveSuccess(true)
-              setTimeout(() => setSaveSuccess(false), 2000)
-              return
-            }
-          } catch (err) {
-            if (err instanceof Error && err.name === 'AbortError') {
-              setSaving(false)
-              return
-            }
-          }
-        }
-
-        // 2순위: <a download> (Android Chrome, 삼성 브라우저 등)
         const blobUrl = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = blobUrl

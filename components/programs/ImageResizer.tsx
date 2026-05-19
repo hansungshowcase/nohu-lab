@@ -62,14 +62,6 @@ export default function ImageResizer() {
       ctx.drawImage(img, 0, 0, w, h)
       canvas.toBlob((blob) => {
         if (!blob) return
-        const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
-        if (isMobile && navigator.share) {
-          try {
-            const file = new File([blob], `resized_${w}x${h}.png`, { type: 'image/png' })
-            navigator.share({ files: [file], title: '리사이즈 이미지' }).catch(() => {})
-            return
-          } catch { /* fallback */ }
-        }
         const blobUrl = URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.download = `resized_${w}x${h}.png`

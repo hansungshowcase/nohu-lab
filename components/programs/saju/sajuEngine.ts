@@ -2,6 +2,8 @@
 // 사주팔자 계산 엔진 (Four Pillars of Destiny)
 // ═══════════════════════════════════════════════
 
+import { Solar } from 'lunar-javascript'
+
 // 천간 (10 Heavenly Stems)
 export const STEMS = ['갑','을','병','정','무','기','경','신','임','계'] as const
 export const STEMS_HANJA = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'] as const
@@ -445,6 +447,34 @@ function getHourPillar(dayStem: number, hour: number): Pillar {
   const hourStemStart = startStems[dayStem % 5]
   const stem = (hourStemStart + branch) % 10
   return { stem, branch }
+}
+
+function getExactPillars(year: number, month: number, day: number, hour: number | null): {
+  yearPillar: Pillar
+  monthPillar: Pillar
+  dayPillar: Pillar
+  hourPillar: Pillar | null
+} {
+  const lunar = Solar.fromYmdHms(year, month, day, hour ?? 12, 0, 0).getLunar()
+  const yearPillar = {
+    stem: lunar.getYearGanIndexExact(),
+    branch: lunar.getYearZhiIndexExact(),
+  }
+  const monthPillar = {
+    stem: lunar.getMonthGanIndexExact(),
+    branch: lunar.getMonthZhiIndexExact(),
+  }
+  const dayPillar = {
+    stem: lunar.getDayGanIndex(),
+    branch: lunar.getDayZhiIndex(),
+  }
+  const hourPillar = hour !== null
+    ? {
+        stem: lunar.getTimeGanIndex(),
+        branch: lunar.getTimeZhiIndex(),
+      }
+    : null
+  return { yearPillar, monthPillar, dayPillar, hourPillar }
 }
 
 // ═══════════════════════════════════════════════
@@ -1736,10 +1766,7 @@ export function calculateSaju(
   hour: number | null,
   gender: 'male' | 'female'
 ): SajuResult {
-  const yearPillar = getYearPillar(year, month, day)
-  const monthPillar = getMonthPillar(yearPillar.stem, month, day)
-  const dayPillar = getDayPillar(year, month, day)
-  const hourPillar = hour !== null ? getHourPillar(dayPillar.stem, hour) : null
+  const { yearPillar, monthPillar, dayPillar, hourPillar } = getExactPillars(year, month, day, hour)
 
   const dayMaster = dayPillar.stem
   const dayMasterElement = STEM_ELEMENT[dayMaster]

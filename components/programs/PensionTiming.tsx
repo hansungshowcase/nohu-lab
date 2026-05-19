@@ -355,26 +355,10 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
         canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png', 0.95)
       })
 
-      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
-
       // 모바일 저장
-      if (isMobile) {
+      if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
         const isKakao = /KAKAOTALK/i.test(navigator.userAgent)
 
-        // 1순위: Web Share API (갤럭시/아이폰 공유시트)
-        if (navigator.share) {
-          try {
-            const file = new File([blob], `연금분석_${age}세.png`, { type: 'image/png' })
-            await navigator.share({ files: [file], title: '연금수령 황금타이밍' })
-            setSaving(false)
-            setSaveOk(true); setTimeout(() => setSaveOk(false), 2000)
-            return
-          } catch (err) {
-            if (err instanceof Error && err.name === 'AbortError') { setSaving(false); return }
-          }
-        }
-
-        // 2순위: <a download>
         const blobUrl = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = blobUrl

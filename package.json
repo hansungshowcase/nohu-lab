@@ -14,6 +14,7 @@
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "jose": "^6.2.1",
+    "lunar-javascript": "^1.7.7",
     "modern-screenshot": "^4.6.8",
     "next": "^16.3.0-canary.23",
     "pg": "^8.20.0",
