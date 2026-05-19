@@ -46,6 +46,8 @@ type ListedStock = {
   industry?: string
 }
 
+const USD_KRW = 1400
+
 const ETF_KEYWORDS = [
   'ETF', 'ETN', 'KODEX', 'TIGER', 'ACE', 'SOL', 'RISE', 'PLUS', 'HANARO',
   'KOSEF', 'ARIRANG', 'TIMEFOLIO', 'KBSTAR', 'TREX', 'WON', '히어로즈',
@@ -148,7 +150,7 @@ async function fetchUsStocks() {
       ticker: stock.ticker,
       name: dividend?.name || stock.name,
       priceUsd,
-      price: dividend?.price || Math.round(priceUsd * 1400),
+      price: dividend?.price || Math.round(priceUsd * USD_KRW),
       sector,
       industry: dividend?.industry || stock.industry || '',
       yieldPct: dividend?.yieldPct || 0,
@@ -160,18 +162,76 @@ async function fetchUsStocks() {
     }
   })
 
+  const enriched = await enrichUsFrequentPayouts(merged)
+
   return NextResponse.json({
     market: 'us',
-    total: merged.length,
-    count: merged.length,
-    dividendCount: merged.filter((s) => s.yieldPct > 0 || (s.dividendRate || 0) > 0).length,
+    total: enriched.length,
+    count: enriched.length,
+    dividendCount: enriched.filter((s) => s.yieldPct > 0 || (s.dividendRate || 0) > 0).length,
     universeCount: listed.length,
     updatedAt: new Date().toISOString(),
-    source: listed.length > 0 ? 'nasdaqtrader+dividend-json' : 'dividend-json',
-    stocks: sortStocks(merged),
+    source: listed.length > 0 ? 'nasdaqtrader+dividend-json+yahoo-events' : 'dividend-json+yahoo-events',
+    stocks: sortStocks(enriched),
   }, {
     headers: { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=3600' },
   })
+}
+
+async function enrichUsFrequentPayouts(stocks: DividendStock[]): Promise<DividendStock[]> {
+  const candidates = stocks.filter((s) =>
+    (US_MONTHLY_TICKERS.has(s.ticker) || US_WEEKLY_TICKERS.has(s.ticker)) &&
+    ((s.yieldPct || 0) <= 0 || (s.dividendRate || 0) <= 0 || (s.priceUsd || 0) <= 0)
+  )
+  if (candidates.length === 0) return stocks
+
+  const updates = new Map<string, Partial<DividendStock>>()
+  for (let i = 0; i < candidates.length; i += 20) {
+    const batch = candidates.slice(i, i + 20)
+    const results = await Promise.allSettled(batch.map(fetchYahooDividendSnapshot))
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value) {
+        updates.set(result.value.ticker, result.value)
+      }
+    }
+  }
+
+  return stocks.map((stock) => {
+    const update = updates.get(stock.ticker)
+    return update ? { ...stock, ...update } : stock
+  })
+}
+
+async function fetchYahooDividendSnapshot(stock: DividendStock): Promise<Partial<DividendStock> & { ticker: string } | null> {
+  const res = await fetch(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(stock.ticker.replace(/\./g, '-'))}?range=1y&interval=1d&events=div`,
+    {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0)' },
+      next: { revalidate: 21600 },
+      signal: AbortSignal.timeout(4000),
+    }
+  )
+  if (!res.ok) return null
+
+  const data = await res.json()
+  const chart = data?.chart?.result?.[0]
+  const meta = chart?.meta
+  const priceUsd = Number(meta?.regularMarketPrice || 0)
+  const dividends = Object.values(chart?.events?.dividends || {}) as Array<{ amount?: number; date?: number }>
+  const oneYearAgo = Math.floor(Date.now() / 1000) - 365 * 24 * 60 * 60
+  const dividendRate = Math.round(dividends
+    .filter((d) => (d.date || 0) >= oneYearAgo)
+    .reduce((sum, d) => sum + Number(d.amount || 0), 0) * 10000) / 10000
+  if (priceUsd <= 0 && dividendRate <= 0) return null
+
+  return {
+    ticker: stock.ticker,
+    priceUsd: priceUsd > 0 ? priceUsd : stock.priceUsd,
+    price: priceUsd > 0 ? Math.round(priceUsd * USD_KRW) : stock.price,
+    dividendRate: dividendRate > 0 ? dividendRate : stock.dividendRate,
+    dividendPerShare: dividendRate > 0 ? dividendRate : stock.dividendPerShare,
+    yieldPct: priceUsd > 0 && dividendRate > 0 ? Math.round((dividendRate / priceUsd) * 10000) / 100 : stock.yieldPct,
+  }
 }
 
 async function loadKrDividendRows(): Promise<KrDividendJson[]> {
