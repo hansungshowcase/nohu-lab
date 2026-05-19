@@ -137,6 +137,93 @@ function getElementTone(result: SajuResult): string {
   return `${ELEMENTS[strong]}(${ELEMENTS_HANJA[strong]}) 기운이 가장 강하고 ${ELEMENTS[weak]}(${ELEMENTS_HANJA[weak]}) 기운이 가장 약합니다. 강한 기운은 장점이지만 과하면 고집·과로·편중으로 드러나고, 약한 기운은 보완해야 운이 부드럽게 풀립니다.`
 }
 
+function getDaeunTheme(tenGod: string): string {
+  if (tenGod.includes('재')) return '돈, 사업, 거래, 현실 성과를 크게 만지는 운입니다. 벌 기회가 늘지만 지출과 욕심도 같이 커지므로 계약서와 현금흐름을 먼저 봐야 합니다.'
+  if (tenGod.includes('관')) return '직장, 책임, 직함, 시험, 평판이 핵심입니다. 압박은 늘지만 규칙을 지키고 실력을 증명하면 지위가 올라갑니다.'
+  if (tenGod.includes('인')) return '공부, 자격, 문서, 윗사람 도움을 통해 운이 열립니다. 당장 돈보다 실력과 안전장치를 만드는 시기입니다.'
+  if (tenGod.includes('식') || tenGod.includes('상')) return '말, 글, 기술, 콘텐츠, 생산성이 살아납니다. 생각을 밖으로 꺼내야 기회가 생기지만 말실수와 과로는 조심해야 합니다.'
+  return '사람, 경쟁, 독립, 동업 문제가 두드러집니다. 내 힘을 키우는 운이지만 돈이 사람 때문에 새지 않도록 선을 분명히 해야 합니다.'
+}
+
+function getAnnualTrigger(result: SajuResult): string {
+  const y = result.yearAnalysis
+  const signals: string[] = []
+  if (y.hasCheonganHap) signals.push(`올해는 ${y.hapTarget || '사주 한 축'}과 합이 들어와 사람의 도움, 제안, 협업이 생기기 쉽습니다.`)
+  if (y.hasJijiHap) signals.push(`지지 합이 있어 관계가 붙고 일이 묶이는 흐름입니다. 혼자 처리하기보다 연결을 활용하세요.`)
+  if (y.hasJijiChung) signals.push(`${y.chungTarget || '중요한 자리'}에 충이 있어 이동, 갈등, 일정 변경, 관계 재정비가 생길 수 있습니다.`)
+  if (signals.length === 0) signals.push('올해는 큰 충돌보다 누적과 정리가 중요한 해입니다. 갑작스러운 승부보다 꾸준한 관리가 유리합니다.')
+  return signals.join(' ')
+}
+
+function getPremiumDiagnosis(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined): string[] {
+  const profile = getPlainProfile(result.dayMaster)
+  const topTenGod = getTopTenGod(result)
+  const root = ROOT_STRENGTH_LABELS[result.tuganTonggeun.rootStrength]
+  const current = currentDaeun ? getDaeunTheme(currentDaeun.tenGod) : '현재 대운을 특정하기 어려워 원국과 올해 흐름을 우선 기준으로 봅니다.'
+
+  return [
+    `이 사주의 첫 판단은 '${profile.label}'이라는 중심 성향입니다. 겉으로 보이는 성격보다 중요한 것은 선택의 기준이 분명하고, 한 번 마음을 정하면 쉽게 흔들리지 않는다는 점입니다.`,
+    `격국은 ${result.gyeokguk.name}으로 봅니다. ${result.gyeokguk.description} 그래서 직업과 돈은 '${topTenGod}' 성향을 어떻게 쓰느냐가 핵심입니다.`,
+    `태어난 계절 기준 조후는 ${result.johu.season}·${result.johu.temperature} 쪽으로 잡힙니다. ${result.johu.explanation}`,
+    `뿌리 판단은 ${root ? root.label : '보통'}입니다. ${root ? root.detail : '환경을 잘 고르면 안정적으로 힘을 쓰는 구조입니다.'}`,
+    current,
+    getAnnualTrigger(result),
+  ]
+}
+
+function getDecisionGuides(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined) {
+  const topTenGod = getTopTenGod(result)
+  const current = currentDaeun?.tenGod || ''
+  const wealthFocus = current.includes('재') || topTenGod.includes('재')
+  const careerFocus = current.includes('관') || topTenGod.includes('관')
+  const studyFocus = current.includes('인') || result.enhancedSinsal.hasMunchang || result.enhancedSinsal.hasHakdang
+  const expressionFocus = current.includes('식') || current.includes('상') || topTenGod.includes('식') || topTenGod.includes('상')
+
+  return [
+    {
+      title: '돈',
+      verdict: wealthFocus ? '공격과 방어를 같이 봐야 합니다.' : '무리한 확장보다 새는 돈을 막는 쪽이 먼저입니다.',
+      detail: wealthFocus
+        ? '돈을 벌 기회가 있을 때도 계약, 세금, 현금흐름을 먼저 확인해야 오래 남습니다. 단기 수익보다 반복 수익 구조가 맞습니다.'
+        : '큰 투자보다 저축, 보험, 연금, 고정비 정리가 운을 안정시킵니다. 돈은 크게 벌기보다 흩어지지 않게 붙잡는 전략이 좋습니다.',
+    },
+    {
+      title: '직업',
+      verdict: careerFocus ? '직함, 승진, 시험, 조직 안 평가가 중요합니다.' : expressionFocus ? '기술과 결과물을 밖으로 보여줘야 합니다.' : '전문성을 쌓아 다음 운에서 쓰는 흐름입니다.',
+      detail: careerFocus
+        ? '책임이 늘어나는 자리를 피하지 않는 것이 좋습니다. 단, 규정 위반이나 말실수는 평판에 바로 반영될 수 있습니다.'
+        : expressionFocus
+          ? '포트폴리오, 글, 콘텐츠, 발표, 영업처럼 보이는 결과물을 만들어야 기회가 붙습니다.'
+          : '조급하게 이직하기보다 자격, 경력, 실무 능력을 쌓아 몸값을 올리는 전략이 맞습니다.',
+    },
+    {
+      title: '관계',
+      verdict: result.hapChung.hasClash ? '관계가 한 번 흔들리며 정리되는 운이 있습니다.' : '관계를 넓히기보다 오래 갈 사람을 가리는 편이 좋습니다.',
+      detail: result.hapChung.hasClash
+        ? '충·형·파·해가 보이면 말 한마디가 크게 번질 수 있습니다. 가까운 사람일수록 돈, 약속, 경계선을 분명히 해야 합니다.'
+        : '합이 좋게 들어오면 소개, 협업, 귀인 도움을 받을 수 있습니다. 다만 모두에게 잘하려 하면 에너지가 흩어집니다.',
+    },
+    {
+      title: '성장',
+      verdict: studyFocus ? '공부와 자격이 바로 운을 여는 카드입니다.' : '생활 루틴을 먼저 잡아야 운이 버텨줍니다.',
+      detail: studyFocus
+        ? '올해는 배움에 쓴 시간과 돈이 실력, 평판, 수입으로 이어지기 쉽습니다. 분야를 넓히기보다 하나를 끝내는 방식이 좋습니다.'
+        : '수면, 운동, 식사, 정리처럼 기본 루틴이 흔들리면 좋은 운도 오래 못 갑니다. 몸의 리듬을 잡는 것이 개운의 시작입니다.',
+    },
+  ]
+}
+
+function getMonthlyWindows(result: SajuResult) {
+  const sorted = [...result.wolun].sort((a, b) => b.rating - a.rating)
+  const best = sorted.slice(0, 3).map(w => `${w.month}월(${w.keyword})`).join(', ')
+  const caution = [...result.wolun].sort((a, b) => a.rating - b.rating).slice(0, 3).map(w => `${w.month}월(${w.keyword})`).join(', ')
+  return {
+    best,
+    caution,
+    advice: `좋은 달에는 새 제안, 계약, 발표, 시험, 투자 검토처럼 앞으로 나가는 일을 배치하세요. 주의 달에는 결정 자체보다 점검, 정리, 건강관리, 갈등 예방에 집중하는 편이 낫습니다.`,
+  }
+}
+
 function buildConsultingPoints(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined): string[] {
   const profile = DAY_MASTER_PROFILES[result.dayMaster]
   const plain = getPlainProfile(result.dayMaster)
@@ -260,6 +347,9 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   ].filter((key): key is string => Boolean(key) && Boolean(getSinsalBadge(String(key)))).slice(0, 5)
   const trendScores = getTrendScores(result, currentDaeun)
   const visibleInteractions = result.hapChung.details.slice(0, 4)
+  const premiumDiagnosis = getPremiumDiagnosis(result, currentDaeun)
+  const decisionGuides = getDecisionGuides(result, currentDaeun)
+  const monthlyWindows = getMonthlyWindows(result)
 
   const pillars: { label: string; pillar: Pillar; tenGod?: string; isMe?: boolean }[] = [
     { label: '시주(時)', pillar: result.hourPillar || { stem: 0, branch: 0 }, tenGod: result.tenGods[3] || '' },
@@ -344,6 +434,63 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* ═══ 10만원 상담식 정밀 리딩 ═══ */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border-2 border-gray-900">
+          <h3 className="text-base sm:text-lg font-black text-gray-900 mb-1 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-gray-900 rounded-full" />
+            정밀 상담 리딩
+          </h3>
+          <p className="text-xs text-gray-500 mb-3">격국·조후·대운·세운·합충을 한 번에 묶어 본 핵심 판단입니다.</p>
+          <div className="space-y-2.5">
+            {premiumDiagnosis.map((point, i) => (
+              <div key={i} className="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                <p className="text-xs font-black text-gray-400 mb-1">판단 {i + 1}</p>
+                <p className="text-sm sm:text-base text-gray-800 leading-[1.85]">{point}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ═══ 분야별 처방 ═══ */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200">
+          <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-emerald-500 rounded-full" />
+            돈·직업·관계·성장 처방
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {decisionGuides.map((item) => (
+              <div key={item.title} className="rounded-xl p-3.5 bg-slate-50 border border-slate-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-7 h-7 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-black text-slate-700">
+                    {item.title}
+                  </span>
+                  <p className="text-sm font-black text-gray-900">{item.verdict}</p>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ═══ 실행 타이밍 ═══ */}
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 sm:p-5 border border-orange-200">
+          <h3 className="text-base sm:text-lg font-bold text-orange-900 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-orange-500 rounded-full" />
+            올해 실행 타이밍
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+            <div className="bg-white rounded-xl p-3 border border-orange-100">
+              <p className="text-xs font-black text-emerald-600 mb-1">밀고 나갈 달</p>
+              <p className="text-sm font-bold text-gray-900">{monthlyWindows.best}</p>
+            </div>
+            <div className="bg-white rounded-xl p-3 border border-orange-100">
+              <p className="text-xs font-black text-red-500 mb-1">점검할 달</p>
+              <p className="text-sm font-bold text-gray-900">{monthlyWindows.caution}</p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-800 leading-relaxed">{monthlyWindows.advice}</p>
         </div>
 
         {/* ═══ 명리 근거 ═══ */}
