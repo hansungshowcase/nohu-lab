@@ -44,10 +44,15 @@ export default function DividendCalc() {
     const d = searchParams.get('d'), y = searchParams.get('y'), f = searchParams.get('f')
     const inv = searchParams.get('i'), m = searchParams.get('m')
     if (t && n && pr && y) {
+      const isUs = m === 'us'
+      const rawPrice = +pr
+      const normalizedPrice = isUs && rawPrice > 0 && rawPrice < 10000
+        ? Math.round(rawPrice * USD_KRW)
+        : rawPrice
       return {
-        stock: { ticker: t, name: n, price: +pr, dividendPerShare: +(d || 0), yieldPct: +y, frequency: f || '연배당', sector: '기타' } as StockItem,
+        stock: { ticker: t, name: n, price: normalizedPrice, dividendPerShare: +(d || 0), yieldPct: +y, frequency: f || '연배당', sector: '기타' } as StockItem,
         investRaw: +(inv || 0),
-        market: (m === 'us' ? 'us' : 'kr') as SubMarket,
+        market: (isUs ? 'us' : 'kr') as SubMarket,
       }
     }
     return null
