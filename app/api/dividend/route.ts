@@ -51,6 +51,18 @@ const ETF_KEYWORDS = [
   'KOSEF', 'ARIRANG', 'TIMEFOLIO', 'KBSTAR', 'TREX', 'WON', '히어로즈',
 ]
 
+const US_MONTHLY_TICKERS = new Set([
+  'O', 'ADC', 'STAG', 'EPR', 'LTC', 'LAND', 'GOOD', 'GAIN', 'GLAD', 'MAIN', 'HRZN', 'PFLT', 'PSEC', 'SCM',
+  'AGNC', 'NLY', 'DX', 'ARR', 'ORC',
+  'JEPI', 'JEPQ', 'JEPY', 'QQQY', 'QYLD', 'XYLD', 'RYLD', 'DJIA', 'DIVO', 'PAPI', 'GPIX', 'GPIQ', 'SPYI', 'QQQI', 'IWMI',
+  'FEPI', 'AIPI', 'YMAX', 'YMAG', 'ULTY', 'TSLY', 'NVDY', 'CONY', 'MSTY', 'AMZY', 'APLY', 'MSFO', 'NFLY', 'GOOY', 'AMDY', 'PYPY', 'FBY', 'AIYY', 'PLTY', 'KLIP',
+  'PDI', 'PDO', 'PTY', 'PCN', 'PFN', 'PHK', 'PAXS', 'RCS', 'GOF', 'CLM', 'CRF', 'UTF', 'UTG', 'BST', 'BSTZ', 'BMEZ', 'BIGZ', 'BCAT', 'BUI', 'DNP', 'DSL', 'EIC', 'EVV', 'ECC', 'OXLC', 'OCCI', 'ACP', 'AOD',
+  'BND', 'BNDX', 'VCIT', 'VCLT', 'VCSH', 'MBB', 'EMB', 'GOVT', 'SHV', 'SGOV', 'BIL', 'TLT', 'IEF', 'SHY', 'TIP', 'VTIP', 'MUB', 'HYD', 'HYG', 'JNK', 'LQD', 'MINT', 'NEAR', 'ICSH', 'JPST', 'SHYG', 'ANGL', 'FALN', 'PFF', 'PGX', 'VRP',
+])
+
+const US_REIT_TICKERS = new Set(['O', 'ADC', 'STAG', 'EPR', 'LTC', 'LAND', 'GOOD', 'AGNC', 'NLY', 'DX', 'ARR', 'ORC'])
+const US_BDC_TICKERS = new Set(['MAIN', 'PSEC', 'GAIN', 'GLAD', 'HRZN', 'PFLT', 'SCM'])
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const market = searchParams.get('market') || 'kr'
@@ -120,18 +132,18 @@ async function fetchUsStocks() {
     const dividend = dividendMap.get(stock.ticker)
     const priceUsd = dividend?.priceUsd || 0
     const dividendRate = dividend?.dividendRate || 0
-    const sector = dividend?.sector || stock.sector || normalizeUsSector('', stock.name)
+    const sector = normalizeUsSector(dividend?.sector || stock.sector || '', stock.name, stock.ticker)
     return {
       ticker: stock.ticker,
       name: dividend?.name || stock.name,
       priceUsd,
       price: dividend?.price || Math.round(priceUsd * 1400),
-      sector: normalizeUsSector(sector, stock.name),
+      sector,
       industry: dividend?.industry || stock.industry || '',
       yieldPct: dividend?.yieldPct || 0,
       dividendRate,
       dividendPerShare: dividendRate,
-      frequency: dividend?.frequency || (dividendRate > 0 ? guessUsFrequency(stock.ticker) : '배당없음'),
+      frequency: getUsFrequency(stock.ticker, dividend?.frequency, dividendRate),
       marketCap: dividend?.marketCap || 0,
       change: 0,
     }
@@ -313,11 +325,13 @@ function normalizeKrSector(sector: string, name: string): string {
   return sector || '기타'
 }
 
-function normalizeUsSector(sector: string, name: string): string {
+function normalizeUsSector(sector: string, name: string, ticker?: string): string {
+  if (ticker && US_REIT_TICKERS.has(ticker)) return '리츠'
+  if (ticker && US_BDC_TICKERS.has(ticker)) return '금융'
   const text = `${sector} ${name}`
-  if (/ETF|Fund|Trust|Income|Portfolio|Index|iShares|Vanguard|Schwab|SPDR|Invesco|Global X/i.test(text)) return 'ETF·펀드'
   if (/REIT|Realty|Real Estate|Property/i.test(text)) return '리츠'
-  if (/Bank|Financial|Capital|Insurance|Asset|Investment/i.test(text)) return '금융'
+  if (/ETF|Fund|Portfolio|Index|iShares|Vanguard|Schwab|SPDR|Invesco|Global X|PIMCO|BlackRock|JPMorgan.*ETF/i.test(text)) return 'ETF·펀드'
+  if (/Bank|Financial|Capital|Insurance|Asset|Investment|BDC|Business Development/i.test(text)) return '금융'
   if (/Energy|Oil|Petroleum|Gas|Pipeline/i.test(text)) return '에너지'
   if (/Pharma|Health|Medical|Bio|Therapeutics/i.test(text)) return '헬스케어'
   if (/Technology|Software|Semiconductor|Data|Cloud|NVIDIA|Microsoft|Apple/i.test(text)) return 'IT'
@@ -331,7 +345,7 @@ function guessKrSector(name: string): string {
   return normalizeKrSector('', name)
 }
 
-function guessUsFrequency(ticker: string): string {
-  const monthly = ['JEPI', 'JEPQ', 'QYLD', 'XYLD', 'RYLD', 'DIVO', 'O', 'MAIN', 'STAG', 'AGNC', 'NLY', 'PSEC', 'CLM', 'GOF', 'PDI', 'SVOL']
-  return monthly.includes(ticker) ? '월배당' : '분기배당'
+function getUsFrequency(ticker: string, sourceFrequency: string | undefined, dividendRate: number): string {
+  if (US_MONTHLY_TICKERS.has(ticker)) return '월배당'
+  return sourceFrequency || (dividendRate > 0 ? '분기배당' : '배당없음')
 }
