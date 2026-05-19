@@ -72,6 +72,19 @@ const US_QUARTERLY_TICKERS = new Set(['NLY', 'VTIP'])
 const US_REIT_TICKERS = new Set(['O', 'ADC', 'STAG', 'EPR', 'LTC', 'LAND', 'GOOD', 'AGNC', 'NLY', 'DX', 'ARR', 'ORC'])
 const US_BDC_TICKERS = new Set(['MAIN', 'PSEC', 'GAIN', 'GLAD', 'HRZN', 'PFLT', 'SCM'])
 
+const US_DIVIDEND_GROWTH_TICKERS = new Set([
+  'AAPL', 'ABBV', 'ABT', 'ADM', 'ADP', 'AFL', 'AOS', 'APD', 'BDX', 'BEN', 'BRO', 'CAH', 'CAT', 'CHD',
+  'CINF', 'CL', 'CLX', 'CTAS', 'CVX', 'DOV', 'ECL', 'ED', 'EMR', 'ESS', 'EXPD', 'FRT', 'GD', 'GPC',
+  'HRL', 'IBM', 'ITW', 'JNJ', 'KMB', 'KO', 'LIN', 'LOW', 'MCD', 'MDT', 'MKC', 'MMM', 'MSFT', 'NDSN',
+  'NUE', 'O', 'PEP', 'PG', 'PNR', 'PPG', 'ROP', 'SHW', 'SPGI', 'SYY', 'TGT', 'TROW', 'WMT', 'XOM',
+])
+
+const KR_DIVIDEND_GROWTH_TICKERS = new Set([
+  '005930', '005935', '000660', '000270', '005380', '005387', '005385', '012330', '033780', '017670',
+  '030200', '032640', '086790', '055550', '105560', '316140', '024110', '000810', '032830', '029780',
+  '267250', '071050', '003550', '066570', '051910', '051915', '005490', '010130', '004370', '271560',
+])
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const market = searchParams.get('market') || 'kr'
@@ -115,7 +128,10 @@ async function fetchKrStocks(includeAll: boolean) {
       yieldPct: dividend?.yieldPct || 0,
       dividendPerShare,
       frequency: dividend?.frequency || (dividendPerShare > 0 ? '연배당' : '배당없음'),
-      desc: dividend?.count && dividend.count >= 2 ? `연 ${dividend.count}회 배당` : '',
+      desc: [
+        KR_DIVIDEND_GROWTH_TICKERS.has(stock.ticker) ? '연속 배당 증가 관심 종목' : '',
+        dividend?.count && dividend.count >= 2 ? `연 ${dividend.count}회 배당` : '',
+      ].filter(Boolean).join(' · '),
     }
   })
 
@@ -161,6 +177,7 @@ async function fetchUsStocks(includeAll: boolean) {
       dividendRate,
       dividendPerShare: dividendRate,
       frequency: getUsFrequency(stock.ticker, dividend?.frequency, dividendRate),
+      desc: US_DIVIDEND_GROWTH_TICKERS.has(stock.ticker) ? '연속 배당 증가 기업' : '',
       marketCap: dividend?.marketCap || 0,
       change: 0,
     }
@@ -409,6 +426,7 @@ function normalizeKrSector(sector: string, name: string): string {
 function normalizeUsSector(sector: string, name: string, ticker?: string): string {
   if (ticker && US_REIT_TICKERS.has(ticker)) return '리츠'
   if (ticker && US_BDC_TICKERS.has(ticker)) return '금융'
+  if (ticker === 'BEN') return '금융'
   const text = `${sector} ${name}`
   if (/REIT|Realty|Real Estate|Property/i.test(text)) return '리츠'
   if (/ETF|Fund|Portfolio|Index|iShares|Vanguard|Schwab|SPDR|Invesco|Global X|PIMCO|BlackRock|JPMorgan.*ETF/i.test(text)) return 'ETF·펀드'

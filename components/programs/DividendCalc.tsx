@@ -32,6 +32,10 @@ function isEtfStock(stock: StockItem): boolean {
   return stock.sector === 'ETF' || stock.sector.includes('ETF') || stock.sector.includes('펀드')
 }
 
+function isDividendGrowthStock(stock: StockItem): boolean {
+  return Boolean(stock.desc?.includes('연속 배당 증가'))
+}
+
 export default function DividendCalc() {
   // URL 파라미터로 공유된 결과 감지
   const searchParams = useSearchParams()
@@ -124,7 +128,7 @@ export default function DividendCalc() {
     if (style === 'high') list = list.filter((s) => s.yieldPct >= 5)
     else if (style === 'safe') list = list.filter((s) => s.yieldPct >= 2 && s.yieldPct <= 5)
     else if (style === 'monthly') list = list.filter((s) => s.frequency?.includes('월') || s.frequency?.includes('주'))
-    else if (style === 'growth') list = list.filter((s) => s.yieldPct >= 1 && s.yieldPct <= 4 && s.desc?.includes('연속'))
+    else if (style === 'growth') list = list.filter(isDividendGrowthStock)
     // 분야 필터
     if (sector !== '전체') list = list.filter((s) => s.sector === sector)
     // 검색
