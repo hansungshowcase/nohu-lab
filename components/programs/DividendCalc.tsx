@@ -12,6 +12,7 @@ interface KakaoWindow extends Window {
   }
 }
 const KAKAO_KEY = '3913fde247b12ce25084eb42a9b17ed9'
+const USD_KRW = 1400
 
 interface StockItem {
   ticker: string
@@ -149,9 +150,13 @@ export default function DividendCalc() {
       const price = Number(data.price || 0)
       if (price <= 0) return
 
+      const dividendPerShare = Number(data.dividendRate || 0)
+      const yieldPct = Number(data.yieldPct || 0)
       const nextStock = {
         ...stock,
-        price: subMarket === 'us' ? Math.round(price * 1400) : price,
+        price: subMarket === 'us' ? Math.round(price * USD_KRW) : price,
+        dividendPerShare: dividendPerShare > 0 ? dividendPerShare : stock.dividendPerShare,
+        yieldPct: yieldPct > 0 ? yieldPct : stock.yieldPct,
       }
       setSelected((current) => current?.ticker === stock.ticker ? nextStock : current)
       const update = (list: StockItem[]) => list.map((item) => item.ticker === stock.ticker ? nextStock : item)
@@ -165,12 +170,18 @@ export default function DividendCalc() {
   // 투자 시뮬레이션
   const investRaw = parseInt(investInput.replace(/,/g, ''), 10) || 0
   const investAmount = investRaw * 10000 // 만원 단위 입력
+  const getAnnualDividendPerShare = useCallback((stock: StockItem) => {
+    if (stock.dividendPerShare > 0) {
+      return market === 'us' ? Math.round(stock.dividendPerShare * USD_KRW) : stock.dividendPerShare
+    }
+    return Math.round(stock.price * stock.yieldPct / 100)
+  }, [market])
 
   const result = useMemo(() => {
     if (!selected || investAmount <= 0 || selected.price <= 0) return null
     const shares = Math.floor(investAmount / selected.price)
     const actualInvest = shares * selected.price
-    const dps = selected.dividendPerShare || Math.round(selected.price * selected.yieldPct / 100)
+    const dps = getAnnualDividendPerShare(selected)
     const grossAnnual = shares * dps
     const marketType = market === 'us' ? '미국' as const : '코스피' as const
     const tax = calculateTax(grossAnnual, marketType, accountType)
@@ -184,7 +195,7 @@ export default function DividendCalc() {
     const effectiveYield = actualInvest > 0 ? Math.round((tax.netDividend / actualInvest) * 1000) / 10 : 0
 
     return { shares, actualInvest, grossAnnual, perPayment, paymentsPerYear, effectiveYield, frequency: freq, ...tax }
-  }, [selected, investAmount, market, accountType])
+  }, [selected, investAmount, market, accountType, getAnnualDividendPerShare])
 
   function formatMoney(n: number): string {
     if (n >= 100000000) return `${(n / 100000000).toFixed(1)}억`
@@ -429,7 +440,7 @@ export default function DividendCalc() {
               </div>
               <div className="text-center p-3 bg-gray-50 rounded-xl">
                 <p className="text-[10px] text-gray-400 font-medium">주당 배당금</p>
-                <p className="text-sm font-black text-gray-900">{(selected.dividendPerShare || Math.round(selected.price * selected.yieldPct / 100)).toLocaleString()}원</p>
+                <p className="text-sm font-black text-gray-900">{getAnnualDividendPerShare(selected).toLocaleString()}원</p>
               </div>
             </div>
           </div>

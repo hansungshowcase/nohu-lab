@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     if (/^[A-Z][A-Z0-9.-]*$/.test(ticker)) {
       const yahooTicker = ticker.replace(/\./g, '-')
       const res = await fetch(
-        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooTicker)}?range=1d&interval=1d`,
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooTicker)}?range=1y&interval=1d&events=div`,
         {
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0)' },
           next: { revalidate: 300 }, // 5분 캐시
@@ -23,15 +23,26 @@ export async function GET(request: Request) {
       )
       if (res.ok) {
         const data = await res.json()
-        const meta = data?.chart?.result?.[0]?.meta
+        const chart = data?.chart?.result?.[0]
+        const meta = chart?.meta
         if (!meta?.regularMarketPrice) {
           return NextResponse.json({ error: 'price unavailable', ticker }, { status: 502 })
         }
+        const dividends = Object.values(chart?.events?.dividends || {}) as Array<{ amount?: number; date?: number }>
+        const oneYearAgo = Math.floor(Date.now() / 1000) - 365 * 24 * 60 * 60
+        const dividendRate = Math.round(dividends
+          .filter((d) => (d.date || 0) >= oneYearAgo)
+          .reduce((sum, d) => sum + Number(d.amount || 0), 0) * 10000) / 10000
+        const yieldPct = dividendRate > 0
+          ? Math.round((dividendRate / meta.regularMarketPrice) * 10000) / 100
+          : 0
         return NextResponse.json({
           ticker,
           price: meta.regularMarketPrice,
           priceUsd: meta.regularMarketPrice,
           name: meta.longName || meta.shortName || ticker,
+          dividendRate,
+          yieldPct,
           change: meta.regularMarketPrice - (meta.previousClose || meta.chartPreviousClose || meta.regularMarketPrice),
           changePct: meta.previousClose
             ? ((meta.regularMarketPrice - meta.previousClose) / meta.previousClose) * 100

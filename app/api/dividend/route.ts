@@ -85,12 +85,16 @@ export async function GET(request: Request) {
 async function fetchKrStocks() {
   const dividendRows = await loadKrDividendRows()
   const dividendMap = new Map(dividendRows.map((s) => [s.ticker, s]))
-  let listed = await fetchKrxListedStocks()
-  let universeSource = 'krx-kind+dividend-json'
-  if (listed.length < 100) {
-    listed = await fetchNaverListedStocks()
-    universeSource = 'naver-market+dividend-json'
-  }
+  const [krxListed, naverListed] = await Promise.all([
+    fetchKrxListedStocks(),
+    fetchNaverListedStocks(),
+  ])
+  const listed = dedupeStocks([...krxListed, ...naverListed])
+  const universeSource = [
+    krxListed.length > 0 ? 'krx-kind' : '',
+    naverListed.length > 0 ? 'naver-market' : '',
+    'dividend-json',
+  ].filter(Boolean).join('+')
 
   const base = listed.length > 0
     ? listed
