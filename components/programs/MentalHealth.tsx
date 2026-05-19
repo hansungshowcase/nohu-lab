@@ -203,6 +203,102 @@ export default function MentalHealth() {
   async function saveImage() {
     if (!resultRef.current || saving) return
     setSaving(true)
+    let captureHost: HTMLDivElement | null = null
+    try {
+      const node = resultRef.current
+      const rect = node.getBoundingClientRect()
+      const captureWidth = Math.ceil(Math.max(rect.width, node.scrollWidth, 320))
+
+      captureHost = document.createElement('div')
+      captureHost.style.position = 'fixed'
+      captureHost.style.left = '-10000px'
+      captureHost.style.top = '0'
+      captureHost.style.width = `${captureWidth}px`
+      captureHost.style.backgroundColor = '#ffffff'
+      captureHost.style.pointerEvents = 'none'
+      captureHost.style.zIndex = '-1'
+
+      const clone = node.cloneNode(true) as HTMLDivElement
+      clone.querySelectorAll('.no-print').forEach((el) => el.remove())
+      clone.classList.remove('animate-fade-in')
+      clone.style.width = `${captureWidth}px`
+      clone.style.maxWidth = 'none'
+      clone.style.height = 'auto'
+      clone.style.maxHeight = 'none'
+      clone.style.overflow = 'visible'
+      clone.style.animation = 'none'
+      clone.style.transition = 'none'
+      clone.style.transform = 'none'
+      clone.querySelectorAll<HTMLElement>('*').forEach((el) => {
+        el.style.animation = 'none'
+        el.style.transition = 'none'
+        el.style.transform = 'none'
+        el.style.maxHeight = 'none'
+        if (el.style.overflow === 'hidden') el.style.overflow = 'visible'
+      })
+
+      captureHost.appendChild(clone)
+      document.body.appendChild(captureHost)
+
+      const fonts = (document as Document & { fonts?: FontFaceSet }).fonts
+      if (fonts) await fonts.ready
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+
+      const captureHeight = Math.ceil(Math.max(clone.scrollHeight, clone.offsetHeight, node.scrollHeight, 1))
+      const scale = Math.min(2, Math.max(1.5, window.devicePixelRatio || 1.5))
+      let blob: Blob
+      try {
+        const { domToBlob } = await import('modern-screenshot')
+        blob = await domToBlob(clone, {
+          scale,
+          width: captureWidth,
+          height: captureHeight,
+          backgroundColor: '#ffffff',
+          quality: 0.95,
+          type: 'image/png',
+          style: {
+            width: `${captureWidth}px`,
+            height: `${captureHeight}px`,
+            maxHeight: 'none',
+            overflow: 'visible',
+          },
+          maximumCanvasSize: 268435456,
+          filter: (el: Node) => !(el instanceof HTMLElement && el.classList?.contains('no-print')),
+        })
+      } catch {
+        const { toBlob } = await import('html-to-image')
+        blob = await toBlob(clone, {
+          quality: 0.95,
+          pixelRatio: scale,
+          backgroundColor: '#ffffff',
+          cacheBust: true,
+          width: captureWidth,
+          height: captureHeight,
+          style: { width: `${captureWidth}px`, height: `${captureHeight}px`, maxHeight: 'none', overflow: 'visible' },
+          filter: (el: HTMLElement) => !el.classList?.contains('no-print'),
+        }) ?? await Promise.reject(new Error('image blob failed'))
+      }
+
+      const blobUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = 'mental-health-result.png'
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(blobUrl) }, 3000)
+    } catch (error) {
+      console.error('Mental health result image save failed', error)
+      alert('\uc774\ubbf8\uc9c0 \uc800\uc7a5\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4.\n\uc2a4\ud06c\ub9b0\uc0f7(\uc804\uc6d0+\ubcfc\ub968)\uc744 \uc774\uc6a9\ud574\uc8fc\uc138\uc694.')
+    } finally {
+      if (captureHost?.parentNode) captureHost.parentNode.removeChild(captureHost)
+      setSaving(false)
+    }
+  }
+
+  async function saveImageLegacy() {
+    if (!resultRef.current || saving) return
+    setSaving(true)
     try {
       let dataUrl = ''
       const node = resultRef.current
