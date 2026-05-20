@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, useEffect, useState } from 'react'
+import { forwardRef, useEffect, useMemo, useState } from 'react'
 import type { BrainResult } from './games'
 import type { DayRecord } from './storage'
 
@@ -11,214 +11,176 @@ interface ResultCardProps {
   history: DayRecord[]
 }
 
-function getGrade(score: number): { grade: string; label: string; color: string; bgColor: string } {
-  if (score >= 90) return { grade: 'S', label: '천재급', color: 'text-amber-500', bgColor: 'from-amber-400 to-yellow-300' }
-  if (score >= 80) return { grade: 'A+', label: '매우 우수', color: 'text-emerald-500', bgColor: 'from-emerald-400 to-green-300' }
-  if (score >= 70) return { grade: 'A', label: '우수', color: 'text-blue-500', bgColor: 'from-blue-400 to-cyan-300' }
-  if (score >= 55) return { grade: 'B+', label: '양호', color: 'text-violet-500', bgColor: 'from-violet-400 to-purple-300' }
-  if (score >= 40) return { grade: 'B', label: '보통', color: 'text-orange-500', bgColor: 'from-orange-400 to-amber-300' }
-  if (score >= 25) return { grade: 'C', label: '노력 필요', color: 'text-rose-500', bgColor: 'from-rose-400 to-red-300' }
-  return { grade: 'D', label: '집중 훈련 필요', color: 'text-gray-500', bgColor: 'from-gray-400 to-gray-300' }
+function getGrade(score: number): { grade: string; label: string; tone: string; bar: string } {
+  if (score >= 92) return { grade: 'S', label: '상위권 집중력', tone: 'text-amber-600', bar: 'from-amber-400 to-yellow-300' }
+  if (score >= 82) return { grade: 'A+', label: '매우 선명한 컨디션', tone: 'text-emerald-600', bar: 'from-emerald-400 to-teal-300' }
+  if (score >= 72) return { grade: 'A', label: '안정적인 두뇌 컨디션', tone: 'text-sky-600', bar: 'from-sky-400 to-cyan-300' }
+  if (score >= 58) return { grade: 'B+', label: '좋은 기본기', tone: 'text-indigo-600', bar: 'from-indigo-400 to-violet-300' }
+  if (score >= 44) return { grade: 'B', label: '워밍업이 필요한 상태', tone: 'text-orange-600', bar: 'from-orange-400 to-amber-300' }
+  return { grade: 'C', label: '회복과 반복 훈련 권장', tone: 'text-rose-600', bar: 'from-rose-400 to-red-300' }
 }
 
-function getAdvice(result: BrainResult): string {
+function getAdvice(result: BrainResult): { title: string; body: string } {
   const weakest = [
-    { name: '기억력', score: result.memoryScore },
-    { name: '계산력', score: result.mathScore },
-    { name: '반응속도', score: result.reactionScore },
+    { key: 'memory', name: '기억력', score: result.memoryScore },
+    { key: 'math', name: '계산력', score: result.mathScore },
+    { key: 'reaction', name: '반응속도', score: result.reactionScore },
   ].sort((a, b) => a.score - b.score)[0]
 
-  const tips: Record<string, string> = {
-    기억력: '매일 새로운 단어 5개 외우기, 퍼즐 풀기, 독서가 도움됩니다',
-    계산력: '장보기 할 때 암산하기, 스도쿠 풀기가 효과적입니다',
-    반응속도: '규칙적인 걷기 운동, 충분한 수면이 반응속도를 개선합니다',
+  if (weakest.key === 'memory') {
+    return {
+      title: '오늘의 강화 포인트: 기억력',
+      body: '카드 위치를 외울 때 하나씩 보지 말고 2x2 구역으로 묶어 기억하면 재도전 점수가 빠르게 올라갑니다.',
+    }
   }
-  return `${weakest.name}이 가장 약합니다. ${tips[weakest.name]}`
+  if (weakest.key === 'math') {
+    return {
+      title: '오늘의 강화 포인트: 계산력',
+      body: '답을 바로 계산하기보다 끝자리와 대략값을 먼저 확인하면 오답 선택을 줄일 수 있습니다.',
+    }
+  }
+  return {
+    title: '오늘의 강화 포인트: 반응속도',
+    body: '초록 신호만 기다리는 동안 손가락에 힘을 빼고 화면 중앙을 넓게 보면 성급한 터치를 줄일 수 있습니다.',
+  }
 }
 
 const ResultCard = forwardRef<HTMLDivElement, ResultCardProps>(
   function ResultCard({ result, realAge, streak, history }, ref) {
+    const [animated, setAnimated] = useState(false)
+    const grade = getGrade(result.totalScore)
+    const advice = getAdvice(result)
     const ageDiff = realAge - result.brainAge
     const isYounger = ageDiff > 0
-    const grade = getGrade(result.totalScore)
-    const [animated, setAnimated] = useState(false)
 
     useEffect(() => {
-      const timer = setTimeout(() => setAnimated(true), 100)
+      const timer = setTimeout(() => setAnimated(true), 120)
       return () => clearTimeout(timer)
     }, [])
 
-    const categories = [
-      { name: '기억력', score: result.memoryScore, icon: '🃏', color: 'from-violet-500 to-purple-500', bgLight: 'bg-violet-50', textColor: 'text-violet-600' },
-      { name: '계산력', score: result.mathScore, icon: '➕', color: 'from-blue-500 to-cyan-500', bgLight: 'bg-blue-50', textColor: 'text-blue-600' },
-      { name: '반응속도', score: result.reactionScore, icon: '⚡', color: 'from-amber-500 to-orange-500', bgLight: 'bg-amber-50', textColor: 'text-amber-600' },
-    ]
-
-    // 최고 기록 비교
-    const bestRecord = history.length > 0 ? Math.max(...history.map((h) => h.totalScore)) : null
+    const bestRecord = history.length ? Math.max(...history.map((h) => h.totalScore)) : null
     const isNewBest = bestRecord !== null && result.totalScore >= bestRecord
+    const categories = useMemo(() => [
+      { name: '기억력', score: result.memoryScore, icon: '🧩', color: 'from-violet-500 to-fuchsia-400' },
+      { name: '계산력', score: result.mathScore, icon: '⌁', color: 'from-sky-500 to-cyan-400' },
+      { name: '반응속도', score: result.reactionScore, icon: '⚡', color: 'from-emerald-500 to-lime-400' },
+    ], [result])
 
     return (
-      <div ref={ref} className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-md mx-auto" style={{ width: '100%' }}>
-        {/* 헤더 - 뇌나이 + 등급 */}
-        <div className="bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-400 p-6 sm:p-8 text-center text-white relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-          <div className="absolute top-3 right-3">
-            <div className={`w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center`}>
-              <span className="text-2xl font-black">{grade.grade}</span>
-            </div>
-          </div>
-          <p className="text-sm font-medium opacity-90 mb-1">오늘의 뇌나이</p>
-          <div className="flex items-baseline justify-center gap-1">
-            <span className="text-6xl sm:text-7xl font-black tracking-tight">{result.brainAge}</span>
-            <span className="text-2xl font-bold opacity-80">세</span>
-          </div>
-          <div className={`mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold ${isYounger ? 'bg-white/25' : ageDiff === 0 ? 'bg-white/20' : 'bg-red-600/30'}`}>
-            {isYounger ? '🎉' : ageDiff === 0 ? '👍' : '💪'}
-            {isYounger
-              ? `실제보다 ${ageDiff}세 젊음!`
-              : ageDiff === 0
-                ? '실제 나이와 동일'
-                : `실제보다 ${Math.abs(ageDiff)}세 많음`
-            }
-          </div>
-          {isNewBest && (
-            <div className="mt-2 text-xs font-bold bg-white/30 px-3 py-1 rounded-full inline-block animate-pulse">
-              🏆 개인 최고 기록 갱신!
-            </div>
-          )}
-        </div>
+      <div ref={ref} className="mx-auto w-full max-w-[520px] overflow-hidden rounded-[28px] bg-white shadow-2xl shadow-gray-900/10 ring-1 ring-gray-200">
+        <div className="relative overflow-hidden bg-[#111827] px-5 py-6 text-white sm:px-7 sm:py-8">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-300 via-sky-300 to-amber-300" />
+          <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-emerald-300/20 blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 h-48 w-48 rounded-full bg-amber-300/20 blur-3xl" />
 
-        <div className="p-5 sm:p-6 space-y-5">
-          {/* 등급 + 종합 점수 */}
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-50">
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${grade.bgColor} flex items-center justify-center shadow-sm`}>
-              <span className="text-2xl font-black text-white">{grade.grade}</span>
+          <div className="relative flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-200">Brain Index</p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">오늘의 두뇌 나이</h2>
             </div>
-            <div className="flex-1">
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-gray-900">{result.totalScore}</span>
-                <span className="text-sm text-gray-400 font-medium">/ 100점</span>
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-2xl font-black ring-1 ring-white/20">
+              {grade.grade}
+            </div>
+          </div>
+
+          <div className="relative mt-6 flex items-end justify-between gap-4">
+            <div>
+              <div className="flex items-end gap-1">
+                <span className="text-7xl font-black leading-none tracking-tight">{result.brainAge}</span>
+                <span className="mb-2 text-2xl font-bold text-white/70">세</span>
               </div>
-              <p className={`text-sm font-bold ${grade.color}`}>{grade.label}</p>
+              <p className="mt-3 inline-flex rounded-full bg-white/10 px-3 py-1.5 text-sm font-bold ring-1 ring-white/15">
+                {isYounger ? `실제보다 ${ageDiff}세 젊게 측정` : ageDiff === 0 ? '실제 나이와 동일' : `실제보다 ${Math.abs(ageDiff)}세 높게 측정`}
+              </p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] text-gray-400">또래 {realAge}세 중</p>
-              <p className="text-xl font-black text-orange-500">상위</p>
-              <p className="text-xl font-black text-orange-500">{Math.max(1, 100 - result.percentile)}%</p>
+              <p className="text-xs text-white/50">또래 대비</p>
+              <p className="text-3xl font-black text-emerald-200">상위 {Math.max(1, 100 - result.percentile)}%</p>
+              {isNewBest && <p className="mt-2 text-xs font-bold text-amber-200">개인 최고 기록</p>}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-5 p-5 sm:p-6">
+          <div className="grid grid-cols-[88px_1fr] items-center gap-4 rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
+            <div className={`flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br ${grade.bar} text-3xl font-black text-white shadow-lg shadow-gray-900/10`}>
+              {grade.grade}
+            </div>
+            <div>
+              <div className="flex items-end gap-1">
+                <span className="text-4xl font-black text-gray-950">{result.totalScore}</span>
+                <span className="mb-1 text-sm font-bold text-gray-400">/100</span>
+              </div>
+              <p className={`text-sm font-bold ${grade.tone}`}>{grade.label}</p>
+              <p className="mt-1 text-xs leading-relaxed text-gray-500">세 영역을 종합해 산출한 오늘의 컨디션 점수입니다.</p>
             </div>
           </div>
 
-          {/* 카테고리별 점수 카드 */}
-          <div className="space-y-2.5">
-            <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">영역별 분석</p>
-            {categories.map((cat, i) => {
-              const catGrade = getGrade(cat.score)
-              return (
-                <div key={cat.name} className={`p-3.5 rounded-xl ${cat.bgLight} border border-gray-100`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{cat.icon}</span>
-                      <span className="text-sm font-bold text-gray-800">{cat.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-md bg-white ${catGrade.color}`}>{catGrade.grade}</span>
-                      <span className="text-lg font-black text-gray-900">{cat.score}</span>
-                    </div>
+          <div className="space-y-3">
+            {categories.map((cat, index) => (
+              <div key={cat.name} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-lg">{cat.icon}</span>
+                    <span className="text-sm font-black text-gray-800">{cat.name}</span>
                   </div>
-                  <div className="h-2.5 bg-white rounded-full overflow-hidden shadow-inner">
-                    <div
-                      className={`h-full bg-gradient-to-r ${cat.color} rounded-full transition-all ease-out`}
-                      style={{
-                        width: animated ? `${cat.score}%` : '0%',
-                        transitionDuration: `${800 + i * 200}ms`,
-                      }}
-                    />
-                  </div>
+                  <span className="text-xl font-black text-gray-950">{cat.score}</span>
                 </div>
-              )
-            })}
-          </div>
-
-          {/* AI 조언 */}
-          <div className="p-4 rounded-xl bg-orange-50 border border-orange-100">
-            <div className="flex items-start gap-2">
-              <span className="text-lg mt-0.5">💡</span>
-              <div>
-                <p className="text-xs font-bold text-orange-700 mb-1">맞춤 두뇌 트레이닝 팁</p>
-                <p className="text-xs text-orange-600 leading-relaxed">{getAdvice(result)}</p>
+                <div className="h-3 overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className={`h-full rounded-full bg-gradient-to-r ${cat.color} transition-all ease-out`}
+                    style={{
+                      width: animated ? `${cat.score}%` : '0%',
+                      transitionDuration: `${850 + index * 170}ms`,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+            ))}
           </div>
 
-          {/* 연속 플레이 배지 */}
+          <div className="rounded-2xl bg-[#f8fafc] p-4 ring-1 ring-gray-100">
+            <p className="text-sm font-black text-gray-900">{advice.title}</p>
+            <p className="mt-1 text-sm leading-relaxed text-gray-600">{advice.body}</p>
+          </div>
+
           {streak > 0 && (
-            <div className="flex items-center justify-center gap-3 py-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100">
-              <div className="flex">
-                {Array.from({ length: Math.min(streak, 7) }).map((_, i) => (
-                  <span key={i} className="text-lg -ml-1 first:ml-0">🔥</span>
-                ))}
-              </div>
+            <div className="flex items-center justify-between rounded-2xl bg-amber-50 px-4 py-3 ring-1 ring-amber-100">
               <div>
-                <span className="text-sm font-black text-orange-700">{streak}일 연속!</span>
-                {streak >= 7 && <span className="ml-1 text-xs text-orange-500">🏅 주간 달성</span>}
-                {streak >= 30 && <span className="ml-1 text-xs text-orange-500">👑 월간 달성</span>}
+                <p className="text-sm font-black text-amber-800">{streak}일 연속 훈련</p>
+                <p className="text-xs text-amber-700/75">기록은 기기 안에 안전하게 저장됩니다.</p>
               </div>
+              <div className="text-2xl">🔥</div>
             </div>
           )}
 
-          {/* 주간 추이 그래프 */}
           {history.length >= 2 && (
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">종합 점수 추이</p>
-                <p className="text-[10px] text-gray-400">최근 {history.length}일</p>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-gray-400">최근 기록</p>
+                <p className="text-xs text-gray-400">{history.length}회</p>
               </div>
-              <div className="flex items-end gap-1.5 h-20 p-3 bg-gray-50 rounded-xl">
-                {history.map((day, i) => {
-                  const height = Math.max(day.totalScore, 5)
-                  const isToday = i === history.length - 1
-                  const prevScore = i > 0 ? history[i - 1].totalScore : day.totalScore
-                  const improved = day.totalScore > prevScore
+              <div className="flex h-24 items-end gap-2 rounded-2xl bg-gray-50 p-3">
+                {history.map((day, index) => {
+                  const height = Math.max(8, day.totalScore)
+                  const isToday = index === history.length - 1
                   return (
-                    <div key={day.date} className="flex-1 flex flex-col items-center gap-0.5">
-                      <span className={`text-[9px] font-bold ${isToday ? 'text-orange-600' : 'text-gray-500'}`}>
-                        {day.totalScore}
-                      </span>
+                    <div key={day.date} className="flex flex-1 flex-col items-center gap-1">
+                      <span className={`text-[10px] font-bold ${isToday ? 'text-emerald-600' : 'text-gray-400'}`}>{day.totalScore}</span>
                       <div
-                        className={`w-full rounded-t-md transition-all duration-700 ${
-                          isToday
-                            ? 'bg-gradient-to-t from-orange-500 to-amber-400 shadow-sm shadow-orange-200'
-                            : improved
-                              ? 'bg-gradient-to-t from-green-300 to-emerald-200'
-                              : 'bg-gray-200'
-                        }`}
+                        className={`w-full rounded-t-lg ${isToday ? 'bg-gradient-to-t from-emerald-500 to-lime-300' : 'bg-gray-300'}`}
                         style={{ height: `${height}%` }}
                       />
-                      <span className={`text-[8px] ${isToday ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>
-                        {isToday ? '오늘' : day.date.slice(5)}
-                      </span>
+                      <span className="text-[9px] text-gray-400">{isToday ? '오늘' : day.date.slice(5)}</span>
                     </div>
                   )
                 })}
               </div>
-              {history.length >= 3 && (() => {
-                const recent = history[history.length - 1].totalScore
-                const first = history[0].totalScore
-                const diff = recent - first
-                if (diff === 0) return null
-                return (
-                  <p className={`text-[11px] mt-1.5 text-center font-medium ${diff > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                    {diff > 0 ? `📈 ${diff}점 향상! 꾸준한 훈련의 효과입니다` : `📉 ${Math.abs(diff)}점 하락 — 오늘부터 다시 도전!`}
-                  </p>
-                )
-              })()}
             </div>
           )}
 
-          {/* 노후연구소 워터마크 */}
-          <div className="text-center pt-3 border-t border-gray-100">
-            <p className="text-[10px] text-gray-300 font-medium">retireplan.kr | 노후연구소 브레인 트레이닝</p>
+          <div className="border-t border-gray-100 pt-4 text-center">
+            <p className="text-[11px] font-medium text-gray-400">retireplan.kr · Brain Training Report</p>
           </div>
         </div>
       </div>

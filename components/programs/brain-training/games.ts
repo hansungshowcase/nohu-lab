@@ -1,6 +1,3 @@
-// 미니게임 로직 + 뇌나이 환산 엔진
-
-/* ── 1. 기억력 카드 뒤집기 ── */
 export interface MemoryCard {
   id: number
   emoji: string
@@ -9,42 +6,40 @@ export interface MemoryCard {
 }
 
 const EMOJI_POOL = [
-  '🍎','🍊','🍋','🍇','🍓','🍑','🍒','🥝','🍌','🥭',
-  '🌸','🌻','🌺','🪻','🌷','🌹','🍀','🌿','🌵','🪴',
-  '🐶','🐱','🐰','🦊','🐻','🐼','🐯','🦁','🐸','🦋',
+  '🧠', '⚡', '💎', '🎯', '🚀', '🔮', '🌿', '🔥',
+  '🪐', '🎧', '🧩', '🏆', '✨', '📚', '🛡️', '🕹️',
 ]
 
 export function generateMemoryBoard(pairs: number): MemoryCard[] {
   const selected = EMOJI_POOL.slice(0, pairs)
-  const cards = [...selected, ...selected].map((emoji, i) => ({
-    id: i,
+  const cards = [...selected, ...selected].map((emoji, id) => ({
+    id,
     emoji,
     flipped: false,
     matched: false,
   }))
-  // Fisher-Yates 셔플
-  for (let i = cards.length - 1; i > 0; i--) {
+
+  for (let i = cards.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1))
     ;[cards[i], cards[j]] = [cards[j], cards[i]]
   }
+
   return cards
 }
 
 export function getMemoryDifficulty(level: number): { pairs: number; previewMs: number } {
-  if (level <= 1) return { pairs: 4, previewMs: 3000 }   // 4쌍 = 8장 (2x4)
-  if (level <= 2) return { pairs: 6, previewMs: 4000 }   // 6쌍 = 12장 (3x4)
-  return { pairs: 8, previewMs: 5000 }                     // 8쌍 = 16장 (4x4)
+  if (level <= 1) return { pairs: 4, previewMs: 3200 }
+  if (level <= 2) return { pairs: 6, previewMs: 4200 }
+  return { pairs: 8, previewMs: 5200 }
 }
 
-/** 기억력 점수: 실수 횟수 + 소요 시간 기반 (0~100) */
 export function scoreMemory(mistakes: number, timeMs: number, pairs: number): number {
-  const perfectTime = pairs * 1500          // 최적 시간 추정
-  const timeScore = Math.max(0, 100 - ((timeMs - perfectTime) / perfectTime) * 40)
-  const mistakeScore = Math.max(0, 100 - mistakes * 12)
-  return Math.round(Math.min(100, Math.max(0, timeScore * 0.5 + mistakeScore * 0.5)))
+  const targetTime = pairs * 1700
+  const timeScore = Math.max(0, 100 - Math.max(0, timeMs - targetTime) / targetTime * 42)
+  const mistakeScore = Math.max(0, 100 - mistakes * 11)
+  return Math.round(Math.min(100, Math.max(0, timeScore * 0.48 + mistakeScore * 0.52)))
 }
 
-/* ── 2. 암산 속도 ── */
 export interface MathProblem {
   question: string
   answer: number
@@ -53,118 +48,102 @@ export interface MathProblem {
 
 export function generateMathProblems(level: number, count: number): MathProblem[] {
   const problems: MathProblem[] = []
-  for (let i = 0; i < count; i++) {
-    let a: number, b: number, op: string, answer: number
+
+  for (let i = 0; i < count; i += 1) {
+    let a = 0
+    let b = 0
+    let op: '+' | '-' | '×' = '+'
+    let answer = 0
 
     if (level <= 1) {
-      // 쉬움: 두 자릿수 덧셈/뺄셈
       a = Math.floor(Math.random() * 50) + 10
       b = Math.floor(Math.random() * 30) + 5
-      if (Math.random() > 0.5) {
-        op = '+'
-        answer = a + b
-      } else {
-        op = '−'
-        if (a < b) [a, b] = [b, a]
-        answer = a - b
-      }
+      op = Math.random() > 0.5 ? '+' : '-'
     } else if (level <= 2) {
-      // 보통: 세 자릿수 or 곱셈
-      if (Math.random() > 0.4) {
-        a = Math.floor(Math.random() * 90) + 10
-        b = Math.floor(Math.random() * 50) + 10
-        op = Math.random() > 0.5 ? '+' : '−'
-        if (op === '−' && a < b) [a, b] = [b, a]
-        answer = op === '+' ? a + b : a - b
+      if (Math.random() > 0.35) {
+        a = Math.floor(Math.random() * 90) + 20
+        b = Math.floor(Math.random() * 60) + 10
+        op = Math.random() > 0.45 ? '+' : '-'
       } else {
-        a = Math.floor(Math.random() * 12) + 2
-        b = Math.floor(Math.random() * 9) + 2
+        a = Math.floor(Math.random() * 12) + 3
+        b = Math.floor(Math.random() * 9) + 3
         op = '×'
-        answer = a * b
       }
+    } else if (Math.random() > 0.45) {
+      a = Math.floor(Math.random() * 220) + 60
+      b = Math.floor(Math.random() * 120) + 20
+      op = Math.random() > 0.45 ? '+' : '-'
     } else {
-      // 어려움: 큰 수 or 복합 연산
-      if (Math.random() > 0.5) {
-        a = Math.floor(Math.random() * 200) + 50
-        b = Math.floor(Math.random() * 100) + 20
-        op = Math.random() > 0.5 ? '+' : '−'
-        if (op === '−' && a < b) [a, b] = [b, a]
-        answer = op === '+' ? a + b : a - b
-      } else {
-        a = Math.floor(Math.random() * 15) + 3
-        b = Math.floor(Math.random() * 12) + 3
-        op = '×'
-        answer = a * b
-      }
+      a = Math.floor(Math.random() * 16) + 4
+      b = Math.floor(Math.random() * 13) + 4
+      op = '×'
     }
 
-    const question = `${a} ${op} ${b}`
+    if (op === '-' && a < b) [a, b] = [b, a]
+    answer = op === '+' ? a + b : op === '-' ? a - b : a * b
 
-    // 오답 생성 (정답 근처 ±1~20)
     const wrongSet = new Set<number>()
     while (wrongSet.size < 3) {
-      const offset = Math.floor(Math.random() * 20) + 1
+      const offset = Math.floor(Math.random() * (level >= 3 ? 28 : 18)) + 1
       const wrong = Math.random() > 0.5 ? answer + offset : answer - offset
       if (wrong !== answer && wrong >= 0) wrongSet.add(wrong)
     }
 
     const options = [answer, ...wrongSet]
-    // 셔플
-    for (let j = options.length - 1; j > 0; j--) {
+    for (let j = options.length - 1; j > 0; j -= 1) {
       const k = Math.floor(Math.random() * (j + 1))
       ;[options[j], options[k]] = [options[k], options[j]]
     }
 
-    problems.push({ question, answer, options })
+    problems.push({ question: `${a} ${op} ${b}`, answer, options })
   }
+
   return problems
 }
 
-/** 암산 점수: 정답률 + 평균 응답 시간 기반 (0~100) */
 export function scoreMath(correct: number, total: number, avgTimeMs: number): number {
   const accuracyScore = (correct / total) * 100
-  const speedBonus = Math.max(0, 20 - (avgTimeMs - 2000) / 200)
-  return Math.round(Math.min(100, accuracyScore * 0.7 + speedBonus * 0.3))
+  const speedScore = Math.max(0, 100 - Math.max(0, avgTimeMs - 1600) / 25)
+  return Math.round(Math.min(100, accuracyScore * 0.76 + speedScore * 0.24))
 }
 
-/* ── 3. 반응속도 테스트 ── */
 export type ReactionTarget = {
   type: 'go' | 'nogo'
   color: string
   shape: string
-  delay: number  // ms before appearing
+  delay: number
 }
 
 export function generateReactionTargets(level: number, count: number): ReactionTarget[] {
   const targets: ReactionTarget[] = []
-  const goRatio = level <= 1 ? 0.8 : level <= 2 ? 0.7 : 0.6
+  const goRatio = level <= 1 ? 0.78 : level <= 2 ? 0.68 : 0.58
+  const minDelay = level <= 1 ? 900 : level <= 2 ? 700 : 550
+  const spread = level <= 1 ? 1700 : level <= 2 ? 1500 : 1300
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < count; i += 1) {
     const isGo = Math.random() < goRatio
     targets.push({
       type: isGo ? 'go' : 'nogo',
-      color: isGo ? '#22c55e' : '#ef4444',
-      shape: isGo ? '원' : '사각형',
-      delay: Math.floor(Math.random() * 2000) + 1000,
+      color: isGo ? '#10b981' : '#ef4444',
+      shape: isGo ? 'circle' : 'square',
+      delay: Math.floor(Math.random() * spread) + minDelay,
     })
   }
+
   return targets
 }
 
-/** 반응속도 점수: 평균 반응 시간 + 오탐률 기반 (0~100) */
 export function scoreReaction(
   avgReactionMs: number,
   falsePositives: number,
   misses: number,
   total: number
 ): number {
-  // 300ms = 완벽, 800ms = 보통, 1500ms+ = 느림
-  const speedScore = Math.max(0, 100 - ((avgReactionMs - 300) / 10))
-  const accuracyPenalty = (falsePositives + misses) * 10
+  const speedScore = Math.max(0, 100 - Math.max(0, avgReactionMs - 260) / 8.5)
+  const accuracyPenalty = (falsePositives + misses) * (110 / total)
   return Math.round(Math.max(0, Math.min(100, speedScore - accuracyPenalty)))
 }
 
-/* ── 뇌나이 환산 엔진 ── */
 export interface BrainResult {
   memoryScore: number
   mathScore: number
@@ -174,43 +153,30 @@ export interface BrainResult {
   percentile: number
 }
 
-/**
- * 종합 점수 → 뇌나이 환산
- * 만점(100) = 20세, 0점 = 80세 (선형)
- * 실제나이 보정: 고령일수록 같은 점수에 더 좋은 뇌나이 부여
- */
 export function calculateBrainAge(
   memoryScore: number,
   mathScore: number,
   reactionScore: number,
   realAge: number
 ): BrainResult {
-  const totalScore = Math.round(memoryScore * 0.35 + mathScore * 0.35 + reactionScore * 0.3)
+  const totalScore = Math.round(memoryScore * 0.36 + mathScore * 0.34 + reactionScore * 0.3)
+  const ageAnchor = Math.max(26, Math.min(72, realAge * 0.72 + 20))
+  let brainAge = Math.round(ageAnchor + (58 - totalScore) * 0.48)
 
-  // 뇌나이 = 80 - (totalScore * 0.6) 기본값
-  let brainAge = Math.round(80 - totalScore * 0.6)
+  if (realAge >= 60 && totalScore >= 82) brainAge -= 4
+  else if (realAge >= 50 && totalScore >= 74) brainAge -= 2
 
-  // 나이 보정: 60대 이상이 80점 넘으면 추가 보너스
-  if (realAge >= 60 && totalScore >= 80) {
-    brainAge = Math.max(brainAge - 3, 20)
-  } else if (realAge >= 50 && totalScore >= 70) {
-    brainAge = Math.max(brainAge - 2, 20)
-  }
+  brainAge = Math.max(20, Math.min(82, brainAge))
 
-  brainAge = Math.max(20, Math.min(80, brainAge))
-
-  // 또래 퍼센타일 (정규분포 기반 시뮬레이션)
-  const ageMean = Math.max(30, realAge * 0.85) // 나이별 평균 뇌나이
-  const diff = ageMean - brainAge
-  const percentile = Math.round(Math.min(99, Math.max(1, 50 + diff * 3)))
+  const peerMean = Math.max(30, Math.min(72, realAge * 0.78 + 14))
+  const percentile = Math.round(Math.min(99, Math.max(1, 50 + (peerMean - brainAge) * 3.2 + (totalScore - 60) * 0.28)))
 
   return { memoryScore, mathScore, reactionScore, totalScore, brainAge, percentile }
 }
 
-/** 난이도 자동 조절: 이전 점수 기반 */
 export function getAutoLevel(prevScore: number | null): number {
   if (prevScore === null) return 1
-  if (prevScore >= 80) return 3
-  if (prevScore >= 50) return 2
+  if (prevScore >= 82) return 3
+  if (prevScore >= 58) return 2
   return 1
 }
