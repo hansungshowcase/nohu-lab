@@ -14,6 +14,16 @@ interface KakaoWindow extends Window {
 const KAKAO_KEY = '3913fde247b12ce25084eb42a9b17ed9'
 const USD_KRW = 1400
 
+const DIVIDEND_GROWTH_TICKERS = new Set([
+  'AAPL', 'ABBV', 'ABT', 'ADM', 'ADP', 'AFL', 'AOS', 'APD', 'BDX', 'BEN', 'BRO', 'CAH', 'CAT', 'CHD',
+  'CINF', 'CL', 'CLX', 'CTAS', 'CVX', 'DOV', 'ECL', 'ED', 'EMR', 'ESS', 'EXPD', 'FRT', 'GD', 'GPC',
+  'HRL', 'IBM', 'ITW', 'JNJ', 'KMB', 'KO', 'LIN', 'LOW', 'MCD', 'MDT', 'MKC', 'MMM', 'MSFT', 'NDSN',
+  'NUE', 'O', 'PEP', 'PG', 'PNR', 'PPG', 'ROP', 'SHW', 'SPGI', 'SYY', 'TGT', 'TROW', 'WMT', 'XOM',
+  '005930', '005935', '000660', '000270', '005380', '005387', '005385', '012330', '033780', '017670',
+  '030200', '032640', '086790', '055550', '105560', '316140', '024110', '000810', '032830', '029780',
+  '267250', '071050', '003550', '066570', '051910', '051915', '005490', '010130', '004370', '271560',
+])
+
 interface StockItem {
   ticker: string
   name: string
@@ -33,7 +43,7 @@ function isEtfStock(stock: StockItem): boolean {
 }
 
 function isDividendGrowthStock(stock: StockItem): boolean {
-  return Boolean(stock.desc?.includes('연속 배당 증가'))
+  return DIVIDEND_GROWTH_TICKERS.has(stock.ticker) || Boolean(stock.desc?.includes('연속 배당 증가'))
 }
 
 export default function DividendCalc() {
