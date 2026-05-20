@@ -22,9 +22,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // 공유 링크 감지 (사주풀이/연금 결과 링크)
   useEffect(() => {
     const search = window.location.search
+    const params = new URLSearchParams(search)
     const isShared =
       (pathname === '/programs/saju-reading' && search.includes('y=')) ||
-      (pathname === '/programs/pension-timing' && search.includes('age='))
+      (pathname === '/programs/pension-timing' && Boolean(params.get('age')) && Boolean(params.get('income')))
     setSharedMode(isShared)
   }, [pathname])
 

@@ -31,13 +31,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       type: 'website',
-      images: [{ url: '/api/og', width: 800, height: 400, alt: `노후 준비 점수 - ${result.grade}` }],
+      images: [{ url: `/api/result-image?code=${encodeURIComponent(result.code)}`, width: 800, height: 1200, alt: `노후 준비 점수 - ${result.grade}` }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: ['/api/og'],
+      images: [`/api/result-image?code=${encodeURIComponent(result.code)}`],
     },
   }
 }

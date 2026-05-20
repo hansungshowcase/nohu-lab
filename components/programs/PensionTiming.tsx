@@ -139,7 +139,7 @@ const STEPS = [
 ]
 
 // ══ 컴포넌트 ══
-export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
+export default function PensionTiming({ userTier = 0, isGuest: explicitGuest }: { userTier?: number; isGuest?: boolean }) {
   const resultRef = useRef<HTMLDivElement>(null)
   const ivRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [myAge, setAge] = useState('')
@@ -159,7 +159,7 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
   const [urlLoaded, setUrlLoaded] = useState(false)
 
   // 계산 로직 (useEffect보다 먼저 선언해야 TDZ 방지)
-  const isGuest = userTier === 0
+  const isGuest = explicitGuest ?? userTier === 0
   const age = parseInt(myAge) || 0
   const inc = (parseInt(myIncome.replace(/,/g, '')) || 0) * 10000 // 만원 단위 입력 → 원 변환
   const lifeExp = parseInt(le) || 85
@@ -239,6 +239,12 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
 
   function handleCalc() {
     if (age < 25 || age > 75 || !validIncome || !base) return
+    if (isGuest && blocked) return
+    if (isGuest) {
+      const nextUsage = addU()
+      setUsage(nextUsage)
+      if (nextUsage >= MF) setBlocked(true)
+    }
     setAnim(true); setStep(0)
     if (ivRef.current) clearInterval(ivRef.current)
     let s = 0
@@ -552,7 +558,12 @@ export default function PensionTiming({ userTier = 0 }: { userTier?: number }) {
         {inc > 0 && !validIncome && (
           <p className="text-[12px] text-red-500 text-center">50 이상 입력해주세요 (만원 단위, 예: 350)</p>
         )}
-        <button onClick={handleCalc} disabled={age < 25 || age > 75 || !validIncome || !base}
+        {isGuest && (
+          <p className={`text-[12px] text-center ${blocked ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>
+            {blocked ? '비회원 무료 분석 횟수를 모두 사용했습니다. 회원 가입 후 계속 이용해주세요.' : `비회원 무료 분석 ${Math.max(0, MF - usage)}회 남음`}
+          </p>
+        )}
+        <button onClick={handleCalc} disabled={age < 25 || age > 75 || !validIncome || !base || (isGuest && blocked)}
           className="w-full min-h-[52px] py-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 disabled:from-gray-200 disabled:to-gray-300 disabled:text-gray-400 text-white font-bold text-[15px] rounded-xl transition-all shadow-md shadow-orange-500/20 disabled:shadow-none active:scale-[0.98]">내 연금 분석하기</button>
       </div>
 

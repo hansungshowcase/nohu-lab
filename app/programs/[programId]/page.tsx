@@ -6,7 +6,7 @@ import { getProgramById } from '@/app/programs/registry'
 import { TIER_MAP } from '@/lib/types'
 import TierBadge from '@/components/TierBadge'
 
-const programComponents: Record<string, React.LazyExoticComponent<React.ComponentType<{ userTier?: number }>>> = {
+const programComponents: Record<string, React.LazyExoticComponent<React.ComponentType<{ userTier?: number; isGuest?: boolean }>>> = {
   'text-counter': lazy(() => import('@/components/programs/TextCounter')),
   'image-resizer': lazy(() => import('@/components/programs/ImageResizer')),
   'nickname-generator': lazy(() => import('@/components/programs/NicknameGenerator')),
@@ -39,6 +39,7 @@ export default function ProgramPage() {
     || (programId === 'supplement-recommend' && searchParams.has('g') && searchParams.has('age'))
     || (programId === 'event-money' && searchParams.has('e') && searchParams.has('r'))
     || (programId === 'dividend-calc' && searchParams.has('t') && searchParams.has('y'))
+    || (programId === 'pension-timing' && searchParams.has('age') && searchParams.has('income'))
   const program = getProgramById(programId)
 
   useEffect(() => {
@@ -130,7 +131,7 @@ export default function ProgramPage() {
             </div>
           }
         >
-          <ProgramComponent userTier={user.tier} />
+          <ProgramComponent userTier={user.tier} isGuest={user.memberId === 'guest'} />
         </Suspense>
       ) : (
         <div className="text-center py-12 text-gray-400">

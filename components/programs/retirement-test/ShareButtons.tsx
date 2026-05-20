@@ -35,6 +35,15 @@ function fallbackCopy(text: string) {
   document.body.removeChild(textarea)
 }
 
+function getResultImageUrl(total: number, resultCode: string, categories: { key: string; score: number }[]) {
+  const scoreMap = new Map(categories.map((c) => [c.key, c.score]))
+  const f = scoreMap.get('finance') ?? scoreMap.get('f') ?? categories[0]?.score ?? 0
+  const l = scoreMap.get('lifestyle') ?? scoreMap.get('l') ?? categories[1]?.score ?? 0
+  const h = scoreMap.get('housing') ?? scoreMap.get('h') ?? categories[2]?.score ?? 0
+  const m = scoreMap.get('mindset') ?? scoreMap.get('m') ?? categories[3]?.score ?? 0
+  return `https://retireplan.kr/api/result-image?code=${encodeURIComponent(resultCode)}&s=${total}&f=${f}&l=${l}&h=${h}&m=${m}`
+}
+
 export default function ShareButtons({
   shareUrl,
   total,
@@ -87,7 +96,7 @@ export default function ShareButtons({
         content: {
           title: '나의 노후 준비 점수 결과',
           description: shareText,
-          imageUrl: 'https://retireplan.kr/api/og',
+          imageUrl: getResultImageUrl(total, resultCode, categories),
           link: {
             mobileWebUrl: shareUrl,
             webUrl: shareUrl,
