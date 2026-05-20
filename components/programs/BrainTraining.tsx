@@ -78,8 +78,9 @@ export default function BrainTraining() {
   }, [])
 
   const handleStart = useCallback(() => {
-    const age = parseInt(realAge, 10)
-    if (!age || age < 10 || age > 100) return
+    const parsedAge = parseInt(realAge, 10)
+    const age = Number.isFinite(parsedAge) && parsedAge >= 10 && parsedAge <= 100 ? parsedAge : 50
+    if (realAge !== String(age)) setRealAge(String(age))
     memoryScoreRef.current = 0
     mathScoreRef.current = 0
     reactionScoreRef.current = 0
@@ -254,9 +255,6 @@ export default function BrainTraining() {
   }
 
   if (phase === 'intro') {
-    const ageNumber = parseInt(realAge, 10)
-    const canStart = Boolean(ageNumber && ageNumber >= 10 && ageNumber <= 100)
-
     return (
       <div className="mx-auto max-w-5xl animate-fade-in">
         <section className="grid gap-5 lg:grid-cols-[1.12fr_0.88fr]">
@@ -336,8 +334,7 @@ export default function BrainTraining() {
 
             <button
               onClick={handleStart}
-              disabled={!canStart}
-              className="mt-6 w-full min-h-[58px] rounded-xl bg-gray-950 px-5 py-4 text-lg font-black text-white shadow-xl shadow-gray-900/20 transition hover:bg-gray-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
+              className="mt-6 w-full min-h-[58px] rounded-xl bg-gray-950 px-5 py-4 text-lg font-black text-white shadow-xl shadow-gray-900/20 transition hover:bg-gray-800 active:scale-[0.98]"
             >
               브레인 트레이닝 시작
             </button>
