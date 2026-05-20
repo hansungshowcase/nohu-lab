@@ -24,6 +24,11 @@ const DIVIDEND_GROWTH_TICKERS = new Set([
   '267250', '071050', '003550', '066570', '051910', '051915', '005490', '010130', '004370', '271560',
 ])
 
+const DIVIDEND_GROWTH_ETF_TICKERS = new Set([
+  'SCHD', 'DGRO', 'VIG', 'VYM', 'NOBL', 'SDY', 'DGRW', 'HDV', 'DVY', 'FDVV',
+  '458730', '466940', '458250', '441640', '402970', '385510',
+])
+
 interface StockItem {
   ticker: string
   name: string
@@ -43,7 +48,11 @@ function isEtfStock(stock: StockItem): boolean {
 }
 
 function isDividendGrowthStock(stock: StockItem): boolean {
-  return DIVIDEND_GROWTH_TICKERS.has(stock.ticker) || Boolean(stock.desc?.includes('연속 배당 증가'))
+  return DIVIDEND_GROWTH_TICKERS.has(stock.ticker) || DIVIDEND_GROWTH_ETF_TICKERS.has(stock.ticker) || Boolean(stock.desc?.includes('연속 배당 증가') || stock.name.includes('배당성장'))
+}
+
+function isDividendStockItem(stock: StockItem): boolean {
+  return (stock.yieldPct || 0) > 0 || (stock.dividendPerShare || 0) > 0
 }
 
 export default function DividendCalc() {
@@ -98,7 +107,7 @@ export default function DividendCalc() {
     setError(null)
     try {
       const [krRes, usRes] = await Promise.allSettled([
-        fetch('/api/dividend?market=kr'),
+        fetch('/api/dividend?market=kr&includeAll=1'),
         fetch('/api/dividend?market=us'),
       ])
       if (krRes.status === 'fulfilled' && krRes.value.ok) {
@@ -125,7 +134,7 @@ export default function DividendCalc() {
   const stocks = useMemo(() => {
     const source = subMarket === 'kr' ? allKr : allUs
     if (category === 'etf') return source.filter(isEtfStock)
-    return source.filter((s) => !isEtfStock(s))
+    return source.filter((s) => !isEtfStock(s) && (subMarket !== 'kr' || isDividendStockItem(s)))
   }, [category, subMarket, allKr, allUs])
 
   const market = subMarket // 세금 계산용
@@ -285,7 +294,7 @@ export default function DividendCalc() {
         {([['stock', '📊 개별주식'], ['etf', '📈 ETF (간접투자)']] as const).map(([c, label]) => (
           <button
             key={c}
-            onClick={() => { setCategory(c); setSelected(null); setSector('전체'); setSearchQuery('') }}
+            onClick={() => { setCategory(c); setSelected(null); setSector('전체'); setSearchQuery(''); setStyle('all') }}
             className={`flex-1 py-3 rounded-xl text-sm font-bold min-h-[48px] transition-all ${
               category === c ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-white text-gray-600 border border-gray-200'
             }`}
@@ -300,7 +309,7 @@ export default function DividendCalc() {
         {([['kr', '🇰🇷 국내'], ['us', '🇺🇸 미국']] as const).map(([m, label]) => (
           <button
             key={m}
-            onClick={() => { setSubMarket(m); setSelected(null); setSector('전체'); setSearchQuery('') }}
+            onClick={() => { setSubMarket(m); setSelected(null); setSector('전체'); setSearchQuery(''); setStyle('all') }}
             className={`flex-1 py-2.5 rounded-xl text-xs font-bold min-h-[44px] transition-all ${
               subMarket === m ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'
             }`}

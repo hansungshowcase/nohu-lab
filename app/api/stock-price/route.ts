@@ -36,6 +36,8 @@ export async function GET(request: Request) {
         const yieldPct = dividendRate > 0
           ? Math.round((dividendRate / meta.regularMarketPrice) * 10000) / 100
           : 0
+        const previousClose = Number(meta.previousClose || 0)
+        const change = previousClose > 0 ? meta.regularMarketPrice - previousClose : 0
         return NextResponse.json({
           ticker,
           price: meta.regularMarketPrice,
@@ -43,9 +45,9 @@ export async function GET(request: Request) {
           name: meta.longName || meta.shortName || ticker,
           dividendRate,
           yieldPct,
-          change: meta.regularMarketPrice - (meta.previousClose || meta.chartPreviousClose || meta.regularMarketPrice),
-          changePct: meta.previousClose
-            ? ((meta.regularMarketPrice - meta.previousClose) / meta.previousClose) * 100
+          change,
+          changePct: previousClose > 0
+            ? (change / previousClose) * 100
             : 0,
         })
       }

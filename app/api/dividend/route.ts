@@ -49,7 +49,7 @@ type ListedStock = {
 const USD_KRW = 1400
 
 const ETF_KEYWORDS = [
-  'ETF', 'ETN', 'KODEX', 'TIGER', 'ACE', 'SOL', 'RISE', 'PLUS', 'HANARO',
+  'ETF', 'ETN', 'KODEX', 'TIGER', 'ACE', 'SOL', 'RISE', 'HANARO',
   'KOSEF', 'ARIRANG', 'TIMEFOLIO', 'KBSTAR', 'TREX', 'WON', '히어로즈',
 ]
 
@@ -409,6 +409,7 @@ function cleanUsName(value: string) {
 
 function normalizeKrSector(sector: string, name: string): string {
   const text = `${sector} ${name}`
+  if (/^PLUS(\s|$)/i.test(name)) return 'ETF'
   if (ETF_KEYWORDS.some((word) => text.toUpperCase().includes(word.toUpperCase()))) return 'ETF'
   if (/리츠|REIT/i.test(text)) return '리츠'
   if (/금융|은행|증권|보험|캐피탈/i.test(text)) return '금융'
