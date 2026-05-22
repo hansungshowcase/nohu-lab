@@ -3,7 +3,7 @@
 import { forwardRef } from 'react'
 import {
   SajuResult, STEMS, STEMS_HANJA, BRANCHES_HANJA,
-  ELEMENTS, ELEMENTS_HANJA, Pillar, pillarToHanja,
+  ELEMENTS, ELEMENTS_HANJA, Pillar,
   STEM_ELEMENT, BRANCH_ELEMENT, STEM_YINYANG,
 } from './sajuEngine'
 import {
@@ -193,8 +193,12 @@ function getPremiumDiagnosis(result: SajuResult, currentDaeun: SajuResult['daeun
       text: getGyeokPlain(result, topTenGod),
     },
     {
+      label: '보완점과 현재 운',
+      text: `${getJohuPlain(result)} ${current}`,
+    },
+    {
       label: '올해 사건 포인트',
-      text: `${getJohuPlain(result)} ${current} ${getAnnualTrigger(result)}`,
+      text: getAnnualTrigger(result),
     },
   ]
 }
@@ -246,55 +250,71 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
       `}</style>
 
       {/* ═══ HEADER ═══ */}
-      <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 px-4 sm:px-6 py-4 sm:py-5 text-white rounded-t-2xl print:rounded-none">
+      <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 px-4 sm:px-6 py-5 sm:py-7 text-white rounded-t-2xl print:rounded-none">
         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 mb-1.5">
           <p className="text-orange-200 text-xs tracking-[0.15em] uppercase">四柱命理 분석 리포트</p>
           <p className="text-orange-200 text-xs sm:text-sm">{result.animal}띠 · {result.gender === 'male' ? '남' : '여'}성 · {result.birthYear}.{String(result.birthMonth).padStart(2,'0')}.{String(result.birthDay).padStart(2,'0')}</p>
         </div>
-        <h2 className="text-xl sm:text-2xl font-black leading-snug">{profile.emoji} {plainProfile.label}</h2>
+        <h2 className="text-xl sm:text-2xl font-black leading-snug">{profile.emoji} {profile.title}</h2>
         <p className="text-orange-100 text-sm sm:text-base mt-1">{viralSummary}</p>
       </div>
 
-      <div className="px-3 sm:px-5 py-4 sm:py-5 space-y-4 print:space-y-3">
+      <div className="px-3 sm:px-5 py-4 sm:py-5 space-y-5 sm:space-y-6 print:space-y-4">
 
-        {/* ═══ 사주 원국 요약 ═══ */}
-        <div className="bg-orange-50 rounded-2xl p-3 sm:p-4 border border-orange-200">
-          <p className="text-xs font-black text-orange-600 mb-2">원국 요약 · {strength.label}</p>
-          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+        {/* ═══ 1. 당신의 사주팔자 ═══ */}
+        <div>
+          <div className="flex gap-1.5 sm:gap-2 justify-center pt-2 pb-4 px-2 sm:px-1">
             {pillars.map((p, i) => (
-              <div key={i} className={`rounded-xl border px-1.5 py-2 text-center ${p.isMe ? 'bg-white border-orange-300' : 'bg-white/70 border-orange-100'}`}>
-                <p className="text-[11px] text-gray-400">{p.label.replace(/\(.+\)/, '')}</p>
-                <p className="text-base sm:text-lg font-black text-gray-900">{result.hourPillar || i > 0 ? pillarToHanja(p.pillar) : '-'}</p>
-                <p className="text-[11px] text-orange-600 font-bold">{p.tenGod || '-'}</p>
-              </div>
+              result.hourPillar || i > 0 ? (
+                <PillarBox key={i} label={p.label} pillar={p.pillar} tenGod={p.tenGod} isMe={p.isMe} />
+              ) : (
+                <EmptyPillarBox key={i} />
+              )
             ))}
+          </div>
+
+          <div className="bg-orange-50 rounded-2xl p-4 sm:p-5 border border-orange-200">
+            <div className="flex items-start gap-3 mb-3">
+              <span className="text-4xl sm:text-5xl flex-shrink-0">{profile.emoji}</span>
+              <div className="min-w-0">
+                <p className="text-base sm:text-lg font-black text-orange-800 leading-tight">
+                  당신의 중심 성향 · {plainProfile.label}
+                </p>
+                <p className="text-xs sm:text-sm text-orange-600 mt-0.5">상담 요약 · {strength.label}</p>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {profile.personality.map(k => (
+                    <span key={k} className="text-xs bg-orange-100 text-orange-700 px-2.5 py-0.5 rounded-full font-medium">#{k}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* ═══ 압축 상담 리딩 ═══ */}
+        {/* ═══ 10만원 상담식 정밀 리딩 ═══ */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border-2 border-gray-900">
           <h3 className="text-base sm:text-lg font-black text-gray-900 mb-1 flex items-center gap-2">
             <span className="w-1.5 h-5 bg-gray-900 rounded-full" />
             정밀 상담 리딩
           </h3>
-          <p className="text-xs text-gray-500 mb-3">길게 늘이지 않고 실제 상담 핵심만 남겼습니다.</p>
-          <div className="space-y-2">
+          <p className="text-xs text-gray-500 mb-3">타고난 성향, 일과 돈, 현재 운, 올해 변화를 핵심만 압축했습니다.</p>
+          <div className="space-y-2.5">
             {premiumDiagnosis.map((point, i) => (
-              <div key={i} className="rounded-xl bg-gray-50 border border-gray-100 p-3 sm:p-3.5">
-                <p className="text-xs font-black text-gray-500 mb-1">{i + 1}. {point.label}</p>
-                <p className="text-sm sm:text-[15px] text-gray-800 leading-[1.65]">{point.text}</p>
+              <div key={i} className="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                <p className="text-xs font-black text-gray-400 mb-1">판단 {i + 1} · {point.label}</p>
+                <p className="text-sm sm:text-base text-gray-800 leading-[1.85]">{point.text}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* ═══ 실행 타이밍 ═══ */}
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-3.5 sm:p-4 border border-orange-200">
-          <h3 className="text-base font-bold text-orange-900 mb-2.5 flex items-center gap-2">
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 sm:p-5 border border-orange-200">
+          <h3 className="text-base sm:text-lg font-bold text-orange-900 mb-3 flex items-center gap-2">
             <span className="w-1.5 h-5 bg-orange-500 rounded-full" />
             올해 실행 타이밍
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
             <div className="bg-white rounded-xl p-3 border border-orange-100">
               <p className="text-xs font-black text-emerald-600 mb-1">밀고 나갈 달</p>
               <p className="text-sm font-bold text-gray-900">{monthlyWindows.best}</p>
@@ -304,7 +324,7 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               <p className="text-sm font-bold text-gray-900">{monthlyWindows.caution}</p>
             </div>
           </div>
-          <p className="text-sm text-gray-800 leading-relaxed">좋은 달에는 새 제안과 계약을 배치하고, 주의 달에는 점검과 갈등 예방에 집중하세요.</p>
+          <p className="text-sm text-gray-800 leading-relaxed">{monthlyWindows.advice}</p>
         </div>
 
         {/* ═══ Footer ═══ */}
