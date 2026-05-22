@@ -477,6 +477,17 @@ function getExactPillars(year: number, month: number, day: number, hour: number 
   return { yearPillar, monthPillar, dayPillar, hourPillar }
 }
 
+function solarToDate(solar: { getYear(): number; getMonth(): number; getDay(): number; getHour(): number; getMinute(): number; getSecond(): number }): Date {
+  return new Date(
+    solar.getYear(),
+    solar.getMonth() - 1,
+    solar.getDay(),
+    solar.getHour(),
+    solar.getMinute(),
+    solar.getSecond()
+  )
+}
+
 // ═══════════════════════════════════════════════
 // 십신 (Ten Gods) 계산
 // ═══════════════════════════════════════════════
@@ -700,51 +711,69 @@ function analyzeElements(pillars: Pillar[], dayMasterElement: number, monthBranc
     }
   }
 
-  // 월령 가중치 적용
-  const seasonWeight = getMonthSeasonWeight(monthBranch, dayMasterElement)
-
   const missing = counts.map((c, i) => c < 0.5 ? i : -1).filter(i => i >= 0)
   const strongIdx = counts.indexOf(Math.max(...counts))
 
   // ── 신강/신약 판단: 득령·득지·득세 3요소 ──
   const produceMe = (dayMasterElement + 4) % 5  // 인성 오행
 
-  // 득령(得令): 월지 오행이 일간과 같거나(비겁) 일간을 생하면(인성)
-  const monthEl = BRANCH_ELEMENT[monthBranch]
-  const deukryeong = (monthEl === dayMasterElement) || produces(monthEl, dayMasterElement)
+  // 득령(得令): 월령의 본기와 지장간 비율을 같이 반영
+  const monthHidden = HIDDEN_STEMS[monthBranch]
+  const monthWeights = HIDDEN_WEIGHTS[monthBranch]
+  let monthSupport = 0
+  let monthDrain = 0
+  for (let i = 0; i < monthHidden.length; i++) {
+    const el = STEM_ELEMENT[monthHidden[i]]
+    const weight = monthWeights[i]
+    if (el === dayMasterElement || el === produceMe) monthSupport += weight
+    if (el === (dayMasterElement + 1) % 5 || el === (dayMasterElement + 2) % 5 || el === (dayMasterElement + 3) % 5) monthDrain += weight
+  }
+  const mainMonthEl = STEM_ELEMENT[monthHidden[monthHidden.length - 1]]
+  const deukryeong = monthSupport >= 0.45 || mainMonthEl === dayMasterElement || produces(mainMonthEl, dayMasterElement)
 
-  // 득지(得地): 일지 지장간에 비겁/인성 오행이 있으면 (특히 정기)
+  // 득지(得地): 일지 지장간 중 정기/중기의 실제 비율을 반영
   const dayBranchIdx = pillars.length >= 3 ? pillars[2].branch : monthBranch
   const dayBranchHidden = HIDDEN_STEMS[dayBranchIdx]
-  const deukji = dayBranchHidden.some(h => {
+  const dayBranchWeights = HIDDEN_WEIGHTS[dayBranchIdx]
+  const deukjiScore = dayBranchHidden.reduce((sum, h, i) => {
     const el = STEM_ELEMENT[h]
-    return el === dayMasterElement || produces(el, dayMasterElement)
-  })
+    return sum + ((el === dayMasterElement || el === produceMe) ? dayBranchWeights[i] : 0)
+  }, 0)
+  const deukji = deukjiScore >= 0.5
 
-  // 득세(得勢): 천간+지지 중 비겁/인성이 과반수
-  let helpCount = 0
-  let totalItems = 0
+  // 득세(得勢): 천간·지지·지장간을 가중 합산해 비겁/인성 세력을 판단
+  let supportPower = 0
+  let totalPower = 0
   for (const p of pillars) {
     const sEl = STEM_ELEMENT[p.stem]
-    if (sEl === dayMasterElement || sEl === produceMe) helpCount++
-    totalItems++
+    if (sEl === dayMasterElement || sEl === produceMe) supportPower += 1.0
+    totalPower += 1.0
     const bEl = BRANCH_ELEMENT[p.branch]
-    if (bEl === dayMasterElement || bEl === produceMe) helpCount++
-    totalItems++
+    if (bEl === dayMasterElement || bEl === produceMe) supportPower += 1.2
+    totalPower += 1.2
+    const hidden = HIDDEN_STEMS[p.branch]
+    const weights = HIDDEN_WEIGHTS[p.branch]
+    for (let i = 0; i < hidden.length; i++) {
+      const hEl = STEM_ELEMENT[hidden[i]]
+      if (hEl === dayMasterElement || hEl === produceMe) supportPower += weights[i]
+      totalPower += weights[i]
+    }
   }
-  const deukse = helpCount >= Math.ceil(totalItems / 2)
+  const deukse = supportPower / totalPower >= 0.45
 
-  // 3요소 중 2개 이상이면 신강
+  // 3요소 중 2개 이상이면 신강. 월령이 심하게 불리하면 한 단계 보수적으로 판단
   const strengthFactors = [deukryeong, deukji, deukse].filter(Boolean).length
-  const isDayMasterStrong = strengthFactors >= 2
+  const isMonthHostile = monthDrain >= 0.6 && monthSupport < 0.3
+  const isDayMasterStrong = strengthFactors >= (isMonthHostile ? 3 : 2)
 
   // 점수 계산 (종격 판별 등에 사용)
-  const myStrength = (counts[dayMasterElement] + counts[produceMe]) * seasonWeight
+  const seasonWeight = getMonthSeasonWeight(monthBranch, dayMasterElement) * (deukryeong ? 1.08 : isMonthHostile ? 0.88 : 1)
+  const myStrength = (counts[dayMasterElement] + counts[produceMe] * 0.9) * seasonWeight
   const totalStrength = counts.reduce((a, b) => a + b, 0)
   const rawScore = (myStrength / totalStrength) * 100
   // 득령/득지/득세 반영 보정
-  const factorBonus = strengthFactors * 5 - 7.5
-  const dayMasterScore = Math.round(Math.min(100, Math.max(0, rawScore + factorBonus)))
+  const factorBonus = strengthFactors * 5 - 7.5 + (deukjiScore >= 0.67 ? 3 : 0) - (isMonthHostile ? 5 : 0)
+  const dayMasterScore = Math.round(Math.min(95, Math.max(5, rawScore + factorBonus)))
 
   // 오행 균형도 계산
   const avg = totalStrength / 5
@@ -812,8 +841,9 @@ function analyzeYear(
   dayMasterYinYang: number, tenGods: string[], usefulGod: number
 ): YearAnalysis {
   const currentYear = new Date().getFullYear()
-  const yearStem = ((currentYear - 4) % 10 + 10) % 10
-  const yearBranch = ((currentYear - 4) % 12 + 12) % 12
+  const currentLunar = Solar.fromYmdHms(currentYear, 6, 15, 12, 0, 0).getLunar()
+  const yearStem = currentLunar.getYearGanIndexExact()
+  const yearBranch = currentLunar.getYearZhiIndexExact()
 
   // 올해 천간의 십신
   const yearTenGod = getTenGod(dayMasterElement, dayMasterYinYang, yearStem)
@@ -926,48 +956,52 @@ function analyzeYear(
 function calculateDaeun(
   yearStem: number, monthPillar: Pillar, gender: 'male' | 'female',
   dayMasterElement: number, dayMasterYinYang: number,
-  birthYear: number, birthMonth: number, birthDay: number
+  birthYear: number, birthMonth: number, birthDay: number, birthHour: number | null
 ): DaeunInfo[] {
   // 양남음녀 = 순행, 음남양녀 = 역행
   const yearYinYang = STEM_YINYANG[yearStem]
   const isForward = (gender === 'male' && yearYinYang === 1) || (gender === 'female' && yearYinYang === 0)
 
-  // 대운 시작 나이 = 생일~다음(또는 이전) 절기까지 일수 ÷ 3 (반올림)
-  // 순행이면 다음 절기, 역행이면 이전 절기까지의 거리
-  const birthDate = new Date(birthYear, birthMonth - 1, birthDay)
+  // 대운 시작 나이 = 생일시~다음/이전 절기(節)까지의 시간 ÷ 3일
+  // 실제 절기 시각을 사용해 경계일 출생자의 오차를 줄인다.
+  const birthDate = new Date(birthYear, birthMonth - 1, birthDay, birthHour ?? 12, 0, 0)
   let startAge = 3 // fallback
 
-  // MONTH_BOUNDS를 양력 순서로 정렬하여 가장 가까운 절기 찾기
-  const sortedBounds = [...MONTH_BOUNDS].sort((a, b) => a.solarMonth - b.solarMonth || a.solarDay - b.solarDay)
-
-  if (isForward) {
-    // 순행: 생일 이후 가장 가까운 다음 절기까지 일수
-    let nextBoundDate: Date | null = null
-    for (const b of sortedBounds) {
-      const d = new Date(birthYear, b.solarMonth - 1, b.solarDay)
-      if (d > birthDate) { nextBoundDate = d; break }
+  try {
+    const lunar = Solar.fromYmdHms(birthYear, birthMonth, birthDay, birthHour ?? 12, 0, 0).getLunar()
+    const lunarWithJie = lunar as unknown as {
+      getNextJie(wholeDay: boolean): { getSolar(): Parameters<typeof solarToDate>[0] }
+      getPrevJie(wholeDay: boolean): { getSolar(): Parameters<typeof solarToDate>[0] }
     }
-    if (!nextBoundDate) {
-      // 올해 남은 절기 없으면 다음해 첫 절기
-      nextBoundDate = new Date(birthYear + 1, sortedBounds[0].solarMonth - 1, sortedBounds[0].solarDay)
-    }
-    const diffDays = Math.round((nextBoundDate.getTime() - birthDate.getTime()) / 86400000)
+    const term = isForward ? lunarWithJie.getNextJie(true) : lunarWithJie.getPrevJie(true)
+    const termDate = solarToDate(term.getSolar())
+    const diffMs = Math.abs(termDate.getTime() - birthDate.getTime())
+    const diffDays = diffMs / 86400000
     startAge = Math.max(1, Math.round(diffDays / 3))
-  } else {
-    // 역행: 생일 이전 가장 가까운 절기까지 일수
-    let prevBoundDate: Date | null = null
-    for (let i = sortedBounds.length - 1; i >= 0; i--) {
-      const b = sortedBounds[i]
-      const d = new Date(birthYear, b.solarMonth - 1, b.solarDay)
-      if (d < birthDate) { prevBoundDate = d; break }
+  } catch {
+    // fallback: 절기 일자 근사. 라이브러리 절기 시각을 얻지 못할 때만 사용.
+    const sortedBounds = [...MONTH_BOUNDS].sort((a, b) => a.solarMonth - b.solarMonth || a.solarDay - b.solarDay)
+    if (isForward) {
+      let nextBoundDate: Date | null = null
+      for (const b of sortedBounds) {
+        const d = new Date(birthYear, b.solarMonth - 1, b.solarDay)
+        if (d > birthDate) { nextBoundDate = d; break }
+      }
+      if (!nextBoundDate) nextBoundDate = new Date(birthYear + 1, sortedBounds[0].solarMonth - 1, sortedBounds[0].solarDay)
+      startAge = Math.max(1, Math.round(((nextBoundDate.getTime() - birthDate.getTime()) / 86400000) / 3))
+    } else {
+      let prevBoundDate: Date | null = null
+      for (let i = sortedBounds.length - 1; i >= 0; i--) {
+        const b = sortedBounds[i]
+        const d = new Date(birthYear, b.solarMonth - 1, b.solarDay)
+        if (d < birthDate) { prevBoundDate = d; break }
+      }
+      if (!prevBoundDate) {
+        const last = sortedBounds[sortedBounds.length - 1]
+        prevBoundDate = new Date(birthYear - 1, last.solarMonth - 1, last.solarDay)
+      }
+      startAge = Math.max(1, Math.round(((birthDate.getTime() - prevBoundDate.getTime()) / 86400000) / 3))
     }
-    if (!prevBoundDate) {
-      // 올해 이전 절기 없으면 작년 마지막 절기
-      const last = sortedBounds[sortedBounds.length - 1]
-      prevBoundDate = new Date(birthYear - 1, last.solarMonth - 1, last.solarDay)
-    }
-    const diffDays = Math.round((birthDate.getTime() - prevBoundDate.getTime()) / 86400000)
-    startAge = Math.max(1, Math.round(diffDays / 3))
   }
 
   const result: DaeunInfo[] = []
@@ -1700,14 +1734,15 @@ function calculateEnhancedGongmang(dayPillar: Pillar, pillars: Pillar[], baseGon
 // ═══════════════════════════════════════════════
 function calculateWolun(
   dayMasterElement: number, dayMasterYinYang: number,
-  yearStem: number, isDayMasterStrong: boolean, usefulGod: number
+  isDayMasterStrong: boolean, usefulGod: number
 ): WolunInfo[] {
   const currentYear = new Date().getFullYear()
-  const yearPillar = getYearPillar(currentYear, 6, 15) // 연중 근사값
+  const currentLunar = Solar.fromYmdHms(currentYear, 6, 15, 12, 0, 0).getLunar()
+  const currentYearStem = currentLunar.getYearGanIndexExact()
   const result: WolunInfo[] = []
 
   for (let m = 1; m <= 12; m++) {
-    const mp = getMonthPillar(yearPillar.stem, m, 15)
+    const mp = getMonthPillar(currentYearStem, m, 15)
     const tg = getTenGod(dayMasterElement, dayMasterYinYang, mp.stem)
 
     // 월의 오행
@@ -1725,6 +1760,11 @@ function calculateWolun(
       rating = 2
     } else if (controls(usefulGod, monthElement)) {
       rating = 1
+    }
+    if (isDayMasterStrong && (monthElement === dayMasterElement || produces(monthElement, dayMasterElement))) {
+      rating = Math.max(1, rating - 1)
+    } else if (!isDayMasterStrong && (monthElement === dayMasterElement || produces(monthElement, dayMasterElement))) {
+      rating = Math.min(5, rating + 1)
     }
 
     // 십신 × 평점 조합 키워드 (더 구체적)
@@ -1794,7 +1834,7 @@ export function calculateSaju(
   const yearAnalysis = analyzeYear(pillars, dayMaster, dayMasterElement, dayMasterYinYang, tenGods, analysis.usefulGod)
 
   // 대운 계산
-  const daeun = calculateDaeun(yearPillar.stem, monthPillar, gender, dayMasterElement, dayMasterYinYang, year, month, day)
+  const daeun = calculateDaeun(yearPillar.stem, monthPillar, gender, dayMasterElement, dayMasterYinYang, year, month, day, hour)
 
   // 공망 분석
   const gongmang = calculateGongmang(dayPillar, pillars)
@@ -1815,7 +1855,7 @@ export function calculateSaju(
   const johu = calculateJohu(dayMasterElement, monthPillar.branch, dayMaster)
 
   // 월운 계산
-  const wolun = calculateWolun(dayMasterElement, dayMasterYinYang, yearPillar.stem, analysis.isDayMasterStrong, analysis.usefulGod)
+  const wolun = calculateWolun(dayMasterElement, dayMasterYinYang, analysis.isDayMasterStrong, analysis.usefulGod)
 
   // 확장 신살 계산
   const enhancedSinsal = calculateEnhancedSinsal(pillars, dayMaster, dayPillar.branch, yearPillar.branch, monthPillar.branch, sinsal)
