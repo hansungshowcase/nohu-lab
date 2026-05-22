@@ -271,48 +271,6 @@ function getPremiumDiagnosis(result: SajuResult, currentDaeun: SajuResult['daeun
   ]
 }
 
-function getDecisionGuides(result: SajuResult, currentDaeun: SajuResult['daeun'][number] | undefined) {
-  const topTenGod = getTopTenGod(result)
-  const current = currentDaeun?.tenGod || ''
-  const wealthFocus = current.includes('재') || topTenGod.includes('재')
-  const careerFocus = current.includes('관') || topTenGod.includes('관')
-  const studyFocus = current.includes('인') || result.enhancedSinsal.hasMunchang || result.enhancedSinsal.hasHakdang
-  const expressionFocus = current.includes('식') || current.includes('상') || topTenGod.includes('식') || topTenGod.includes('상')
-
-  return [
-    {
-      title: '돈',
-      verdict: wealthFocus ? '공격과 방어를 같이 봐야 합니다.' : '무리한 확장보다 새는 돈을 막는 쪽이 먼저입니다.',
-      detail: wealthFocus
-        ? '돈을 벌 기회가 있을 때도 계약, 세금, 현금흐름을 먼저 확인해야 오래 남습니다. 단기 수익보다 반복 수익 구조가 맞습니다.'
-        : '큰 투자보다 저축, 보험, 연금, 고정비 정리가 운을 안정시킵니다. 돈은 크게 벌기보다 흩어지지 않게 붙잡는 전략이 좋습니다.',
-    },
-    {
-      title: '직업',
-      verdict: careerFocus ? '직함, 승진, 시험, 조직 안 평가가 중요합니다.' : expressionFocus ? '기술과 결과물을 밖으로 보여줘야 합니다.' : '전문성을 쌓아 다음 운에서 쓰는 흐름입니다.',
-      detail: careerFocus
-        ? '책임이 늘어나는 자리를 피하지 않는 것이 좋습니다. 단, 규정 위반이나 말실수는 평판에 바로 반영될 수 있습니다.'
-        : expressionFocus
-          ? '포트폴리오, 글, 콘텐츠, 발표, 영업처럼 보이는 결과물을 만들어야 기회가 붙습니다.'
-          : '조급하게 이직하기보다 자격, 경력, 실무 능력을 쌓아 몸값을 올리는 전략이 맞습니다.',
-    },
-    {
-      title: '관계',
-      verdict: result.hapChung.hasClash ? '관계가 한 번 흔들리며 정리되는 운이 있습니다.' : '관계를 넓히기보다 오래 갈 사람을 가리는 편이 좋습니다.',
-      detail: result.hapChung.hasClash
-        ? '충·형·파·해가 보이면 말 한마디가 크게 번질 수 있습니다. 가까운 사람일수록 돈, 약속, 경계선을 분명히 해야 합니다.'
-        : '합이 좋게 들어오면 소개, 협업, 귀인 도움을 받을 수 있습니다. 다만 모두에게 잘하려 하면 에너지가 흩어집니다.',
-    },
-    {
-      title: '성장',
-      verdict: studyFocus ? '공부와 자격이 바로 운을 여는 카드입니다.' : '생활 루틴을 먼저 잡아야 운이 버텨줍니다.',
-      detail: studyFocus
-        ? '올해는 배움에 쓴 시간과 돈이 실력, 평판, 수입으로 이어지기 쉽습니다. 분야를 넓히기보다 하나를 끝내는 방식이 좋습니다.'
-        : '수면, 운동, 식사, 정리처럼 기본 루틴이 흔들리면 좋은 운도 오래 못 갑니다. 몸의 리듬을 잡는 것이 개운의 시작입니다.',
-    },
-  ]
-}
-
 function getMonthlyWindows(result: SajuResult) {
   const sorted = [...result.wolun].sort((a, b) => b.rating - a.rating)
   const best = sorted.slice(0, 3).map(w => `${w.month}월(${w.keyword})`).join(', ')
@@ -427,7 +385,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
   const trendScores = getTrendScores(result, currentDaeun)
   const visibleInteractions = result.hapChung.details.slice(0, 4)
   const premiumDiagnosis = getPremiumDiagnosis(result, currentDaeun)
-  const decisionGuides = getDecisionGuides(result, currentDaeun)
   const monthlyWindows = getMonthlyWindows(result)
 
   const pillars: { label: string; pillar: Pillar; tenGod?: string; isMe?: boolean }[] = [
@@ -514,27 +471,6 @@ const SajuResultCard = forwardRef<HTMLDivElement, Props>(({ result }, ref) => {
               <div key={i} className="rounded-xl bg-gray-50 border border-gray-100 p-3">
                 <p className="text-xs font-black text-gray-400 mb-1">판단 {i + 1} · {point.label}</p>
                 <p className="text-sm sm:text-base text-gray-800 leading-[1.85]">{point.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ═══ 분야별 처방 ═══ */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200">
-          <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-            <span className="w-1.5 h-5 bg-emerald-500 rounded-full" />
-            돈·직업·관계·성장 처방
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {decisionGuides.map((item) => (
-              <div key={item.title} className="rounded-xl p-3.5 bg-slate-50 border border-slate-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="w-7 h-7 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-black text-slate-700">
-                    {item.title}
-                  </span>
-                  <p className="text-sm font-black text-gray-900">{item.verdict}</p>
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed">{item.detail}</p>
               </div>
             ))}
           </div>
