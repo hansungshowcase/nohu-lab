@@ -80,18 +80,18 @@ export default function SajuAnalyzingScreen({ onComplete }: { onComplete: () => 
   }, [onComplete])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 pt-8">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] px-4">
       {/* 메인 아이콘 */}
-      <div className="relative mb-8 overflow-visible p-10">
+      <div className="relative mb-8 overflow-hidden p-8">
         <div className={`text-7xl transition-all duration-700 ${showPulse ? 'scale-110 opacity-100' : 'scale-100 opacity-80'}`}>
           🔮
         </div>
         {/* 회전하는 링 */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-24 h-24 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin" />
+        <div className="absolute inset-0 -m-4">
+          <div className="w-24 h-24 mx-auto border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin" />
         </div>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-32 h-32 border border-amber-200 border-b-amber-500 rounded-full animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }} />
+        <div className="absolute inset-0 -m-8">
+          <div className="w-32 h-32 mx-auto border border-amber-200 border-b-amber-500 rounded-full animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }} />
         </div>
       </div>
 
